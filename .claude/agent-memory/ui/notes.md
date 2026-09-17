@@ -7,6 +7,70 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- 2026-09-17: reworked `/app/engine-status` and `/app/sink-derivations` from
+  their original flat lists into the SAME sidebar-nav + single-selected-
+  detail layout `/app/keywords/[[slug]].vue` uses, per an explicit override
+  of the flat-list call made earlier that same day (see the two entries
+  right below this one — both of them documented "flat list, no sidebar
+  needed, list is small" as a deliberate choice; that reasoning is now
+  superseded, not re-litigated — the user wants layout consistency with
+  `/app/keywords` regardless of list size).
+  - Mirrored `/app/keywords`' structural shell class-for-class: `nav`
+    `w-[240px] min-w-[240px] flex flex-col overflow-y-auto border-r
+    border-border-subtle bg-panel p-2.5` on the left (title + description,
+    then a `UInput` search box with the same clear-button `#trailing`
+    slot pattern, then the row list), and a `min-h-0 flex-1 overflow-y-auto
+    p-6` content pane on the right with the same `mx-auto max-w-4xl`
+    wrapper. Loading/error top-level states also copied verbatim
+    (`v-if="pending"` / `v-else-if="error"` before the nav+content
+    `template`).
+  - Did NOT copy `/app/keywords`' per-entry URL routing
+    (`[[slug]].vue`/`navigateTo`) — that page's slug-based deep-linking is
+    a separate feature this task didn't ask for; both reworked pages use a
+    plain local `selectedKey` ref instead (defaults to the first entry in
+    the CURRENTLY VISIBLE — i.e. already search/filter-narrowed — list via
+    a `watch(visibleEntries, ..., {immediate: true})`, re-picks a new
+    default if the current selection scrolls out of the filtered set)
+    exactly the way keywords/index.vue's OWN pre-slug-routing version did
+    (see that entry further down this file, from before the `[[slug]].vue`
+    migration) — reused that simpler precedent rather than inventing a
+    third pattern.
+  - The existing color-toggle "filter by status" row buttons (previously
+    a horizontal wrapped row of dot+label+full-description text above the
+    list) moved into the sidebar as a compact vertical list — dropped the
+    inline description text (no room at 240px) but kept it as the button's
+    `title` tooltip, so hovering still surfaces the same explanation text
+    that used to be always-visible. Search box matches page-specific
+    fields: engine-status matches `title` OR `#<gapNumber>`; sink-
+    derivations matches `label` OR `slug`.
+  - All existing review logic (STATUS_META, submitReview/confirmEntry/
+    clearReview/openReject/submitReject, the optimistic in-place mutation,
+    the dev-gated `isDev` controls, the reject `UModal`) is UNTOUCHED —
+    only the template was restructured; the per-row detail markup (status
+    dot, evidence chips, excerpt/motivation, review note block, Confirm/
+    Reject/Clear buttons) was relocated as-is from the old `v-for` row
+    into the single `selectedEntry`-keyed detail block on the right, just
+    renamed `entry.*` → `selectedEntry.*`.
+  - Verified live end-to-end via Playwright against the real dev server
+    (not `page.evaluate`-driven clicks): both pages render the sidebar+
+    detail shell with 0 console/page errors; a junk search query on each
+    correctly narrows to a "no entries match" empty state and clears back
+    to the full list; the FULL confirm→green→clear-review AND
+    reject-with-note→yellow→clear-review round trip both work end-to-end
+    on one real row per page (engine-status: gap #1 "Combat: blockers,
+    damage, first/double strike, trample"; sink-derivations: "Crew cost
+    activation path") against the real file-backed endpoints — confirmed
+    `functional-model/engine-status-reviews.json` and
+    `functional-model/sink-derivation-reviews.json` both back to `{}`
+    afterward (same "undo your own live-verification write" discipline as
+    the original build passes). `npm run typecheck` — same pre-existing
+    unrelated errors as always (`CardDetailTabs.vue`/`functional-model/
+    card-status.ts`/`card.ts`/`mana.ts`/`server/api/tokens/by-key.ts`),
+    zero new errors from either reworked file. `npx vitest run` — 1135
+    passed, same 5 pre-existing `tagging/sets/*`-data-missing failures as
+    always (sandbox-only, unrelated). Did not touch `/app/keywords` itself
+    per the task's own instruction (read-only reference for the pattern).
+
 - New page `/app/sink-derivations` (2026-09-17) — the sibling status page to
   `/app/engine-status` for the `engine` agent's separate sink-derivation-
   predicate axis (`GET /api/sink-derivations` + `POST

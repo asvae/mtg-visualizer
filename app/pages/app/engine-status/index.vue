@@ -11,11 +11,19 @@
 // different question, and keywords/registry.ts is intentionally NOT the
 // index this page reads).
 //
-// Flat list, not a sidebar+detail layout like /app/keywords — the list is
-// small (a few dozen rows, growing slowly) and every row's own detail
-// (excerpt/test files/remainder flags) is short enough to show inline, so
-// there's no need for a nav+single-selected-content split the way a real
-// per-entry replay would need.
+// REWORKED (2026-09-17) from a flat list into the SAME sidebar-nav +
+// single-selected-detail layout /app/keywords/[[slug]].vue uses (search box
+// + grouped/filterable list on the left, one entry's full detail on the
+// right) — the earlier flat-list choice ("list is small, no need for a
+// nav+detail split") was an explicit, deliberate call at the time but is
+// overridden now: the user wants layout consistency with /app/keywords
+// regardless of list size. Structure below intentionally mirrors that page
+// class-for-class (`w-[240px]` nav, `UInput` search, `mx-auto max-w-4xl`
+// detail pane) rather than inventing a new sidebar pattern. Unlike
+// /app/keywords' `[[slug]].vue`, this page does NOT get its own per-entry
+// URL routing (`selectedKey` is a plain local ref, not a route param) — the
+// task asked for the sidebar+detail STRUCTURE, not deep-linking, and this
+// axis has no existing slug-routing precedent to extend.
 //
 // `baseline` (gray/purple/blue, computed fresh off ENGINE_GAPS.md every
 // request) and `color` (baseline, or yellow/green once a human review
@@ -23,7 +31,7 @@
 // own "render/filter on this" field), but a `baseline` note stays visible
 // whenever a review has overridden it, so what got overridden and from what
 // is never lost (same as the schema contract itself asks for).
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { EngineStatusPageEntry } from '../../../../server/api/engine-status/index.get';
 
 definePageMeta({ layout: 'graph' });
@@ -59,9 +67,20 @@ const STATUS_ORDER: StatusColor[] = ['gray', 'purple', 'blue', 'yellow', 'green'
 // a wording tweak).
 const sortedEntries = computed(() => [...(data.value ?? [])].sort((a, b) => a.gapNumber - b.gapNumber));
 
-// Optional show/hide-by-color filter — all on by default. A convenience
-// given the list only grows over time (per the contract's own "entry COUNT
-// will grow" note), not load-bearing for the task itself.
+// Sidebar search — same plain case-insensitive substring convention as
+// /app/keywords' own `matchesQuery`, matched against title + gap number.
+const searchQuery = ref('');
+const normalizedQuery = computed(() => searchQuery.value.trim().toLowerCase());
+function matchesQuery(entry: EngineStatusPageEntry): boolean {
+  if (!normalizedQuery.value) return true;
+  return (
+    entry.title.toLowerCase().includes(normalizedQuery.value) ||
+    `#${entry.gapNumber}`.includes(normalizedQuery.value)
+  );
+}
+
+// Show/hide-by-color filter — all on by default, same as before this
+// rework, just relocated into the sidebar.
 const activeFilters = ref<Set<StatusColor>>(new Set(STATUS_ORDER));
 function toggleFilter(c: StatusColor) {
   const next = new Set(activeFilters.value);
@@ -69,7 +88,29 @@ function toggleFilter(c: StatusColor) {
   else next.add(c);
   activeFilters.value = next;
 }
-const filteredEntries = computed(() => sortedEntries.value.filter((e) => activeFilters.value.has(e.color)));
+
+const visibleEntries = computed(() =>
+  sortedEntries.value.filter((e) => activeFilters.value.has(e.color) && matchesQuery(e)),
+);
+
+// Single-selection state, mirrors /app/keywords' own `selectedEntry`
+// pattern (defaults to the first loaded/visible entry, never left
+// unselected once data has arrived).
+const selectedKey = ref<string | null>(null);
+watch(
+  visibleEntries,
+  (entries) => {
+    if (!entries.length) {
+      selectedKey.value = null;
+      return;
+    }
+    if (!selectedKey.value || !entries.some((e) => e.key === selectedKey.value)) {
+      selectedKey.value = entries[0]!.key;
+    }
+  },
+  { immediate: true },
+);
+const selectedEntry = computed(() => sortedEntries.value.find((e) => e.key === selectedKey.value) ?? null);
 
 // Per-row in-flight guard — same "disable while a request for THIS row is
 // out" convention ReviewStatusBadge's own `pending` prop documents, just
@@ -131,128 +172,162 @@ async function submitReject() {
 </script>
 
 <template>
-  <div class="min-h-0 min-w-0 flex-1 overflow-y-auto p-6">
-    <div class="mx-auto flex max-w-4xl flex-col gap-4">
-      <div>
-        <h1 class="text-sm font-semibold text-text">Engine capability status</h1>
-        <p class="mt-1 text-[11px] leading-relaxed text-muted">
-          One row per real gap/capability tracked by
-          <code class="rounded bg-bg px-1 py-0.5">functional-model/ENGINE_GAPS.md</code>'s own "Real gaps — prioritized"
-          list — a mechanic/vocabulary-level "does the engine support this at all" axis, independent of any one card's
-          own facts. This is a sparse, organically-growing list seeded from gaps this project has already flagged by
-          hand, not an exhaustive a-priori catalog of every MTG keyword — see
+  <div class="relative flex min-h-0 flex-1">
+    <div v-if="pending" class="p-6 text-xs text-muted italic">Loading…</div>
+    <div v-else-if="error" class="p-6 text-xs text-error">Failed to load: {{ error.message }}</div>
+
+    <template v-else>
+      <nav class="flex w-[240px] min-w-[240px] flex-col overflow-y-auto border-r border-border-subtle bg-panel p-2.5">
+        <h1 class="mb-1 px-1.5 text-sm font-semibold text-text">Engine capability status</h1>
+        <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
+          One row per gap tracked in <code class="rounded bg-bg px-1 py-0.5">ENGINE_GAPS.md</code> — does the engine
+          support this at all, independent of any one card's own facts. See
           <NuxtLink to="/app/keywords" class="text-text underline">Keyword &amp; mechanic coverage</NuxtLink>
           for that different question instead.
-          <template v-if="data">{{ data.length }} tracked capabilit{{ data.length === 1 ? 'y' : 'ies' }} right now.</template>
         </p>
-        <p v-if="pending" class="mt-2 text-[11px] text-muted">Loading…</p>
-        <p v-if="error" class="mt-2 text-[11px] text-error">Failed to load: {{ error.message }}</p>
-        <p v-if="!isDev" class="mt-2 text-[11px] text-muted italic">
-          Review actions are dev-only — viewing computed status still works here.
-        </p>
-      </div>
+        <p v-if="!isDev" class="mb-3 px-1.5 text-[11px] text-muted italic">Review actions are dev-only here.</p>
 
-      <div class="flex flex-wrap gap-x-4 gap-y-1.5 rounded-md border border-border-subtle bg-panel p-3">
-        <button
-          v-for="c in STATUS_ORDER"
-          :key="c"
-          type="button"
-          class="flex items-center gap-1.5 rounded px-1 py-0.5 text-left"
-          :class="activeFilters.has(c) ? '' : 'opacity-40'"
-          :title="STATUS_META[c].description"
-          @click="toggleFilter(c)"
+        <UInput
+          v-model="searchQuery"
+          class="mb-3"
+          placeholder="Search gaps…"
+          icon="i-lucide-search"
+          autocomplete="off"
+          size="sm"
         >
-          <span class="h-3.5 w-3.5 shrink-0 rounded-sm" :style="{ background: STATUS_META[c].color }"></span>
-          <span class="text-[11px] text-muted"
-            ><span class="font-semibold text-text">{{ STATUS_META[c].label }}</span> — {{ STATUS_META[c].description }}</span
+          <template v-if="searchQuery" #trailing>
+            <UButton icon="i-lucide-x" color="neutral" variant="link" size="xs" aria-label="Clear search" @click="searchQuery = ''" />
+          </template>
+        </UInput>
+
+        <div class="mb-3 flex flex-col gap-0.5">
+          <div class="mb-1 px-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Filter by status</div>
+          <button
+            v-for="c in STATUS_ORDER"
+            :key="c"
+            type="button"
+            class="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-left"
+            :class="activeFilters.has(c) ? 'text-text' : 'text-muted opacity-40'"
+            :title="STATUS_META[c].description"
+            @click="toggleFilter(c)"
           >
-        </button>
-      </div>
+            <span class="h-2.5 w-2.5 shrink-0 rounded-sm" :style="{ background: STATUS_META[c].color }"></span>
+            <span class="truncate text-[11px]">{{ STATUS_META[c].label }}</span>
+          </button>
+        </div>
 
-      <p v-if="data && !filteredEntries.length" class="text-xs text-muted italic">No entries match the active filters.</p>
-
-      <div v-for="entry in filteredEntries" :key="entry.key" class="rounded-md border border-border-subtle bg-panel p-3">
-        <div class="flex items-start gap-2">
+        <div class="mb-1 px-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
+          {{ visibleEntries.length }} of {{ data?.length ?? 0 }}
+        </div>
+        <button
+          v-for="entry in visibleEntries"
+          :key="entry.key"
+          type="button"
+          class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left text-xs"
+          :class="selectedEntry?.key === entry.key ? 'bg-surface text-text' : 'text-muted hover:bg-surface/50 hover:text-text'"
+          @click="selectedKey = entry.key"
+        >
           <span
-            class="mt-0.5 h-3 w-3 shrink-0 rounded-full"
+            class="h-1.5 w-1.5 shrink-0 rounded-full"
             :style="{ background: STATUS_META[entry.color].color }"
-            :title="STATUS_META[entry.color].label"
-          ></span>
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-baseline gap-x-2">
-              <span class="text-[11px] tabular-nums text-muted">#{{ entry.gapNumber }}</span>
-              <span class="text-xs font-semibold text-text">{{ entry.title }}</span>
+          />
+          <span class="shrink-0 text-[10px] tabular-nums text-muted/70">#{{ entry.gapNumber }}</span>
+          <span class="truncate">{{ entry.title }}</span>
+        </button>
+
+        <p v-if="!visibleEntries.length" class="px-1.5 text-[11px] text-muted italic">No gaps match the current search/filters.</p>
+      </nav>
+
+      <div class="min-h-0 flex-1 overflow-y-auto p-6">
+        <div class="mx-auto max-w-4xl">
+          <div v-if="selectedEntry" class="rounded-md border border-border-subtle bg-panel p-3">
+            <div class="flex items-start gap-2">
               <span
-                v-if="entry.review"
-                class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
-              >
-                baseline: {{ entry.baseline }}
-              </span>
-            </div>
+                class="mt-0.5 h-3 w-3 shrink-0 rounded-full"
+                :style="{ background: STATUS_META[selectedEntry.color].color }"
+                :title="STATUS_META[selectedEntry.color].label"
+              ></span>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-baseline gap-x-2">
+                  <span class="text-[11px] tabular-nums text-muted">#{{ selectedEntry.gapNumber }}</span>
+                  <span class="text-sm font-semibold text-text">{{ selectedEntry.title }}</span>
+                  <span
+                    v-if="selectedEntry.review"
+                    class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
+                  >
+                    baseline: {{ selectedEntry.baseline }}
+                  </span>
+                </div>
 
-            <div class="mt-1 flex flex-wrap gap-1.5 text-[10px]">
-              <span
-                class="rounded px-1.5 py-0.5"
-                :class="entry.evidence.hasClosedMarker ? 'bg-produce/15 text-produce' : 'bg-consume/15 text-consume'"
-              >
-                {{ entry.evidence.hasClosedMarker ? 'CLOSED marker present' : 'No CLOSED marker — open gap' }}
-              </span>
-              <span v-if="entry.evidence.hasNamedRemainder" class="rounded bg-magnifier/15 px-1.5 py-0.5 text-magnifier">
-                Text names a remainder not modeled
-              </span>
-              <span v-if="entry.evidence.hasClosedMarker && !entry.evidence.testFiles.length" class="rounded bg-magnifier/15 px-1.5 py-0.5 text-magnifier">
-                No *.test.ts cited
-              </span>
-              <span v-for="f in entry.evidence.testFiles" :key="f" class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">
-                {{ f }}
-              </span>
-            </div>
+                <div class="mt-1 flex flex-wrap gap-1.5 text-[10px]">
+                  <span
+                    class="rounded px-1.5 py-0.5"
+                    :class="selectedEntry.evidence.hasClosedMarker ? 'bg-produce/15 text-produce' : 'bg-consume/15 text-consume'"
+                  >
+                    {{ selectedEntry.evidence.hasClosedMarker ? 'CLOSED marker present' : 'No CLOSED marker — open gap' }}
+                  </span>
+                  <span v-if="selectedEntry.evidence.hasNamedRemainder" class="rounded bg-magnifier/15 px-1.5 py-0.5 text-magnifier">
+                    Text names a remainder not modeled
+                  </span>
+                  <span
+                    v-if="selectedEntry.evidence.hasClosedMarker && !selectedEntry.evidence.testFiles.length"
+                    class="rounded bg-magnifier/15 px-1.5 py-0.5 text-magnifier"
+                  >
+                    No *.test.ts cited
+                  </span>
+                  <span v-for="f in selectedEntry.evidence.testFiles" :key="f" class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">
+                    {{ f }}
+                  </span>
+                </div>
 
-            <p class="mt-1.5 text-[11px] leading-relaxed text-muted italic">{{ entry.evidence.excerpt }}</p>
+                <p class="mt-1.5 text-[11px] leading-relaxed text-muted italic">{{ selectedEntry.evidence.excerpt }}</p>
 
-            <div v-if="entry.review" class="mt-2 rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
-              <div class="font-semibold" :class="entry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
-                Reviewed — {{ entry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}
-                <span v-if="entry.review.reviewedAt" class="font-normal text-muted">({{ entry.review.reviewedAt }})</span>
+                <div v-if="selectedEntry.review" class="mt-2 rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
+                  <div class="font-semibold" :class="selectedEntry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
+                    Reviewed — {{ selectedEntry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}
+                    <span v-if="selectedEntry.review.reviewedAt" class="font-normal text-muted">({{ selectedEntry.review.reviewedAt }})</span>
+                  </div>
+                  <p v-if="selectedEntry.review.note" class="mt-0.5 text-muted">{{ selectedEntry.review.note }}</p>
+                </div>
+
+                <div v-if="isDev" class="mt-2 flex items-center gap-2">
+                  <UButton
+                    size="xs"
+                    color="success"
+                    variant="subtle"
+                    :disabled="pendingKey === selectedEntry.key"
+                    :loading="pendingKey === selectedEntry.key"
+                    @click="confirmEntry(selectedEntry)"
+                  >
+                    Confirm
+                  </UButton>
+                  <UButton
+                    size="xs"
+                    color="warning"
+                    variant="subtle"
+                    :disabled="pendingKey === selectedEntry.key"
+                    @click="openReject(selectedEntry)"
+                  >
+                    Reject…
+                  </UButton>
+                  <UButton
+                    v-if="selectedEntry.review"
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    :disabled="pendingKey === selectedEntry.key"
+                    @click="clearReview(selectedEntry)"
+                  >
+                    Clear review
+                  </UButton>
+                </div>
               </div>
-              <p v-if="entry.review.note" class="mt-0.5 text-muted">{{ entry.review.note }}</p>
-            </div>
-
-            <div v-if="isDev" class="mt-2 flex items-center gap-2">
-              <UButton
-                size="xs"
-                color="success"
-                variant="subtle"
-                :disabled="pendingKey === entry.key"
-                :loading="pendingKey === entry.key"
-                @click="confirmEntry(entry)"
-              >
-                Confirm
-              </UButton>
-              <UButton
-                size="xs"
-                color="warning"
-                variant="subtle"
-                :disabled="pendingKey === entry.key"
-                @click="openReject(entry)"
-              >
-                Reject…
-              </UButton>
-              <UButton
-                v-if="entry.review"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                :disabled="pendingKey === entry.key"
-                @click="clearReview(entry)"
-              >
-                Clear review
-              </UButton>
             </div>
           </div>
+          <p v-else class="text-xs text-muted italic">Pick a tracked gap from the sidebar.</p>
         </div>
       </div>
-    </div>
+    </template>
 
     <UModal v-model:open="rejectOpen" title="Reject baseline">
       <template #body>

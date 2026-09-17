@@ -11,18 +11,27 @@
 // for any of today's 4 seeded mechanisms (all `gray`, for real, not a
 // stub). Same visual language/STATUS_META color set as /app/engine-status
 // (gray/purple/blue/yellow/green) — reused verbatim, not reinvented — but
-// a standalone flat list, not merged into that page, since the two index
+// a standalone page, not merged into that page, since the two index
 // genuinely different things (ENGINE_GAPS.md's numbered list vs. this
 // axis's own small `SINK_DERIVATION_MECHANISMS` array) with different row
 // shapes (no gapNumber/title/excerpt/testFiles here; instead
 // motivation/expectedSinkShapes/predicate-module+corpus-manifest evidence).
+//
+// REWORKED (2026-09-17) from a flat list into the SAME sidebar-nav +
+// single-selected-detail layout /app/keywords/[[slug]].vue (and
+// /app/engine-status, reworked in this same pass) use — search box +
+// filterable list on the left, one entry's full detail on the right —
+// overriding the earlier "flat list, small count" call for the same reason
+// /app/engine-status's own note documents: layout consistency with
+// /app/keywords now matters regardless of list size. No per-entry URL
+// routing here either, same call as /app/engine-status's own rework note.
 //
 // `baseline` (gray/purple/blue, computed fresh off real filesystem presence
 // every request) and `color` (baseline, or yellow/green once a human review
 // overlay exists) are BOTH rendered — dot uses `color` (contract's own
 // "render/filter on this" field), `baseline` chip stays visible whenever a
 // review has overridden it, same convention as /app/engine-status.
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { SinkDerivationPageEntry } from '../../../../server/api/sink-derivations/index.get';
 
 definePageMeta({ layout: 'graph' });
@@ -68,8 +77,20 @@ const STATUS_ORDER: StatusColor[] = ['gray', 'purple', 'blue', 'yellow', 'green'
 // unstable title would.
 const sortedEntries = computed(() => [...(data.value ?? [])].sort((a, b) => a.label.localeCompare(b.label)));
 
-// Optional show/hide-by-color filter, same convenience as /app/engine-status
-// — all on by default, not load-bearing.
+// Sidebar search — matches label or slug, same substring convention as
+// /app/keywords' own `matchesQuery`.
+const searchQuery = ref('');
+const normalizedQuery = computed(() => searchQuery.value.trim().toLowerCase());
+function matchesQuery(entry: SinkDerivationPageEntry): boolean {
+  if (!normalizedQuery.value) return true;
+  return (
+    entry.label.toLowerCase().includes(normalizedQuery.value) ||
+    entry.slug.toLowerCase().includes(normalizedQuery.value)
+  );
+}
+
+// Show/hide-by-color filter, same convenience as /app/engine-status — all
+// on by default, relocated into the sidebar.
 const activeFilters = ref<Set<StatusColor>>(new Set(STATUS_ORDER));
 function toggleFilter(c: StatusColor) {
   const next = new Set(activeFilters.value);
@@ -77,7 +98,29 @@ function toggleFilter(c: StatusColor) {
   else next.add(c);
   activeFilters.value = next;
 }
-const filteredEntries = computed(() => sortedEntries.value.filter((e) => activeFilters.value.has(e.color)));
+
+const visibleEntries = computed(() =>
+  sortedEntries.value.filter((e) => activeFilters.value.has(e.color) && matchesQuery(e)),
+);
+
+// Single-selection state, mirrors /app/keywords' own `selectedEntry`
+// pattern (defaults to the first loaded/visible entry, never left
+// unselected once data has arrived).
+const selectedKey = ref<string | null>(null);
+watch(
+  visibleEntries,
+  (entries) => {
+    if (!entries.length) {
+      selectedKey.value = null;
+      return;
+    }
+    if (!selectedKey.value || !entries.some((e) => e.key === selectedKey.value)) {
+      selectedKey.value = entries[0]!.key;
+    }
+  },
+  { immediate: true },
+);
+const selectedEntry = computed(() => sortedEntries.value.find((e) => e.key === selectedKey.value) ?? null);
 
 // Per-row in-flight guard — same convention as /app/engine-status/index.vue.
 const pendingKey = ref<string | null>(null);
@@ -133,141 +176,169 @@ async function submitReject() {
 </script>
 
 <template>
-  <div class="min-h-0 min-w-0 flex-1 overflow-y-auto p-6">
-    <div class="mx-auto flex max-w-4xl flex-col gap-4">
-      <div>
-        <h1 class="text-sm font-semibold text-text">Sink-derivation predicate status</h1>
-        <p class="mt-1 text-[11px] leading-relaxed text-muted">
-          One row per hand-tracked mechanism whose real gameplay consequences are emergent from generic engine
-          automation rather than visible via <code class="rounded bg-bg px-1 py-0.5">CardDefinition</code>
-          effect-walking at all (Saga chapter completion, Stun counters, Finality counters, Crew) — a different axis
-          from
-          <NuxtLink to="/app/engine-status" class="text-text underline">Engine capability status</NuxtLink>
-          's mechanic/vocabulary gap list. This is a small, organically-growing list seeded one real named gap at a
-          time, not an exhaustive a-priori catalog — every entry starts gray until a real predicate module is built
-          and verified against a scenario corpus.
-          <template v-if="data">{{ data.length }} tracked mechanism{{ data.length === 1 ? '' : 's' }} right now.</template>
-        </p>
-        <p v-if="pending" class="mt-2 text-[11px] text-muted">Loading…</p>
-        <p v-if="error" class="mt-2 text-[11px] text-error">Failed to load: {{ error.message }}</p>
-        <p v-if="!isDev" class="mt-2 text-[11px] text-muted italic">
-          Review actions are dev-only — viewing computed status still works here.
-        </p>
-      </div>
+  <div class="relative flex min-h-0 flex-1">
+    <div v-if="pending" class="p-6 text-xs text-muted italic">Loading…</div>
+    <div v-else-if="error" class="p-6 text-xs text-error">Failed to load: {{ error.message }}</div>
 
-      <div class="flex flex-wrap gap-x-4 gap-y-1.5 rounded-md border border-border-subtle bg-panel p-3">
-        <button
-          v-for="c in STATUS_ORDER"
-          :key="c"
-          type="button"
-          class="flex items-center gap-1.5 rounded px-1 py-0.5 text-left"
-          :class="activeFilters.has(c) ? '' : 'opacity-40'"
-          :title="STATUS_META[c].description"
-          @click="toggleFilter(c)"
+    <template v-else>
+      <nav class="flex w-[240px] min-w-[240px] flex-col overflow-y-auto border-r border-border-subtle bg-panel p-2.5">
+        <h1 class="mb-1 px-1.5 text-sm font-semibold text-text">Sink-derivation predicate status</h1>
+        <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
+          One row per hand-tracked mechanism whose gameplay consequences are emergent from generic engine automation
+          rather than visible via effect-walking at all — a different axis from
+          <NuxtLink to="/app/engine-status" class="text-text underline">Engine capability status</NuxtLink>.
+        </p>
+        <p v-if="!isDev" class="mb-3 px-1.5 text-[11px] text-muted italic">Review actions are dev-only here.</p>
+
+        <UInput
+          v-model="searchQuery"
+          class="mb-3"
+          placeholder="Search mechanisms…"
+          icon="i-lucide-search"
+          autocomplete="off"
+          size="sm"
         >
-          <span class="h-3.5 w-3.5 shrink-0 rounded-sm" :style="{ background: STATUS_META[c].color }"></span>
-          <span class="text-[11px] text-muted"
-            ><span class="font-semibold text-text">{{ STATUS_META[c].label }}</span> — {{ STATUS_META[c].description }}</span
+          <template v-if="searchQuery" #trailing>
+            <UButton icon="i-lucide-x" color="neutral" variant="link" size="xs" aria-label="Clear search" @click="searchQuery = ''" />
+          </template>
+        </UInput>
+
+        <div class="mb-3 flex flex-col gap-0.5">
+          <div class="mb-1 px-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Filter by status</div>
+          <button
+            v-for="c in STATUS_ORDER"
+            :key="c"
+            type="button"
+            class="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-left"
+            :class="activeFilters.has(c) ? 'text-text' : 'text-muted opacity-40'"
+            :title="STATUS_META[c].description"
+            @click="toggleFilter(c)"
           >
-        </button>
-      </div>
+            <span class="h-2.5 w-2.5 shrink-0 rounded-sm" :style="{ background: STATUS_META[c].color }"></span>
+            <span class="truncate text-[11px]">{{ STATUS_META[c].label }}</span>
+          </button>
+        </div>
 
-      <p v-if="data && !filteredEntries.length" class="text-xs text-muted italic">No entries match the active filters.</p>
-
-      <div v-for="entry in filteredEntries" :key="entry.key" class="rounded-md border border-border-subtle bg-panel p-3">
-        <div class="flex items-start gap-2">
+        <div class="mb-1 px-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
+          {{ visibleEntries.length }} of {{ data?.length ?? 0 }}
+        </div>
+        <button
+          v-for="entry in visibleEntries"
+          :key="entry.key"
+          type="button"
+          class="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left text-xs"
+          :class="selectedEntry?.key === entry.key ? 'bg-surface text-text' : 'text-muted hover:bg-surface/50 hover:text-text'"
+          @click="selectedKey = entry.key"
+        >
           <span
-            class="mt-0.5 h-3 w-3 shrink-0 rounded-full"
+            class="h-1.5 w-1.5 shrink-0 rounded-full"
             :style="{ background: STATUS_META[entry.color].color }"
-            :title="STATUS_META[entry.color].label"
-          ></span>
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-baseline gap-x-2">
-              <span class="text-xs font-semibold text-text">{{ entry.label }}</span>
-              <span class="text-[11px] text-muted">({{ entry.slug }})</span>
+          />
+          <span class="truncate">{{ entry.label }}</span>
+        </button>
+
+        <p v-if="!visibleEntries.length" class="px-1.5 text-[11px] text-muted italic">No mechanisms match the current search/filters.</p>
+      </nav>
+
+      <div class="min-h-0 flex-1 overflow-y-auto p-6">
+        <div class="mx-auto max-w-4xl">
+          <div v-if="selectedEntry" class="rounded-md border border-border-subtle bg-panel p-3">
+            <div class="flex items-start gap-2">
               <span
-                v-if="entry.review"
-                class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
-              >
-                baseline: {{ entry.baseline }}
-              </span>
-            </div>
+                class="mt-0.5 h-3 w-3 shrink-0 rounded-full"
+                :style="{ background: STATUS_META[selectedEntry.color].color }"
+                :title="STATUS_META[selectedEntry.color].label"
+              ></span>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-baseline gap-x-2">
+                  <span class="text-sm font-semibold text-text">{{ selectedEntry.label }}</span>
+                  <span class="text-[11px] text-muted">({{ selectedEntry.slug }})</span>
+                  <span
+                    v-if="selectedEntry.review"
+                    class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
+                  >
+                    baseline: {{ selectedEntry.baseline }}
+                  </span>
+                </div>
 
-            <div class="mt-1 flex flex-wrap gap-1.5 text-[10px]">
-              <span
-                class="rounded px-1.5 py-0.5"
-                :class="entry.evidence.predicateModuleExists ? 'bg-produce/15 text-produce' : 'bg-consume/15 text-consume'"
-              >
-                {{ entry.evidence.predicateModuleExists ? 'Predicate module exists' : 'No predicate module yet' }}
-              </span>
-              <span
-                v-if="entry.evidence.predicateModuleExists"
-                class="rounded px-1.5 py-0.5"
-                :class="entry.evidence.corpusManifestExists ? 'bg-produce/15 text-produce' : 'bg-magnifier/15 text-magnifier'"
-              >
-                {{ entry.evidence.corpusManifestExists ? 'Corpus manifest exists' : 'No corpus manifest yet' }}
-              </span>
-              <span v-if="entry.evidence.corpusManifestExists" class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">
-                {{ entry.evidence.corpusPassing }} / {{ entry.evidence.corpusTotal }} corpus scenarios passing
-              </span>
-              <span class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">{{ entry.evidence.predicateModulePath }}</span>
-            </div>
+                <div class="mt-1 flex flex-wrap gap-1.5 text-[10px]">
+                  <span
+                    class="rounded px-1.5 py-0.5"
+                    :class="selectedEntry.evidence.predicateModuleExists ? 'bg-produce/15 text-produce' : 'bg-consume/15 text-consume'"
+                  >
+                    {{ selectedEntry.evidence.predicateModuleExists ? 'Predicate module exists' : 'No predicate module yet' }}
+                  </span>
+                  <span
+                    v-if="selectedEntry.evidence.predicateModuleExists"
+                    class="rounded px-1.5 py-0.5"
+                    :class="selectedEntry.evidence.corpusManifestExists ? 'bg-produce/15 text-produce' : 'bg-magnifier/15 text-magnifier'"
+                  >
+                    {{ selectedEntry.evidence.corpusManifestExists ? 'Corpus manifest exists' : 'No corpus manifest yet' }}
+                  </span>
+                  <span v-if="selectedEntry.evidence.corpusManifestExists" class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">
+                    {{ selectedEntry.evidence.corpusPassing }} / {{ selectedEntry.evidence.corpusTotal }} corpus scenarios passing
+                  </span>
+                  <span class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">{{ selectedEntry.evidence.predicateModulePath }}</span>
+                </div>
 
-            <p class="mt-1.5 text-[11px] leading-relaxed text-muted italic">{{ entry.motivation }}</p>
+                <p class="mt-1.5 text-[11px] leading-relaxed text-muted italic">{{ selectedEntry.motivation }}</p>
 
-            <div v-if="entry.expectedSinkShapes.length" class="mt-2">
-              <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Expected sink-query shapes</div>
-              <ul class="mt-1 flex flex-col gap-1">
-                <li v-for="(shape, i) in entry.expectedSinkShapes" :key="i" class="text-[11px] leading-relaxed text-muted">
-                  <code class="rounded bg-surface px-1 py-0.5 font-mono text-text">{{ shape.event }}</code>
-                  — {{ shape.note }}
-                </li>
-              </ul>
-            </div>
+                <div v-if="selectedEntry.expectedSinkShapes.length" class="mt-2">
+                  <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Expected sink-query shapes</div>
+                  <ul class="mt-1 flex flex-col gap-1">
+                    <li v-for="(shape, i) in selectedEntry.expectedSinkShapes" :key="i" class="text-[11px] leading-relaxed text-muted">
+                      <code class="rounded bg-surface px-1 py-0.5 font-mono text-text">{{ shape.event }}</code>
+                      — {{ shape.note }}
+                    </li>
+                  </ul>
+                </div>
 
-            <div v-if="entry.review" class="mt-2 rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
-              <div class="font-semibold" :class="entry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
-                Reviewed — {{ entry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}
-                <span v-if="entry.review.reviewedAt" class="font-normal text-muted">({{ entry.review.reviewedAt }})</span>
+                <div v-if="selectedEntry.review" class="mt-2 rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
+                  <div class="font-semibold" :class="selectedEntry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
+                    Reviewed — {{ selectedEntry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}
+                    <span v-if="selectedEntry.review.reviewedAt" class="font-normal text-muted">({{ selectedEntry.review.reviewedAt }})</span>
+                  </div>
+                  <p v-if="selectedEntry.review.note" class="mt-0.5 text-muted">{{ selectedEntry.review.note }}</p>
+                </div>
+
+                <div v-if="isDev" class="mt-2 flex items-center gap-2">
+                  <UButton
+                    size="xs"
+                    color="success"
+                    variant="subtle"
+                    :disabled="pendingKey === selectedEntry.key"
+                    :loading="pendingKey === selectedEntry.key"
+                    @click="confirmEntry(selectedEntry)"
+                  >
+                    Confirm
+                  </UButton>
+                  <UButton
+                    size="xs"
+                    color="warning"
+                    variant="subtle"
+                    :disabled="pendingKey === selectedEntry.key"
+                    @click="openReject(selectedEntry)"
+                  >
+                    Reject…
+                  </UButton>
+                  <UButton
+                    v-if="selectedEntry.review"
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    :disabled="pendingKey === selectedEntry.key"
+                    @click="clearReview(selectedEntry)"
+                  >
+                    Clear review
+                  </UButton>
+                </div>
               </div>
-              <p v-if="entry.review.note" class="mt-0.5 text-muted">{{ entry.review.note }}</p>
-            </div>
-
-            <div v-if="isDev" class="mt-2 flex items-center gap-2">
-              <UButton
-                size="xs"
-                color="success"
-                variant="subtle"
-                :disabled="pendingKey === entry.key"
-                :loading="pendingKey === entry.key"
-                @click="confirmEntry(entry)"
-              >
-                Confirm
-              </UButton>
-              <UButton
-                size="xs"
-                color="warning"
-                variant="subtle"
-                :disabled="pendingKey === entry.key"
-                @click="openReject(entry)"
-              >
-                Reject…
-              </UButton>
-              <UButton
-                v-if="entry.review"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                :disabled="pendingKey === entry.key"
-                @click="clearReview(entry)"
-              >
-                Clear review
-              </UButton>
             </div>
           </div>
+          <p v-else class="text-xs text-muted italic">Pick a mechanism from the sidebar.</p>
         </div>
       </div>
-    </div>
+    </template>
 
     <UModal v-model:open="rejectOpen" title="Reject baseline">
       <template #body>
