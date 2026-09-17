@@ -196,112 +196,140 @@ async function submitReject() {
 
     <template #detail>
       <div v-if="selectedEntry" class="rounded-md border border-border-subtle bg-panel p-3">
-        <div class="flex items-start gap-2">
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span class="text-[11px] tabular-nums text-muted">#{{ selectedEntry.gapNumber }}</span>
-              <span class="text-sm font-semibold text-text">{{ selectedEntry.title }}</span>
-              <UBadge :style="statusBadgeStyle(statusMeta(selectedEntry.color).color)" size="sm" variant="solid">
-                {{ statusMeta(selectedEntry.color).label }}
-              </UBadge>
-              <span
-                v-if="selectedEntry.review"
-                class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
-              >
-                baseline: {{ selectedEntry.baseline }}
-              </span>
-            </div>
+        <!-- Header: gap number + title + status. -->
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span class="text-[11px] tabular-nums text-muted">#{{ selectedEntry.gapNumber }}</span>
+          <span class="text-sm font-semibold text-text">{{ selectedEntry.title }}</span>
+          <UBadge :style="statusBadgeStyle(statusMeta(selectedEntry.color).color)" size="sm" variant="solid">
+            {{ statusMeta(selectedEntry.color).label }}
+          </UBadge>
+          <span
+            v-if="selectedEntry.review"
+            class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
+          >
+            baseline: {{ selectedEntry.baseline }}
+          </span>
+        </div>
 
-            <div class="mt-1 flex flex-wrap gap-1.5 text-[10px]">
-              <span
-                class="rounded px-1.5 py-0.5"
-                :class="selectedEntry.evidence.hasClosedMarker ? 'bg-produce/15 text-produce' : 'bg-consume/15 text-consume'"
-              >
-                {{ selectedEntry.evidence.hasClosedMarker ? 'CLOSED marker present' : 'No CLOSED marker — open gap' }}
-              </span>
-              <span v-if="selectedEntry.evidence.hasNamedRemainder" class="rounded bg-magnifier/15 px-1.5 py-0.5 text-magnifier">
-                Text names a remainder not modeled
-              </span>
-              <span
-                v-if="selectedEntry.evidence.hasClosedMarker && !selectedEntry.evidence.testFiles.length"
-                class="rounded bg-magnifier/15 px-1.5 py-0.5 text-magnifier"
-              >
-                No *.test.ts cited
-              </span>
-              <span v-for="f in selectedEntry.evidence.testFiles" :key="f" class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">
-                {{ f }}
-              </span>
-            </div>
-
-            <p class="mt-1.5 text-[11px] leading-relaxed text-muted italic">{{ selectedEntry.evidence.excerpt }}</p>
-
-            <div v-if="selectedEntry.testFileRefs.length" class="mt-2">
-              <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Cited test files — real evidence</div>
-              <div class="mt-1 flex flex-col gap-1">
-                <template v-for="ref in selectedEntry.testFileRefs" :key="ref.file">
-                  <EngineConsoleCodeSection
-                    v-for="path in ref.matches"
-                    :key="path"
-                    :title="path"
-                    language="ts"
-                    :loading="sourceEntry(path)?.loading ?? false"
-                    :result="sourceEntry(path)?.result ?? null"
-                    not-found-label="Failed to load."
-                    @expand="loadSource(path)"
-                  />
-                  <EngineConsoleCodeSection
-                    v-if="!ref.matches.length"
-                    :title="ref.file"
-                    language="ts"
-                    :result="{ path: ref.file, exists: false, content: null, truncated: false }"
-                    not-found-label="Citation not found on disk — this filename doesn't exist anywhere in functional-model/."
-                  />
-                </template>
-              </div>
-            </div>
-
-            <div v-if="selectedEntry.review" class="mt-2 rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
-              <div class="font-semibold" :class="selectedEntry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
-                Reviewed — {{ selectedEntry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}
-                <span v-if="selectedEntry.review.reviewedAt" class="font-normal text-muted">({{ selectedEntry.review.reviewedAt }})</span>
-              </div>
-              <p v-if="selectedEntry.review.note" class="mt-0.5 text-muted">{{ selectedEntry.review.note }}</p>
-            </div>
-
-            <div v-if="isDev && (selectedEntry.baseline === 'blue' || selectedEntry.review)" class="mt-2 flex items-center gap-2">
-              <template v-if="selectedEntry.baseline === 'blue'">
-                <UButton
-                  size="xs"
-                  color="success"
-                  variant="subtle"
-                  :disabled="pendingKey === selectedEntry.key"
-                  :loading="pendingKey === selectedEntry.key"
-                  @click="confirmEntry(selectedEntry)"
-                >
-                  Confirm
-                </UButton>
-                <UButton
-                  size="xs"
-                  color="warning"
-                  variant="subtle"
-                  :disabled="pendingKey === selectedEntry.key"
-                  @click="openReject(selectedEntry)"
-                >
-                  Reject…
-                </UButton>
-              </template>
-              <UButton
-                v-if="selectedEntry.review"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                :disabled="pendingKey === selectedEntry.key"
-                @click="clearReview(selectedEntry)"
-              >
-                Clear review
-              </UButton>
-            </div>
+        <!-- Verification checklist: scannable icon+label status row instead
+             of run-on chips; cited test filenames move to their own small
+             chip list underneath (a list of names, not a pass/fail signal
+             themselves — the pass/fail signal is "were any cited at all"). -->
+        <div class="mt-3 border-t border-border-subtle pt-3">
+          <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Verification checklist</div>
+          <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
+            <span
+              class="flex items-center gap-1.5"
+              :class="selectedEntry.evidence.hasClosedMarker ? 'text-produce' : 'text-consume'"
+            >
+              <UIcon
+                :name="selectedEntry.evidence.hasClosedMarker ? 'i-lucide-circle-check' : 'i-lucide-circle-x'"
+                class="h-3.5 w-3.5 shrink-0"
+              />
+              {{ selectedEntry.evidence.hasClosedMarker ? 'CLOSED marker present' : 'No CLOSED marker — open gap' }}
+            </span>
+            <span v-if="selectedEntry.evidence.hasNamedRemainder" class="flex items-center gap-1.5 text-magnifier">
+              <UIcon name="i-lucide-triangle-alert" class="h-3.5 w-3.5 shrink-0" />
+              Text names a remainder not modeled
+            </span>
+            <span
+              v-if="selectedEntry.evidence.hasClosedMarker && !selectedEntry.evidence.testFiles.length"
+              class="flex items-center gap-1.5 text-magnifier"
+            >
+              <UIcon name="i-lucide-triangle-alert" class="h-3.5 w-3.5 shrink-0" />
+              No *.test.ts cited
+            </span>
+            <span v-if="selectedEntry.evidence.testFiles.length" class="flex items-center gap-1.5 text-produce">
+              <UIcon name="i-lucide-list-checks" class="h-3.5 w-3.5 shrink-0" />
+              {{ selectedEntry.evidence.testFiles.length }} test file{{ selectedEntry.evidence.testFiles.length > 1 ? 's' : '' }} cited
+            </span>
           </div>
+          <div v-if="selectedEntry.evidence.testFiles.length" class="mt-1.5 flex flex-wrap gap-1">
+            <span
+              v-for="f in selectedEntry.evidence.testFiles"
+              :key="f"
+              class="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-text"
+            >
+              {{ f }}
+            </span>
+          </div>
+        </div>
+
+        <div class="mt-3 border-t border-border-subtle pt-3">
+          <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">From ENGINE_GAPS.md</div>
+          <p class="mt-1 text-[11px] leading-relaxed text-muted">{{ selectedEntry.evidence.excerpt }}</p>
+        </div>
+
+        <div v-if="selectedEntry.testFileRefs.length" class="mt-3 border-t border-border-subtle pt-3">
+          <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Cited test files — real evidence</div>
+          <div class="mt-1.5 flex flex-col gap-1">
+            <template v-for="ref in selectedEntry.testFileRefs" :key="ref.file">
+              <EngineConsoleCodeSection
+                v-for="path in ref.matches"
+                :key="path"
+                :title="path"
+                language="ts"
+                :loading="sourceEntry(path)?.loading ?? false"
+                :result="sourceEntry(path)?.result ?? null"
+                not-found-label="Failed to load."
+                @expand="loadSource(path)"
+              />
+              <EngineConsoleCodeSection
+                v-if="!ref.matches.length"
+                :title="ref.file"
+                language="ts"
+                :result="{ path: ref.file, exists: false, content: null, truncated: false }"
+                not-found-label="Citation not found on disk — this filename doesn't exist anywhere in functional-model/."
+              />
+            </template>
+          </div>
+        </div>
+
+        <div v-if="selectedEntry.review" class="mt-3 border-t border-border-subtle pt-3">
+          <div class="rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
+            <div class="font-semibold" :class="selectedEntry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
+              Reviewed — {{ selectedEntry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}
+              <span v-if="selectedEntry.review.reviewedAt" class="font-normal text-muted">({{ selectedEntry.review.reviewedAt }})</span>
+            </div>
+            <p v-if="selectedEntry.review.note" class="mt-0.5 text-muted">{{ selectedEntry.review.note }}</p>
+          </div>
+        </div>
+
+        <div
+          v-if="isDev && (selectedEntry.baseline === 'blue' || selectedEntry.review)"
+          class="mt-3 flex items-center gap-2 border-t border-border-subtle pt-3"
+        >
+          <template v-if="selectedEntry.baseline === 'blue'">
+            <UButton
+              size="xs"
+              color="success"
+              variant="subtle"
+              :disabled="pendingKey === selectedEntry.key"
+              :loading="pendingKey === selectedEntry.key"
+              @click="confirmEntry(selectedEntry)"
+            >
+              Confirm
+            </UButton>
+            <UButton
+              size="xs"
+              color="warning"
+              variant="subtle"
+              :disabled="pendingKey === selectedEntry.key"
+              @click="openReject(selectedEntry)"
+            >
+              Reject…
+            </UButton>
+          </template>
+          <UButton
+            v-if="selectedEntry.review"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            :disabled="pendingKey === selectedEntry.key"
+            @click="clearReview(selectedEntry)"
+          >
+            Clear review
+          </UButton>
         </div>
       </div>
       <p v-else class="text-xs text-muted italic">Pick a tracked gap from the sidebar.</p>

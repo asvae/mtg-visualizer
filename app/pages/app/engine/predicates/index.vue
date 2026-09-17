@@ -188,120 +188,149 @@ async function submitReject() {
 
     <template #detail>
       <div v-if="selectedEntry" class="rounded-md border border-border-subtle bg-panel p-3">
-        <div class="flex items-start gap-2">
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span class="text-sm font-semibold text-text">{{ selectedEntry.label }}</span>
-              <span class="text-[11px] text-muted">({{ selectedEntry.slug }})</span>
-              <UBadge :style="statusBadgeStyle(statusMeta(selectedEntry.color).color)" size="sm" variant="solid">
-                {{ statusMeta(selectedEntry.color).label }}
-              </UBadge>
-              <span
-                v-if="selectedEntry.review"
-                class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
-              >
-                baseline: {{ selectedEntry.baseline }}
-              </span>
-            </div>
+        <!-- Header: name + status. The slug used to be echoed right next to
+             the label ("Crew cost activation path (crew)") — pure noise
+             since it's almost always the same words, just abbreviated; it's
+             already searchable (see `matchesQuery` above) so dropping it
+             here loses nothing a reviewer needs. -->
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span class="text-sm font-semibold text-text">{{ selectedEntry.label }}</span>
+          <UBadge :style="statusBadgeStyle(statusMeta(selectedEntry.color).color)" size="sm" variant="solid">
+            {{ statusMeta(selectedEntry.color).label }}
+          </UBadge>
+          <span
+            v-if="selectedEntry.review"
+            class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase"
+          >
+            baseline: {{ selectedEntry.baseline }}
+          </span>
+        </div>
 
-            <div class="mt-1 flex flex-wrap gap-1.5 text-[10px]">
-              <span
-                class="rounded px-1.5 py-0.5"
-                :class="selectedEntry.evidence.predicateModuleExists ? 'bg-produce/15 text-produce' : 'bg-consume/15 text-consume'"
-              >
-                {{ selectedEntry.evidence.predicateModuleExists ? 'Predicate module exists' : 'No predicate module yet' }}
-              </span>
-              <span
-                v-if="selectedEntry.evidence.predicateModuleExists"
-                class="rounded px-1.5 py-0.5"
-                :class="selectedEntry.evidence.corpusManifestExists ? 'bg-produce/15 text-produce' : 'bg-magnifier/15 text-magnifier'"
-              >
-                {{ selectedEntry.evidence.corpusManifestExists ? 'Corpus manifest exists' : 'No corpus manifest yet' }}
-              </span>
-              <span v-if="selectedEntry.evidence.corpusManifestExists" class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">
-                {{ selectedEntry.evidence.corpusPassing }} / {{ selectedEntry.evidence.corpusTotal }} corpus scenarios passing
-              </span>
-              <span class="rounded bg-surface px-1.5 py-0.5 font-mono text-text">{{ selectedEntry.evidence.predicateModulePath }}</span>
-            </div>
-
-            <p class="mt-1.5 text-[11px] leading-relaxed text-muted italic">{{ selectedEntry.motivation }}</p>
-
-            <div v-if="selectedEntry.expectedSinkShapes.length" class="mt-2">
-              <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Expected sink-query shapes</div>
-              <ul class="mt-1 flex flex-col gap-1">
-                <li v-for="(shape, i) in selectedEntry.expectedSinkShapes" :key="i" class="text-[11px] leading-relaxed text-muted">
-                  <code class="rounded bg-surface px-1 py-0.5 font-mono text-text">{{ shape.event }}</code>
-                  — {{ shape.note }}
-                </li>
-              </ul>
-            </div>
-
-            <div class="mt-2">
-              <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Source — real evidence</div>
-              <div class="mt-1 flex flex-col gap-1">
-                <EngineConsoleCodeSection
-                  title="Predicate source"
-                  language="ts"
-                  :result="selectedEntry.sourceFiles.predicate"
-                  not-found-label="No predicate module built yet."
-                />
-                <EngineConsoleCodeSection
-                  title="Corpus manifest"
-                  language="json"
-                  :result="selectedEntry.sourceFiles.corpusManifest"
-                  not-found-label="No corpus manifest yet."
-                />
-                <EngineConsoleCodeSection
-                  title="Corpus test"
-                  language="ts"
-                  :result="selectedEntry.sourceFiles.corpusTest"
-                  not-found-label="No corpus test yet."
-                />
-              </div>
-            </div>
-
-            <div v-if="selectedEntry.review" class="mt-2 rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
-              <div class="font-semibold" :class="selectedEntry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
-                Reviewed — {{ selectedEntry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}
-                <span v-if="selectedEntry.review.reviewedAt" class="font-normal text-muted">({{ selectedEntry.review.reviewedAt }})</span>
-              </div>
-              <p v-if="selectedEntry.review.note" class="mt-0.5 text-muted">{{ selectedEntry.review.note }}</p>
-            </div>
-
-            <div v-if="isDev && (selectedEntry.baseline === 'blue' || selectedEntry.review)" class="mt-2 flex items-center gap-2">
-              <template v-if="selectedEntry.baseline === 'blue'">
-                <UButton
-                  size="xs"
-                  color="success"
-                  variant="subtle"
-                  :disabled="pendingKey === selectedEntry.key"
-                  :loading="pendingKey === selectedEntry.key"
-                  @click="confirmEntry(selectedEntry)"
-                >
-                  Confirm
-                </UButton>
-                <UButton
-                  size="xs"
-                  color="warning"
-                  variant="subtle"
-                  :disabled="pendingKey === selectedEntry.key"
-                  @click="openReject(selectedEntry)"
-                >
-                  Reject…
-                </UButton>
-              </template>
-              <UButton
-                v-if="selectedEntry.review"
-                size="xs"
-                color="neutral"
-                variant="ghost"
-                :disabled="pendingKey === selectedEntry.key"
-                @click="clearReview(selectedEntry)"
-              >
-                Clear review
-              </UButton>
-            </div>
+        <!-- Verification checklist: a scannable icon+label status row
+             instead of run-on chips, with the file path demoted to a small
+             mono caption underneath (it's a location detail, not a
+             pass/fail signal). -->
+        <div class="mt-3 border-t border-border-subtle pt-3">
+          <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Verification checklist</div>
+          <div class="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
+            <span
+              class="flex items-center gap-1.5"
+              :class="selectedEntry.evidence.predicateModuleExists ? 'text-produce' : 'text-consume'"
+            >
+              <UIcon
+                :name="selectedEntry.evidence.predicateModuleExists ? 'i-lucide-circle-check' : 'i-lucide-circle-x'"
+                class="h-3.5 w-3.5 shrink-0"
+              />
+              {{ selectedEntry.evidence.predicateModuleExists ? 'Predicate module exists' : 'No predicate module yet' }}
+            </span>
+            <span
+              v-if="selectedEntry.evidence.predicateModuleExists"
+              class="flex items-center gap-1.5"
+              :class="selectedEntry.evidence.corpusManifestExists ? 'text-produce' : 'text-magnifier'"
+            >
+              <UIcon
+                :name="selectedEntry.evidence.corpusManifestExists ? 'i-lucide-circle-check' : 'i-lucide-triangle-alert'"
+                class="h-3.5 w-3.5 shrink-0"
+              />
+              {{ selectedEntry.evidence.corpusManifestExists ? 'Corpus manifest exists' : 'No corpus manifest yet' }}
+            </span>
+            <span v-if="selectedEntry.evidence.corpusManifestExists" class="flex items-center gap-1.5 font-mono text-text">
+              <UIcon name="i-lucide-list-checks" class="h-3.5 w-3.5 shrink-0 text-muted" />
+              {{ selectedEntry.evidence.corpusPassing }} / {{ selectedEntry.evidence.corpusTotal }} corpus scenarios passing
+            </span>
           </div>
+          <div
+            class="mt-1.5 truncate font-mono text-[10px] text-muted/70"
+            :title="selectedEntry.evidence.predicateModulePath"
+          >
+            {{ selectedEntry.evidence.predicateModulePath }}
+          </div>
+        </div>
+
+        <div class="mt-3 border-t border-border-subtle pt-3">
+          <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">What this is</div>
+          <p class="mt-1 text-[11px] leading-relaxed text-muted">{{ selectedEntry.motivation }}</p>
+        </div>
+
+        <div v-if="selectedEntry.expectedSinkShapes.length" class="mt-3 border-t border-border-subtle pt-3">
+          <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Expected sink-query shapes</div>
+          <ul class="mt-1.5 flex flex-col gap-1">
+            <li v-for="(shape, i) in selectedEntry.expectedSinkShapes" :key="i" class="text-[11px] leading-relaxed text-muted">
+              <code class="rounded bg-surface px-1 py-0.5 font-mono text-text">{{ shape.event }}</code>
+              — {{ shape.note }}
+            </li>
+          </ul>
+        </div>
+
+        <div class="mt-3 border-t border-border-subtle pt-3">
+          <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Source — real evidence</div>
+          <div class="mt-1.5 flex flex-col gap-1">
+            <EngineConsoleCodeSection
+              title="Predicate source"
+              language="ts"
+              :result="selectedEntry.sourceFiles.predicate"
+              not-found-label="No predicate module built yet."
+            />
+            <EngineConsoleCodeSection
+              title="Corpus manifest"
+              language="json"
+              :result="selectedEntry.sourceFiles.corpusManifest"
+              not-found-label="No corpus manifest yet."
+            />
+            <EngineConsoleCodeSection
+              title="Corpus test"
+              language="ts"
+              :result="selectedEntry.sourceFiles.corpusTest"
+              not-found-label="No corpus test yet."
+            />
+          </div>
+        </div>
+
+        <div v-if="selectedEntry.review" class="mt-3 border-t border-border-subtle pt-3">
+          <div class="rounded border border-border-subtle bg-surface/60 p-2 text-[11px]">
+            <div class="font-semibold" :class="selectedEntry.review.verdict === 'confirm' ? 'text-produce' : 'text-warn'">
+              Reviewed — {{ selectedEntry.review.verdict === 'confirm' ? 'confirmed' : 'rejected' }}
+              <span v-if="selectedEntry.review.reviewedAt" class="font-normal text-muted">({{ selectedEntry.review.reviewedAt }})</span>
+            </div>
+            <p v-if="selectedEntry.review.note" class="mt-0.5 text-muted">{{ selectedEntry.review.note }}</p>
+          </div>
+        </div>
+
+        <div
+          v-if="isDev && (selectedEntry.baseline === 'blue' || selectedEntry.review)"
+          class="mt-3 flex items-center gap-2 border-t border-border-subtle pt-3"
+        >
+          <template v-if="selectedEntry.baseline === 'blue'">
+            <UButton
+              size="xs"
+              color="success"
+              variant="subtle"
+              :disabled="pendingKey === selectedEntry.key"
+              :loading="pendingKey === selectedEntry.key"
+              @click="confirmEntry(selectedEntry)"
+            >
+              Confirm
+            </UButton>
+            <UButton
+              size="xs"
+              color="warning"
+              variant="subtle"
+              :disabled="pendingKey === selectedEntry.key"
+              @click="openReject(selectedEntry)"
+            >
+              Reject…
+            </UButton>
+          </template>
+          <UButton
+            v-if="selectedEntry.review"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            :disabled="pendingKey === selectedEntry.key"
+            @click="clearReview(selectedEntry)"
+          >
+            Clear review
+          </UButton>
         </div>
       </div>
       <p v-else class="text-xs text-muted italic">Pick a mechanism from the sidebar.</p>

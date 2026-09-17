@@ -3597,3 +3597,62 @@ worth remembering the pitfalls before re-deriving them:
     missing checked-in data files on this branch, unrelated), 1163 passed.
   - Didn't touch `functional-model/`, `server/api/*`, Sets, or Keywords —
     stayed inside the task's stated UI-only scope.
+
+- 2026-09-18, Predicates/Features detail-pane layout/formatting pass
+  (density complaint — wall of text, weak hierarchy — separate from a
+  concurrent `engine` task trimming `motivation` text length itself):
+  on both `predicates/index.vue` and `features/index.vue`, restructured
+  the detail pane into explicit `border-t border-border-subtle pt-3`
+  sections (header / verification-checklist / description / expected-
+  shapes-or-cited-files / source-evidence / review-box / actions), each
+  with its own `text-[10px] font-semibold tracking-wide text-muted
+  uppercase` micro-label — reusing that exact label style already
+  established by the pre-existing "Expected sink-query shapes"/"Source —
+  real evidence" headers rather than inventing a new one.
+  - **Evidence chips → checklist row**: the run-on `rounded bg-X/15
+    px-1.5 py-0.5` chip strip became a `flex flex-wrap gap-x-4` row of
+    icon+label pairs (`i-lucide-circle-check`/`circle-x`/`triangle-alert`/
+    `list-checks`, colored via the same produce/consume/magnifier reuse
+    the chips already had) — confirmed exact icon names exist in
+    `@iconify-json/lucide`'s `icons.json` before using them (`circle-
+    check`, `circle-x`, `triangle-alert`, `list-checks` all present;
+    `check-circle`/`check-circle-2`/`x-circle` do NOT exist under lucide's
+    current naming, worth remembering if reaching for those names again
+    elsewhere in this app). File-path/test-filename info that isn't
+    itself a pass/fail signal (predicate module path; Features' cited
+    test filenames) demoted to a small muted/mono caption or chip list
+    *underneath* the checklist row, not mixed into it.
+  - **Motivation/excerpt text**: dropped the `italic` styling (was making
+    already-thin prose look like an orphaned side-note) and gave it its
+    own labeled section — "What this is" on Predicates (`selectedEntry
+    .motivation`, genuinely authored prose), "From ENGINE_GAPS.md" on
+    Features (`evidence.excerpt`, a literal quote — deliberately NOT
+    labeled "What this is" since it isn't prose written for this purpose,
+    it's quoted source text). Designed to look right at both the old
+    paragraph-length and the new post-engine-trim sentence-or-two length —
+    verified live with today's real (not-yet-trimmed) longer text and it
+    already reads fine, so the concurrent trim should only tighten it
+    further, not require another layout pass.
+  - **Killed the "Crew cost activation path (crew)" duplicate**: dropped
+    the `({{ selectedEntry.slug }})` span that used to sit immediately
+    after the label on Predicates — it's near-identical wording to the
+    label itself for basically every entry, purely decorative duplication,
+    and the underlying `slug` field is still fully searchable via
+    `matchesQuery` unaffected by this — nowhere else needed it displayed.
+    Also dropped the vestigial single-child `flex items-start gap-2` >
+    `min-w-0 flex-1` wrapper on both pages' outer detail `<div>` (relic
+    of an apparent earlier layout with a second flex sibling that no
+    longer exists) — purely a cleanup, zero visual/behavioral change.
+  - Verified LIVE via Playwright/Chromium against the already-running dev
+    server (this session's `npm run dev` hit the "another Nuxt dev server
+    already running" lock — a peer orchestrator/session's server was live
+    on :3000 already; used that one directly rather than killing it) for:
+    Predicates' Saga entry (blue/verified, full checklist+3 code panels)
+    and its own Crew entry specifically (confirming the slug duplicate is
+    gone); Features' gap #1 (purple/unverified, remainder-warning +
+    cited-files list) and gap #10 (yellow/rejected, full review box +
+    Confirm/Reject/Clear-review row) — all four render cleanly, correct
+    colors, no cramped/misaligned spacing, dividers read clearly.
+  - `npx vue-tsc --noEmit -p .`: zero errors (same as pre-task baseline).
+    `npx vitest run app/`: 71/71 passed, no regressions. Didn't touch
+    `functional-model/`, Sets, or Keywords tabs.
