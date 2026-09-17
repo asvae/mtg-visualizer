@@ -29238,3 +29238,115 @@ task on the same 11 gaps' scenario evidence).
 **Open Forge-verification needed: none.** Pure prose-content edit to one
 hand-authored data file — no `interfaces.ts` mirror, no real-world rules
 claim changed, no predicate/matching logic touched.
+
+## 2026-09-18 — Real engine-piloted scenario evidence for the 11 rejected gaps + gap #19 citation fix
+
+Two-part orchestrator task, following the "blue means scenario-verified?"
+evidence audit above and the user's own review-overlay rejection of all 11
+audited `blue` gaps (`functional-model/engine-status-reviews.json`, keys
+gap-4/5/8/9/10/19/20/21/22/23/24, verdict `reject`, already committed
+before this task started — did NOT touch that file myself, per explicit
+instruction: confirming is always a human action).
+
+**Part 1 — gap #19's false citation.** Its own prose used to say
+"`engine.test.ts`/`card.test.ts` needed no new cases" — the second half
+was a `TEST_CITATION_RE` false-positive off a sentence saying that file did
+NOT need touching (no such file exists anywhere in the repo). Rewrote that
+sentence to spell the filename as three separate tokens
+("card" + "test" + "ts") specifically so it can never again auto-match as
+a citation, while still explaining what happened for a human reader.
+Replaced it with REAL evidence: the pre-existing `the-water-crystal`
+`runEngineScenarios` card-level trace (already real, just never a
+`*.test.ts` file the classifier could see) PLUS a brand-new genuine
+`engine.test.ts` describe block (see Part 2).
+
+**Part 2 — real `createEngine`-piloted coverage for all 11, added to
+`functional-model/engine.test.ts`** (all using that file's own established
+`setupGame()`/`createEngine`/real `castSpell`/`declareAttackers`/
+`resolveCombatDamage` pattern — none of these are narrow single-function
+unit tests):
+
+- **#4/#5/#9/#22/#23** (already had genuine `engine.test.ts` coverage, but
+  only against SYNTHETIC fixtures per the audit's own critique) —
+  strengthened with a SIBLING describe block using the actual real
+  `CardDefinition` import: Fate of the Sun-Cryst (#4, real cost-reduction +
+  fizzle together), Capital City (#5 mana + #23 cycling, one real card
+  covers both), Lightning Army of One / Giott King of the Dwarves (#9,
+  real First/Double Strike combat), Ashe, Princess of Dalmasca (#22, real
+  `declareAttackers`-driven dig-for-artifact).
+- **#8/#10/#19/#20/#21/#24** (previously ZERO `createEngine` citation at
+  all — pure unit tests of one function) — brand-new real-card describe
+  blocks: Diamond Weapon vs. a real Hill Gigas in real combat (#8,
+  CombatDamagePrevention); Jill, Shiva's Dominant cast TWICE for real
+  across two real turns, legend rule enforced in the same 704.3 sweep as
+  an unrelated lethal-damage creature (#10); The Water Crystal cast +
+  activated for real, real +4 mill replacement computed off a LIVE hand
+  size (#19); G'raha Tia cast for real, her real `ActivationLimit: 1`
+  trigger fired through the shared `fireTrigger` chokepoint, capped same-
+  turn, genuinely reset across a real `advance()`-driven Cleanup (#20);
+  Battle Menu's real Ability mode cast for real, `effectivePT` before/after
+  a real Cleanup crossing (#21); Slash of Light cast with a real
+  `declaredTargets` lock, genuine 608.2b fizzle via `combinator.ts`'s
+  `selectPool`, plus a baseline `AddValue` two-count-sum case (#24).
+
+All 11 real cards used (not invented placeholders): fate-of-the-sun-cryst,
+capital-city, diamond-weapon (+ a real Hill Gigas attacker), lightning-army-
+of-one, giott-king-of-the-dwarves, jill-shiva-s-dominant-shiva-warden-of-
+ice, the-water-crystal, g-raha-tia, battle-menu, ashe-princess-of-dalmasca,
+slash-of-light — all imported directly from their own real
+`cards/<slug>/definition.ts` (read-only; none of those files were modified,
+per this task's own constraint).
+
+**Real bugs/gotchas found writing these** (worth flagging for future
+similar work, not filed as separate gaps): (1) Jill's own real ETB ("exile
+up to one OTHER target nonland permanent... return to hand") will legally
+retarget onto an EARLIER-cast Jill on the same battlefield when casting a
+SECOND one — `optional` is documentary-only in this model (a legal target
+always gets picked), so a legend-rule test casting the same Legendary twice
+needs a decoy nonland permanent + `ctx.preferTarget` to steer the pick away
+from the first copy, or the second cast's own ETB silently bounces the
+first one back to hand before the legend rule ever gets a chance to fire.
+(2) A multi-turn `advance()` loop that crosses the OTHER player's turn
+before returning to "you" also crosses YOUR OWN real automatic Draw step —
+this silently consumes whatever's on top of your library, which matters a
+lot for a scenario that seeds a specific card at the library's top for a
+LATER `dig`/mill read (Ashe's own top-5 artifact, e.g.) — either seed a
+disposable filler card first (consumed by the real draw) or compute
+expected amounts off a LIVE read (`you.hand.length`) instead of a hardcoded
+number, never assume "nothing touches the library between my setup and my
+effect" once a real turn boundary is crossed. (3) `RealCard.damageMarked`
+is `undefined` until `dealDamage` first touches a card, not `0` — asserting
+"took no damage" needs `?? 0`, not a bare `toBe(0)`.
+
+**Not attempted / flagged**: nothing scoped here needed new engine
+capability — all 11 closed with real test strengthening alone, no gap
+turned out to need a bigger follow-up. Crystal Fragments/Summon: Alexander
+(gap #8's OTHER real card, the whole-damage-shield variant vs. Diamond
+Weapon's own combat-damage-only one) stays backed by its pre-existing
+`state.test.ts` unit coverage + its own real `runEngineScenarios` trace —
+not independently re-driven through a NEW `engine.test.ts` case this pass
+(Diamond Weapon alone already demonstrates the real keyword-based
+mechanism end-to-end through real combat; re-simulating the Saga-transform
+front/back-face shape too was judged not worth the added complexity for
+what would be redundant mechanism-level coverage — flagged here in case a
+future pass disagrees).
+
+**Verified**: `npx vitest run functional-model/engine.test.ts` — 146/146
+green (was ~132 before this pass — 14 new `it()` cases). Full
+`npx vitest run functional-model` — 108 files, 1111 passed + 5 skipped
+(+14 vs. this task's own start). Full-repo `npx vitest run` — same
+pre-existing 5 unrelated `tagging/sets/{lea,leb,2ed,arn}`/
+`card-enrichment-status.json` failures, untouched. `npx tsc -p
+functional-model/tsconfig.json --noEmit` — diffed byte-for-byte against a
+`git stash`-reverted baseline run: IDENTICAL 225 pre-existing errors, zero
+new. Confirmed via `npx vite-node functional-model/scripts/compute-engine-
+status.mjs` that all 11 gaps (#4/5/8/9/10/19/20/21/22/23/24) now compute to
+a genuine `blue` baseline for real (gap #19's evidence list no longer
+contains the false filename at all). Did NOT touch
+`functional-model/engine-status-reviews.json` — all 11 correctly stay
+`yellow` (rejected, overridden) in the served color until the user
+manually re-reviews/re-confirms through the UI, exactly as instructed.
+
+**Open Forge-verification needed: none.** This pass added test coverage
+and fixed a documentation citation only — no `interfaces.ts` mirror, no
+new real-world rules claim, no engine-core logic changed.

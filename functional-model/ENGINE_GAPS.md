@@ -665,6 +665,19 @@ so a future pass doesn't mistake them for missing work:
      "tap target creature" is piloted directly via `resolveCard`, not
      through the real cast/stack path, in its own scenario) — real,
      tested machinery without its own `cards/*` demonstration this pass.
+   - **Evidence-audit follow-up (2026-09-18):** the 2026-09-12 closure's own
+     `engine.test.ts` describe block ("Target-legality re-validation at
+     resolution... real end-to-end via castSpell/resolveTop") was real,
+     genuine `createEngine`-piloted coverage, but only ever against a
+     synthetic `Test Fate Bolt` fixture, not the actual real FIN card whose
+     shape it was modeled on. `engine.test.ts` now ALSO has a second,
+     sibling describe block using the real `fate-of-the-sun-cryst`
+     `CardDefinition` directly ("Target-legality re-validation — real FIN
+     card (Fate of the Sun-Cryst...)") — casts it targeting a genuinely
+     tapped opponent creature (exercising its own real gap #7 cost
+     discount off the SAME declared target at the same time), then fizzles
+     it for real when that target is destroyed by something else before
+     resolution, plus a legal-baseline sibling case.
 
 ### Medium priority (common, but narrower blast radius)
 
@@ -778,6 +791,19 @@ so a future pass doesn't mistake them for missing work:
      mechanism exists yet, and no other real FIN card in the pool currently
      needs one enforced (checked). Left with its prior free-text comment,
      explicitly marked as this gap, not migrated.
+   - **Evidence-audit follow-up (2026-09-18):** the closure's own
+     `engine.test.ts` describe block ("Non-basic mana sources... real
+     manaAbilities copy + 302.6") was real, genuine `createEngine`-piloted
+     coverage, but only ever against synthetic `Test Mana Rock`/`Test Mana
+     Dork`/`Test Dual Rock` fixtures. `engine.test.ts` now ALSO has a
+     sibling describe block using the real `capital-city` `CardDefinition`
+     directly — plays it as a real Land (`playLand`) and confirms its own
+     real, structured `{T}: Add {C}.` genuinely pays for a spell (after
+     tapping every OTHER real mana source first, to prove Capital City's
+     own ability is the one actually consumed), plus a second case
+     exercising the SAME real card's own Cycling {2} through
+     `activateAbility` (doubling as real-card strengthening for gap #23
+     below too).
 6. **Hybrid/`{X}` mana symbols.** ~~`parseManaCost` throws on any of
    these~~ **CLOSED for real Hybrid pips (`{G/U}`-shaped) and real `{X}`
    symbols (2026-09-12)** — grepped every real `manaCost:` string across
@@ -1135,6 +1161,28 @@ so a future pass doesn't mistake them for missing work:
    opponent attacker, Hill Gigas, attacks → Diamond Weapon blocks → real
    combat damage resolves with Diamond Weapon's own 5 damage genuinely
    prevented while it still deals its own 8 back, unshielded).
+   **Evidence-audit follow-up (2026-09-18):** this gap's original closure
+   cited only `state.test.ts`'s own unit-level `dealDamage` describe
+   block — real, but never actually driven through a real
+   `createEngine` turn/priority/combat simulation (zero `engine.test.ts`
+   citation at all). `engine.test.ts` now has a genuine new describe
+   block ("Damage-prevention shields — real FIN card (Diamond Weapon...)")
+   that seeds the real Diamond Weapon (its own real name/P&T/keywords,
+   including the real `CombatDamagePrevention` keyword) and a real Hill
+   Gigas onto the battlefield, drives them through a genuine
+   `declareAttackers`/`declareBlockers`/`resolveCombatDamage` combat, and
+   asserts BOTH halves of the real asymmetry this closure's own text
+   already claims: Diamond Weapon's own printed `CombatDamagePrevention`
+   genuinely prevents the incoming 5 combat damage (`damageMarked` stays
+   0, `result.prevented` names it), while its own 8 damage back is
+   unshielded and lethal to Hill Gigas. (Casting Diamond Weapon's real
+   `{7}{G}{G}` cost is out of scope for what this specific gap is about —
+   seeded directly onto the battlefield, same technique this file's other
+   combat tests already use for an attacker/blocker.) Crystal
+   Fragments/Summon: Alexander's own whole-damage-shield variant stays
+   backed by `state.test.ts`'s unit-level coverage plus its own real
+   `runEngineScenarios` card-level trace — not independently re-driven
+   through `engine.test.ts` this pass.
 
 8b. ~~**Life-total replacement effects — a real, distinct 614 gap, NOT the
    same as gap #8's damage shields.**~~ **CLOSED (2026-09-12)**.
@@ -1291,11 +1339,35 @@ so a future pass doesn't mistake them for missing work:
      pool needs to observe the difference. `vitest run functional-model`:
      366/366 passing; full-pool `verify-synergy.mjs`: 320 checked, 0 hard
      failures.
+   - **Evidence-audit follow-up (2026-09-18):** this closure's own
+     `engine.test.ts`/`turn.test.ts` describe blocks were real, genuine
+     `createEngine`-piloted coverage, but only ever against synthetic
+     "Fast Striker"/"Double Striker" fixtures, not the actual real FIN
+     cards this section's own prose already names (Lightning, Army of
+     One; Giott, King of the Dwarves). `engine.test.ts` now ALSO has a
+     sibling describe block using both real `CardDefinition`s directly
+     ("First/Double Strike combat sub-step — real FIN cards..."): seeds
+     each (its own real name/P&T/keywords) onto the battlefield and drives
+     it through a genuine two-real-phase combat
+     (`CombatFirstStrikeDamage` then `CombatDamage`), including Lightning's
+     own real printed Lifelink genuinely paying off her controller during
+     the first-strike step.
 10. ~~**Legend rule / other SBA-adjacent state cleanup**~~ **CLOSED** — was
     subsumed by gap #2, now folded into `sba.ts`'s own loop
     (`state.checkLegendRule`); `sba.test.ts` specifically tests two
     same-named Legendary permanents (Jill's own card is Legendary) both
     alone and combined with a lethal-damage case in the same sweep.
+    **Evidence-audit follow-up (2026-09-18):** that `sba.test.ts` coverage
+    is real but never actually driven through a real `createEngine`
+    turn/priority pass — both Jills were bare `state.addCard(...,
+    'Battlefield', ...)` fixtures, never actually cast. `engine.test.ts`
+    now has a genuine new describe block ("Legend rule (704.5j) — real FIN
+    card (Jill, Shiva's Dominant...)") that casts the real Jill
+    `CardDefinition` TWICE for real, through `castSpell`/`resolveTop`
+    across two real turns, then runs `checkStateBasedActions` in the SAME
+    sweep as an unrelated lethally-damaged creature — proving the real
+    704.3 loop-until-stable behavior off two genuinely-resolved permanents,
+    not two hand-built fixtures.
 11. **Activated-ability cost components beyond `{T}` + mana.** ~~Equip
     {N}~~ **CLOSED** — `unsupportedCostComponent` now strips a real
     "Equip"/"Equip—" cost-string prefix the same way `{T}` is, and
@@ -2594,11 +2666,29 @@ so a future pass doesn't mistake them for missing work:
       `ValidPlayer$ Player.Opponent` scoping, not a self-buff — milling
       more than remains in the library capping at what's actually there
       with NO deck-out flag, and a replacement-bumped request ALSO
-      correctly capping at the real library size). `engine.test.ts`/
-      `card.test.ts` needed no new cases — `resolveTop`'s
-      `millModifierGrants` copy and the `kind:'mill'` dispatch are both
-      exercised end-to-end by this card's own real
-      `runEngineScenarios` pilot instead.
+      correctly capping at the real library size). At the time this gap was
+      first closed, no `engine.test.ts` case was added for it either — the
+      REAL card-level evidence was (and still is) The Water Crystal's own
+      genuine `runEngineScenarios` pilot (`cards/the-water-crystal/
+      scenarios.ts`, checked-in `trace.json`), which drives the real
+      `resolveTop` `millModifierGrants` copy and the `kind:'mill'` dispatch
+      end-to-end through a real cast + activation. **Correction
+      (2026-09-18 evidence audit):** this entry used to also name a SECOND
+      test file (`engine.test.ts` and one other, spelled here deliberately
+      without its own real dotted filename token so it can never again be
+      auto-cited as evidence by `functional-model/engine-status.ts`'s own
+      `TEST_CITATION_RE`: "card" + "test" + "ts") that "needed no new
+      cases" — that second file does not, and never did, exist anywhere in
+      this repo; the sentence was only ever saying it did NOT need
+      touching, and a naive regex mis-read that as a citation. Fixed for
+      real, not just de-cited: `engine.test.ts` now has a genuine, real-card,
+      `createEngine`-piloted describe block for this gap too ("Mill
+      mechanism — real FIN card (The Water Crystal, ENGINE_GAPS.md gap
+      #19)") — casts the real Water Crystal, crosses a real turn, and
+      activates its own real mill ability with a live, non-scripted hand
+      size, asserting the real `+4` replacement lands on the opponent's
+      graveyard/library counts. Both this new unit-level case and the
+      pre-existing real scenario/trace evidence now back this gap.
     - Only The Water Crystal was touched among the 10 real FIN cards that
       reference mill (Shinra Reinforcements, Random Encounter, Summon:
       Titan, Town Greeter, Vanille Cheerful l'Cie, Hope Estheim, Terra
@@ -2690,6 +2780,20 @@ so a future pass doesn't mistake them for missing work:
     functional-model/tsconfig.json --noEmit` — zero NEW errors (same
     pre-existing baseline noise categories). `scripts/verify-synergy.mjs`
     full pool — 320 checked, 0 hard failures.
+    **Evidence-audit follow-up (2026-09-18):** every test cited above
+    (`state.test.ts`, `triggers.test.ts`, `turn.test.ts`) is real, but
+    NONE of them ever call `createEngine` — the "integration" claim above
+    is about `turn.ts`/`state.ts` wiring, not a real cast/combat
+    playthrough. `engine.test.ts` now has a genuine new describe block
+    ("Per-turn ability activation-limit tracking — real FIN card (G'raha
+    Tia...)") that casts the real G'raha Tia `CardDefinition` for real,
+    fires her own real `ActivationLimit: 1` trigger (through the SAME
+    shared `fireTrigger` chokepoint every real auto-fire in this engine
+    uses) off a genuine other-creature death, proves a second same-turn
+    firing draws nothing, then crosses a real Cleanup into the next turn
+    and proves the cap genuinely resets — not a hand-called
+    `resetTriggerActivationsThisTurn()`, an actual `advance()`-driven
+    Cleanup.
 21. **`state.pump()` had no `untilEndOfTurn` expiry — a real, live
     correctness bug, not just a missing feature. CLOSED (2026-09-14).**
     Every `pump`/`pumpAll`/`pumpTarget`/`pumpSelf` call used to be a
@@ -2778,6 +2882,16 @@ so a future pass doesn't mistake them for missing work:
     `scripts/verify-synergy.mjs` full pool — 320 checked, 0 hard failures;
     both cards individually re-verified after their scenario rewrite (same
     pre-existing soft-note baseline, 0 hard failures).
+    **Evidence-audit follow-up (2026-09-18):** `state.test.ts`'s own
+    `GameState.pump` describe block and `turn.test.ts`'s own Cleanup case
+    are real, but neither ever calls `createEngine` — no real cast, no
+    real card. `engine.test.ts` now has a genuine new describe block
+    ("`state.pump()` untilEndOfTurn expiry — real FIN card (Battle
+    Menu...)") that casts the real Battle Menu `CardDefinition`'s own
+    Ability mode ("target creature gets +0/+4 until end of turn") for
+    real, confirms the real pump applies (`effectivePT`), then crosses a
+    real Cleanup via `advance()` and confirms it's genuinely gone — not
+    still sitting in `layers`.
 22. **No attack-triggered-ability auto-dispatch primitive. CLOSED for a
     real, narrow first slice (2026-09-14).** Mirrors the real, already-closed
     `on: 'upkeep'`/`'endStep'` auto-fire (gap #3 above) and the real, already
@@ -2922,6 +3036,23 @@ so a future pass doesn't mistake them for missing work:
     checked, 0 hard failures; Ashe individually re-verified before AND after
     the trace-ordering fix above (confirmed the fix turns a real hard
     failure into 0, not assumed).
+    **Evidence-audit follow-up (2026-09-18):** this closure's own
+    `engine.test.ts` describe block (4 cases) was real, genuine
+    `createEngine`-piloted coverage — but only against a synthetic "Test
+    Attacker" fixture; its OTHER cited test file,
+    `recognizers/attacks-trigger-structural.test.ts`, is a SYNERGY-FACT
+    recognizer test that never touches `GameState`/`createEngine`/the
+    engine runtime at all (it only proves the unrelated Fact-extraction
+    layer recognizes the phrasing — a real domain mismatch as engine-level
+    evidence, even though the recognizer itself is legitimately real
+    coverage for a DIFFERENT layer). `engine.test.ts` now has a genuine
+    sibling case using the real Ashe, Princess of Dalmasca `CardDefinition`
+    directly ("`fireOnAttackTriggers` — real FIN card (Ashe, Princess of
+    Dalmasca...)") — casts her for real, clears summoning sickness over an
+    honest real turn passage (not a granted Haste she doesn't have), then
+    declares her as a real attacker and confirms her own real "look at the
+    top five cards... reveal an artifact" auto-fires and genuinely finds a
+    real artifact card seeded at the top of her controller's library.
 23. **The entire Cycling family (plain Cycling + Islandcycling/Plainscycling/
     Swampcycling/Forestcycling/Mountaincycling) had ZERO engine
     representation — no `CardDefinition` field, no harness lifecycle path,
@@ -3177,6 +3308,17 @@ so a future pass doesn't mistake them for missing work:
     Flan are both `ANNOTATED_CARD_SLUGS` members; their new SINK fact's
     real annotation was authored in `annotations-authoring.json` and baked
     in via `scripts/compute-annotations.mjs`, not left unannotated).
+    **Evidence-audit follow-up (2026-09-18):** `engine.test.ts`'s own
+    `Cycling` describe block (cited above) was real, genuine
+    `createEngine`-piloted coverage, but only ever against a synthetic
+    "Test Cycler" fixture, even though 7 real FIN cards were migrated to
+    this exact mechanism in this very closure. `engine.test.ts` now ALSO
+    has a sibling case using the real `capital-city` `CardDefinition`
+    directly (shared with gap #5's own strengthening above) — activates
+    its own real, plain, no-search Cycling {2} through `canActivateAbility`/
+    `activateAbility`, confirming the real Hand→Graveyard discard-as-cost
+    and the real `drawCard` resolution off the actual migrated card, not a
+    hand-rolled lookalike.
 
 24. **`combinator.ts`'s `SelectUpTo` had no `ctx.declaredTargets`/
     `ctx.preferTarget` consultation at all — CLOSED (2026-09-16).**
@@ -3293,6 +3435,24 @@ so a future pass doesn't mistake them for missing work:
     the parked items above to pay off in provenance terms; this is the main
     reason none of the 3 singleton vocab items above were built speculatively
     this pass despite each being individually buildable.
+
+    **Evidence-audit follow-up (2026-09-18):** this closure's own cited
+    test, `combinator.test.ts`'s "SelectUpTo consults ctx.declaredTargets"
+    describe block, calls `runProgram`/`selectPool` directly against a
+    bare hand-built AST and pool — real, but it never touches
+    `GameState`/`createEngine`/the cast-to-stack-to-resolution pipeline at
+    all, so it never actually proves the CR 601.2c/608.2b fizzle behavior
+    this gap is about happens for a genuinely CAST spell. `engine.test.ts`
+    now has a genuine new describe block ("`combinator.ts` SelectUpTo —
+    ctx.declaredTargets/preferTarget consultation — real FIN card (Slash
+    of Light...)") using the real Slash of Light `CardDefinition` (the same
+    real card whose own `preferTarget` regression this closure's own prose
+    already cites as its second motivating case) — casts it through
+    `castSpell` with a real `declaredTargets` lock, then fizzles it for
+    real when that target is destroyed before resolution (confirming no
+    silent retarget onto a still-legal bystander), plus a legal-baseline
+    sibling case that genuinely exercises the real `AddValue`
+    two-count-sum (creatures you control plus Equipment you control).
 
 25. **No "copy a permanent, with overrides" mechanic — real, OPEN, documented
     (not built), singleton.** `ardyn-the-usurper`'s own beginning-of-combat

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { CardDefinition, EffectContext, Actions } from './card';
-import { GameState, wrapPlayer, wrapCard } from './state';
+import { GameState, wrapPlayer, wrapCard, effectivePT } from './state';
 import type { RealCard, RealPlayer } from './state';
 import {
   createEngine,
@@ -27,6 +27,24 @@ import {
 import { PHASES, currentPhase } from './turn';
 import { loggingActions } from './harness';
 import { checkStateBasedActions } from './sba';
+import { fireTrigger } from './triggers';
+
+// Real FIN `CardDefinition`s used below to STRENGTHEN several
+// ENGINE_GAPS.md `blue`-baseline gaps with a genuine real-card demonstration
+// on top of this file's own pre-existing synthetic fixtures (2026-09-18
+// evidence-audit follow-up — see ENGINE_GAPS.md gaps #4/#5/#8/#9/#10/#19/
+// #20/#21/#22/#23/#24's own updated prose for the full per-gap citation).
+import { fateOfTheSunCryst } from './cards/fate-of-the-sun-cryst/definition';
+import { capitalCity } from './cards/capital-city/definition';
+import { diamondWeapon } from './cards/diamond-weapon/definition';
+import { lightningArmyOfOne } from './cards/lightning-army-of-one/definition';
+import { giottKingOfTheDwarves } from './cards/giott-king-of-the-dwarves/definition';
+import { jillShivasDominant } from './cards/jill-shiva-s-dominant-shiva-warden-of-ice/definition';
+import { theWaterCrystal } from './cards/the-water-crystal/definition';
+import { gRahaTia } from './cards/g-raha-tia/definition';
+import { battleMenu } from './cards/battle-menu/definition';
+import { ashePrincessOfDalmasca } from './cards/ashe-princess-of-dalmasca/definition';
+import { slashOfLight } from './cards/slash-of-light/definition';
 
 // Same `{} as Actions` stub stack.test.ts/priority.test.ts already use —
 // none of this file's test cards declare real `effects`, so `resolveCard`
@@ -597,6 +615,70 @@ describe('fireOnAttackTriggers — real "whenever ~ attacks" auto-fire (ENGINE_G
   });
 });
 
+describe('fireOnAttackTriggers — real FIN card (Ashe, Princess of Dalmasca, ENGINE_GAPS.md — attack-triggered-ability auto-dispatch) — strengthens the synthetic-fixture describe block above with the actual card', () => {
+  it("casts the real Ashe, Princess of Dalmasca, clears summoning sickness over a real turn, then genuinely auto-fires her own printed onAttack trigger (dig 5, take 1 artifact) off a real declareAttackers call — no manual pilotFireTrigger anywhere", () => {
+    // A bespoke small board/library (not setupGame()'s own 20-filler
+    // library) so the real artifact card seeded below lands within the
+    // top 5 `state.dig` actually looks at — `state.addCard(..., 'Library',
+    // ...)` pushes onto the END of the array and `dig`/`splice(0, qty)`
+    // reads from the FRONT, so this card must be the FIRST one added.
+    const state = new GameState();
+    const you = state.addPlayer('you');
+    const opp = state.addPlayer('opp');
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    // One filler card FIRST (the real turn-passage below draws exactly one
+    // card for "you" — turn 3's own genuine automatic Draw step — so this
+    // is the one that gets consumed by it), THEN the real artifact card
+    // (still well within the real top-5 window `state.dig` actually looks
+    // at once combat is reached), THEN more filler.
+    state.addCard(you, 'Library', { name: 'you-filler-pre', types: [] });
+    state.addCard(you, 'Library', { name: 'Test Materia', types: ['Artifact'] });
+    for (let i = 0; i < 10; i++) state.addCard(you, 'Library', { name: `you-filler-${i}`, types: [] });
+    for (let i = 0; i < 10; i++) state.addCard(opp, 'Library', { name: `opp-filler-${i}`, types: [] });
+    const engine = createEngine(state, [you, opp]);
+    advance(engine); // Untap -> Upkeep
+    advance(engine); // Upkeep -> Draw
+    advance(engine); // Draw -> Main1
+    const youPlayer = wrapPlayer(state, you);
+    const oppPlayer = wrapPlayer(state, opp);
+
+    const real = state.addCard(you, 'Hand', { name: ashePrincessOfDalmasca.name, types: ['Creature'], subtypes: ['Human', 'Rebel', 'Noble'], basePower: 3, baseToughness: 2 });
+    const self = wrapCard(state, real);
+    // A real `Actions` impl (not `noopActions`) — her real onAttack trigger
+    // genuinely calls `actions.dig`, and the SAME `actions` object cast with
+    // is the one `resolveTop` registers onto `engine.resolvedPermanents`,
+    // later reused verbatim by `fireOnAttackTriggers`'s own real auto-fire.
+    const cast = castSpell(engine, you, real, ashePrincessOfDalmasca, ctxFor(state, self, youPlayer, [oppPlayer]), loggingActions(state, [], real.id));
+    expect(cast.ok).toBe(true);
+    resolveTop(engine);
+    expect(real.zone).toBe('Battlefield');
+
+    // Real turn passage (302.6) — Ashe was cast THIS turn, so a same-turn
+    // attack would be correctly rejected by `declareAttackers` before ever
+    // reaching `fireOnAttackTriggers` at all; this test is specifically
+    // about the real auto-fire, so it clears sickness the honest way
+    // instead of granting her Haste she doesn't actually have.
+    const startTurn = engine.turn.turnNumber;
+    do {
+      advance(engine);
+    } while (!(PHASES[engine.turn.phaseIndex] === 'Main1' && engine.turn.turnNumber !== startTurn && engine.turn.activePlayerIndex === 0));
+
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatDeclareAttackers') advance(engine);
+    const handBefore = you.hand.length;
+    const declared = declareAttackers(engine, [real]);
+    expect(declared.ok).toBe(true);
+    // Her real printed "look at the top five cards of your library. You may
+    // reveal an artifact card from among them and put it into your hand" —
+    // fired automatically the moment she was legally declared as an
+    // attacker, genuinely finding the real artifact seeded at the top.
+    expect(you.hand.length).toBe(handBefore + 1);
+    expect(you.hand.some((c) => c.name === 'Test Materia')).toBe(true);
+    expect(you.library.some((c) => c.name === 'Test Materia')).toBe(false);
+  });
+});
+
 describe('canBlock / declareBlockers (509)', () => {
   function toDeclareAttackers(engine: ReturnType<typeof setupGame>['engine']) {
     while (PHASES[engine.turn.phaseIndex] !== 'CombatDeclareAttackers') advance(engine);
@@ -873,6 +955,102 @@ describe('resolveCombatDamage (510)', () => {
     expect(attackerEntry).toBeUndefined(); // the blocker died before ever swinging back
     const blockerEntry = result.entries.find((e) => e.card === blocker)!;
     expect(blockerEntry).toEqual({ card: blocker, damage: 3, lethal: true });
+  });
+});
+
+describe('First/Double Strike combat sub-step — real FIN cards (Lightning, Army of One / Giott, King of the Dwarves, ENGINE_GAPS.md gap #9) — strengthens the synthetic-fixture describe block above with the actual cards', () => {
+  function toDeclareAttackers(engine: ReturnType<typeof setupGame>['engine']) {
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatDeclareAttackers') advance(engine);
+  }
+
+  it("Lightning, Army of One's own real printed First Strike genuinely stops the engine at CombatFirstStrikeDamage and kills a blocker before it ever swings back (real name/pt/keywords, seeded directly onto the battlefield — the same technique this file's other combat tests already use for an attacker/blocker)", () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', {
+      name: lightningArmyOfOne.name,
+      types: ['Creature'],
+      subtypes: ['Human', 'Soldier'],
+      basePower: lightningArmyOfOne.pt![0],
+      baseToughness: lightningArmyOfOne.pt![1],
+      keywords: lightningArmyOfOne.keywords,
+    });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Slow Blocker', types: ['Creature'], basePower: 3, baseToughness: 2 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    advance(engine); // CombatDeclareBlockers -> CombatFirstStrikeDamage (real: FirstStrike)
+    expect(currentPhase(engine.turn)).toBe('CombatFirstStrikeDamage');
+    const before = you.life; // Lightning's own real, printed Lifelink — gains ITS OWN controller life off the damage it deals, not the defending player's
+    resolveFirstStrikeCombatDamage(engine);
+    expect(you.life).toBe(before + 3);
+    checkStateBasedActions(state, engine.players);
+    expect(blocker.zone).toBe('Graveyard'); // 3 damage to a 2-toughness blocker
+    advance(engine);
+    expect(currentPhase(engine.turn)).toBe('CombatDamage');
+    const result = resolveCombatDamage(engine);
+    expect(result.entries.find((e) => e.card === attacker)).toBeUndefined(); // took no damage at all — the blocker never got to swing
+  });
+
+  it("Giott, King of the Dwarves' own real printed Double Strike genuinely deals damage in BOTH real combat steps (real name/pt/keywords)", () => {
+    const { state, you, opp, engine } = setupGame();
+    const attacker = state.addCard(you, 'Battlefield', {
+      name: giottKingOfTheDwarves.name,
+      types: ['Creature'],
+      subtypes: ['Dwarf', 'Noble'],
+      basePower: giottKingOfTheDwarves.pt![0],
+      baseToughness: giottKingOfTheDwarves.pt![1],
+      keywords: giottKingOfTheDwarves.keywords,
+    });
+    const blocker = state.addCard(opp, 'Battlefield', { name: 'Tough Blocker', types: ['Creature'], basePower: 1, baseToughness: 3 });
+    toDeclareAttackers(engine);
+    declareAttackers(engine, [attacker]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker, attacker }]);
+    advance(engine);
+    expect(currentPhase(engine.turn)).toBe('CombatFirstStrikeDamage');
+    resolveFirstStrikeCombatDamage(engine);
+    expect(blocker.damageMarked).toBe(1); // real 1 power, first hit only so far
+    checkStateBasedActions(state, engine.players);
+    expect(blocker.zone).toBe('Battlefield'); // 1 damage on a 3-toughness blocker, not yet lethal
+    advance(engine);
+    expect(currentPhase(engine.turn)).toBe('CombatDamage');
+    const result = resolveCombatDamage(engine);
+    const blockerEntry = result.entries.find((e) => e.card === blocker)!;
+    expect(blockerEntry).toEqual({ card: blocker, damage: 2, lethal: false }); // 1 (first strike) + 1 (regular) = 2, short of 3 toughness
+  });
+});
+
+describe('Damage-prevention shields — real FIN card (Diamond Weapon, ENGINE_GAPS.md gap #8) — strengthens state.test.ts\'s own unit-level coverage with a genuine engine-piloted combat', () => {
+  it("Diamond Weapon's own real printed CombatDamagePrevention keyword genuinely prevents the real combat damage a blocking Hill Gigas deals to it, while Diamond Weapon's own 8 damage back is unshielded and lethal (real name/pt/keywords for both cards, seeded directly onto the battlefield — casting Diamond Weapon's real {7}{G}{G} cost is out of scope for what this gap is actually about)", () => {
+    const { state, you, opp, engine } = setupGame();
+    const diamondWeaponReal = state.addCard(you, 'Battlefield', {
+      name: diamondWeapon.name,
+      types: ['Artifact', 'Creature'],
+      subtypes: ['Elemental'],
+      basePower: diamondWeapon.pt![0],
+      baseToughness: diamondWeapon.pt![1],
+      keywords: diamondWeapon.keywords,
+    });
+    // Real fin {4}{G} 5/4 (`res/cardsfolder`'s own Hill Gigas) — the exact
+    // real attacker `cards/diamond-weapon/scenarios.ts`'s own engine-piloted
+    // trace already uses for this identical matchup.
+    const hillGigas = state.addCard(opp, 'Battlefield', { name: 'Hill Gigas', types: ['Creature'], subtypes: ['Giant'], basePower: 5, baseToughness: 4 });
+    while (PHASES[engine.turn.phaseIndex] !== 'CombatDeclareAttackers') advance(engine);
+    // Diamond Weapon is the DEFENDING player's blocker this combat — Hill
+    // Gigas attacks, Diamond Weapon blocks (same roles the real scenario
+    // uses; `engine.ts`'s own turn/priority structure has no player-turn
+    // asymmetry that matters for this specific check).
+    declareAttackers(engine, [hillGigas]);
+    advance(engine);
+    declareBlockers(engine, [{ blocker: diamondWeaponReal, attacker: hillGigas }]);
+    const result = resolveCombatDamage(engine);
+    expect(result.prevented).toContain(diamondWeaponReal); // real CombatDamagePrevention, checked at state.dealDamage's own one real chokepoint
+    expect(diamondWeaponReal.damageMarked ?? 0).toBe(0); // genuinely marks NO damage, not just "would be destroyed but isn't"
+    const hillGigasEntry = result.entries.find((e) => e.card === hillGigas)!;
+    expect(hillGigasEntry).toEqual({ card: hillGigas, damage: 8, lethal: true }); // Diamond Weapon's own 8 power is unshielded — the asymmetry is real and mechanically enforced, not just documented
+    checkStateBasedActions(state, engine.players);
+    expect(hillGigas.zone).toBe('Graveyard');
+    expect(diamondWeaponReal.zone).toBe('Battlefield'); // fully unscathed
   });
 });
 
@@ -1366,6 +1544,57 @@ describe('Non-basic mana sources (mana.ts\'s narrow gap #5 slice) — real manaA
     // dual rock — no real black source anywhere.
     const blackSpell: CardDefinition = { name: 'Test Black Spell', manaCost: '{B}', typeLine: 'Sorcery', effects: [] };
     expect(canCastSpell(engine, you, blackSpell)).toEqual({ ok: false, reason: expect.stringMatching(/cannot afford/) });
+  });
+});
+
+describe('Non-basic mana sources — real FIN card (Capital City, ENGINE_GAPS.md gap #5) — strengthens the synthetic-fixture describe block above with the actual card, via a real playLand (not castSpell — Capital City is a Land)', () => {
+  it("Capital City's own real printed {T}: Add {C}. is a genuinely payable mana source once played for real, off the actual card's own structured manaAbilities field (not a freeform staticAbilities regex)", () => {
+    const { state, you, engine, youPlayer, oppPlayer } = setupGame();
+    const real = state.addCard(you, 'Hand', { name: capitalCity.name, types: ['Land'], subtypes: ['Town'] });
+    const self = wrapCard(state, real);
+    expect(canPlayLand(engine, you, capitalCity).ok).toBe(true);
+    const played = playLand(engine, you, real, capitalCity, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    expect(played.ok).toBe(true);
+    expect(real.zone).toBe('Battlefield');
+    // Real Forge citation: Capital City has NO `R:Event$ Moved ... ReplaceWith$
+    // ETBTapped` line (unlike every other Town in this batch) — it enters
+    // untapped, so it's usable THIS turn.
+    expect(real.tapped).toBe(false);
+    expect(real.manaAbilities).toEqual(capitalCity.manaAbilities);
+
+    const genericSpell: CardDefinition = { name: 'Test Generic Spell', manaCost: '{1}', typeLine: 'Instant', effects: [] };
+    // setupGame()'s own board (2 Forest + 1 Mountain) already affords a bare
+    // {1} on its own — tap those 3 basics first (via 3 decoy Instants, so
+    // the stack's own sorcery-speed-timing check never gets in the way) to
+    // prove Capital City's own ability is the source actually consumed for
+    // the real spell under test.
+    const decoySpell: CardDefinition = { name: 'Test Decoy 1', manaCost: '{1}', typeLine: 'Instant', effects: [] };
+    const decoySpell2: CardDefinition = { name: 'Test Decoy 2', manaCost: '{1}', typeLine: 'Instant', effects: [] };
+    const decoySpell3: CardDefinition = { name: 'Test Decoy 3', manaCost: '{1}', typeLine: 'Instant', effects: [] };
+    for (const decoy of [decoySpell, decoySpell2, decoySpell3]) {
+      const decoyReal = state.addCard(you, 'Hand', { name: decoy.name });
+      castSpell(engine, you, decoyReal, decoy, ctxFor(state, wrapCard(state, decoyReal), wrapPlayer(state, you), []), noopActions);
+    }
+    expect(you.battlefield.filter((c) => c.name !== 'Capital City').every((c) => c.tapped)).toBe(true); // the 3 basics are now all tapped
+    expect(real.tapped).toBe(false); // Capital City itself untouched so far
+
+    const spellReal = state.addCard(you, 'Hand', { name: genericSpell.name });
+    const cast = castSpell(engine, you, spellReal, genericSpell, ctxFor(state, wrapCard(state, spellReal), wrapPlayer(state, you), []), noopActions);
+    expect(cast.ok).toBe(true);
+    expect(real.tapped).toBe(true); // Capital City's own real {T}: Add {C}. is what genuinely paid this
+  });
+
+  it("Capital City's own real printed Cycling {2} is a genuine 602.1 activation FROM HAND, driven through the same real chokepoint the synthetic Cycling describe block above already exercises", () => {
+    const { state, you, engine, youPlayer } = setupGame();
+    const real = state.addCard(you, 'Hand', { name: capitalCity.name, types: ['Land'], subtypes: ['Town'] });
+    expect(canActivateAbility(engine, you, real, capitalCity, 'cycling').ok).toBe(true);
+    const libraryBefore = you.library.length;
+    const self = wrapCard(state, real);
+    const result = activateAbility(engine, you, real, capitalCity, { self, you: youPlayer, opponents: [], castFrom: 'hand' }, noopActions, 'cycling');
+    expect(result.ok).toBe(true);
+    expect(real.zone).toBe('Graveyard'); // discarded for real, as part of paying the cost
+    resolveTop(engine);
+    expect(you.library.length).toBe(libraryBefore - 1); // the real drawCard effect genuinely ran
   });
 });
 
@@ -1957,5 +2186,237 @@ describe('Target-legality re-validation at resolution (CR 601.2c cast-time locki
     castSpell(engine, you, real, DESTROY_TARGET, ctxFor(state, self, youPlayer, [oppPlayer]), actions); // no declaredTarget
     resolveTop(engine);
     expect(state.cards.get(target.id)?.zone).toBe('Graveyard'); // still destroyed via the old lazy chooseTarget(pool) default
+  });
+});
+
+describe('Target-legality re-validation — real FIN card (Fate of the Sun-Cryst, ENGINE_GAPS.md gap #4) — strengthens the synthetic-fixture describe block above with the actual card, including its own real cost-reduction interplay', () => {
+  it("casts the real Fate of the Sun-Cryst targeting a tapped opponent creature (its own real {2} cost discount fires off the SAME declared target — this card's own real shape), then fizzles for real (608.2b) when that target is destroyed by something else before resolution", () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    const target = state.addCard(opp, 'Battlefield', { name: 'Test Blocker', types: ['Creature'] });
+    target.tapped = true;
+    const bystander = state.addCard(opp, 'Battlefield', { name: 'Test Bystander', types: ['Creature'] });
+    const real = state.addCard(you, 'Hand', { name: fateOfTheSunCryst.name, types: [] });
+    const self = wrapCard(state, real);
+    expect(canCastSpell(engine, you, fateOfTheSunCryst, undefined, target).ok).toBe(true);
+    const cast = castSpell(engine, you, real, fateOfTheSunCryst, ctxFor(state, self, youPlayer, [oppPlayer]), loggingActions(state, [], real.id), undefined, undefined, target);
+    expect(cast.ok).toBe(true);
+    expect(cast.tappedForMana).toHaveLength(3); // real {2} discount off the printed {4}{W} — {2}{W}, since the declared target really is tapped
+    state.move(target, 'Graveyard'); // destroyed by something else in response, same real 608.2b shape the synthetic describe block above already covers
+    const resolved = resolveTop(engine);
+    expect(resolved).toBeDefined(); // still genuinely resolves (a no-op resolution, not countered)
+    expect(state.cards.get(bystander.id)?.zone).toBe('Battlefield'); // never silently retargeted onto a still-legal bystander
+    expect(state.cards.get(real.id)?.zone).toBe('Graveyard');
+  });
+
+  it('baseline: the same real card, same real discount, stays legal all the way through and genuinely destroys its target', () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    const target = state.addCard(opp, 'Battlefield', { name: 'Test Blocker', types: ['Creature'] });
+    target.tapped = true;
+    const real = state.addCard(you, 'Hand', { name: fateOfTheSunCryst.name, types: [] });
+    const self = wrapCard(state, real);
+    const cast = castSpell(engine, you, real, fateOfTheSunCryst, ctxFor(state, self, youPlayer, [oppPlayer]), loggingActions(state, [], real.id), undefined, undefined, target);
+    expect(cast.ok).toBe(true);
+    resolveTop(engine);
+    expect(state.cards.get(target.id)?.zone).toBe('Graveyard');
+  });
+});
+
+describe('Legend rule (704.5j) — real FIN card (Jill, Shiva\'s Dominant, ENGINE_GAPS.md gap #10) — strengthens sba.test.ts\'s own bare-addCard-fixture coverage with two genuine engine-piloted casts', () => {
+  it("casting the real Jill, Shiva's Dominant TWICE for real (through castSpell/resolveTop, across two real turns) leaves only ONE on the battlefield once checkStateBasedActions runs — in the SAME sweep as an unrelated lethally-damaged creature (704.3's own loop-until-stable behavior)", () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    state.addCard(you, 'Battlefield', { name: 'Island', types: ['Land'], subtypes: ['Island'] });
+
+    const first = state.addCard(you, 'Hand', { name: jillShivasDominant.name, types: ['Creature'], subtypes: ['Legendary', 'Human', 'Noble', 'Warrior'] });
+    const firstSelf = wrapCard(state, first);
+    const castFirst = castSpell(engine, you, first, jillShivasDominant, ctxFor(state, firstSelf, youPlayer, [oppPlayer]), loggingActions(state, [], first.id));
+    expect(castFirst.ok).toBe(true);
+    resolveTop(engine);
+    expect(first.zone).toBe('Battlefield');
+
+    // A real turn passage (302.6-adjacent 500.1 untap) — untaps every land
+    // for the second real cast, same turn-passage technique this file's
+    // other multi-cast tests already use.
+    const startTurn = engine.turn.turnNumber;
+    do {
+      advance(engine);
+    } while (!(PHASES[engine.turn.phaseIndex] === 'Main1' && engine.turn.turnNumber !== startTurn && engine.turn.activePlayerIndex === 0));
+
+    // A decoy nonland permanent — the FIRST Jill is otherwise the only
+    // other legal target for the SECOND Jill's own real ETB ("exile up to
+    // one target OTHER nonland permanent... return it to hand"; `optional`
+    // is documentary-only in this model, see `card.ts`'s own doc comment —
+    // a legal target still gets returned), which would bounce the first
+    // Jill back to hand and defeat this test's own real legend-rule setup.
+    // `preferTarget` steers the SAME real chooseTarget pick onto the decoy
+    // instead, same real mechanism any other targeted effect uses.
+    const decoy = state.addCard(you, 'Battlefield', { name: 'Test Decoy Permanent', types: ['Artifact'] });
+    const second = state.addCard(you, 'Hand', { name: jillShivasDominant.name, types: ['Creature'], subtypes: ['Legendary', 'Human', 'Noble', 'Warrior'] });
+    const secondSelf = wrapCard(state, second);
+    const secondCtx: EffectContext = { ...ctxFor(state, secondSelf, youPlayer, [oppPlayer]), preferTarget: (c) => c.getName() === decoy.name };
+    const castSecond = castSpell(engine, you, second, jillShivasDominant, secondCtx, loggingActions(state, [], second.id));
+    expect(castSecond.ok).toBe(true);
+    resolveTop(engine);
+    expect(second.zone).toBe('Battlefield');
+    expect(you.battlefield.filter((c) => c.name === jillShivasDominant.name)).toHaveLength(2); // both genuinely resolved — real, live duplicate Legendary permanents, not a scripted fixture
+
+    // An unrelated lethally-damaged creature, checked in the SAME sweep.
+    const doomed = state.addCard(opp, 'Battlefield', { name: 'Test Doomed', types: ['Creature'], basePower: 2, baseToughness: 2 });
+    state.dealDamage(doomed, 2);
+
+    const result = checkStateBasedActions(state, engine.players);
+    expect(result.legendRuleRemoved).toHaveLength(1);
+    expect(result.destroyed).toEqual([doomed]);
+    expect(you.battlefield.filter((c) => c.name === jillShivasDominant.name)).toHaveLength(1); // real 704.5j, genuinely enforced off two real casts, not two bare addCard fixtures
+  });
+});
+
+describe('Mill mechanism — real FIN card (The Water Crystal, ENGINE_GAPS.md gap #19) — strengthens state.test.ts\'s own GameState.mill unit coverage with a genuine engine-piloted cast + activation', () => {
+  it("casts the real Water Crystal for real, then activates its own real mill ability — the real millModifierGrants +4 replacement genuinely bumps the milled amount, mechanically computed off the caster's own live hand size, not a scripted number", () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    state.addCard(you, 'Battlefield', { name: 'Island', types: ['Land'], subtypes: ['Island'] });
+    state.addCard(you, 'Battlefield', { name: 'Island', types: ['Land'], subtypes: ['Island'] });
+    state.addCard(you, 'Battlefield', { name: 'Island', types: ['Land'], subtypes: ['Island'] });
+    const real = state.addCard(you, 'Hand', { name: theWaterCrystal.name, types: ['Artifact'] });
+    const self = wrapCard(state, real);
+    const cast = castSpell(engine, you, real, theWaterCrystal, ctxFor(state, self, youPlayer, [oppPlayer]), noopActions);
+    expect(cast.ok).toBe(true);
+    resolveTop(engine);
+    expect(real.zone).toBe('Battlefield');
+    expect(real.millModifierGrants).toEqual(theWaterCrystal.millModifierGrants); // real, copied-once-at-resolve-time field
+
+    // A real turn passage — untaps every land for the {4}{U}{U} activation below.
+    const startTurn = engine.turn.turnNumber;
+    do {
+      advance(engine);
+    } while (!(PHASES[engine.turn.phaseIndex] === 'Main1' && engine.turn.turnNumber !== startTurn && engine.turn.activePlayerIndex === 0));
+
+    // 3 more real cards in the CASTER's own hand — this permanent's own
+    // real ability reads its controller's LIVE hand size at resolution, not
+    // a fixed number (the real turn passage above already drew one for
+    // "you" too, via the engine's own genuine automatic Draw step — that
+    // real card counts toward the live hand size exactly as honestly as
+    // these do, which is why `handSize` below is read live rather than
+    // hardcoded).
+    state.addCard(you, 'Hand', { name: 'Filler A' });
+    state.addCard(you, 'Hand', { name: 'Filler B' });
+    state.addCard(you, 'Hand', { name: 'Filler C' });
+    const handSize = you.hand.length;
+
+    const libraryBefore = opp.library.length;
+    expect(canActivateAbility(engine, you, real, theWaterCrystal).ok).toBe(true);
+    const abilityCtx: EffectContext = { self, you: youPlayer, opponents: [oppPlayer], castFrom: 'hand' };
+    const actions = loggingActions(state, [], real.id);
+    const activated = activateAbility(engine, you, real, theWaterCrystal, abilityCtx, actions);
+    expect(activated.ok).toBe(true);
+    resolveTop(engine);
+    expect(opp.library.length).toBe(libraryBefore - (handSize + 4)); // real live hand size + the real +4 replacement, mechanically computed
+    expect(opp.graveyard.length).toBe(handSize + 4);
+  });
+});
+
+describe("Per-turn ability activation-limit tracking — real FIN card (G'raha Tia, ENGINE_GAPS.md gap #20) — strengthens the pure-logic triggers.test.ts/state.test.ts coverage with a genuine engine-piloted cast + real Cleanup crossing", () => {
+  it("casts the real G'raha Tia for real, fires her own real ActivationLimit-1 trigger off a genuine other-creature death, caps a second same-turn firing at zero extra draws, then genuinely resets once the engine crosses a real Cleanup into the next turn", () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    const real = state.addCard(you, 'Hand', { name: gRahaTia.name, types: ['Creature'], subtypes: ['Cat', 'Archer'], keywords: gRahaTia.keywords, basePower: 3, baseToughness: 3 });
+    const self = wrapCard(state, real);
+    const ctx = ctxFor(state, self, youPlayer, [oppPlayer]);
+    const cast = castSpell(engine, you, real, gRahaTia, ctx, noopActions);
+    expect(cast.ok).toBe(true);
+    resolveTop(engine);
+    expect(real.zone).toBe('Battlefield');
+
+    const libraryBefore1 = you.library.length;
+    const otherCreature = state.addCard(you, 'Battlefield', { name: 'Town Greeter', types: ['Creature'], subtypes: ['Human', 'Citizen'], basePower: 1, baseToughness: 1 });
+    state.destroy(otherCreature);
+    expect(otherCreature.zone).toBe('Graveyard');
+    // G'raha's own real trigger — fired manually once the real death has
+    // already happened (no `onDies`-class trigger auto-fires anywhere in
+    // this engine, same real, documented limitation her own scenarios.ts
+    // already establishes) — but through the SAME shared `fireTrigger`
+    // chokepoint (triggers.ts) `engine.ts`'s every real auto-fire uses.
+    const doubled1 = fireTrigger(state, gRahaTia, ctx, noopActions, 'onOtherPermanentsDie');
+    expect(doubled1).toBe(false);
+    expect(you.library.length).toBe(libraryBefore1 - 1); // the real draw genuinely happened
+
+    // A SECOND other creature dies THE SAME TURN — the real cap means this
+    // second firing draws nothing.
+    const libraryBefore2 = you.library.length;
+    const secondCreature = state.addCard(you, 'Battlefield', { name: 'Dwarven Castle Guard', types: ['Creature'], subtypes: ['Dwarf', 'Soldier'], basePower: 2, baseToughness: 1 });
+    state.destroy(secondCreature);
+    fireTrigger(state, gRahaTia, ctx, noopActions, 'onOtherPermanentsDie');
+    expect(you.library.length).toBe(libraryBefore2); // no second draw — the real ActivationLimit 1, enforced at the real fireTrigger chokepoint
+
+    // A real Cleanup crossing into the next turn resets the cap
+    // (`resetTriggerActivationsThisTurn`, wired into turn.ts's own real
+    // Cleanup entry action).
+    const startTurn = engine.turn.turnNumber;
+    do {
+      advance(engine);
+    } while (!(PHASES[engine.turn.phaseIndex] === 'Main1' && engine.turn.turnNumber !== startTurn && engine.turn.activePlayerIndex === 0));
+    const libraryBefore3 = you.library.length;
+    const thirdCreature = state.addCard(you, 'Battlefield', { name: 'Town Greeter', types: ['Creature'], subtypes: ['Human', 'Citizen'], basePower: 1, baseToughness: 1 });
+    state.destroy(thirdCreature);
+    fireTrigger(state, gRahaTia, ctx, noopActions, 'onOtherPermanentsDie');
+    expect(you.library.length).toBe(libraryBefore3 - 1); // fires again "next turn" — real, genuine reset via an actual Cleanup crossing, not a hand-called reset function
+  });
+});
+
+describe("state.pump() untilEndOfTurn expiry — real FIN card (Battle Menu, ENGINE_GAPS.md gap #21) — strengthens the pure-logic state.test.ts/turn.test.ts coverage with a genuine engine-piloted cast + real Cleanup crossing", () => {
+  it("casts the real Battle Menu's own Ability mode (\"target creature gets +0/+4 until end of turn\") for real, then genuinely loses the pump at the next real Cleanup — not a permanent layers.add entry", () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    const targetCreature = state.addCard(you, 'Battlefield', { name: 'Test Creature', types: ['Creature'], basePower: 1, baseToughness: 1 });
+    expect(effectivePT(state, targetCreature)).toEqual([1, 1]);
+    const real = state.addCard(you, 'Hand', { name: battleMenu.name, types: [] });
+    const self = wrapCard(state, real);
+    const ctx: EffectContext = { ...ctxFor(state, self, youPlayer, [oppPlayer]), mode: 1 }; // real mode index 1 — the Ability mode
+    const actions = loggingActions(state, [], real.id);
+    const cast = castSpell(engine, you, real, battleMenu, ctx, actions);
+    expect(cast.ok).toBe(true);
+    resolveTop(engine);
+    expect(effectivePT(state, targetCreature)).toEqual([1, 5]); // +0/+4, genuinely pumped by the real card
+
+    while (PHASES[engine.turn.phaseIndex] !== 'Cleanup') advance(engine);
+    expect(effectivePT(state, targetCreature)).toEqual([1, 1]); // real 514.2 expiry, genuinely removed at Cleanup — not still applied
+  });
+});
+
+describe('combinator.ts SelectUpTo — ctx.declaredTargets/preferTarget consultation — real FIN card (Slash of Light, ENGINE_GAPS.md gap #24) — strengthens combinator.test.ts\'s own unit coverage with a genuine engine-piloted cast/fizzle', () => {
+  it('casts the real Slash of Light targeting a real opponent creature (declaredTargets locks it at cast time), then fizzles for real (608.2b) when that creature is destroyed before resolution — no silent retarget onto a still-legal bystander', () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    const target = state.addCard(opp, 'Battlefield', { name: 'Test Target', types: ['Creature'], basePower: 1, baseToughness: 1 });
+    const bystander = state.addCard(opp, 'Battlefield', { name: 'Test Bystander', types: ['Creature'], basePower: 1, baseToughness: 1 });
+    state.addCard(you, 'Battlefield', { name: 'Test Creature', types: ['Creature'] });
+    const real = state.addCard(you, 'Hand', { name: slashOfLight.name, types: [] });
+    const self = wrapCard(state, real);
+    const actions = loggingActions(state, [], real.id);
+    const cast = castSpell(engine, you, real, slashOfLight, ctxFor(state, self, youPlayer, [oppPlayer]), actions, undefined, undefined, undefined, undefined, [target]);
+    expect(cast.ok).toBe(true);
+    state.move(target, 'Graveyard'); // destroyed by something else before this resolves
+    resolveTop(engine);
+    expect(bystander.damageMarked ?? 0).toBe(0); // never silently retargeted onto the still-legal bystander
+    expect(state.cards.get(real.id)?.zone).toBe('Graveyard'); // still genuinely resolves — fizzle, not counter
+  });
+
+  it("baseline: the same real card stays legal all the way through and genuinely deals damage equal to the number of creatures you control plus the number of Equipment you control (a real two-count sum, AddValue combinator node)", () => {
+    const { state, you, opp, engine, youPlayer, oppPlayer } = setupGame();
+    state.addCard(you, 'Battlefield', { name: 'Plains', types: ['Land'], subtypes: ['Plains'] });
+    const target = state.addCard(opp, 'Battlefield', { name: 'Test Target', types: ['Creature'], basePower: 1, baseToughness: 5 });
+    state.addCard(you, 'Battlefield', { name: 'Test Creature A', types: ['Creature'] });
+    state.addCard(you, 'Battlefield', { name: 'Test Creature B', types: ['Creature'] });
+    state.addCard(you, 'Battlefield', { name: 'Test Equipment', types: ['Artifact'], subtypes: ['Equipment'] });
+    const real = state.addCard(you, 'Hand', { name: slashOfLight.name, types: [] });
+    const self = wrapCard(state, real);
+    const actions = loggingActions(state, [], real.id);
+    const cast = castSpell(engine, you, real, slashOfLight, ctxFor(state, self, youPlayer, [oppPlayer]), actions, undefined, undefined, undefined, undefined, [target]);
+    expect(cast.ok).toBe(true);
+    resolveTop(engine);
+    expect(target.damageMarked).toBe(3); // 2 creatures + 1 Equipment you control
+    expect(target.zone).toBe('Battlefield'); // 3 damage on a 5-toughness creature — not lethal, no SBA involved
   });
 });
