@@ -159,7 +159,23 @@ async function submitReject() {
         :total-count="items.length"
         @update:search-query="(v: string) => (list.searchQuery.value = v)"
         @toggle="list.toggleFilter"
-      />
+      >
+        <template #help>
+          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS">
+            <p>
+              Computed baseline (automatic, off what's on disk): <b class="text-text">No predicate yet</b> →
+              <b class="text-text">Unverified</b> once a predicate module is written, but there's no scenario-corpus
+              manifest yet (or the manifest doesn't yet show every scenario passing) → <b class="text-text">Verified</b>
+              once the manifest shows every corpus scenario agreeing with real trace evidence.
+            </p>
+            <p>
+              <b class="text-text">Rejected</b>/<b class="text-text">Confirmed</b> are a separate human-review layer on
+              top of whichever of those three is current — a reviewer can confirm (green) or reject with a required note
+              (yellow) at any point, independent of the underlying computed color.
+            </p>
+          </EngineConsoleStatusHelp>
+        </template>
+      </EngineConsoleStatusFilterControls>
 
       <EngineConsoleEntryListPanel
         :entries="list.visible.value"

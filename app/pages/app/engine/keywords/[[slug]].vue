@@ -117,7 +117,22 @@ function handleReviewed(status: ReviewStatus) {
         :total-count="items.length"
         @update:search-query="(v: string) => (list.searchQuery.value = v)"
         @toggle="list.toggleFilter"
-      />
+      >
+        <template #help>
+          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS">
+            <p>
+              Binary, not a multi-stage progression: a keyword/mechanic starts <b class="text-text">Gap</b> until a real,
+              engine-piloted playthrough exists proving the engine actually enforces that rule — at that point it becomes
+              <b class="text-text">Covered</b>, permanently (nothing here moves back to Gap).
+            </p>
+            <p>
+              <b class="text-text">Covered</b> itself has one more layer not shown as its own status color here: a covered
+              entry starts AI-reviewed, and a human can additionally confirm it (a review-status override) — that upgrade
+              doesn't change which of these two filter buckets it falls into.
+            </p>
+          </EngineConsoleStatusHelp>
+        </template>
+      </EngineConsoleStatusFilterControls>
 
       <div v-if="evergreen.length" class="mb-3">
         <div class="mb-1 px-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Evergreen keywords</div>

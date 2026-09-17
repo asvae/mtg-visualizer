@@ -285,7 +285,26 @@ watch(
         :total-count="rawCards.length"
         @update:search-query="(v: string) => (list.searchQuery.value = v)"
         @toggle="list.toggleFilter"
-      />
+      >
+        <template #help>
+          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS">
+            <p>
+              Priority-ordered, first match wins: <b class="text-text">Untouched</b> (no real facts yet) →
+              <b class="text-text">Needs provenance</b> once it has any hand/agent-authored (non-recognizer) fact →
+              once every fact is recognizer-derived, <b class="text-text">Coverage gaps</b> (a real span of oracle text
+              still uncovered) or <b class="text-text">Fully covered</b> (nothing left uncovered).
+            </p>
+            <p>
+              <b class="text-text">Verified</b>, <b class="text-text">Uncertain</b>, and <b class="text-text">Re-review</b>
+              are all narrowings of <b class="text-text">Fully covered</b> only, driven by human review:
+              <b class="text-text">Verified</b> once a human confirms the card's facts; <b class="text-text">Uncertain</b>
+              when a human instead flags one specific, still-unmodelable conceptual gap (a caveat); and
+              <b class="text-text">Re-review</b> when a card was previously human-confirmed but its content has since
+              drifted from that confirmed snapshot, making the old confirmation stale.
+            </p>
+          </EngineConsoleStatusHelp>
+        </template>
+      </EngineConsoleStatusFilterControls>
 
       <EngineConsoleEntryListPanel
         :entries="list.visible.value"

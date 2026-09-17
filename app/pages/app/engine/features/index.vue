@@ -132,7 +132,23 @@ async function submitReject() {
         :total-count="items.length"
         @update:search-query="(v: string) => (list.searchQuery.value = v)"
         @toggle="list.toggleFilter"
-      />
+      >
+        <template #help>
+          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS">
+            <p>
+              Computed baseline (automatic, off <code>ENGINE_GAPS.md</code>): <b class="text-text">Open gap</b> → once
+              the doc marks the gap <code>CLOSED</code>, either <b class="text-text">Closed, unverified</b> (no
+              <code>*.test.ts</code> cited, or the entry names a real remainder still not modeled) or, once a real test
+              is cited AND no remainder is named, <b class="text-text">Closed, verified</b>.
+            </p>
+            <p>
+              <b class="text-text">Rejected</b>/<b class="text-text">Confirmed</b> are a separate human-review layer on
+              top of whichever of those three is current — a reviewer can confirm (green) or reject with a required note
+              (yellow) at any point, independent of the underlying computed color.
+            </p>
+          </EngineConsoleStatusHelp>
+        </template>
+      </EngineConsoleStatusFilterControls>
 
       <EngineConsoleEntryListPanel
         :entries="list.visible.value"

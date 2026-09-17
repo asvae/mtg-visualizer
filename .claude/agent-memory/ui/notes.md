@@ -3354,3 +3354,60 @@ worth remembering the pitfalls before re-deriving them:
     conflict (verified via `git stash`/`pop` around the typecheck baseline
     check above) — no actual collision this time, unlike the earlier
     entry above.
+
+- 2026-09-18, per-tab status-help popover (?) on `/app/engine/*`:
+  - Added a `#help` slot to `EngineConsoleStatusFilterControls.vue` — a
+    `UPopover` + `circle-help` `UButton` next to the "Filter by status"
+    label, only rendered when the caller supplies the slot
+    (`v-if="$slots.help"`). Same interaction pattern as `AppHeader.vue`'s
+    own legend popover (that's where the pattern was copied from), not a
+    new one.
+  - New small shared component `EngineConsoleStatusHelp.vue` (generic over
+    `C` like the rest of this family) renders the per-status color-dot +
+    label + full `description` text (the same string `STATUS_OPTIONS`
+    already carries, previously only surfaced as a hover `title` on the
+    filter buttons — now shown in full), followed by a default slot for
+    the "how you get from one status to another" flow prose. Each of the
+    4 pages (`keywords/[[slug]].vue`, `predicates/index.vue`,
+    `features/index.vue`, `sets/index.vue`) passes its OWN `STATUS_OPTIONS`
+    (already in page scope, no new prop plumbing needed) plus its own
+    hand-authored flow paragraph(s) via `<template #help>`.
+  - Flow text was grounded in the real source, not guessed, per the task's
+    own explicit ask: predicates from `functional-model/
+    sink-derivation-status.ts`'s header (gray→purple→blue computed
+    baseline off what predicate-module/manifest files exist on disk;
+    yellow/green a separate human-review overlay layered on top,
+    independent of the baseline), features from `functional-model/
+    engine-status.ts`'s header (same gray→purple→blue shape, keyed off
+    `ENGINE_GAPS.md`'s `CLOSED` marker + test citation + named remainder;
+    same yellow/green overlay), sets from `functional-model/
+    card-status.ts`'s own priority-ordered header comment (gray→orange→
+    yellow/green on the ordinary track, plus verified/uncertain/re-review
+    as human-review-driven NARROWINGS of green only, never of
+    yellow/orange/red/gray). Keywords turned out to be a **collapsed
+    binary** in the page's own `STATUS_OPTIONS` (`covered`/`gap`) even
+    though the underlying `KeywordStatus` has a 3rd `human_reviewed` state
+    (`server/api/keywords/index.get.ts`) — said so plainly in the popover
+    text (gap→covered once a real engine-piloted trace exists, permanent,
+    plus a one-line mention that "covered" itself has an unexposed
+    human-review sub-layer) rather than inventing a 3-color flow that
+    doesn't match this page's actual 2-bucket filter.
+  - Verified live via a throwaway Playwright script (repo's own
+    `playwright` devDependency, run against the ALREADY-RUNNING dev server
+    on :3000 rather than starting a second one — `nuxi dev` correctly
+    refused a second lock and this task just reused the existing PID
+    70949 instance) across all 4 tabs: help button present, click opens
+    the popover, and the popover text differs per tab (confirmed via
+    screenshot + extracted text, not just existence-of-button). One real
+    bug caught this way: `UButton`'s `size` prop doesn't accept `"2xs"`
+    (only `xs`/`sm`/`md`/`lg`/`xl`) — `nuxi typecheck` flagged it
+    immediately, fixed to `"xs"`.
+  - `nuxi typecheck`: zero new errors (diffed against the pre-existing
+    baseline list already on file above — `CardDetailTabs.vue`,
+    `card-status.ts`/`card.ts`/`mana.ts`, `tokens/by-key.ts` — identical
+    set before/after this task's 6 files). `vitest run`: 1147 passed, the
+    only 5 failures are `scripts/relations.test.mjs` missing
+    `tagging/sets/{leb,2ed,arn}/*_relations.json` + `tagging/
+    card-enrichment-status.json` — pre-existing, unrelated to any file
+    this task touched (almost certainly the historical-sets sweep's own
+    in-flight state on a peer session/branch, not this task's regression).

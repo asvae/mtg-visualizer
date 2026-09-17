@@ -6,6 +6,13 @@
 // this component renders it, the composable computes it. Generic over the
 // same `C` status-color union the composable is (2-value for keywords,
 // 5-value gray/purple/blue/yellow/green for the other three tabs).
+//
+// Optional `#help` slot: a (?) button next to "Filter by status" opening a
+// popover, same interaction pattern as AppHeader.vue's own legend popover
+// (UPopover + circle-help UButton). Only rendered when a caller actually
+// provides the slot (`v-if="$slots.help"`) — content is entirely up to the
+// caller since each tab's statuses mean genuinely different things; this
+// component only owns the button/popover chrome, not the explanatory text.
 import type { StatusFilterOption } from '../../composables/useStatusFilterList';
 
 const props = defineProps<{
@@ -46,7 +53,17 @@ const emit = defineEmits<{
   </UInput>
 
   <div class="mb-3 flex flex-col gap-0.5">
-    <div class="mb-1 px-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Filter by status</div>
+    <div class="mb-1 flex items-center justify-between px-1.5">
+      <span class="text-[11px] font-semibold tracking-wide text-muted uppercase">Filter by status</span>
+      <UPopover v-if="$slots.help" :content="{ side: 'right', align: 'start' }">
+        <UButton icon="i-lucide-circle-help" color="neutral" variant="link" size="xs" square aria-label="Explain these statuses" />
+        <template #content>
+          <div class="w-72 p-3 text-xs text-muted">
+            <slot name="help" />
+          </div>
+        </template>
+      </UPopover>
+    </div>
     <button
       v-for="opt in props.statusOptions"
       :key="opt.value"
