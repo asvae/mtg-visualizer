@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { computeEngineStatus } from './engine-status';
+import { computeEngineStatus, computeEngineStatusFingerprint } from './engine-status';
 
 describe('computeEngineStatus — parses ENGINE_GAPS.md\'s own "Real gaps — prioritized" numbered list', () => {
   const entries = computeEngineStatus();
@@ -90,6 +91,68 @@ describe('computeEngineStatus — parses ENGINE_GAPS.md\'s own "Real gaps — pr
     const lines = readFileSync(join(process.cwd(), 'functional-model', 'ENGINE_GAPS.md'), 'utf8').split('\n');
     for (const e of entries) {
       expect(lines[e.evidence.sourceLine - 1]).toMatch(new RegExp(`^${e.gapNumber}\\.\\s`));
+    }
+  });
+});
+
+describe('computeEngineStatusFingerprint — confirmation-drift detection (2026-09-18)', () => {
+  function fakeRootWithGap(gapProse: string, testFileContent: string): string {
+    const fakeRoot = mkdtempSync(join(tmpdir(), 'engine-status-fingerprint-test-'));
+    const fmDir = join(fakeRoot, 'functional-model');
+    mkdirSync(fmDir, { recursive: true });
+    writeFileSync(
+      join(fmDir, 'ENGINE_GAPS.md'),
+      `# Engine gaps\n\n## Real gaps — prioritized\n\n1. **Fake gap** — ${gapProse}\n\n## Other section\n`,
+    );
+    writeFileSync(join(fmDir, 'fake-gap.test.ts'), testFileContent);
+    return fakeRoot;
+  }
+
+  it('returns null for a gap number that does not exist in ENGINE_GAPS.md', () => {
+    const fakeRoot = fakeRootWithGap('CLOSED, see fake-gap.test.ts', '// v1\n');
+    try {
+      expect(computeEngineStatusFingerprint(999, fakeRoot)).toBeNull();
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('is stable across repeated calls with no change (deterministic, not time-based)', () => {
+    const fakeRoot = fakeRootWithGap('CLOSED, see fake-gap.test.ts', '// v1\n');
+    try {
+      const a = computeEngineStatusFingerprint(1, fakeRoot);
+      const b = computeEngineStatusFingerprint(1, fakeRoot);
+      expect(a).toBeTruthy();
+      expect(a).toBe(b);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('changes when the cited *.test.ts file\'s own content changes, even though ENGINE_GAPS.md prose is untouched', () => {
+    const fakeRoot = fakeRootWithGap('CLOSED, see fake-gap.test.ts', '// v1\n');
+    try {
+      const before = computeEngineStatusFingerprint(1, fakeRoot);
+      writeFileSync(join(fakeRoot, 'functional-model', 'fake-gap.test.ts'), '// v2 — real logic changed\n');
+      const after = computeEngineStatusFingerprint(1, fakeRoot);
+      expect(after).not.toBe(before);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('changes when ENGINE_GAPS.md\'s own prose for the gap changes, even though the cited test file is untouched', () => {
+    const fakeRoot = fakeRootWithGap('CLOSED, see fake-gap.test.ts', '// v1\n');
+    try {
+      const before = computeEngineStatusFingerprint(1, fakeRoot);
+      writeFileSync(
+        join(fakeRoot, 'functional-model', 'ENGINE_GAPS.md'),
+        '# Engine gaps\n\n## Real gaps — prioritized\n\n1. **Fake gap** — CLOSED, see fake-gap.test.ts, now with a real, explicit remainder: still not modeled\n\n## Other section\n',
+      );
+      const after = computeEngineStatusFingerprint(1, fakeRoot);
+      expect(after).not.toBe(before);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
     }
   });
 });

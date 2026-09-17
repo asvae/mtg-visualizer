@@ -21,7 +21,7 @@
 // `./review.post.ts`.
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { computeSinkDerivationStatus } from '../../../functional-model/sink-derivation-status';
+import { computeSinkDerivationStatus, computeSinkDerivationColor } from '../../../functional-model/sink-derivation-status';
 import type {
   SinkDerivationBaseline,
   SinkDerivationColor,
@@ -68,6 +68,14 @@ export interface SinkDerivationReview {
   note?: string;
   reviewedAt?: string;
   reviewedBy?: string;
+  /** Snapshotted by `./review.post.ts` only for a `'confirm'` verdict —
+   * `computeSinkDerivationFingerprint(slug)`'s own value at the moment of
+   * confirmation (hashes the predicate module's + corpus manifest's real
+   * current content). Compared against the CURRENT fingerprint below on
+   * every read; a mismatch downgrades the served `color` from `green` to
+   * `re-review` (2026-09-18) instead of trusting a now-stale confirmation.
+   * Unused for `'reject'`. */
+  fingerprint?: string;
 }
 
 function loadReviews(): Record<string, SinkDerivationReview> {
@@ -96,13 +104,22 @@ export interface SinkDerivationPageEntry {
 }
 
 export default defineEventHandler((): SinkDerivationPageEntry[] => {
-  const baselineEntries = computeSinkDerivationStatus();
+  const root = process.cwd();
+  const baselineEntries = computeSinkDerivationStatus(root);
   const reviews = loadReviews();
 
   return baselineEntries.map((entry): SinkDerivationPageEntry => {
     const review = reviews[entry.key];
-    const color: SinkDerivationColor =
-      review?.verdict === 'reject' ? 'yellow' : review?.verdict === 'confirm' ? 'green' : entry.baseline;
+    // Color computation (baseline-gating a review overlay to `blue`-only,
+    // plus the `re-review` fingerprint-drift check) lives in
+    // `functional-model/sink-derivation-status.ts`'s own
+    // `computeSinkDerivationColor` — the SAME real-matching-usability-gate
+    // logic `isSinkDerivationMechanismUsable` consults, reused here directly
+    // rather than re-duplicated a second time in this route (unlike
+    // `server/api/engine-status/index.get.ts`, which has no equivalent
+    // core-module function to call and so keeps its own small
+    // `colorFor` copy — see that file's own comment for why).
+    const color: SinkDerivationColor = computeSinkDerivationColor(entry.slug, root);
     return { ...entry, sourceFiles: loadSourceFiles(entry.slug, entry.evidence), color, review };
   });
 });

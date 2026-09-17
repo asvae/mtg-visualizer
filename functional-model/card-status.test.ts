@@ -326,11 +326,14 @@ describe('card-status — cardStatusBaseline / cardStatusColor (5-state display-
     }
   });
 
-  it('folds green and re-review to the blue baseline/color (a stale re-review confirmation is dropped, not carried forward as green)', () => {
-    for (const status of ['green', 're-review'] as const) {
-      expect(cardStatusBaseline(status)).toBe('blue');
-      expect(cardStatusColor(status)).toBe('blue');
-    }
+  it('folds green to the blue baseline/color', () => {
+    expect(cardStatusBaseline('green')).toBe('blue');
+    expect(cardStatusColor('green')).toBe('blue');
+  });
+
+  it('re-review has a blue baseline but its own real re-review color (2026-09-18 — a 6th shared color, no longer dropped/folded to plain blue)', () => {
+    expect(cardStatusBaseline('re-review')).toBe('blue');
+    expect(cardStatusColor('re-review')).toBe('re-review');
   });
 
   it('verified has a blue baseline but a green (confirmed) color', () => {
@@ -343,9 +346,9 @@ describe('card-status — cardStatusBaseline / cardStatusColor (5-state display-
     expect(cardStatusColor('uncertain')).toBe('yellow');
   });
 
-  it('every real CardStatusBucket value maps to exactly one of the 5 display colors (exhaustiveness smoke test)', () => {
+  it('every real CardStatusBucket value maps to exactly one of the 6 display colors (exhaustiveness smoke test)', () => {
     const allBuckets: CardStatusBucket[] = ['verified', 'uncertain', 're-review', 'green', 'yellow', 'orange', 'red', 'gray'];
-    const validColors = new Set(['gray', 'purple', 'blue', 'yellow', 'green']);
+    const validColors = new Set(['gray', 'purple', 'blue', 'yellow', 'green', 're-review']);
     for (const status of allBuckets) {
       expect(validColors.has(cardStatusColor(status))).toBe(true);
     }

@@ -25,7 +25,7 @@
 // ENGINE_GAPS.md, so there is no separate static id catalog to import).
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { computeEngineStatus } from '../../../functional-model/engine-status';
+import { computeEngineStatus, computeEngineStatusFingerprint } from '../../../functional-model/engine-status';
 import type { EngineStatusReview } from './index.get';
 
 const STORE_PATH = join(process.cwd(), 'functional-model', 'engine-status-reviews.json');
@@ -51,8 +51,10 @@ export default defineEventHandler(async (event) => {
   const note: string | undefined = body?.note;
   const reviewedBy: string | undefined = body?.reviewedBy;
 
-  const validKeys = new Set(computeEngineStatus().map((e) => e.key));
-  if (!key || !validKeys.has(key)) {
+  const root = process.cwd();
+  const entries = computeEngineStatus(root);
+  const entry = entries.find((e) => e.key === key);
+  if (!key || !entry) {
     setResponseStatus(event, 404);
     return { error: `no engine-status entry for key "${key}"` };
   }
@@ -64,9 +66,32 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 400);
     return { error: 'a "reject" verdict (yellow) needs a non-empty "note" explaining why — that\'s the whole point of this state' };
   }
+  // Confirm/reject are only meaningful on a `blue` baseline (2026-09-18) —
+  // "was this gap ever actually verified" is a precondition for either "a
+  // human confirmed it" or "a human rejected it" being a real claim; a
+  // `gray`/`purple` gap was never claimed to be verified in the first place,
+  // so reviewing it either way is semantically meaningless. Clearing a
+  // review (`verdict: null`/`undefined`) is always allowed regardless of the
+  // current baseline — same "un-reviewing never needs a precondition"
+  // posture FIN's own `field:'review', reviewed:false` Unconfirm action
+  // already has.
+  if ((verdict === 'confirm' || verdict === 'reject') && entry.baseline !== 'blue') {
+    setResponseStatus(event, 400);
+    return {
+      error: `"${key}" is currently ${entry.baseline}, not blue (or a stale, drifted re-review) — confirm/reject is only meaningful once a gap has actually reached the verified baseline`,
+    };
+  }
 
   const reviews = loadReviews();
-  if (verdict === 'confirm' || verdict === 'reject') {
+  if (verdict === 'confirm') {
+    reviews[key] = {
+      verdict,
+      note: note?.trim() || undefined,
+      reviewedAt: new Date().toISOString().slice(0, 10),
+      reviewedBy,
+      fingerprint: computeEngineStatusFingerprint(entry.gapNumber, root) ?? undefined,
+    };
+  } else if (verdict === 'reject') {
     reviews[key] = { verdict, note: note?.trim() || undefined, reviewedAt: new Date().toISOString().slice(0, 10), reviewedBy };
   } else {
     delete reviews[key];

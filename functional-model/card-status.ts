@@ -514,14 +514,34 @@ export function classifyCardStatus(input: ClassifyCardStatusInput): CardStatusEn
 //            specific known caveat instead of a plain confirmation — the
 //            direct analog of Predicates'/Features' own "Rejected (with a
 //            required note)" overlay state: the caveat text IS that note.
-//   blue   <- `re-review`        — was `verified`/green-quality, then the
-//            card's real content drifted since. The OLD confirmation is
-//            deliberately NOT carried forward as a (now-misleading) `green`/
-//            confirmed appearance — falls back to plain `blue` (baseline-
-//            quality, no current review opinion) until a human looks again.
-//            Not `yellow` either — nothing was actually REJECTED, the prior
-//            confirmation just went stale; that's a materially different
-//            claim than a reviewer having looked and disagreed.
+//   re-review <- `re-review`     — was `verified`/green-quality, then the
+//            card's real content drifted since (`scripts/
+//            check-verified-regressions.mjs`'s own auto-detected
+//            'regression' signal). 2026-09-18: this is now its OWN 6th
+//            shared color (`#7dd3fc`, bright/light blue — the exact hex
+//            FIN's own now-superseded `re-review`-bucket UI color already
+//            used for this identical concept, see this file's own header
+//            above), the same `re-review` state
+//            `functional-model/engine-status.ts`/`functional-model/
+//            sink-derivation-status.ts` now ALSO compute for their own axes
+//            (a human confirmation whose own underlying inputs have since
+//            changed) — NOT folded into plain `blue` anymore. An earlier
+//            version of this fold (the initial Sets-vocabulary task, commit
+//            `2267487`) DID drop it to plain `blue`, explicitly flagged at
+//            the time as a placeholder ("stale confirmation dropped rather
+//            than shown as misleading green") because no real 6th
+//            `re-review` color existed yet anywhere on this shared axis —
+//            now that it does, FIN's own `re-review` bucket maps directly
+//            onto it instead. Not `yellow` either — nothing was actually
+//            REJECTED, the prior confirmation just went stale; that's a
+//            materially different claim than a reviewer having looked and
+//            disagreed. `baseline` is UNCHANGED by this — still folds to
+//            `blue` (see `cardStatusBaseline` below): the underlying
+//            fact-authoring completeness hasn't regressed, only the human
+//            confirmation on top of it has gone stale, same "baseline never
+//            reflects the review overlay" split `engine-status.ts`/
+//            `sink-derivation-status.ts` already establish for their own
+//            axes.
 // ## Policy (documented here, NOT enforced in code by this task — 2026-09-18)
 //
 // `gray`/`purple` (i.e. anything below `blue`) are meant to be treated as
@@ -555,7 +575,7 @@ export function classifyCardStatus(input: ClassifyCardStatusInput): CardStatusEn
 // authoring completeness) should add a real gate THEN, mirroring
 // `sink-derivation-status.ts`'s own shape, rather than skip it.
 export type CardStatusBaseline = 'gray' | 'purple' | 'blue';
-export type CardStatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+export type CardStatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green' | 're-review';
 
 /** The 3-state computed baseline half of the mapping above (`gray`/
  * `purple`/`blue`) — exported separately from `cardStatusColor` so a
@@ -579,11 +599,14 @@ export function cardStatusBaseline(status: CardStatusBucket): CardStatusBaseline
   }
 }
 
-/** The full 5-state display color — `cardStatusBaseline`, narrowed to
- * `green`/`yellow` for the two real human-review-overlay buckets
- * (`verified`/`uncertain`) per the mapping above. */
+/** The full 6-state display color — `cardStatusBaseline`, narrowed to
+ * `green`/`yellow`/`re-review` for the three real human-review-overlay
+ * buckets (`verified`/`uncertain`/`re-review`) per the mapping above.
+ * `re-review` (2026-09-18) is its own real color now, not folded into
+ * `blue` — see this file's own header for the full rationale. */
 export function cardStatusColor(status: CardStatusBucket): CardStatusColor {
   if (status === 'verified') return 'green';
   if (status === 'uncertain') return 'yellow';
+  if (status === 're-review') return 're-review';
   return cardStatusBaseline(status);
 }

@@ -1134,6 +1134,27 @@ coverage gap is already correctly flagged by that gap itself, and layering
 `uncertain`'s own more saturated `#3b82f6` so the two read as visually
 distinct at a glance, not a shade variation of the same signal.
 
+**`re-review` is now its own real 6th color on the shared display axis
+(2026-09-18) — no longer folded into plain `blue`.** `functional-model/
+engine-status.ts` and `functional-model/sink-derivation-status.ts` both
+independently grew this exact same `re-review` state for their own axes
+(a human `'confirm'` whose underlying inputs — ENGINE_GAPS.md prose/cited
+test files for Features, predicate source/corpus manifest for Predicates —
+have since drifted), generalizing the SAME mechanism this section already
+describes (`check-verified-regressions.mjs`'s fingerprint-based drift
+detection) rather than inventing a separate one; see those two axes' own
+contract docs for the fingerprint mechanics. `functional-model/
+card-status.ts`'s `cardStatusColor` now maps FIN's own `re-review` bucket
+directly onto this shared `re-review` color instead of dropping it to plain
+`blue` — see this section's own earlier text below (the "Display-axis
+translation" bullet immediately following) for the corrected mapping; the
+OLD `blue`-fold behavior was explicitly flagged at the time as a
+placeholder pending a real 6th color existing anywhere on the shared axis,
+which is now the case. `cardStatusBaseline` is UNCHANGED — a `re-review`
+card's baseline still folds to `blue` (the underlying fact-authoring
+completeness hasn't regressed, only the human confirmation on top of it
+has gone stale).
+
 **Display-axis translation to gray/purple/blue/yellow/green (2026-09-18)**
 — the 8-bucket classification above is unchanged and remains the real
 per-card fact-authoring answer (still what `app/lib/cardStatus.ts`'s
@@ -1141,11 +1162,12 @@ Facts-tab strip and `CardDetailTabs.vue` read via the per-card
 `GET /api/card/:set/:number` route's own `cardStatus` field). Separately,
 `GET /api/card-status/:set` (the batch route feeding `/app/engine/sets`
 only) now ALSO serves a `baseline: 'gray'|'purple'|'blue'` and
-`color: 'gray'|'purple'|'blue'|'yellow'|'green'` field per entry —
-`functional-model/card-status.ts`'s own `cardStatusBaseline`/
+`color: 'gray'|'purple'|'blue'|'yellow'|'green'|'re-review'` field per entry
+(the `'re-review'` value added 2026-09-18, see the bullet immediately above
+this one) — `functional-model/card-status.ts`'s own `cardStatusBaseline`/
 `cardStatusColor` functions, a pure translation layer over the 8 buckets
 (see that pair's own doc comment for the full bucket-by-bucket fold). This
-puts `/app/engine/sets` on the SAME shared 5-state axis
+puts `/app/engine/sets` on the SAME shared 6-state axis
 `/app/engine/predicates` (`GET /api/sink-derivations`) and
 `/app/engine/features` (`GET /api/engine-status`) already use, replacing
 that tab's previous bespoke 8-color scheme — this is now the ONE shared
@@ -1159,19 +1181,48 @@ same-shaped sibling), not that superseded scheme. The checked-in
 by this — the translation is applied at serve time only, in
 `server/api/card-status/[set].get.ts`'s own `withDisplayColor`.
 
-**Policy, documented not enforced (2026-09-18)**: `gray`/`purple` (below
-`blue`) are meant to be treated as prohibited for any real/production
-decision anywhere in the app, except within verification/review work
-itself — same "pretend it doesn't exist" policy
-`functional-model/sink-derivation-status.ts`'s own "Real-matching usability
-gate" section already enforces FOR REAL on its own axis (rejecting
+**Policy, documented not enforced for PRODUCTION MATCHING (2026-09-18,
+narrowed same day — see the real review-action gate immediately below)**:
+`gray`/`purple` (below `blue`) are meant to be treated as prohibited for
+any real/production SYNERGY-MATCHING decision anywhere in the app, except
+within verification/review work itself — same "pretend it doesn't exist"
+policy `functional-model/sink-derivation-status.ts`'s own "Real-matching
+usability gate" section already enforces FOR REAL on its own axis (rejecting
 `gray`/`purple` from contributing to a live `match-sink.ts` match). No
-equivalent gate exists for this axis today because nothing real consumes
-it for a production decision yet (FIN's own live synergy graph never reads
-`card-status.ts` at all; no real FDN pipeline exists yet) — whoever builds
-that real consumer should add a real gate then, mirroring
-`sink-derivation-status.ts`'s shape, per `card-status.ts`'s own "## Policy"
-comment section.
+equivalent gate exists for THAT kind of consumption today because nothing
+real consumes it for a production MATCHING decision yet (FIN's own live
+synergy graph never reads `card-status.ts` at all; no real FDN pipeline
+exists yet) — whoever builds that real consumer should add a real gate
+then, mirroring `sink-derivation-status.ts`'s shape, per `card-status.ts`'s
+own "## Policy" comment section.
+
+**Real, enforced gate DOES now exist for the REVIEW-ACTION side of this axis
+(2026-09-18)**: confirm/reject is meaningless on a `gray`/`purple` card —
+"was this card's fact-authoring ever actually claimed complete" is a
+precondition for "a human confirmed it," same rule
+`.claude/contracts/engine-status-schema.md`/
+`sink-derivation-status-schema.md` now state for their own axes.
+`POST /api/card/review-status` (`server/api/card/review-status.ts`) now
+refuses (400) a `field: 'review'`, `reviewed: true` request (the Confirm /
+"Confirm (Uncertain)" actions — there is no separate "reject" verdict on
+this axis, only Confirm/Unconfirm/"Confirm (Uncertain)") unless the card's
+CURRENT (pre-write) `cardStatusBaseline` is `blue` — computed live via the
+same single-card `functional-model/scripts/compute-one-card-status.mjs`
+subprocess `server/api/card/[set]/[number].ts`'s own per-request `cardStatus`
+badge already spawns. Unconfirm (`reviewed: false`) is NEVER gated — always
+succeeds, same "un-reviewing needs no precondition" posture the other two
+axes' `verdict: null` clear path already has. Structurally this can never
+reject an ALREADY-legitimately-`verified`/`uncertain`/`re-review` card
+(`classifyCardStatus`'s own priority order makes those buckets unreachable
+unless the card is independently green-quality already — see this file's
+own classifier section above), so this gate only ever blocks a genuinely
+new/premature confirm attempt on a card that hasn't earned full coverage
+yet; it cannot un-verify an already-correctly-verified card. `ui`
+(`CardDetailTabs.vue`'s Confirm/"Confirm (Uncertain)" buttons) should hide
+or disable those controls unless the card's own live `cardStatus.status`
+maps (`cardStatusBaseline`) to `blue` — not yet done as of this writing,
+a follow-up `ui` task; until then, a click on an ineligible card gets a
+real 400 with a clear message rather than a silent no-op.
 
 **Engine has no connection to card/UI, full stop.** Logging or similar
 instrumentation baked into engine code is fine; engine code being

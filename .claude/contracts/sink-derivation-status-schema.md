@@ -42,7 +42,7 @@ Every seeded entry starts `gray` today, for real (not as a placeholder) —
 this whole scaffold is meant to fill in one entry at a time as real
 predicate work lands later.
 
-## Five states (this context's meaning)
+## Six states (this context's meaning; `re-review` added 2026-09-18)
 
 - `gray` — no predicate built yet for this mechanism. Computed: no
   predicate module file exists on disk yet at the mechanism's expected
@@ -55,19 +55,82 @@ predicate work lands later.
   manifest shows every scenario in its corpus (a real, positive count)
   agreeing with real trace evidence.
 - `yellow` — **review overlay, not computed by `sink-derivation-status.ts`**:
-  a human reviewed a `blue`/`purple` baseline and found a real
-  disagreement/wrong verdict. Requires a non-empty `note` describing what's
-  wrong.
+  a human reviewed a `blue` baseline and found a real disagreement/wrong
+  verdict. Requires a non-empty `note` describing what's wrong.
 - `green` — **review overlay**: a human reviewed and confirmed the
   predicate is correct.
+- `re-review` — **review overlay, 2026-09-18**: a human previously confirmed
+  this mechanism (`green`), but the real inputs that determined its `blue`
+  baseline at confirm time have since drifted (the predicate module's own
+  source, or its corpus manifest, changed) — the old confirmation is stale
+  and needs another look. NOT the same as `yellow` (a human actively
+  rejecting a claim) — nothing was rejected, a prior confirmation just went
+  stale. Bright/light blue `#7dd3fc`, distinct from plain verified-blue
+  `#3b82f6` — the exact hex FIN's own `card-status.ts` `re-review` bucket
+  already used for this identical concept. See "Confirmation drift
+  fingerprint" below.
 
-`baseline` (gray/purple/blue) and `color` (baseline, possibly overridden to
-yellow/green) are both always present on a served entry — a consumer
-should render/filter on `color`, but `baseline` stays visible too so "what
-did the reviewer actually override, and from what" is never lost. Same
-split as `.claude/contracts/engine-status-schema.md` — read that contract
-first if this is your first time consuming either axis; the two intentionally
-share vocabulary and mechanics, just applied to different indexes.
+`baseline` (gray/purple/blue — still only 3-valued, UNCHANGED by this
+addition) and `color` (baseline, possibly overridden to yellow/green/
+re-review) are both always present on a served entry — a consumer should
+render/filter on `color`, but `baseline` stays visible too so "what did the
+reviewer actually override, and from what" is never lost. A `re-review`
+entry's own `baseline` is still `blue`. Same split as `.claude/contracts/
+engine-status-schema.md` — read that contract first if this is your first
+time consuming either axis; the two intentionally share vocabulary and
+mechanics, just applied to different indexes.
+
+## Confirm/reject only meaningful at `blue` (or a stale `re-review` sitting on top of one) — 2026-09-18
+
+**Confirm/reject are refused server-side (400) unless the entry's CURRENT
+`baseline` is `blue`** — "was this mechanism ever actually corpus-verified"
+is a precondition for either "a human confirmed it" or "a human rejected
+it" being a real claim; a `gray`/`purple` mechanism was never claimed to be
+verified in the first place. Same rule `.claude/contracts/
+engine-status-schema.md`/`card-schema.md` now state for their own axes.
+Clearing a review (`verdict: null`) is always allowed regardless of the
+current baseline. Enforced BOTH at write time (`./review.post.ts` returns
+400 before touching `sink-derivation-reviews.json` at all) and, as defense
+in depth, at read time — `functional-model/sink-derivation-status.ts`'s own
+`computeSinkDerivationColor` (which `GET /api/sink-derivations` now calls
+directly, replacing its own earlier hand-duplicated color logic) silently
+ignores a stale/hand-authored review record sitting on a `gray`/`purple`
+mechanism, never rendering it as a misleading `green`/`yellow` —
+`sink-derivation-reviews.json` is still a flat, hand-editable file, not
+exclusively written through the gated route. This is also now the SAME real
+gate `isSinkDerivationMechanismUsable` (the real-matching usability check
+for `match-sink.ts`) already enforces — a `re-review`-colored mechanism is
+correctly treated as NOT usable (same as `gray`/`purple`), since a
+confirmation whose own inputs have drifted is no longer a trustworthy human
+sign-off; a fresh confirm is required to restore usability.
+
+## Confirmation drift fingerprint (2026-09-18)
+
+Generalizes FIN's own `scripts/check-verified-regressions.mjs` mechanism
+(see `.claude/contracts/card-schema.md`'s "Verified-snapshot regression
+guard" section) to this axis. `functional-model/sink-derivation-status.ts`
+exports:
+
+```ts
+function computeSinkDerivationFingerprint(slug: string, root?: string): string | null
+```
+
+Hashes (sha256) the real, current content of BOTH the predicate module
+(`<slug>.ts`) and its corpus manifest (`<slug>.corpus.json`) — the same two
+real inputs `computeSinkDerivationStatus` itself reads to decide
+gray/purple/blue. Uses `readFunctionalModelFile` (scope-safe, never throws)
+so a missing file hashes a stable marker rather than erroring.
+
+- `./review.post.ts` snapshots this fingerprint into
+  `SinkDerivationReview.fingerprint` ONLY for a `'confirm'` verdict (unused
+  for `'reject'`).
+- `computeSinkDerivationColor`/`GET /api/sink-derivations` recompute the
+  CURRENT fingerprint on every call and compare against the stored one for
+  any `'confirm'` review on a `blue`-baseline entry; a mismatch (or a
+  missing/unreadable stored fingerprint) produces `'re-review'` instead of
+  `'green'`.
+- A fresh confirm (re-POSTing `verdict: 'confirm'`) always re-snapshots the
+  fingerprint, restoring `green`/usability.
 
 ## Source (`engine` agent owns)
 
@@ -116,7 +179,8 @@ interface SinkDerivationEntry {
     "verdict": "confirm",           // or "reject"
     "note": "spot-checked against 3 Saga cards' real traces, all agree",  // required for "reject"
     "reviewedAt": "2026-09-20",
-    "reviewedBy": "optional free text"
+    "reviewedBy": "optional free text",
+    "fingerprint": "8d3d5872..."    // 2026-09-18, 'confirm' only — see "Confirmation drift fingerprint" above
   }
 }
 ```
@@ -186,6 +250,11 @@ production, same posture as `engine-status`'s own review route). `verdict:
 null` clears a review, falling back to the computed baseline. `key` is
 validated against a **fresh** `computeSinkDerivationStatus()` call. A
 `'reject'` verdict without a non-empty `note` is rejected with 400.
+**2026-09-18**: a `'confirm'`/`'reject'` verdict is ALSO rejected with 400
+when the entry's current `baseline` is not `blue` (see "Confirm/reject only
+meaningful at `blue`" above) — `verdict: null` (clearing) is exempt. A
+successful `'confirm'` snapshots `computeSinkDerivationFingerprint(slug)`
+into the stored review record.
 
 ## How a new mechanism entry gets added later (the exact edit point)
 
@@ -210,6 +279,13 @@ real, already-identified work items, not a wishlist.
 
 ## What `ui` (consumer) must not assume
 
+- **`color` is now 6-valued, not 5** (2026-09-18) — `'re-review'` is a real,
+  reachable value; a hardcoded 5-value color map/type will silently
+  mis-render or type-error on it. Same bright/light blue `#7dd3fc` FIN's own
+  `card-status.ts` uses for its own `re-review` bucket.
+- **Confirm/reject controls should only be shown for a `blue` (or
+  `re-review`, itself always `baseline: 'blue'`) entry** — the server now
+  refuses (400) a confirm/reject attempt on `gray`/`purple`.
 - **The entry COUNT will grow over time**, starting from exactly 4 — don't
   hardcode 4 anywhere, don't build a UI that assumes a fixed row count.
 - **Every entry is `gray` today, for real** — this is not a broken/stub

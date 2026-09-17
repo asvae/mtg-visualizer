@@ -51,7 +51,7 @@ axis today; it remains its own, separate, complete-taxonomy tool for a
 different question ("does the Keywords PAGE have a demo bundle for this
 printed keyword").
 
-## Five states
+## Six states (2026-09-18: `re-review` added, see below)
 
 - `gray` — no support at all. Computed: the tracked gap has no `CLOSED`
   marker anywhere in `ENGINE_GAPS.md`'s own text for that item (that doc's
@@ -68,14 +68,80 @@ printed keyword").
 - `blue` — engine support, VERIFIED. Computed: `CLOSED`, cites at least one
   real `*.test.ts` file, and names no remainder.
 - `yellow` — **review overlay, not computed by `engine-status.ts`**: a
-  human reviewed a `blue`/`purple` baseline and rejected it. Requires a
-  non-empty `note`.
+  human reviewed a `blue` baseline and rejected it. Requires a non-empty
+  `note`.
 - `green` — **review overlay**: a human reviewed and confirmed it.
+- `re-review` — **review overlay, 2026-09-18**: a human previously confirmed
+  this gap (`green`), but the real inputs that determined its `blue`
+  baseline at confirm time have since drifted (the gap's own ENGINE_GAPS.md
+  prose changed, or the content of a `*.test.ts` file it cites changed) —
+  the old confirmation is stale and needs another look. NOT the same as
+  `yellow` (a human actively rejecting a claim) — nothing was rejected here,
+  a prior confirmation just went stale. Bright/light blue `#7dd3fc` in the
+  shared UI palette, distinct from plain verified-blue `#3b82f6` — the exact
+  hex FIN's own `card-status.ts` `re-review` bucket already used for this
+  identical concept (see `.claude/contracts/card-schema.md`'s own
+  `re-review`-bucket section). See "Confirmation drift fingerprint" below
+  for the real mechanism.
 
-`baseline` (gray/purple/blue) and `color` (baseline, possibly overridden to
-yellow/green) are both always present on a served entry — a consumer
-should render/filter on `color`, but `baseline` stays visible too so "what
-did the reviewer actually override, and from what" is never lost.
+`baseline` (gray/purple/blue — still only 3-valued, UNCHANGED by this
+addition) and `color` (baseline, possibly overridden to yellow/green/
+re-review) are both always present on a served entry — a consumer should
+render/filter on `color`, but `baseline` stays visible too so "what did the
+reviewer actually override, and from what" is never lost. A `re-review`
+entry's own `baseline` is still `blue` — the underlying ENGINE_GAPS.md-
+derived completeness signal hasn't regressed, only the confirmation on top
+of it has gone stale.
+
+## Confirm/reject only meaningful at `blue` (or a stale `re-review` sitting on top of one) — 2026-09-18
+
+**Confirm/reject are refused server-side (400) unless the entry's CURRENT
+`baseline` is `blue`** — "was this gap ever actually verified" is a
+precondition for either "a human confirmed it" or "a human rejected it"
+being a real claim; a `gray`/`purple` gap was never claimed to be verified
+in the first place, so reviewing it either way is semantically meaningless
+(this is the same rule `.claude/contracts/sink-derivation-status-schema.md`
+and `.claude/contracts/card-schema.md` now state for their own axes).
+Clearing a review (`verdict: null`) is always allowed regardless of the
+current baseline — only a fresh confirm/reject is gated. Enforced BOTH at
+write time (`./review.post.ts` returns 400, body `{ error: string }`, before
+touching `engine-status-reviews.json` at all) and, as defense in depth, at
+read time (`GET /api/engine-status`'s own color computation — a stale/hand-
+authored review record sitting on a `gray`/`purple` gap is silently ignored,
+never rendered as a misleading `green`/`yellow`; `engine-status-reviews.json`
+is still a flat, hand-editable file, not exclusively written through the
+gated route). A `re-review`-colored gap IS still eligible for a fresh
+confirm/reject (its own `baseline` is `blue`, per above) — that's the
+correction path back to `green`.
+
+## Confirmation drift fingerprint (2026-09-18)
+
+Generalizes FIN's own `scripts/check-verified-regressions.mjs` mechanism
+(see `.claude/contracts/card-schema.md`'s "Verified-snapshot regression
+guard" section) to this axis. `functional-model/engine-status.ts` exports:
+
+```ts
+function computeEngineStatusFingerprint(gapNumber: number, root?: string): string | null
+```
+
+Hashes (sha256) the gap's own FULL whitespace-flattened ENGINE_GAPS.md text
+(not the truncated 280-char `evidence.excerpt`) together with the real,
+current content of every distinct `*.test.ts` file it cites, resolved
+against the real repo tree the same way `testFileRefs` does
+(`findFunctionalModelFilesByBasename` — every real match for a citation,
+not one guessed path). Returns `null` only if `gapNumber` no longer
+resolves to any item at all.
+
+- `./review.post.ts` snapshots this fingerprint into
+  `EngineStatusReview.fingerprint` ONLY for a `'confirm'` verdict (unused
+  for `'reject'` — drift detection is specifically about a stale
+  CONFIRMATION going stale, not a stale rejection).
+- `GET /api/engine-status` recomputes the CURRENT fingerprint on every
+  request and compares against the stored one for any `'confirm'` review on
+  a `blue`-baseline entry; a mismatch (or a missing/unreadable stored
+  fingerprint) serves `color: 're-review'` instead of `'green'`.
+- A fresh confirm (re-POSTing `verdict: 'confirm'`) always re-snapshots the
+  fingerprint, restoring `green`.
 
 ## Source (`engine` agent owns)
 
@@ -119,7 +185,8 @@ interface EngineStatusEntry {
     "verdict": "confirm",           // or "reject"
     "note": "spot-checked, matches Cecil's real definition.ts",  // required for "reject"
     "reviewedAt": "2026-09-17",
-    "reviewedBy": "optional free text"
+    "reviewedBy": "optional free text",
+    "fingerprint": "7d05520c..."    // 2026-09-18, 'confirm' only — see "Confirmation drift fingerprint" above
   }
 }
 ```
@@ -208,10 +275,25 @@ serverless deployment's filesystem isn't the repo checkout anyway).
 separate static id catalog (this axis's whole index is itself computed off
 `ENGINE_GAPS.md` — there's nothing else to keep in sync). A `'reject'`
 verdict without a non-empty `note` is rejected with 400 — the whole point
-of yellow is "reviewed AND here's why it's wrong."
+of yellow is "reviewed AND here's why it's wrong." **2026-09-18**: a
+`'confirm'`/`'reject'` verdict is ALSO rejected with 400 when the entry's
+current `baseline` is not `blue` (see "Confirm/reject only meaningful at
+`blue`" above) — `verdict: null` (clearing) is exempt from this check. A
+successful `'confirm'` snapshots `computeEngineStatusFingerprint(gapNumber)`
+into the stored review record.
 
 ## What `ui` (consumer) must not assume
 
+- **`color` is now 6-valued, not 5** (2026-09-18) — `'re-review'` is a real,
+  reachable value (not just `gray`/`purple`/`blue`/`yellow`/`green`); a
+  hardcoded 5-value color map/type will silently mis-render or type-error on
+  it. Same bright/light blue `#7dd3fc` FIN's own `card-status.ts` uses for
+  its own `re-review` bucket.
+- **Confirm/reject controls should only be shown for a `blue` (or
+  `re-review`, which is itself always `baseline: 'blue'`) entry** — the
+  server now refuses (400) a confirm/reject attempt on `gray`/`purple`, so a
+  UI that still shows the buttons there will get a real error back, not a
+  silent no-op.
 - **Don't assume `key` is stable across a title rewording** — only the
   `gap-<N>-` NUMBER prefix is guaranteed stable; a cosmetic ENGINE_GAPS.md
   wording change can change the slug suffix. If you need a durable

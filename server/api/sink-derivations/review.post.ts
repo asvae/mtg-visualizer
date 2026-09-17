@@ -21,7 +21,7 @@
 // without at least being checkable).
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { computeSinkDerivationStatus } from '../../../functional-model/sink-derivation-status';
+import { computeSinkDerivationStatus, computeSinkDerivationFingerprint } from '../../../functional-model/sink-derivation-status';
 import type { SinkDerivationReview } from './index.get';
 
 const STORE_PATH = join(process.cwd(), 'functional-model', 'sink-derivation-reviews.json');
@@ -47,8 +47,10 @@ export default defineEventHandler(async (event) => {
   const note: string | undefined = body?.note;
   const reviewedBy: string | undefined = body?.reviewedBy;
 
-  const validKeys = new Set(computeSinkDerivationStatus().map((e) => e.key));
-  if (!key || !validKeys.has(key)) {
+  const root = process.cwd();
+  const entries = computeSinkDerivationStatus(root);
+  const entry = entries.find((e) => e.key === key);
+  if (!key || !entry) {
     setResponseStatus(event, 404);
     return { error: `no sink-derivation entry for key "${key}"` };
   }
@@ -60,9 +62,33 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 400);
     return { error: 'a "reject" verdict (yellow) needs a non-empty "note" explaining the disagreement found — that\'s the whole point of this state' };
   }
+  // Confirm/reject are only meaningful on a `blue` baseline (2026-09-18) —
+  // "was this mechanism ever actually corpus-verified" is a precondition for
+  // either "a human confirmed it" or "a human rejected it" being a real
+  // claim; a `gray`/`purple` mechanism (no predicate yet, or not yet
+  // corpus-verified) was never claimed to be verified in the first place, so
+  // reviewing it either way is semantically meaningless. Clearing a review
+  // (`verdict: null`/`undefined`) is always allowed regardless of the
+  // current baseline — same "un-reviewing never needs a precondition"
+  // posture FIN's own `field:'review', reviewed:false` Unconfirm action
+  // already has.
+  if ((verdict === 'confirm' || verdict === 'reject') && entry.baseline !== 'blue') {
+    setResponseStatus(event, 400);
+    return {
+      error: `"${key}" is currently ${entry.baseline}, not blue (or a stale, drifted re-review) — confirm/reject is only meaningful once a mechanism has actually reached the corpus-verified baseline`,
+    };
+  }
 
   const reviews = loadReviews();
-  if (verdict === 'confirm' || verdict === 'reject') {
+  if (verdict === 'confirm') {
+    reviews[key] = {
+      verdict,
+      note: note?.trim() || undefined,
+      reviewedAt: new Date().toISOString().slice(0, 10),
+      reviewedBy,
+      fingerprint: computeSinkDerivationFingerprint(entry.slug, root) ?? undefined,
+    };
+  } else if (verdict === 'reject') {
     reviews[key] = { verdict, note: note?.trim() || undefined, reviewedAt: new Date().toISOString().slice(0, 10), reviewedBy };
   } else {
     delete reviews[key];

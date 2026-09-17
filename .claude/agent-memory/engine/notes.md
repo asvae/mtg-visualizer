@@ -29018,3 +29018,170 @@ classification logic touched:**
 - **Open Forge-verification needed: none.** This task is a status-dashboard
   evidence-serving change only — no new `interfaces.ts` mirror, no new
   real-world rules claim, no change to any classification/matching logic.
+
+## 2026-09-18 — 6th shared status `re-review` + confirm/reject gated to blue/re-review
+
+Two-part orchestrator task. Part 1: add `re-review` as a 6th color on the
+shared gray/purple/blue/yellow/green axis (Features/Predicates/Sets),
+backed by REAL drift detection (generalizing FIN's own
+`scripts/check-verified-regressions.mjs`), not just a new label. Part 2:
+gate confirm/reject server-side to only be meaningful when the entry's
+current baseline is `blue` (a `re-review` color is itself always sitting on
+a `blue` baseline, so this one check covers both cases the task named).
+
+**Part 1 — fingerprint mechanism, one per axis, added to the core module
+each axis already owns:**
+- `functional-model/engine-status.ts`: new `computeEngineStatusFingerprint(gapNumber, root?)` —
+  sha256 of the gap's own FULL flattened ENGINE_GAPS.md text (not the
+  truncated 280-char excerpt) + the real, current content of every cited
+  `*.test.ts` file (resolved via `source-files.ts`'s
+  `findFunctionalModelFilesByBasename`, same collision-safe resolution
+  `testFileRefs` already uses).
+- `functional-model/sink-derivation-status.ts`: new
+  `computeSinkDerivationFingerprint(slug, root?)` — sha256 of the real,
+  current content of BOTH the predicate module and its corpus manifest.
+- Both `EngineStatusReview`/`SinkDerivationReview` (in each axis's own
+  `index.get.ts`) gained an optional `fingerprint?: string`, written by
+  `./review.post.ts` ONLY for a `'confirm'` verdict (not `'reject'` —
+  drift detection is specifically about a stale CONFIRMATION, per the
+  task's own explicit scope). On read, a mismatch (or missing/unreadable
+  stored fingerprint) between the stored and current fingerprint downgrades
+  the served `color` from `green` to `re-review`; `baseline` is UNCHANGED
+  (stays 3-valued gray/purple/blue everywhere — `re-review` is purely a
+  color-axis addition, matching how `verified`/`uncertain` already work in
+  `card-status.ts`).
+- `functional-model/card-status.ts`: fixed the FIN `re-review` bucket's
+  OLD `blue`-fold (from the earlier Sets-vocabulary task, commit `2267487`,
+  explicitly flagged then as a placeholder pending a real 6th color) to map
+  directly onto the new shared `re-review` color instead — `cardStatusColor('re-review')`
+  now returns `'re-review'`, not `'blue'`. `cardStatusBaseline` is
+  unchanged (still folds to `blue`).
+- Refactored `server/api/sink-derivations/index.get.ts` to call the core
+  module's own `computeSinkDerivationColor` directly instead of
+  re-duplicating baseline/review-fold logic a second time in the route
+  (avoids a 3rd copy of the same gating+drift logic); `engine-status`'s
+  route keeps its own small `colorFor` helper since there was no equivalent
+  core-module color function to call before this task (there still isn't
+  one exported for matching-time use on that axis, unlike sink-derivation's
+  `isSinkDerivationMechanismUsable`).
+- `isSinkDerivationMechanismUsable`/`computeSinkDerivationColor` (the real
+  `match-sink.ts` matching-time gate) now also treat `re-review` as NOT
+  usable (same bucket as gray/purple) — a drifted confirmation is not a
+  trustworthy human sign-off until re-confirmed.
+
+**Part 2 — server-side 400 gate, all 3 review-write endpoints:**
+- `server/api/engine-status/review.post.ts` / `server/api/sink-derivations/review.post.ts`:
+  both now reject (400, clear message) a `'confirm'`/`'reject'` verdict
+  whenever the entry's CURRENT baseline isn't `blue` — `verdict: null`
+  (clearing) is exempt, always allowed. Since a `re-review` color only ever
+  sits on a `blue` baseline, this single "baseline === blue" check
+  correctly covers both `blue` and `re-review` as eligible without a
+  separate check.
+- `server/api/card/review-status.ts` (the Sets/`card-status` equivalent —
+  found by tracing `applyReviewStatusChange` in `app/pages/app/engine/sets/index.vue`
+  back to what it actually listens for: `CardDetailTabs.vue`'s
+  Confirm/Unconfirm/"Confirm (Uncertain)" buttons, which POST here, NOT a
+  separate Sets-tab-owned endpoint): the `field === 'review'`,
+  `reviewed === true` path (there is no distinct "reject" verdict on this
+  axis, only Confirm/Unconfirm/"Confirm (Uncertain)") now spawns the SAME
+  `functional-model/scripts/compute-one-card-status.mjs` vite-node
+  subprocess `server/api/card/[set]/[number].ts`'s own live `cardStatus`
+  badge already uses, maps the result through `cardStatusBaseline`, and
+  refuses (400) unless it's `blue`. Unconfirm (`reviewed === false`) is
+  never gated. Confirmed structurally this can never reject an
+  already-legitimate `verified`/`uncertain`/`re-review` card:
+  `classifyCardStatus`'s own priority order makes those buckets unreachable
+  unless the card is independently green-quality already, so the gate only
+  ever blocks a genuinely premature confirm.
+- Also read/compute-time defense-in-depth in both `index.get.ts` routes and
+  `computeSinkDerivationColor` itself (not just the POST 400) — the reviews
+  JSON files are still flat, hand-editable files, not exclusively written
+  through the gated routes, so a stale/hand-authored confirm sitting on a
+  gray/purple entry is silently ignored (falls back to plain baseline),
+  never rendered as a misleading green/yellow.
+- Updated the one test this reverses per the task's own explicit
+  instruction: `sink-derivation-status.test.ts`'s old "a human 'confirm'
+  review verdict overlays a NOT-yet-blue (gray/purple) baseline to green"
+  test (the intended human-override path from the predicate-gating task)
+  now asserts the OPPOSITE — a confirm on a non-blue baseline is ignored,
+  color stays at the plain baseline. Added a new drift-detection test
+  alongside it (confirm on blue -> green; predicate source changes ->
+  re-review + not-usable; fresh re-confirm -> green again).
+- Added a new `engine-status.test.ts` describe block for
+  `computeEngineStatusFingerprint` (fake ENGINE_GAPS.md + fake cited test
+  file in a temp root — null for an unknown gap number, stable/
+  deterministic, changes when either the cited test file's content OR the
+  gap's own prose changes).
+- Added 2 new `card-status.test.ts` assertions (re-review's own color is
+  `'re-review'`, not folded to blue; widened the 5-color exhaustiveness
+  smoke test to 6).
+
+**Contracts updated**: `.claude/contracts/engine-status-schema.md`,
+`.claude/contracts/sink-derivation-status-schema.md` (both: renamed "Five
+states" to "Six states", new `re-review` bullet, new "Confirm/reject only
+meaningful at blue" section, new "Confirmation drift fingerprint" section,
+`fingerprint` field on the reviews.json example, review-write-path 400
+note, new `ui`-must-not-assume bullets for the 6th color + gated buttons),
+`.claude/contracts/card-schema.md` (re-review no longer folds to blue —
+corrected the "Display-axis translation" mapping text + the
+`re-review`-bucket section itself; new section documenting the real
+`/api/card/review-status` gate, distinguishing it from the pre-existing,
+still-accurate "no gate for production MATCHING consumption" policy
+paragraph, which I narrowed in wording rather than deleted since it's still
+true for that different concern).
+
+**Verified live** (`npx nuxt dev`, but found and reused an ALREADY-RUNNING
+dev server on port 3000, PID 92398, started earlier the same day by some
+other process — did not start a second one once found, did not kill it,
+left it running exactly as found after testing):
+- `GET /api/engine-status` + `POST /api/engine-status/review`: confirmed
+  gap-19 (real blue baseline) -> green + fingerprint written; perturbed
+  `functional-model/state.test.ts` (one of gap-19's real cited test files)
+  -> re-fetch showed `color: 're-review'`, `baseline` still `blue`;
+  restored the file byte-for-byte -> back to green; cleared the review.
+  Confirmed a gray gap (gap-25) and a purple gap (gap-1) both 400 on
+  confirm/reject attempts, no write to `engine-status-reviews.json`.
+- `GET /api/sink-derivations` + `POST /api/sink-derivations/review`: same
+  drift-detection round-trip against the real `saga` predicate (perturbed
+  `functional-model/sink-model/predicates/saga.ts`, confirmed re-review,
+  restored, confirmed green again); confirmed `stun-counters` (gray) 400s.
+- `POST /api/card/review-status`: confirmed a real purple-baseline FIN card
+  (fin/31, Sidequest: Catch a Fish // Cooking Campsite) 400s on confirm with
+  zero write to its `progress.json` (diffed byte-identical after); confirmed
+  a real green-bucket card (fin/4, Aerith Gainsborough) succeeds, flips to
+  `verified` live via `/api/card/fin/4`; reverted `progress.json` to its
+  original byte-for-byte content and deleted the `verified-snapshot.json`
+  this test run created, confirmed `git status --short` shows no diff on
+  either card's directory afterward.
+- Both `functional-model/engine-status-reviews.json` and
+  `sink-derivation-reviews.json` confirmed back to their original `{}` after
+  all live testing.
+- `npx vitest run functional-model` — 108 files, 1097 passed + 5 skipped
+  (+6 net new tests vs. this task's own start). Full-repo `npx vitest run` —
+  same pre-existing 5 unrelated `tagging/sets/{lea,leb,2ed,arn}`/
+  `card-enrichment-status.json` failures, untouched by this task.
+- `npm run typecheck` — same pre-existing baseline errors
+  (`CardDetailTabs.vue` x3, `card-status.ts:263`, `card.ts:2970`,
+  `mana.ts:275`, `server/api/tokens/by-key.ts:32`) PLUS 8 new, EXPECTED
+  errors in `app/pages/app/engine/features/index.vue` and
+  `.../predicates/index.vue` — both files declare their own local
+  `type StatusColor = 'gray'|'purple'|'blue'|'yellow'|'green'` (5-valued),
+  now too narrow for the widened `EngineStatusColor`/`SinkDerivationColor`.
+  Deliberately NOT fixed here (`app/*` is out of scope per this task's own
+  explicit constraint, and the task's own framing already names this as the
+  follow-up `ui` task's job — "needs the new re-review color for the visual
+  redesign already planned"). Confirmed via `git status --short` that zero
+  `app/*` files were touched by this task.
+- **Open Forge-verification needed: none.** Pure status-dashboard/review-
+  workflow plumbing — no `interfaces.ts` mirror, no new real-world rules
+  claim, no change to any real synergy-matching/classification logic beyond
+  the matching-time usability gate already documented as the intended
+  enforcement point.
+
+**Follow-up for `ui` (not done here, flagged per task instruction)**: widen
+both pages' local `StatusColor` type alias to include `'re-review'` (and
+pick a display for the new bright/light-blue `#7dd3fc` color), and hide/
+disable the confirm/reject controls unless the entry's `baseline` is
+`blue` (equivalently: color is `blue` or `re-review`) — the server-side
+gate added this task makes an ineligible click 400 rather than silently
+no-op, so the UI fix is about UX polish, not correctness.

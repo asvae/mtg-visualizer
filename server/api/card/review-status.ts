@@ -54,8 +54,47 @@
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { DatabaseSync } from 'node:sqlite';
 import { slugify } from '../../../app/lib/buildGraph';
+import { cardStatusBaseline } from '../../../functional-model/card-status';
+import type { CardStatusEntry } from '../../../functional-model/card-status';
+
+// Confirm-eligibility gate (2026-09-18) — "confirm/reject only meaningful at
+// blue/re-review" (see `.claude/contracts/engine-status-schema.md`/
+// `sink-derivation-status-schema.md`'s own identical rule for their axes):
+// a FACTS "Confirm"/"Confirm (Uncertain)" click on this card is semantically
+// meaningless unless the card's CURRENT (pre-write) fact-authoring
+// completeness has actually reached the shared `blue` baseline (this axis's
+// own `functional-model/card-status.ts` `cardStatusBaseline` fold — `blue`
+// covers `green`/`verified`/`uncertain`/`re-review`, all of which require
+// the underlying 8-bucket classifier to have reached full, provenance-clean,
+// fully-text-covered completeness at least once; `gray`/`purple` never do).
+// Reuses the exact same live single-card classification
+// `server/api/card/[set]/[number].ts`'s own `computeCardStatusLive` already
+// spawns for its per-request `cardStatus` badge (`functional-model/scripts/
+// compute-one-card-status.mjs` under vite-node — see that route's own
+// comment for why this needs a subprocess rather than an in-process import).
+// There is no separate "reject" verdict on this axis (FIN's own review model
+// only has Confirm/Unconfirm/"Confirm (Uncertain)", no distinct rejection
+// action) — only the CONFIRM path (`reviewed === true`) is gated; Unconfirm
+// (`reviewed === false`) always succeeds unconditionally, same as clearing a
+// review on the other two axes.
+const execFileAsync = promisify(execFile);
+async function computeCurrentCardStatusBaseline(slug: string, number: string): Promise<'gray' | 'purple' | 'blue' | null> {
+  try {
+    const { stdout } = await execFileAsync(join(process.cwd(), 'node_modules/.bin/vite-node'), [
+      join(process.cwd(), 'functional-model/scripts/compute-one-card-status.mjs'),
+      slug,
+      number,
+    ]);
+    const entry = JSON.parse(stdout) as CardStatusEntry;
+    return cardStatusBaseline(entry.status);
+  } catch {
+    return null;
+  }
+}
 
 // Snapshotting real oracle text at the moment a human confirms the FACTS
 // review (`field === 'review'`, `reviewed === true`) — baked
@@ -143,6 +182,27 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 404);
     return { error: `no functional-model card directory for "${name}" (slug "${slug}")` };
   }
+
+  // Confirm-eligibility gate — see this file's own header comment on
+  // `computeCurrentCardStatusBaseline` for the full rationale. Only the
+  // `field === 'review'`, `reviewed === true` path (Confirm / "Confirm
+  // (Uncertain)") is gated; Unconfirm and the other two review axes
+  // (`scenariosReview`/`interactionsReview`, unrelated to this shared
+  // gray/purple/blue/yellow/green axis) are never gated.
+  if (field === 'review' && reviewed === true) {
+    const numberForGate: string = typeof body?.number === 'string' ? body.number : '';
+    const currentBaseline = await computeCurrentCardStatusBaseline(slug, numberForGate);
+    if (currentBaseline === null || currentBaseline === 'gray' || currentBaseline === 'purple') {
+      setResponseStatus(event, 400);
+      return {
+        error:
+          `"${name}" is currently ${currentBaseline ?? 'unknown (status could not be computed)'}, not blue (or a stale, ` +
+          `drifted re-review) — confirming this card's facts review is only meaningful once its fact-authoring has ` +
+          `actually reached the fully-covered baseline`,
+      };
+    }
+  }
+
   const progressPath = join(dir, 'progress.json');
 
   // Merge onto whatever's already there (enrichment/review/notes/knownGaps/

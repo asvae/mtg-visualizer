@@ -104,9 +104,23 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { findFunctionalModelFilesByBasename, readFunctionalModelFile } from './source-files';
 
 export type EngineStatusBaseline = 'gray' | 'purple' | 'blue';
-export type EngineStatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+// 're-review' (2026-09-18) is a SIXTH state, never computed here — a review
+// OVERLAY refinement of a human 'confirm', not a baseline value (a
+// `re-review`-colored entry's own `baseline` is still 'blue': the underlying
+// ENGINE_GAPS.md-derived completeness signal hasn't regressed, only the
+// PRIOR confirmation has gone stale — see `computeEngineStatusFingerprint`
+// below and `server/api/engine-status/index.get.ts`'s own color computation
+// for how a mismatch between a confirm's stored fingerprint and the current
+// one produces this color instead of 'green'). Same "bright/light blue,
+// distinct from verified-blue" semantics `functional-model/card-status.ts`'s
+// own `re-review` bucket already established for FIN
+// (`#7dd3fc`, vs. plain blue's `#3b82f6`) — this axis reuses that exact
+// concept, not a new one.
+export type EngineStatusColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green' | 're-review';
 
 export interface EngineStatusEvidence {
   /** `ENGINE_GAPS.md`'s own gap number (its "## Real gaps — prioritized" numbering) — the real, stable identifier a reader can go look up directly. */
@@ -220,4 +234,49 @@ export function computeEngineStatus(root: string = process.cwd()): EngineStatusE
       },
     };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Confirmation drift fingerprint (2026-09-18) — the real mechanism backing
+// the `re-review` color, generalizing FIN's own
+// `scripts/check-verified-regressions.mjs` (see that script's own header +
+// `.claude/contracts/card-schema.md`'s "Verified-snapshot regression guard"
+// section) to this axis: the moment a human CONFIRMS a gap
+// (`server/api/engine-status/review.post.ts`), that route snapshots this
+// fingerprint alongside the review record. A later read
+// (`server/api/engine-status/index.get.ts`) recomputes the CURRENT
+// fingerprint and compares — a mismatch means the gap's own real inputs
+// (its ENGINE_GAPS.md prose, or the content of any `*.test.ts` file it
+// cites) have changed since that confirmation, so the color becomes
+// `re-review` instead of trusting a now-stale `green`.
+//
+// Inputs hashed (both real, checkable signals — never a guess): the gap
+// item's own full whitespace-flattened text (NOT the truncated 280-char
+// `evidence.excerpt` — the real, complete span, so a change outside that
+// excerpt's own first 280 characters still trips a mismatch), and the real,
+// current content of every distinct `*.test.ts` file its own text cites,
+// resolved against the real repo tree exactly the way `testFileRefs`/
+// `GET /api/engine-status/source` already do (`findFunctionalModelFilesByBasename`
+// — every real match for a citation, not one guessed path, same collision
+// safety that resolver already needs for `engine.test.ts`'s own real
+// basename collision).
+export function computeEngineStatusFingerprint(gapNumber: number, root: string = process.cwd()): string | null {
+  const fmDir = join(root, 'functional-model');
+  const item = parseGapItems(fmDir).find((i) => i.gapNumber === gapNumber);
+  if (!item) return null;
+
+  const testFiles = Array.from(new Set(Array.from(item.flatText.matchAll(TEST_CITATION_RE)).map((mm) => mm[1]!)));
+
+  const hash = createHash('sha256');
+  hash.update(item.flatText);
+  for (const file of testFiles) {
+    const matches = findFunctionalModelFilesByBasename(root, file);
+    hash.update(` file:${file}`);
+    for (const relPath of matches) {
+      const result = readFunctionalModelFile(root, relPath);
+      hash.update(` match:${relPath}`);
+      hash.update(result.content ?? ' <unreadable>');
+    }
+  }
+  return hash.digest('hex');
 }

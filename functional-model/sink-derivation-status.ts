@@ -85,9 +85,22 @@
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { readFunctionalModelFile } from './source-files';
 
 export type SinkDerivationBaseline = 'gray' | 'purple' | 'blue';
-export type SinkDerivationColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+// 're-review' (2026-09-18) is a SIXTH state, never computed by
+// `computeSinkDerivationStatus` — a review OVERLAY refinement of a human
+// 'confirm', not a baseline value (see `computeSinkDerivationFingerprint`
+// below and `computeSinkDerivationColor`'s own updated logic): a
+// `re-review`-colored mechanism's own `baseline` is still 'blue' (the real
+// predicate-module+corpus-manifest completeness signal hasn't regressed),
+// only the PRIOR human confirmation has gone stale because the predicate's
+// own source or its corpus manifest changed since. Same concept
+// `functional-model/card-status.ts`'s own `re-review` bucket already
+// established for FIN (bright/light blue `#7dd3fc`, distinct from plain
+// verified-blue `#3b82f6`) — reused here, not reinvented.
+export type SinkDerivationColor = 'gray' | 'purple' | 'blue' | 'yellow' | 'green' | 're-review';
 
 /** One real sink-query event-shape a mechanism's eventual predicate is expected to cover. */
 export interface SinkDerivationExpectedShape {
@@ -327,6 +340,13 @@ const REVIEWS_RELATIVE_PATH = join('functional-model', 'sink-derivation-reviews.
 
 interface SinkDerivationReviewVerdictOnly {
   verdict?: 'confirm' | 'reject';
+  /** Snapshotted by `server/api/sink-derivations/review.post.ts` the moment
+   * a human CONFIRMS this mechanism — see `computeSinkDerivationFingerprint`
+   * below. Only ever meaningful alongside `verdict: 'confirm'`; unused for
+   * `'reject'` (a rejection's own note already records the disagreement
+   * found; drift detection is specifically about a stale CONFIRMATION going
+   * stale, not a stale rejection). */
+  fingerprint?: string;
 }
 
 function loadReviewVerdicts(root: string): Record<string, SinkDerivationReviewVerdictOnly> {
@@ -339,18 +359,72 @@ function loadReviewVerdicts(root: string): Record<string, SinkDerivationReviewVe
   }
 }
 
-/** Live color for ONE mechanism — baseline, or the yellow/green human-review
- * overlay on top of it — the same computation `server/api/sink-derivations/
- * index.get.ts` performs for its whole served list, narrowed to a single
- * slug for a matching-time gate check. Uncached — see
- * `isSinkDerivationMechanismUsable` below for the cached, gate-facing
- * entry point production code should actually call. */
+// ---------------------------------------------------------------------------
+// Confirmation drift fingerprint (2026-09-18) — generalizes FIN's own
+// `scripts/check-verified-regressions.mjs` mechanism (see that script's own
+// header + `.claude/contracts/card-schema.md`'s "Verified-snapshot
+// regression guard" section) to this axis: the moment a human CONFIRMS a
+// mechanism, `server/api/sink-derivations/review.post.ts` snapshots this
+// fingerprint alongside the review record. A later read
+// (`computeSinkDerivationColor` below, and `server/api/sink-derivations/
+// index.get.ts`'s own served color) recomputes the CURRENT fingerprint and
+// compares — a mismatch means the mechanism's real predicate source or its
+// corpus manifest has changed since that confirmation, so the color becomes
+// `re-review` instead of trusting a now-stale `green`.
+//
+// Inputs hashed: the real, current content of BOTH the predicate module
+// (`<slug>.ts`) and its corpus manifest (`<slug>.corpus.json`) — the two
+// real, checkable inputs `computeSinkDerivationStatus` itself already reads
+// to decide gray/purple/blue for this mechanism. Uses
+// `readFunctionalModelFile` (same read-only, scope-safe primitive
+// `sourceFiles` in the served shape already uses) rather than a bare
+// `readFileSync`, so a missing file hashes a stable, distinct marker instead
+// of throwing.
+export function computeSinkDerivationFingerprint(slug: string, root: string = process.cwd()): string | null {
+  const mechanism = SINK_DERIVATION_MECHANISMS.find((m) => m.slug === slug);
+  if (!mechanism) return null;
+
+  const predicatesDir = join('functional-model', 'sink-model', 'predicates');
+  const predicateResult = readFunctionalModelFile(root, join(predicatesDir, `${slug}.ts`));
+  const corpusResult = readFunctionalModelFile(root, join(predicatesDir, `${slug}.corpus.json`));
+
+  const hash = createHash('sha256');
+  hash.update(` predicate:${predicateResult.exists ? (predicateResult.content ?? '') : '<missing>'}`);
+  hash.update(` corpus:${corpusResult.exists ? (corpusResult.content ?? '') : '<missing>'}`);
+  return hash.digest('hex');
+}
+
+/** Live color for ONE mechanism — baseline, or the yellow/green/re-review
+ * human-review overlay on top of it — the same computation
+ * `server/api/sink-derivations/index.get.ts` performs for its whole served
+ * list, narrowed to a single slug for a matching-time gate check. Uncached —
+ * see `isSinkDerivationMechanismUsable` below for the cached, gate-facing
+ * entry point production code should actually call.
+ *
+ * A review overlay (confirm/reject) is only ever meaningful on a `blue`
+ * baseline (2026-09-18) — "was this mechanism ever actually verified" is a
+ * precondition for either "a human confirmed it" or "a human rejected it";
+ * confirming/rejecting a `gray`/`purple` mechanism is semantically
+ * meaningless (nothing was ever claimed to be corpus-verified in the first
+ * place) and is now refused server-side at write time too (see
+ * `server/api/sink-derivations/review.post.ts`). Enforced HERE too, at
+ * read/compute time, as defense in depth — `sink-derivation-reviews.json`
+ * is still a flat, hand-editable file (not exclusively written through the
+ * gated POST route), so a stale/hand-authored review record sitting on a
+ * `gray`/`purple` mechanism must never be trusted into a `green`/`yellow`
+ * color; it's silently ignored, falling back to the plain baseline. */
 export function computeSinkDerivationColor(slug: string, root: string = process.cwd()): SinkDerivationColor {
   const entry = computeSinkDerivationStatus(root).find((e) => e.slug === slug);
   const baseline: SinkDerivationBaseline = entry?.baseline ?? 'gray';
+  if (baseline !== 'blue') return baseline;
+
   const review = loadReviewVerdicts(root)[slug];
   if (review?.verdict === 'reject') return 'yellow';
-  if (review?.verdict === 'confirm') return 'green';
+  if (review?.verdict === 'confirm') {
+    const currentFingerprint = computeSinkDerivationFingerprint(slug, root);
+    if (!review.fingerprint || !currentFingerprint || review.fingerprint !== currentFingerprint) return 're-review';
+    return 'green';
+  }
   return baseline;
 }
 
@@ -394,10 +468,14 @@ export function resetSinkDerivationColorCacheForTests(): void {
 
 /**
  * The real gate: is mechanism `slug`'s LIVE status usable by real matching
- * right now? Only `blue`/`green` are — `gray`/`purple` return `false`,
- * meaning the caller must treat that mechanism's predicate as if it doesn't
- * exist (contribute zero occurrences), never throw or otherwise break
- * matching. Cached per `root` — see the cache comment above.
+ * right now? Only `blue`/`green` are — `gray`/`purple`/`yellow`/`re-review`
+ * return `false`, meaning the caller must treat that mechanism's predicate
+ * as if it doesn't exist (contribute zero occurrences), never throw or
+ * otherwise break matching. `re-review` (2026-09-18) is deliberately NOT
+ * usable, same as `gray`/`purple` — a confirmation whose own inputs have
+ * since drifted is no longer a trustworthy human sign-off; it takes a FRESH
+ * confirm (re-baselining the fingerprint) to become usable again, not a
+ * stale one. Cached per `root` — see the cache comment above.
  */
 export function isSinkDerivationMechanismUsable(slug: string, root: string = process.cwd()): boolean {
   const color = cachedColor(slug, root);

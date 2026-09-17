@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import {
   computeSinkDerivationStatus,
   computeSinkDerivationColor,
+  computeSinkDerivationFingerprint,
   isSinkDerivationMechanismUsable,
   resetSinkDerivationColorCacheForTests,
   SINK_DERIVATION_MECHANISMS,
@@ -173,7 +174,7 @@ describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the r
     }
   });
 
-  it('a human "confirm" review verdict overlays a NOT-yet-blue (gray/purple) baseline to green -> IS usable — the one way a not-yet-corpus-verified mechanism can still be used for real matching, via explicit human sign-off', () => {
+  it('a human "confirm" review verdict sitting on a NOT-yet-blue (gray/purple) baseline is IGNORED, not carried forward as green (2026-09-18) — confirm/reject is only ever meaningful once a mechanism has actually reached the blue/corpus-verified baseline; `./review.post.ts` now refuses to write this in the first place, but this is the read-time defense-in-depth half (a stale/hand-authored review record must never be trusted)', () => {
     const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
     try {
       const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
@@ -189,10 +190,63 @@ describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the r
       // the overlaid color, so this test doesn't just restate its own setup.
       expect(computeSinkDerivationStatus(fakeRoot).find((e) => e.slug === 'saga')!.baseline).toBe('purple');
 
+      expect(computeSinkDerivationColor('saga', fakeRoot)).toBe('purple');
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(false);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('a stale confirm on a blue baseline whose predicate/corpus content has since changed reads back as re-review, not green (drift detection)', () => {
+    const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
+    try {
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      mkdirSync(predicatesDir, { recursive: true });
+      writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate v1\n');
+      writeFileSync(join(predicatesDir, 'saga.corpus.json'), JSON.stringify({ total: 2, passing: 2 }));
+
+      const fingerprintAtConfirm = computeSinkDerivationFingerprint('saga', fakeRoot)!;
+      expect(fingerprintAtConfirm).toBeTruthy();
+      writeFileSync(
+        join(fakeRoot, 'functional-model', 'sink-derivation-reviews.json'),
+        JSON.stringify({ saga: { verdict: 'confirm', reviewedAt: '2026-09-18', fingerprint: fingerprintAtConfirm } }),
+      );
+
+      // Fresh confirm, unchanged predicate source -> green, usable.
+      // `computeSinkDerivationColor` itself is uncached (always fresh), but
+      // `isSinkDerivationMechanismUsable` goes through the per-root
+      // `cachedColor` memoization — reset before every check in this test so
+      // each assertion re-reads the real, current filesystem state instead
+      // of serving an earlier call's cached verdict (see
+      // `resetSinkDerivationColorCacheForTests`'s own doc comment; the
+      // pre-existing cache-behavior test below this one covers the caching
+      // itself, this test is about drift detection).
+      resetSinkDerivationColorCacheForTests();
+      expect(computeSinkDerivationColor('saga', fakeRoot)).toBe('green');
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(true);
+
+      // Predicate source content drifts (a real edit lands after the human
+      // confirmed) — the stored fingerprint no longer matches the current
+      // one, so the color must downgrade to re-review, and re-review must
+      // NOT be usable for real matching (a stale confirmation is not a
+      // trustworthy one).
+      writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate v2 — real logic changed\n');
+      resetSinkDerivationColorCacheForTests();
+      expect(computeSinkDerivationColor('saga', fakeRoot)).toBe('re-review');
+      expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(false);
+
+      // A fresh re-confirm (new fingerprint) restores green/usable.
+      const freshFingerprint = computeSinkDerivationFingerprint('saga', fakeRoot)!;
+      writeFileSync(
+        join(fakeRoot, 'functional-model', 'sink-derivation-reviews.json'),
+        JSON.stringify({ saga: { verdict: 'confirm', reviewedAt: '2026-09-18', fingerprint: freshFingerprint } }),
+      );
+      resetSinkDerivationColorCacheForTests();
       expect(computeSinkDerivationColor('saga', fakeRoot)).toBe('green');
       expect(isSinkDerivationMechanismUsable('saga', fakeRoot)).toBe(true);
     } finally {
       rmSync(fakeRoot, { recursive: true, force: true });
+      resetSinkDerivationColorCacheForTests();
     }
   });
 

@@ -22,7 +22,7 @@
 // written by this route's own sibling, `./review.post.ts`.
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { computeEngineStatus } from '../../../functional-model/engine-status';
+import { computeEngineStatus, computeEngineStatusFingerprint } from '../../../functional-model/engine-status';
 import type { EngineStatusBaseline, EngineStatusColor, EngineStatusEvidence } from '../../../functional-model/engine-status';
 import { findFunctionalModelFilesByBasename } from '../../../functional-model/source-files';
 
@@ -57,6 +57,13 @@ export interface EngineStatusReview {
   note?: string;
   reviewedAt?: string;
   reviewedBy?: string;
+  /** Snapshotted by `./review.post.ts` only for a `'confirm'` verdict —
+   * `computeEngineStatusFingerprint(gapNumber)`'s own value at the moment of
+   * confirmation. Compared against the CURRENT fingerprint below on every
+   * read; a mismatch downgrades the served `color` from `green` to
+   * `re-review` (2026-09-18) instead of trusting a now-stale confirmation.
+   * Unused for `'reject'`. */
+  fingerprint?: string;
 }
 
 function loadReviews(): Record<string, EngineStatusReview> {
@@ -82,14 +89,35 @@ export interface EngineStatusPageEntry {
   review?: EngineStatusReview;
 }
 
+// A review overlay (confirm/reject) is only ever meaningful on a `blue`
+// baseline (2026-09-18) — "was this gap ever actually verified" is a
+// precondition for either "a human confirmed it" or "a human rejected it";
+// this dashboard's own confirm/reject write path (`./review.post.ts`) now
+// refuses a `gray`/`purple` entry outright, but `engine-status-reviews.json`
+// is still a flat, hand-editable file (not exclusively written through that
+// gated route) — so this is enforced HERE too, at read time, as defense in
+// depth: a stale/hand-authored review sitting on a `gray`/`purple` gap is
+// silently ignored (falls back to the plain baseline), never trusted into a
+// misleading `green`/`yellow`.
+function colorFor(root: string, entry: { gapNumber: number; baseline: EngineStatusBaseline }, review: EngineStatusReview | undefined): EngineStatusColor {
+  if (entry.baseline !== 'blue') return entry.baseline;
+  if (review?.verdict === 'reject') return 'yellow';
+  if (review?.verdict === 'confirm') {
+    const currentFingerprint = computeEngineStatusFingerprint(entry.gapNumber, root);
+    if (!review.fingerprint || !currentFingerprint || review.fingerprint !== currentFingerprint) return 're-review';
+    return 'green';
+  }
+  return entry.baseline;
+}
+
 export default defineEventHandler((): EngineStatusPageEntry[] => {
-  const baselineEntries = computeEngineStatus();
+  const root = process.cwd();
+  const baselineEntries = computeEngineStatus(root);
   const reviews = loadReviews();
 
   return baselineEntries.map((entry): EngineStatusPageEntry => {
     const review = reviews[entry.key];
-    const color: EngineStatusColor =
-      review?.verdict === 'reject' ? 'yellow' : review?.verdict === 'confirm' ? 'green' : entry.baseline;
+    const color = colorFor(root, entry, review);
     return { ...entry, testFileRefs: resolveTestFileRefs(entry.evidence.testFiles), color, review };
   });
 });
