@@ -30,27 +30,33 @@
 // in, plain data out) — only this page's own script knows `SET` exists.
 //
 // Preserves: the live-recompute-in-dev/checked-in-snapshot-in-prod
-// `/api/card-status/:set` fetch, the same-tab optimistic review-status-bus
-// overlay (`useReviewStatusBus.ts`) the old grid used so a just-confirmed
-// card re-colors without a refetch, and CardPeekPanel (clicking a row still
-// opens the real card preview, same as clicking a square used to). Does
-// NOT preserve the grid's own bespoke ArrowLeft/ArrowRight-while-panel-open
-// keyboard nav or its hover tooltip — both are superseded by this shell's
-// shared Prev/Next buttons and always-visible detail pane respectively, so
-// carrying them forward unchanged would've been duplicate mechanism for
-// the same job, not a preserved capability.
-import { computed, inject } from 'vue';
-import { StoreKey } from '../../../../composables/useGraphStore';
+// `/api/card-status/:set` fetch, and the same-tab optimistic
+// review-status-bus overlay (`useReviewStatusBus.ts`) the old grid used so
+// a just-confirmed card re-colors without a refetch. Does NOT preserve the
+// grid's own bespoke ArrowLeft/ArrowRight-while-panel-open keyboard nav or
+// its hover tooltip — both are superseded by this shell's shared Prev/Next
+// buttons and always-visible detail pane respectively, so carrying them
+// forward unchanged would've been duplicate mechanism for the same job,
+// not a preserved capability.
+//
+// 2026-09-17 (later same day): selecting a row no longer opens
+// `CardPeekPanel.vue` (a floating overlay) — this tab's detail pane now
+// renders the card's real full content directly inline, via
+// `CardDetailTabs.vue` (the same shared component the standalone
+// `/app/card/[set]/[number]` page and `CardPeekPanel.vue` itself both
+// mount — see the `#detail` template below for the fetch/render logic).
+// No popup at all on this tab anymore; the graph page's own peek panel is
+// unaffected.
+import { computed } from 'vue';
 import { onReviewStatusChanged } from '../../../../composables/useReviewStatusBus';
 import type { ReviewStatusChange } from '../../../../composables/useReviewStatusBus';
 import { useStatusFilterList } from '../../../../composables/useStatusFilterList';
 import type { StatusFilterOption } from '../../../../composables/useStatusFilterList';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
+import type { CardResponse } from '../../../../lib/cardResponse';
 
 definePageMeta({ layout: 'graph' });
 useHead({ title: 'Fact-authoring status' });
-
-const store = inject(StoreKey)!;
 
 // Mirrors `functional-model/card-status.ts`'s own `CardStatusEntry`/bucket
 // union, duplicated here rather than imported — this page only ever reads
@@ -188,108 +194,134 @@ function statusMeta(status: CardStatusBucket) {
   return STATUS_OPTIONS.find((o) => o.value === status)!;
 }
 
-function openCard(entry: CardStatusEntry) {
-  store.openCardPanel(SET.value, entry.number);
-}
-function selectAndOpen(entry: CardStatusEntry) {
-  list.select(entry);
-  openCard(entry);
-}
+// Real card content, inline in the detail pane — this tab used to open the
+// same-shape data via `CardPeekPanel.vue` (a floating overlay) on row click;
+// per explicit 2026-09-17 rework that panel is dropped for this tab
+// entirely in favor of rendering `CardDetailTabs.vue` (the actual shared
+// content component both `CardPeekPanel.vue` and the standalone
+// `/app/card/[set]/[number]` page mount — see either's own header comment)
+// directly in the pane, so selecting a row IS the whole interaction. Fetch
+// shape (in-memory-only `set/number`-keyed cache, loading/not-found refs)
+// deliberately mirrors `CardPeekPanel.vue`'s own copy rather than reusing
+// its component outright — that component's chrome (drag-to-resize, close/
+// expand buttons, its own `<aside>` overlay styling) is exactly what this
+// tab shouldn't have.
+const responseCache = new Map<string, CardResponse>();
+const cardData = ref<CardResponse | null>(null);
+const cardLoading = ref(false);
+const cardNotFound = ref(false);
+
+const selectedCardKey = computed(() => (selectedEntry.value ? `${SET.value}/${selectedEntry.value.number}` : null));
+
+watch(
+  selectedCardKey,
+  async (key, prevKey) => {
+    cardNotFound.value = false;
+    if (!key) return;
+    const cached = responseCache.get(key);
+    if (cached) {
+      cardData.value = cached;
+      return;
+    }
+    if (key !== prevKey) cardData.value = null;
+    cardLoading.value = true;
+    try {
+      const [set, number] = key.split('/');
+      const res = await fetch(`/api/card/${encodeURIComponent(set!)}/${encodeURIComponent(number!)}`);
+      if (!res.ok) {
+        cardNotFound.value = true;
+        return;
+      }
+      const body = (await res.json()) as CardResponse;
+      responseCache.set(key, body);
+      cardData.value = body;
+    } catch {
+      cardNotFound.value = true;
+    } finally {
+      cardLoading.value = false;
+    }
+  },
+  { immediate: true },
+);
 </script>
 
 <template>
-  <div class="relative flex min-h-0 flex-1">
-    <EngineConsoleShell
-      :pending="statusPending && !statusFile"
-      :error="statusError"
-      :can-prev="list.canPrev.value"
-      :can-next="list.canNext.value"
-      :position-label="list.positionLabel.value"
-      @prev="list.selectPrev"
-      @next="list.selectNext"
-    >
-      <template #nav>
-        <div class="mb-1 flex items-center gap-2 px-1.5">
-          <h1 class="text-sm font-semibold text-text">Fact-authoring status</h1>
-          <USelect
-            :model-value="SET"
-            @update:model-value="(v) => (SET = String(v))"
-            :items="(availableSets ?? [SET]).map((s) => ({ label: s.toUpperCase(), value: s }))"
-            size="xs"
-            class="ml-auto w-20"
-          />
-        </div>
-        <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
-          One row per card, colored by how far its functional-model facts have come along — see
-          <code class="rounded bg-bg px-1 py-0.5">scripts/AI_FACT_ELIMINATION_PROCESS.md</code>.
-          <template v-if="statusFile">
-            Computed as of {{ new Date(statusFile.generatedAt).toLocaleString() }}.
-          </template>
-        </p>
-
-        <EngineConsoleStatusFilterControls
-          :search-query="list.searchQuery.value"
-          search-placeholder="Search cards…"
-          :status-options="STATUS_OPTIONS"
-          :active-filters="list.activeFilters.value"
-          :counts="list.countsByStatus.value"
-          :visible-count="list.visible.value.length"
-          :total-count="rawCards.length"
-          @update:search-query="(v: string) => (list.searchQuery.value = v)"
-          @toggle="list.toggleFilter"
+  <EngineConsoleShell
+    :pending="statusPending && !statusFile"
+    :error="statusError"
+    :can-prev="list.canPrev.value"
+    :can-next="list.canNext.value"
+    :position-label="list.positionLabel.value"
+    @prev="list.selectPrev"
+    @next="list.selectNext"
+  >
+    <template #nav>
+      <div class="mb-1 flex items-center gap-2 px-1.5">
+        <h1 class="text-sm font-semibold text-text">Fact-authoring status</h1>
+        <USelect
+          :model-value="SET"
+          @update:model-value="(v) => (SET = String(v))"
+          :items="(availableSets ?? [SET]).map((s) => ({ label: s.toUpperCase(), value: s }))"
+          size="xs"
+          class="ml-auto w-20"
         />
+      </div>
+      <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
+        One row per card, colored by how far its functional-model facts have come along — see
+        <code class="rounded bg-bg px-1 py-0.5">scripts/AI_FACT_ELIMINATION_PROCESS.md</code>.
+        <template v-if="statusFile">
+          Computed as of {{ new Date(statusFile.generatedAt).toLocaleString() }}.
+        </template>
+      </p>
 
-        <EngineConsoleEntryListPanel
-          :entries="list.visible.value"
-          :key-of="(e: CardStatusEntry) => e.number"
-          :selected-key="list.selectedKey.value"
-          empty-message="No cards match the current search/filters."
-          @select="selectAndOpen"
-        >
-          <template #row="{ entry }">
-            <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.status).color }" />
-            <span class="shrink-0 text-[10px] tabular-nums text-muted/70">#{{ entry.number }}</span>
-            <span class="truncate">{{ entry.name }}</span>
-          </template>
-        </EngineConsoleEntryListPanel>
+      <EngineConsoleStatusFilterControls
+        :search-query="list.searchQuery.value"
+        search-placeholder="Search cards…"
+        :status-options="STATUS_OPTIONS"
+        :active-filters="list.activeFilters.value"
+        :counts="list.countsByStatus.value"
+        :visible-count="list.visible.value.length"
+        :total-count="rawCards.length"
+        @update:search-query="(v: string) => (list.searchQuery.value = v)"
+        @toggle="list.toggleFilter"
+      />
+
+      <EngineConsoleEntryListPanel
+        :entries="list.visible.value"
+        :key-of="(e: CardStatusEntry) => e.number"
+        :selected-key="list.selectedKey.value"
+        empty-message="No cards match the current search/filters."
+        @select="list.select"
+      >
+        <template #row="{ entry }">
+          <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.status).color }" />
+          <span class="shrink-0 text-[10px] tabular-nums text-muted/70">#{{ entry.number }}</span>
+          <span class="truncate">{{ entry.name }}</span>
+        </template>
+      </EngineConsoleEntryListPanel>
+    </template>
+
+    <template #detail>
+      <!-- 2026-09-17: this pane used to be a small custom summary (name,
+           collector number, status dot, reasons list) plus an "Open card"
+           button that opened `CardPeekPanel.vue` (a floating overlay) — per
+           explicit rework, this tab drops that popup entirely and instead
+           renders the card's real full content directly here, via
+           `CardDetailTabs.vue` — the SAME shared component the standalone
+           `/app/card/[set]/[number]` page and `CardPeekPanel.vue` both
+           already mount (see either's own header comment for why: one
+           component, so a future change to the tab set can't leave any of
+           its three consumers behind). The reasons/status summary itself
+           isn't lost — `CardDetailTabs.vue` already renders this exact same
+           live `cardStatus` (color dot + reasons tooltip) on its own
+           Facts-tab strip, so repeating it here would just be a duplicate,
+           not new information. -->
+      <template v-if="selectedEntry">
+        <CardImageSkeleton v-if="cardLoading && !cardData" />
+        <p v-else-if="cardNotFound" class="text-xs text-muted italic">Card not found.</p>
+        <CardDetailTabs v-else-if="cardData" :data="cardData" :set="SET" :number="selectedEntry.number" />
       </template>
-
-      <template #detail>
-        <div v-if="selectedEntry" class="rounded-md border border-border-subtle bg-panel p-3">
-          <div class="flex items-start gap-2">
-            <span
-              class="mt-0.5 h-3 w-3 shrink-0 rounded-full"
-              :style="{ background: statusMeta(selectedEntry.status).color }"
-              :title="statusMeta(selectedEntry.status).label"
-            ></span>
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-baseline gap-x-2">
-                <span class="text-sm font-semibold text-text">{{ selectedEntry.name }}</span>
-                <span class="text-[11px] tabular-nums text-muted">#{{ selectedEntry.number }}</span>
-                <span class="rounded bg-surface px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-muted uppercase">
-                  {{ statusMeta(selectedEntry.status).label }}
-                </span>
-              </div>
-
-              <ul class="mt-2 list-disc space-y-0.5 pl-4 text-[11px] leading-relaxed text-muted">
-                <li v-for="(reason, i) in selectedEntry.reasons" :key="i">{{ reason }}</li>
-              </ul>
-
-              <UButton class="mt-3" size="xs" color="neutral" variant="subtle" icon="i-lucide-external-link" @click="openCard(selectedEntry)">
-                Open card
-              </UButton>
-            </div>
-          </div>
-        </div>
-        <p v-else class="text-xs text-muted italic">Pick a card from the sidebar.</p>
-      </template>
-    </EngineConsoleShell>
-
-    <!-- PRD 02 "Navigation" — mounted here too, same as the old grid page
-         (see CardPeekPanel.vue's own header comment for the full mount-point
-         list). A real flex sibling of EngineConsoleShell's own root, same
-         "opening the panel shrinks the shell instead of covering it"
-         behavior every other mount point already has. -->
-    <CardPeekPanel />
-  </div>
+      <p v-else class="text-xs text-muted italic">Pick a card from the sidebar.</p>
+    </template>
+  </EngineConsoleShell>
 </template>

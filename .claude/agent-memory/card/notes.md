@@ -6410,3 +6410,30 @@ narrative/process record, that file has the authoritative shape.
   card-schema.md` updated directly with the full design + live-verification
   writeup rather than left to a future flag, since this task's own dispatch
   asked for it explicitly.
+
+- 2026-09-17: `/app/engine/sets` (`app/pages/app/engine/sets/index.vue`)
+  reworked so selecting a row in its sidebar renders the card's real full
+  content (Facts/Scenarios/Interactions tabs etc.) directly inline in the
+  detail pane, instead of opening `CardPeekPanel.vue` (a floating overlay)
+  on click. Mounts `CardDetailTabs.vue` — the same shared content component
+  the standalone `/app/card/[set]/[number].vue` page and `CardPeekPanel.vue`
+  itself both already mount — as a third consumer; no changes needed to
+  `CardDetailTabs.vue`'s own props (`data`/`set`/`number`) or to either of
+  the other two consumers. This page now owns its own small `fetch('/api/
+  card/:set/:number')` + in-memory `set/number`-keyed response cache
+  (mirrors `CardPeekPanel.vue`'s own copy, deliberately not shared as a
+  composable — small enough duplication, and `CardPeekPanel.vue` isn't
+  mine to refactor) keyed off `useStatusFilterList`'s `selected` entry +
+  the page's own `SET` ref. `<CardPeekPanel />` mount and the old
+  click-to-peek/`store.openCardPanel` call removed from this page entirely
+  — confirmed via Playwright that no `aside[role="dialog"]` appears on this
+  tab anymore, while the standalone page and the graph page's own peek
+  panel (via `?card=` query) both still render exactly as before. The old
+  small per-row summary block (status dot/reasons text) was dropped rather
+  than kept alongside the new content — `CardDetailTabs.vue` already
+  surfaces the identical live `cardStatus` (color dot + reasons tooltip) on
+  its own Facts-tab strip, so keeping both would've been a duplicate, not
+  new information. No contract shape mismatch found; `typecheck`/`vitest`
+  both showed only pre-existing, unrelated failures (confirmed via `git
+  stash` before/after comparison) — none in this file or its dependency
+  chain.
