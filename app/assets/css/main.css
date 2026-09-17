@@ -33,6 +33,20 @@ body {
   color: var(--color-text);
 }
 
+/* Tailwind v4's preflight sets `button { cursor: default }` deliberately
+   (not every button is actionable, per upstream) — this app never opted
+   back in, so most clickable elements showed the default cursor instead
+   of a pointer. Restore it for anything actually clickable. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+select,
+summary,
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+
 /* Nuxt UI's own generated `primary` palette (app.config.ts's `ui.colors.
    primary`) is always a stock Tailwind hue at normal web-app lightness/
    chroma — even a "calm" name like teal still pops hard against this app's
