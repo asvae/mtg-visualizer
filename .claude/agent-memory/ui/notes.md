@@ -7,6 +7,76 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- 2026-09-18: Features tab (`app/pages/app/engine/features/[[slug]].vue`)
+  "From ENGINE_GAPS.md" excerpt (`evidence.excerpt`) was rendering as
+  plain `{{ }}` text, so literal `~~`/`**` markers showed instead of real
+  strikethrough/bold — this excerpt is a direct quote of ENGINE_GAPS.md's
+  own markdown prose (confirmed via grep: `~~closed stuff~~`/`**bold**`
+  genuinely appear across ~30 numbered gap entries). Fixed by reusing the
+  EXISTING hand-rolled renderer at `app/lib/markdown.ts` (only prior
+  consumer: the dev-only `/docs` page) rather than adding a markdown
+  dependency — confirmed via grep there's no marked/markdown-it/remark/etc.
+  anywhere in package.json first.
+  - `renderInline()` (private helper in that file) already handled
+    bold/italic/code-span/link but NOT strikethrough — added a
+    `~~text~~` -> `<del>...</del>` regex substitution alongside the
+    existing bold/italic ones (same escaped-text-only pass, no new safety
+    surface — `escapeHtml` still runs first, so this can't be used to
+    inject arbitrary HTML even if `excerpt` ever contained a literal
+    `<`/`>`).
+  - Added a new exported `renderMarkdownInline(text)` (thin wrapper over
+    the module-private `renderInline`) for callers that only have a
+    single already-flattened line (no headers/lists/fences of their own)
+    and don't want `renderMarkdown`'s `<p>`/block wrapping —
+    `evidence.excerpt` is exactly this shape per its own contract comment
+    ("first ~280 chars of the item's own whitespace-flattened text").
+    Features tab's template: `<p ... v-html="renderMarkdownInline(selectedEntry.evidence.excerpt)" />`
+    replacing the old `{{ selectedEntry.evidence.excerpt }}`.
+  - Checked `evidence.testFiles` too (task explicitly asked) — these are
+    plain on-disk basenames (`engine.test.ts`, etc.), never markdown;
+    `title` is also markdown-free by construction (`functional-model/
+    engine-status.ts`'s own `TITLE_RE` strips the `~~`/`**` wrapper before
+    the title string is ever assigned) — confirmed by reading that file,
+    not guessed. So excerpt was the ONLY raw-doc-text field on this page
+    needing this fix; nothing else touched.
+  - Also verified a truncation-cuts-mid-markup case (a real one exists —
+    gap #7's excerpt ends `...**Narrowed (2026-09-11, ...` with no
+    closing `**`, since the server's own ~280-char slice landed inside
+    that span): degrades gracefully to a literal trailing `**` (regex
+    needs a closing pair to match), no dangling/broken HTML — acceptable,
+    not something to special-case.
+  - This bugfix INCIDENTALLY also fixes the same literal-`~~`/`**` display
+    on the dev-only `/docs` page for `ENGINE_GAPS.md` specifically (that
+    page renders the whole file through `renderMarkdown()`, which shares
+    the same now-fixed `renderInline`) — not a separate task, just a
+    byproduct of fixing the one shared helper both consumers call through.
+  - **Live-verification gotcha worth remembering**: the already-running
+    dev server (background `nuxi dev`, started by an earlier task) had
+    gone stale — its own HMR log (the bash-tool task output file backing
+    its stdout) showed the LAST real activity was from a much earlier
+    task, and repeated `curl`s of the compiled page chunk kept serving
+    the pre-edit `_toDisplayString($setup.selectedEntry.evidence.excerpt)`
+    render function byte-for-byte even several seconds after editing +
+    `touch`-ing both files. Killed it and ran a fresh `npm run dev`
+    (background) — the new instance picked up the change immediately and
+    verification succeeded on the first request after that. If a live
+    Playwright check on this app ever shows suspiciously stale output
+    right after an edit, restart the dev server before concluding the
+    code itself is wrong — don't trust a long-lived background `nuxi dev`
+    process's HMR to always still be alive/watching.
+  - Verified live via Playwright against the (restarted) real dev server:
+    gap #1's excerpt now renders `<del><strong>Combat: blockers, damage,
+    first/double strike, trample.</strong></del> <strong>CLOSED</strong>
+    (<code>engine.ts</code>'s ...)` — real strikethrough+bold+monospace
+    code spans in the screenshot, not literal `~~`/`**`/`` ` `` characters;
+    0 console/page errors. `npm run typecheck`: same pre-existing errors
+    as always (`CardDetailTabs.vue` x3, `card-status.ts`, `card.ts`,
+    `mana.ts`, `tokens/by-key.ts`), zero new ones from either touched
+    file. `npx vitest run`: 1186 passed, same 5 pre-existing sandbox-only
+    `tagging/*`-data-missing failures as always, unrelated. Did NOT touch
+    `functional-model/`, `server/api/*`, or the Predicates/Sets/Keywords
+    tabs, per the task's own scope.
+
 - 2026-09-18, `re-review` (6th shared status) wired into Predicates/
   Features/Sets + real visual flow diagram in the help popover, following
   that same day's backend widening of `EngineStatusColor`/

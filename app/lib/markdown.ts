@@ -50,6 +50,13 @@ function renderInline(text: string): string {
     return `@@${codeSpans.length - 1}@@`;
   });
   out = out.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  // GFM strikethrough (`~~text~~`) — ENGINE_GAPS.md's own numbered gap list
+  // uses this a lot to mark a superseded claim before its "CLOSED" rewrite
+  // (e.g. "~~A narrow real slice~~ ~~CLOSED for single-color...~~ CLOSED for
+  // real (2026-09-14)"). Added alongside bold/italic below rather than as a
+  // separate helper — same escaped-text-only substitution pass, no new
+  // safety surface.
+  out = out.replace(/~~([^~]+)~~/g, '<del>$1</del>');
   out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   out = out.replace(/__([^_]+)__/g, '<strong>$1</strong>');
   out = out.replace(/\*([^*]+)\*/g, '<em>$1</em>');
@@ -188,6 +195,17 @@ const FENCE_OPEN_RE = /^(\s*)```(\S*)\s*$/;
 const FENCE_CLOSE_RE = /^\s*```\s*$/;
 const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 const QUOTE_RE = /^\s*>\s?/;
+
+// Inline-only entry point — for text that's already known to be a single
+// flattened line (no headers/lists/fences/blockquotes of its own), e.g.
+// `EngineStatusEvidence.excerpt` (server/api/engine-status's own
+// whitespace-flattened ~280-char slice of ENGINE_GAPS.md prose, per
+// `.claude/contracts/engine-status-schema.md`). Renders just
+// bold/italic/strikethrough/code/link spans, no `<p>`/block wrapper — the
+// caller supplies its own container element.
+export function renderMarkdownInline(text: string): string {
+  return renderInline(text);
+}
 
 export function renderMarkdown(md: string): string {
   const lines = md.replace(/\r\n/g, '\n').split('\n');

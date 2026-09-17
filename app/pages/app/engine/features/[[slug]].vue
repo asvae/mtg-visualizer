@@ -26,6 +26,7 @@ import type { StatusFilterOption } from '../../../../composables/useStatusFilter
 import type { EngineStatusPageEntry } from '../../../../../server/api/engine-status/index.get';
 import type { SourceFileResult } from '../../../../../functional-model/source-files';
 import { statusBadgeStyle } from '../../../../lib/badgeColor';
+import { renderMarkdownInline } from '../../../../lib/markdown';
 
 definePageMeta({ layout: 'graph' });
 useHead({ title: 'Engine capability status' });
@@ -295,7 +296,14 @@ async function submitReject() {
 
         <div class="mt-3 border-t border-border-subtle pt-3">
           <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">From ENGINE_GAPS.md</div>
-          <p class="mt-1 text-[11px] leading-relaxed text-muted">{{ selectedEntry.evidence.excerpt }}</p>
+          <!-- Raw excerpt IS ENGINE_GAPS.md's own markdown prose (bold/
+               strikethrough), not curated reviewer text — render it as
+               real formatting instead of showing literal `~~`/`**`
+               characters. `renderMarkdownInline` only ever emits
+               strong/em/del/code/a tags over already-HTML-escaped text
+               (app/lib/markdown.ts), so this is safe against the excerpt
+               ever containing a literal `<`/`>`. -->
+          <p class="mt-1 text-[11px] leading-relaxed text-muted" v-html="renderMarkdownInline(selectedEntry.evidence.excerpt)" />
         </div>
 
         <div v-if="selectedEntry.testFileRefs.length" class="mt-3 border-t border-border-subtle pt-3">
