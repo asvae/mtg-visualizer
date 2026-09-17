@@ -8,7 +8,19 @@
 // capability that page had — only the shell moved onto the shared
 // `useStatusFilterList`/`EngineConsoleShell`/`StatusFilterControls`/
 // `EntryListPanel` pieces.
-import { computed, reactive, ref } from 'vue';
+//
+// 2026-09-18: URL-based deep-linking (route file renamed `index.vue` ->
+// `[[slug]].vue`), same route-<->selection sync convention
+// `app/pages/app/engine/keywords/[[slug]].vue` established first — see that
+// file's own header for the full rationale (import direction only; the
+// composable's own internal "current selection got filtered out" reset
+// never navigates). This axis's `key` field (`gap-<N>-<slugified-title-
+// prefix>`, per `functional-model/engine-status.ts`'s own
+// `EngineStatusEntry.key` doc comment) is already a clean, URL-safe string
+// recomputed fresh off `ENGINE_GAPS.md` on every request — reused directly
+// as the slug, same "no second derivation" call Predicates makes for its
+// own already-clean `slug` field.
+import { computed, reactive, ref, watch } from 'vue';
 import { useStatusFilterList } from '../../../../composables/useStatusFilterList';
 import type { StatusFilterOption } from '../../../../composables/useStatusFilterList';
 import type { EngineStatusPageEntry } from '../../../../../server/api/engine-status/index.get';
@@ -58,6 +70,32 @@ const list = useStatusFilterList<EngineStatusPageEntry, StatusColor>({
 const selectedEntry = computed(() => list.selected.value);
 function statusMeta(color: StatusColor) {
   return STATUS_OPTIONS.find((o) => o.value === color)!;
+}
+
+// --- URL deep-linking (route <-> selection sync) — see this file's own
+// header for the convention/slug-source note.
+const route = useRoute();
+const routeSlug = computed(() => (typeof route.params.slug === 'string' ? route.params.slug : undefined));
+watch(
+  [routeSlug, items],
+  ([slug, entries]) => {
+    if (!slug || !entries.length) return;
+    const match = entries.find((e) => e.key === slug);
+    if (match) list.selectedKey.value = match.key;
+  },
+  { immediate: true },
+);
+
+function pickEntry(entry: EngineStatusPageEntry) {
+  navigateTo(`/app/engine/features/${entry.key}`);
+}
+function goPrev() {
+  const idx = list.selectedIndex.value;
+  if (idx > 0) pickEntry(list.visible.value[idx - 1]!);
+}
+function goNext() {
+  const idx = list.selectedIndex.value;
+  if (idx >= 0 && idx < list.visible.value.length - 1) pickEntry(list.visible.value[idx + 1]!);
 }
 
 const pendingKey = ref<string | null>(null);
@@ -150,8 +188,8 @@ async function submitReject() {
     :can-prev="list.canPrev.value"
     :can-next="list.canNext.value"
     :position-label="list.positionLabel.value"
-    @prev="list.selectPrev"
-    @next="list.selectNext"
+    @prev="goPrev"
+    @next="goNext"
   >
     <template #nav>
       <h1 class="mb-1 px-1.5 text-sm font-semibold text-text">Engine capability status</h1>
@@ -184,7 +222,7 @@ async function submitReject() {
         :key-of="(e: EngineStatusPageEntry) => e.key"
         :selected-key="list.selectedKey.value"
         empty-message="No gaps match the current search/filters."
-        @select="list.select"
+        @select="pickEntry"
       >
         <template #row="{ entry }">
           <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.color).color }" />

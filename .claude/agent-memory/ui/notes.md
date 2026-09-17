@@ -3656,3 +3656,69 @@ worth remembering the pitfalls before re-deriving them:
   - `npx vue-tsc --noEmit -p .`: zero errors (same as pre-task baseline).
     `npx vitest run app/`: 71/71 passed, no regressions. Didn't touch
     `functional-model/`, Sets, or Keywords tabs.
+
+- 2026-09-18, URL deep-linking added to Predicates/Features/Sets, matching
+  Keywords' pre-existing `[[slug]].vue` pattern (renamed `index.vue` ->
+  `[[slug]].vue` on all three, same `git mv`). Each page now owns a
+  `route`/`routeSlug` computed + a `watch([routeSlug, items/rawCards], ...)`
+  that sets `list.selectedKey.value` on a match (import direction only,
+  same as keywords — the composable's own internal "filtered-out selection
+  resets to first visible entry" reset still never navigates), plus a
+  `pickEntry(entry)` that does `navigateTo(...)` and is now what both the
+  sidebar's `@select` AND the shell's `@prev`/`@next` call (previously
+  `list.select`/`list.selectPrev`/`list.selectNext` directly, which never
+  touched the URL) — `goPrev`/`goNext` wrap `pickEntry` around
+  `list.visible.value[idx ± 1]`, byte-for-byte the same shape keywords'
+  page already had.
+  - **Slug source per axis — reused the existing stable identity field
+    directly, no new slugify needed anywhere** (unlike Keywords, which has
+    no stored slug field and computes one from `title` on the fly via
+    `slugifyKeywordTitle`): Predicates uses `entry.slug` (already `===
+    entry.key`, confirmed off `sink-derivation-status.ts`'s own
+    `SinkDerivationMechanism.slug` doc comment: "Stable identity key — also
+    the served key and the review-overlay key" — e.g. `saga`, `crew`,
+    `stun-counters`, `finality-counters`); Features uses `entry.key`
+    (`gap-<N>-<slugified-title-prefix>`, from `engine-status.ts`'s own
+    `EngineStatusEntry.key` doc comment — already URL-safe, recomputed
+    fresh off `ENGINE_GAPS.md` every request); Sets uses `entry.number`
+    (the card's own collector number, e.g. `1`, `2`, `99b` — already a
+    short alnum string, wrapped in `encodeURIComponent`/decoded implicitly
+    by Vue Router on the way back since collector numbers could in
+    principle need it even though none currently do).
+  - Sets' URL deliberately does NOT also encode `SET` (the fin/future-set
+    dropdown) — out of this task's scope, and `SET` already persists
+    separately via its own `localStorage` key. A number that doesn't
+    resolve under whatever `SET` happens to be active just falls through to
+    the default first-visible-entry selection, same as any other stale/
+    unknown slug elsewhere on this page — documented directly in that
+    page's own header rather than left implicit.
+  - Predicates keeps its pre-existing `hide-nav` (4-entry axis, no visible
+    position-label/chevron row) — arrow-key prev/next and the now-added URL
+    sync both still work regardless, `hide-nav` only ever suppressed the
+    visible chevron buttons, never the underlying nav capability.
+  - Verified LIVE via a real Playwright/Chromium session against an
+    already-running dev server (this session's own `npm run dev` hit the
+    "another Nuxt dev server already running" lock — used the already-live
+    one directly, same as a prior task this same day) for all three tabs:
+    clicking a real sidebar entry row updates the URL to that entry's slug;
+    loading that exact URL fresh pre-selects the same entry; both the
+    visible Prev/Next chevron buttons (Features/Sets) and ArrowLeft/
+    ArrowRight keyboard nav update the URL correctly and land back on the
+    original slug after a round trip; zero console/page errors throughout.
+    Also re-verified Keywords itself (untouched file) still deep-links
+    correctly, confirming no shared-composable regression crossed over.
+    First locator attempt (`nav button.text-xs`) was unreliable — the Sets
+    tab's own SET `USelect` dropdown ALSO renders a `text-xs`-classed
+    button, and matched before the entries meant to be tested; switched to
+    `button:has(span.rounded-full)` (every `EngineConsoleEntryListPanel`
+    row, on all four tabs, has that leading status-dot span, and nothing
+    else in the sidebar does) — worth remembering if scripting against this
+    console's DOM again.
+  - `npx nuxi typecheck`: identical pre-existing baseline error set already
+    on file above (`CardDetailTabs.vue`, `card-status.ts`/`card.ts`/
+    `mana.ts`, `tokens/by-key.ts`) — zero new errors from the 3 renamed
+    pages. `npx vitest run app/`: 71/71 passed, no regressions. Didn't touch
+    `functional-model/`, `server/api/*`, Keywords, or Recognizers — a
+    concurrent `engine` session had `functional-model/ENGINE_GAPS.md` and
+    `functional-model/engine.test.ts` mid-edit throughout this task; left
+    both alone.

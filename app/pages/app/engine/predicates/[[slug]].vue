@@ -17,7 +17,20 @@
 // to hide JUST that visible affordance (Features/Sets/Keywords keep it).
 // Arrow-key prev/next (`EngineConsoleShell.vue`'s own keydown listener)
 // still works here regardless — `hide-nav` only suppresses the buttons.
-import { computed, ref } from 'vue';
+//
+// 2026-09-18: URL-based deep-linking (route file renamed `index.vue` ->
+// `[[slug]].vue`), same route-<->selection sync convention
+// `app/pages/app/engine/keywords/[[slug]].vue` established first — see that
+// file's own header for the full rationale (import direction only; the
+// composable's own internal "current selection got filtered out" reset
+// never navigates). Unlike keywords (which derives a slug from its own
+// title text on the fly, no stored field for it), this axis's `slug` field
+// already IS the stable, clean, URL-safe identity end to end (`e.key ===
+// e.slug`, straight off `sink-derivation-status.ts`'s own
+// `SinkDerivationMechanism.slug` doc comment: "Stable identity key — also
+// the served `key` and the review-overlay key") — reused directly, no
+// second derivation needed.
+import { computed, ref, watch } from 'vue';
 import { useStatusFilterList } from '../../../../composables/useStatusFilterList';
 import type { StatusFilterOption } from '../../../../composables/useStatusFilterList';
 import type { SinkDerivationPageEntry } from '../../../../../server/api/sink-derivations/index.get';
@@ -85,6 +98,39 @@ function statusMeta(color: StatusColor) {
   return STATUS_OPTIONS.find((o) => o.value === color)!;
 }
 
+// --- URL deep-linking (route <-> selection sync), same convention
+// `app/pages/app/engine/keywords/[[slug]].vue` established first — see that
+// file's own header for the full rationale (import direction only; the
+// composable's own internal "current selection got filtered out" reset
+// never navigates). This axis's `slug` field IS already the stable, clean,
+// URL-safe identity (`e.key === e.slug`, see the schema contract/
+// `sink-derivation-status.ts`'s own doc comment) — reused directly rather
+// than deriving a second slug from the label the way keywords derives one
+// from its own title text.
+const route = useRoute();
+const routeSlug = computed(() => (typeof route.params.slug === 'string' ? route.params.slug : undefined));
+watch(
+  [routeSlug, items],
+  ([slug, entries]) => {
+    if (!slug || !entries.length) return;
+    const match = entries.find((e) => e.slug === slug);
+    if (match) list.selectedKey.value = match.key;
+  },
+  { immediate: true },
+);
+
+function pickEntry(entry: SinkDerivationPageEntry) {
+  navigateTo(`/app/engine/predicates/${entry.slug}`);
+}
+function goPrev() {
+  const idx = list.selectedIndex.value;
+  if (idx > 0) pickEntry(list.visible.value[idx - 1]!);
+}
+function goNext() {
+  const idx = list.selectedIndex.value;
+  if (idx >= 0 && idx < list.visible.value.length - 1) pickEntry(list.visible.value[idx + 1]!);
+}
+
 // Per-row in-flight guard, same convention the original page used.
 const pendingKey = ref<string | null>(null);
 
@@ -144,8 +190,8 @@ async function submitReject() {
     :can-next="list.canNext.value"
     :position-label="list.positionLabel.value"
     hide-nav
-    @prev="list.selectPrev"
-    @next="list.selectNext"
+    @prev="goPrev"
+    @next="goNext"
   >
     <template #nav>
       <h1 class="mb-1 px-1.5 text-sm font-semibold text-text">Sink-derivation predicate status</h1>
@@ -177,7 +223,7 @@ async function submitReject() {
         :key-of="(e: SinkDerivationPageEntry) => e.key"
         :selected-key="list.selectedKey.value"
         empty-message="No mechanisms match the current search/filters."
-        @select="list.select"
+        @select="pickEntry"
       >
         <template #row="{ entry }">
           <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.color).color }" />

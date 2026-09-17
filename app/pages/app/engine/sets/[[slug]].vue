@@ -47,6 +47,22 @@
 // mount — see the `#detail` template below for the fetch/render logic).
 // No popup at all on this tab anymore; the graph page's own peek panel is
 // unaffected.
+//
+// 2026-09-18: URL-based deep-linking (route file renamed `index.vue` ->
+// `[[slug]].vue`), same route-<->selection sync convention
+// `app/pages/app/engine/keywords/[[slug]].vue` established first — see that
+// file's own header for the full rationale (import direction only; the
+// composable's own internal "current selection got filtered out" reset
+// never navigates). Slug here is the card's own collector `number` (already
+// a short, URL-safe alnum string — "1", "150", "99b", ...) — this axis's
+// own equivalent of Predicates' `slug`/Features' `key`, no derivation
+// needed. Deliberately does NOT also encode `SET` into the URL (out of this
+// task's scope, and this page's own last-picked-set already persists
+// separately via `localStorage`) — a slug that doesn't resolve under
+// whatever set is currently active (e.g. a link saved under `fin`, opened
+// while `SET` has since been switched to a different set) just falls
+// through to the default first-visible-entry selection, same as any other
+// unknown/stale slug on this page.
 import { computed } from 'vue';
 import { onReviewStatusChanged } from '../../../../composables/useReviewStatusBus';
 import type { ReviewStatusChange } from '../../../../composables/useReviewStatusBus';
@@ -247,6 +263,32 @@ function statusMeta(color: CardStatusColor) {
   return STATUS_OPTIONS.find((o) => o.value === color)!;
 }
 
+// --- URL deep-linking (route <-> selection sync) — see this file's own
+// header for the convention/slug-source note.
+const route = useRoute();
+const routeSlug = computed(() => (typeof route.params.slug === 'string' ? route.params.slug : undefined));
+watch(
+  [routeSlug, rawCards],
+  ([slug, entries]) => {
+    if (!slug || !entries.length) return;
+    const match = entries.find((e) => e.number === slug);
+    if (match) list.selectedKey.value = match.number;
+  },
+  { immediate: true },
+);
+
+function pickEntry(entry: CardStatusEntry) {
+  navigateTo(`/app/engine/sets/${encodeURIComponent(entry.number)}`);
+}
+function goPrev() {
+  const idx = list.selectedIndex.value;
+  if (idx > 0) pickEntry(list.visible.value[idx - 1]!);
+}
+function goNext() {
+  const idx = list.selectedIndex.value;
+  if (idx >= 0 && idx < list.visible.value.length - 1) pickEntry(list.visible.value[idx + 1]!);
+}
+
 // Real card content, inline in the detail pane — this tab used to open the
 // same-shape data via `CardPeekPanel.vue` (a floating overlay) on row click;
 // per explicit 2026-09-17 rework that panel is dropped for this tab
@@ -305,8 +347,8 @@ watch(
     :can-prev="list.canPrev.value"
     :can-next="list.canNext.value"
     :position-label="list.positionLabel.value"
-    @prev="list.selectPrev"
-    @next="list.selectNext"
+    @prev="goPrev"
+    @next="goNext"
   >
     <template #nav>
       <div class="mb-1 flex items-center gap-2 px-1.5">
@@ -352,7 +394,7 @@ watch(
         :key-of="(e: CardStatusEntry) => e.number"
         :selected-key="list.selectedKey.value"
         empty-message="No cards match the current search/filters."
-        @select="list.select"
+        @select="pickEntry"
       >
         <template #row="{ entry }">
           <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.color).color }" />
