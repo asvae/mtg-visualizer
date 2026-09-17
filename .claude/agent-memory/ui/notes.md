@@ -7,6 +7,59 @@ resume alone (session transcripts are swept after ~30 days).
 
 ## Decisions
 
+- New page `/app/engine-status` (2026-09-17) consumes the `engine` agent's
+  new gray/purple/blue/yellow/green capability-status axis
+  (`GET /api/engine-status` + `POST /api/engine-status/review`, contract:
+  `.claude/contracts/engine-status-schema.md`). Deliberately a FLAT list,
+  not the sidebar+detail layout `/app/keywords` uses — the tracked list is
+  small (29 rows today, contract says don't hardcode that count) and every
+  row's own detail (excerpt/test-file citations/remainder flags) is short
+  enough to show inline, no need for a nav+single-selection split. Each row
+  shows a color dot on `color` (render-on field per contract) plus a
+  "baseline: X" chip only when a review has overridden it away from the
+  computed baseline, a CLOSED-marker/remainder/no-test-cited explanation
+  row (small colored chips using the existing produce/consume/magnifier
+  tokens, not new colors) so the WHY behind purple vs blue vs gray is
+  visible without reading ENGINE_GAPS.md itself, and the raw evidence
+  excerpt in muted italic (per contract: raw prose fragment, not curated
+  copy — rendered as-is, no markdown parsing).
+  Confirm is a single click (`POST .../review {verdict:'confirm'}`, no
+  note needed per contract); Reject opens a `UModal` (established pattern,
+  see AppHeader.vue's own filter dialog) with a required `UTextarea` note,
+  submit button disabled until non-empty (matches the API's own 400 on an
+  empty-note reject); a "Clear review" button (verdict: null) reverts to
+  the computed baseline. All three do an OPTIMISTIC in-place mutation of
+  the fetched entry object (same convention `/app/keywords`' own
+  `handleReviewed` uses) rather than refetching the whole list.
+  Review controls are gated `v-if="isDev"` (a local `const isDev =
+  import.meta.dev` — learned live that using `import.meta.dev` directly
+  inline in a template attribute expression breaks the Vue SFC compiler,
+  "import.meta may appear only with sourceType: module"; CardDetailTabs.vue
+  already avoids this via the same local-const pattern, worth grepping for
+  before reaching for `import.meta.*` directly in a `v-if`); status itself
+  still renders in production, matching the review endpoint's own dev-only
+  403 posture (view always works, only the write path is gated).
+  New STATUS_META color set (gray #6b7280 / purple #a855f7 / blue #3b82f6 /
+  yellow #eab308 / green #22c55e) is local to this page, not reusing
+  `ReviewStatusBadge.vue` — that component's `ReviewStatus` is a different
+  3-way ai/human/not_implemented vocabulary that doesn't fit this axis's
+  5-state baseline+overlay shape or its required-note-on-reject payload;
+  didn't force a shared abstraction across two genuinely different status
+  models. Nav: added a 7th header icon button (`i-lucide-cpu`) next to the
+  existing keywords/status ones in AppHeader.vue, linking to
+  `/app/engine-status` — no merge into `/app/keywords` (per this task's own
+  instruction: that page answers a different question, `registry.ts` isn't
+  this axis's index).
+  Live-verified via Playwright against the real dev server: a real gray
+  (#25), purple (#1), and blue (#4) row rendered correctly; confirm ->
+  green -> clear-review round-trip on a gray row, and reject-with-note ->
+  yellow round-trip on a blue row, both worked end-to-end against the real
+  file-backed endpoint (had to manually clean up
+  `functional-model/engine-status-reviews.json` back to `{}` afterward via
+  the same clear-review call — a live verification pass against a
+  file-writing dev endpoint leaves real repo-tree state behind if you don't
+  undo it).
+
 - keywords/index.vue redesigned from a stacked list of independently
   collapsible `KeywordEntryCard`s into a sidebar-nav + content layout: a
   `w-[240px]` `<nav>` (same convention as FilterPanel's own sidebar) lists

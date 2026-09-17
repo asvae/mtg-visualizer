@@ -173,6 +173,9 @@ async function submitDeckImport(clear = false) {
       <NuxtLink to="/app/status">
         <UButton icon="i-lucide-grid-2x2" color="neutral" variant="subtle" square aria-label="Fact-authoring status dashboard" />
       </NuxtLink>
+      <NuxtLink to="/app/engine-status">
+        <UButton icon="i-lucide-cpu" color="neutral" variant="subtle" square aria-label="Engine capability status dashboard" />
+      </NuxtLink>
 
       <UPopover :content="{ side: 'bottom', align: 'end' }">
         <UButton icon="i-lucide-circle-help" color="neutral" variant="subtle" square aria-label="Show legend" />

@@ -28213,3 +28213,104 @@ synergy.ts`:
   in synergy.ts's own doc comment already, not a new discovery, not
   addressed here (same "future full matcher unification" bucket other
   known `factsInteract` gaps already sit in).
+
+- **2026-09-17 — new "engine-capability status" axis (gray/purple/blue +
+  yellow/green review overlay), producer side.** New files:
+  `functional-model/engine-status.ts` (`computeEngineStatus()`),
+  `functional-model/engine-status-reviews.json` (flat review overlay,
+  starts `{}`), `functional-model/engine-status.test.ts` (11 tests),
+  `functional-model/scripts/compute-engine-status.mjs` (CLI report),
+  `server/api/engine-status/{index.get.ts,review.post.ts}`,
+  `.claude/contracts/engine-status-schema.md`. All additive — nothing
+  existing touched.
+  - **Design pivot mid-task, both from live orchestrator corrections —
+    record this so a future session doesn't redo the same wrong turn**:
+    v1 used `functional-model/keywords/registry.ts`'s full 369-entry
+    historical-MTG-keyword catalog as the base index (pre-seeding `gray`
+    for e.g. Banding/Adamant/every keyword this engine's never heard of).
+    Corrected TWICE: (1) don't use the full keyword catalog as the
+    enumeration backbone — this is a sparse, organically-growing set
+    seeded from real ENGINE_GAPS.md-style gap entries, not a pre-seeded
+    a-priori taxonomy; (2) "organic growth from here" means backfill =
+    what the engine ALREADY implements right now (walk real coverage),
+    growth = new gaps surfacing later — not "grow from an empty/near-empty
+    seed." Final design: parses `ENGINE_GAPS.md`'s own "## Real gaps —
+    prioritized" numbered list (29 items as of this writing) fresh off
+    disk every call — that list IS this project's own already-curated,
+    organically-grown ledger (every entry already Forge/test-cited), so
+    parsing it live means a new gap added the normal way shows up here
+    automatically, no second data file to keep in sync.
+  - **Baseline signal (real, checkable, no hardcoded per-item judgment
+    list)**: per numbered item, whitespace-flattened text checked for 3
+    independent regexes — `CLOSED_RE` (the doc's own literal `CLOSED`/
+    `Closed` marker), `TEST_CITATION_RE` (a literal `*.test.ts` filename
+    cited), `REMAINDER_RE` (phrases the doc's own authors already use
+    consistently for a named remaining gap: "NOT modeled", "remains
+    unsupported", "real, OPEN", "entirely unmodeled", "still not"/"still
+    OPEN"/"still unsupported"). No closed-marker → `gray`. Closed + test
+    citation + no remainder → `blue`. Closed but (no test citation OR a
+    named remainder) → `purple`. Spot-checked against real examples: gap
+    #19 (Mill) blue; gap #26 (Meld) gray; gap #27 (`grantKeywordAll`
+    attacking-creatures predicate) purple — genuinely closed per-card, but
+    ENGINE_GAPS.md's OWN text says "Not re-demonstrated by [the card's]
+    own scenario," so no shared `*.test.ts` citation exists — exactly the
+    "closed by claim, not independently checkable" case `purple` exists
+    for; gap #2 (SBAs) purple — closed for a narrow subset, but the SAME
+    item explicitly names 704.5a/704.5i/attachment-SBA as a real, still-
+    open remainder. Current split: 11 blue / 15 purple / 3 gray (of 29).
+  - **Rejected approach, kept as documented history in
+    `engine-status.ts`'s own comments in case someone reopens this**: an
+    earlier attempt sourced the index from `card.ts`'s `Keyword` union +
+    matching against `functional-model/*.test.ts` `describe`/`it`/`test`
+    titles directly (word-boundary, case-insensitive). Found real,
+    checked false positives from common-English-word keyword names
+    (Persist, Companion, Legacy, Rally, Sweep, Support, Assemble, Attach
+    all false-positived via unrelated `it()` prose sentences using the
+    plain English word) — restricting to `describe()`-only titles fixed
+    all but one (Rally still false-positives via a card NAME, "Silvan
+    Rally," inside a describe title — a known, accepted, narrow residual).
+    Abandoned this whole approach anyway per the orchestrator's index
+    correction above, not because it was unfixably imprecise — worth
+    knowing if a future "which real Keyword union members are verified"
+    tool gets built later, the false-positive lessons here transfer.
+  - **Review overlay**: flat JSON keyed by the SAME `key` GET serves
+    (`gap-<N>-<slug>` — the NUMBER is the stable part, not the slug
+    suffix), verdict `'confirm'|'reject'`, `note` REQUIRED for `'reject'`
+    (enforced 400 by `review.post.ts`). Deliberately NOT the old per-card
+    `review-drafts.json`/`review-responses.json` relay queue — confirmed
+    that queue doesn't exist anymore (retired 2026-09-13, see
+    `scripts/REVIEW_PROCESS.md`'s own note) — mirrors `tagging/
+    card-enrichment-status.json`'s flat identity-keyed shape instead.
+    Verified live end-to-end via a real `npm run dev` + curl round-trip
+    (reject-without-note 400, reject-with-note → yellow, confirm → green,
+    invalid key 404, clear via `verdict:null`) before resetting the review
+    file back to checked-in `{}`.
+  - **Verified**: `npx vitest run functional-model` 104 files/1036
+    passed+5 skipped (unchanged baseline count +1 new file/+11 new tests).
+    `npx tsc --noEmit` exit 0 (plain tsc doesn't typecheck Nitro's
+    `defineEventHandler`/`readBody` auto-imports in this project at all —
+    ran the REAL `npm run typecheck` (`nuxt typecheck`) too, which does:
+    caught one real new error this task introduced
+    (`engine-status.ts(197,19)`, a `titleMatch[1]` possibly-undefined —
+    fixed to `titleMatch?.[1] ?? fallback`), re-ran, confirmed 0 new errors
+    anywhere (including both new `server/api/engine-status/*.ts` route
+    files) — same 6 pre-existing baseline errors as before this task
+    (`CardDetailTabs.vue` ×3, `card-status.ts:263`, `card.ts:2970`,
+    `mana.ts:275`, `server/api/tokens/by-key.ts:32` — all pre-existing/
+    unrelated, none touch anything this task added).
+  - **Open, explicitly named follow-up** (not done this pass): wiring
+    `ENGINE_GAPS.md`'s OTHER section, "## FIN-specific mechanics closed"
+    (Saga automation, Stun/Finality counters, the counter-conditional-grant
+    closure, the static-ability audit's several buckets — including its
+    own real "genuinely unclosable" gray list: quina-qu-gourmet's
+    replacement effect, Meld's OWN more-detailed writeup there, the
+    mana-ability-grant gap, etc.) as a SECOND parsed source feeding the
+    same index — that section is bullet-structured, not uniformly
+    numbered, so it needs its own parser; contract file already documents
+    this as a named, not-yet-wired-in follow-up, not a silent gap.
+  - **Not verified against Forge directly** — this task's "signal" is
+    ENGINE_GAPS.md's own already-Forge-cited prose, one level removed;
+    nothing here re-checks Forge source itself (out of scope for this
+    task, which was about surfacing/computing a STATUS axis over
+    already-established engine work, not re-auditing that work's own
+    citations).
