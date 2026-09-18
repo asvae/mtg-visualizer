@@ -1,4 +1,4 @@
-// Real corpus verification for the `graveyard-fodder` sink catalog entry —
+// Unit tests for the `graveyard-fodder` sink catalog entry —
 // see `lifegain.test.ts`'s own header for the "mocked fixtures, not real
 // cards" convention this mirrors.
 import { describe, expect, it } from 'vitest';
@@ -6,7 +6,7 @@ import type { CardDefinition, Effect } from '../../card';
 import { matchSink } from '../match-sink';
 import { query } from './graveyard-fodder';
 
-describe('graveyard-fodder sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
+describe('graveyard-fodder sink catalog entry (mocked CardDefinition fixtures)', () => {
   it('matches an unrestricted "destroy target creature" effect (guaranteed Creature -> Graveyard arrival)', () => {
     const card: CardDefinition = {
       name: 'Mock Removal Spell',

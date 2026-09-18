@@ -1,4 +1,4 @@
-// Real corpus verification for the `lifegain` sink catalog entry — the
+// Unit tests for the `lifegain` sink catalog entry — the
 // STRUCTURAL GATE `sink-catalog-status.ts` reads (via this file's own
 // sibling `lifegain.corpus.json`) to decide gray/purple/blue. Per this
 // project's own confirmed convention (`.claude/agent-memory/engine/notes.md`
@@ -19,7 +19,7 @@ import type { CardDefinition, Effect } from '../../card';
 import { matchesConsumerTriggerNames, matchSink } from '../match-sink';
 import { entry, query } from './lifegain';
 
-describe('lifegain sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
+describe('lifegain sink catalog entry (mocked CardDefinition fixtures)', () => {
   it('matches a plain effect-level gainLife (a real, direct "you gain N life" spell/permanent effect)', () => {
     const card: CardDefinition = {
       name: 'Mock Lifegain Spell',

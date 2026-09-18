@@ -1,4 +1,4 @@
-// Real corpus verification for the `battlefield-presence-{cats,creatures,
+// Unit tests for the `battlefield-presence-{cats,creatures,
 // hare-apparent}` sink catalog entries — 3 configurations of ONE shared
 // factory (`BattlefieldPresenceSink`, `families/battlefield-presence.ts`) as
 // of the 2026-09-18 factory refactor (see that file's own header for the
@@ -18,7 +18,7 @@ import { battlefieldPresenceCats } from './battlefield-presence-cats';
 import { battlefieldPresenceCreatures } from './battlefield-presence-creatures';
 import { battlefieldPresenceHareApparent } from './battlefield-presence-hare-apparent';
 
-describe('battlefield-presence-cats sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
+describe('battlefield-presence-cats sink catalog entry (mocked CardDefinition fixtures)', () => {
   const entry = battlefieldPresenceCats;
   const { query } = entry;
 
@@ -211,7 +211,7 @@ describe('battlefield-presence-cats sink catalog entry — corpus (mocked CardDe
   });
 });
 
-describe('battlefield-presence-creatures sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
+describe('battlefield-presence-creatures sink catalog entry (mocked CardDefinition fixtures)', () => {
   const entry = battlefieldPresenceCreatures;
   const { query } = entry;
 
@@ -324,7 +324,7 @@ describe('battlefield-presence-creatures sink catalog entry — corpus (mocked C
   });
 });
 
-describe('battlefield-presence-hare-apparent sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
+describe('battlefield-presence-hare-apparent sink catalog entry (mocked CardDefinition fixtures)', () => {
   const entry = battlefieldPresenceHareApparent;
   const { query } = entry;
 

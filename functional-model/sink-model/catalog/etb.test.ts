@@ -1,4 +1,4 @@
-// Real corpus verification for the `etb` sink catalog entry — see
+// Unit tests for the `etb` sink catalog entry — see
 // `lifegain.test.ts`'s own header for the "mocked fixtures, not real cards"
 // convention this mirrors.
 //
@@ -23,7 +23,7 @@ import type { CardDefinition, Effect } from '../../card';
 import { matchesConsumerTriggerNames, matchesConsumerTriggerOn, matchSink } from '../match-sink';
 import { entry, query } from './etb';
 
-describe('etb sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
+describe('etb sink catalog entry (mocked CardDefinition fixtures)', () => {
   it('PRODUCER: matches a real bounce-to-hand effect (the real Bigfin Bouncer, FDN, shape: from Battlefield, to Hand, validType creature)', () => {
     const card: CardDefinition = {
       name: 'Mock Bounce Creature',

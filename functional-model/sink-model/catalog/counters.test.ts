@@ -1,4 +1,4 @@
-// Real corpus verification for the `counters-plus1plus1` sink catalog
+// Unit tests for the `counters-plus1plus1` sink catalog
 // instance (the ONE real configuration of the shared `CountersSink` family
 // factory, `families/counters.ts`) — see `lifegain.test.ts`'s own header for
 // the "mocked fixtures, not real cards" convention this mirrors (the
@@ -79,12 +79,12 @@ function mockCard(name: string, overrides: Partial<CardDefinition> = {}): CardDe
   return { name, manaCost: '', typeLine: '', ...overrides };
 }
 
-describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fixtures)', () => {
+describe('counters-plus1plus1 sink instance (mocked CardDefinition fixtures)', () => {
   // Mirrors the real Exemplar of Light's own two triggers (see this file's
   // own header) — MUST keep producing `counterType: '+1/+1'` /
   // `consumerTriggerNames: ['onCounterAdded']` when derived, or this test
   // silently stops testing the real production configuration.
-  const mockExemplarOfLight = mockCard('Mock Sink-Defining Angel', {
+  const mockDrivingDefinition = mockCard('Mock Sink-Defining Card', {
     triggers: [
       { name: 'onLifeGain', on: 'lifeGained', effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] },
       { name: 'onCounterAdded', effects: [] },
@@ -93,7 +93,7 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
   // `CountersSink` returns `SinkInstance[]` (2026-09-19, later still — one
   // instance per distinct `counterType`) — Exemplar of Light only ever
   // grants ONE distinct counter type, so destructure the one real element.
-  const [sinkInstance] = CountersSink(mockExemplarOfLight);
+  const [sinkInstance] = CountersSink(mockDrivingDefinition);
 
   it('SOURCE CANDIDATE: matches a plain self-targeted putCounter effect with counterType "+1/+1" (the real Exemplar of Light, FDN #11, shape)', () => {
     const card = mockCard('Mock Counter Source', {
@@ -189,7 +189,7 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
 
   // -------------------------------------------------------------------------
   // Derivation (2026-09-19) — `CountersSink(definition)` now derives every
-  // field off `mockExemplarOfLight` itself (`families/counters.ts`'s own
+  // field off `mockDrivingDefinition` itself (`families/counters.ts`'s own
   // header for the full writeup) instead of accepting a hand-authored
   // config; this section pins down that derivation directly, not just its
   // downstream matching behavior. `CountersSink` returns `SinkInstance[]`
@@ -203,7 +203,7 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
   });
 
   it('DERIVATION: a differently-typed driving definition derives a differently-sanitized slug/category ("-1/-1" -> "counters-minus1minus1")', () => {
-    const mockMinusOneDefinition = mockCard('Mock -1/-1 Sink-Defining Blight', {
+    const mockMinusOneDefinition = mockCard('Mock -1/-1 Sink-Defining Card', {
       effects: [{ kind: 'putCounter', target: 'self', counterType: '-1/-1', amount: 1 } satisfies Effect],
     });
     const [instance] = CountersSink(mockMinusOneDefinition);
@@ -219,7 +219,7 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
   });
 
   it('DERIVATION: a name-only trigger NOT in the recognized allowlist is correctly excluded (real discrimination, not "any name-only trigger counts")', () => {
-    const mockDefinitionWithUnrelatedNameOnlyTrigger = mockCard('Mock Sink-Defining Angel With Unrelated Trigger', {
+    const mockDefinitionWithUnrelatedNameOnlyTrigger = mockCard('Mock Sink-Defining Card With Unrelated Trigger', {
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
       triggers: [{ name: 'onSomeUnrelatedThing', effects: [] }],
     });
@@ -228,7 +228,7 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
   });
 
   it('DERIVATION: a trigger named "onCounterAdded" that ALSO carries a real `on` value is excluded (a real closed auto-fire occasion already explains it; a coincidental name match is not a genuine second signal)', () => {
-    const mockDefinitionWithClaimedOnValue = mockCard('Mock Sink-Defining Angel With Claimed Trigger', {
+    const mockDefinitionWithClaimedOnValue = mockCard('Mock Sink-Defining Card With Claimed Trigger', {
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
       triggers: [{ name: 'onCounterAdded', on: 'enter', effects: [] }],
     });
