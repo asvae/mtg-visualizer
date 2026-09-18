@@ -16,6 +16,7 @@
 - [Facts-tab display ordering invariants](topics/facts-display-ordering-invariants.md) — toggles must filter, never re-sort; multi-fact-per-segment hover must highlight all of them.
 - [Flex-col text-overflow gotcha](topics/flex-col-text-overflow-gotcha.md) — a `shrink-0`/unbounded flex sibling holding long freeform text can collapse `CardMedia` to 0×0 via a flexbox circular-sizing quirk; needs explicit `max-w-*`+`min-w-0`, not just `break-words` — the specific box this fixed is since removed (see fdn-vs-fin-card-model.md), lesson generalizes.
 - [EngineConsoleShell `header-extra` slot](topics/engine-console-shell-header-extra-slot.md) — generic optional slot next to "N of N"; today's only consumer is the Cards tab's FDN pipeline-status badge.
+- [PlainOracleText collapse toggle](topics/plain-oracle-text-collapse-toggle.md) — FDN-only hover-reveal Shorter/Longer button; short state = oracle text only, mana icons intact.
 
 ## Known open item (not yet fixed, flagged to orchestrator each time)
 

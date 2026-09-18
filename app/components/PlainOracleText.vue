@@ -27,6 +27,7 @@
 // this component's previous bare-`<p>` version. Empty/falsy `oracleText`
 // (a vanilla creature with no rules text) renders no `<p>` at all — the name/
 // mana-cost/type-line/P-T header above it still renders regardless.
+import { ref } from 'vue';
 import { parseManaSegments } from '../lib/manaSegments';
 
 defineProps<{
@@ -37,24 +38,53 @@ defineProps<{
   toughness?: string;
   oracleText: string | null;
 }>();
+
+// Collapse/expand toggle: "long" (default) is the full header chrome below
+// (name/mana-cost/type-line/oracle-text/P-T) — "short" strips everything
+// down to just the oracle-text paragraph, still with its own inline
+// `parseManaSegments`/`ManaSymbol` rendering intact. Component-local only,
+// deliberately not persisted (localStorage etc.) — resets to "long" on
+// remount/navigating to a different card, per the task's own default-to-
+// simple guidance. The toggle button's label is the OPPOSITE of the
+// current state (what clicking it will DO), so "Shorter" while long and
+// "Longer" while short.
+const short = ref(false);
 </script>
 
 <template>
-  <div class="mb-1 flex max-w-2xl items-baseline gap-2 font-sans text-sm font-semibold text-text">
-    <span>{{ name }}</span>
-    <span v-if="manaCost" class="flex shrink-0 items-center gap-0.5 text-text/80">
-      <template v-for="(ms, mi) in parseManaSegments(manaCost)" :key="mi">
-        <ManaSymbol v-if="'mana' in ms" :code="ms.mana" />
+  <div class="group relative max-w-2xl pr-8">
+    <UButton
+      :icon="short ? 'i-lucide-chevron-down' : 'i-lucide-chevron-up'"
+      color="neutral"
+      variant="ghost"
+      size="xs"
+      class="absolute top-0 right-0 z-10 opacity-0 transition-opacity group-hover:opacity-100"
+      :aria-label="short ? 'Show full card text' : 'Show short card text'"
+      @click="short = !short"
+    >
+      {{ short ? 'Longer' : 'Shorter' }}
+    </UButton>
+
+    <template v-if="!short">
+      <div class="mb-1 flex items-baseline gap-2 font-sans text-sm font-semibold text-text">
+        <span>{{ name }}</span>
+        <span v-if="manaCost" class="flex shrink-0 items-center gap-0.5 text-text/80">
+          <template v-for="(ms, mi) in parseManaSegments(manaCost)" :key="mi">
+            <ManaSymbol v-if="'mana' in ms" :code="ms.mana" />
+            <template v-else>{{ ms.text }}</template>
+          </template>
+        </span>
+      </div>
+      <div class="mb-2 font-sans text-sm text-text/80">{{ typeLine }}</div>
+    </template>
+
+    <p v-if="oracleText" class="font-sans text-sm leading-relaxed whitespace-pre-wrap text-text/90">
+      <template v-for="(ms, mi) in parseManaSegments(oracleText)" :key="mi">
+        <span v-if="'mana' in ms" class="text-[1em]"><ManaSymbol :code="ms.mana" /></span>
         <template v-else>{{ ms.text }}</template>
       </template>
-    </span>
+    </p>
+
+    <div v-if="!short && power !== undefined && toughness !== undefined" class="mt-2 font-sans text-sm font-semibold text-text/90">{{ power }}/{{ toughness }}</div>
   </div>
-  <div class="mb-2 font-sans text-sm text-text/80">{{ typeLine }}</div>
-  <p v-if="oracleText" class="max-w-2xl font-sans text-sm leading-relaxed whitespace-pre-wrap text-text/90">
-    <template v-for="(ms, mi) in parseManaSegments(oracleText)" :key="mi">
-      <span v-if="'mana' in ms" class="text-[1em]"><ManaSymbol :code="ms.mana" /></span>
-      <template v-else>{{ ms.text }}</template>
-    </template>
-  </p>
-  <div v-if="power !== undefined && toughness !== undefined" class="mt-2 font-sans text-sm font-semibold text-text/90">{{ power }}/{{ toughness }}</div>
 </template>
