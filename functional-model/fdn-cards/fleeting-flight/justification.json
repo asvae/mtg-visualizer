@@ -12,10 +12,10 @@
     "definitionKeys": [
       {
         "kind": "effect",
-        "effectKind": "putCounterTarget"
+        "effectKind": "putCounter"
       }
     ],
-    "reasoning": "This card's own `putCounterTarget` effect (`validType:'creature', counterType:'+1/+1', amount:1`) is the exact real counter this sentence describes."
+    "reasoning": "This card's own unified `putCounter` effect (`target:{chosen:true, validType:'creature'}, counterType:'+1/+1', amount:1` — real Forge `A:SP$ PutCounter | ValidTgts$ Creature | CounterType$ P1P1 | CounterNum$ 1`, 2026-09-19 even later still: migrated off the pre-existing, separate `putCounterTarget` kind to the unified shape mirroring Forge's own single `PutCounter` ability) is the exact real counter this sentence describes."
   },
   {
     "type": "definition",

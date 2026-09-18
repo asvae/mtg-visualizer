@@ -187,3 +187,53 @@ new helpers. Runtime unaffected (vitest doesn't type-check; full suite
 confirmed green throughout). Full precise line list + exact fix pattern:
 `.claude/contracts/card-schema.md`'s new dated section ("New nested
 `Trigger`/`TriggerCause` shape, `TriggerOld` split off").
+
+## Follow-up 3: `putCounter`/`PutCounterChosenTarget` unification + `abilityType` (2026-09-19, even later still #2)
+
+3rd layered correction, same live task. User: "yes I want us to strictly
+match forge" + "'spell' thing - I also want to use." Real Forge citation
+(`AbilityFactory.md`): `A:<AB/SP/DB/ST>$` — AB/SP/DB/ST, real taxonomy.
+`putCounter`/`putCounterTarget` are ONE real Forge ability (`PutCounter`,
+`Defined$ Self` vs `ValidTgts$ <Type>` fork) — this schema splitting it by
+scope is the same pattern the `Trigger` restructure already fixed, applied
+here too. Scope UNCHANGED: additive, still just Exemplar of Light +
+Fleeting Flight.
+
+**Landed**: `Effect.kind:'putCounter'`'s `target` widened to `'self' |
+PutCounterChosenTarget` (new interface, reuses `putCounterTarget`'s own
+real fields — `validType`/`qty`/`owner`/`grant` — verbatim).
+`putCounterTarget`/`putCounterAll` UNCHANGED, stay real, still used
+pool-wide. Resolver (`card.ts`'s `applyEffect`, same file `engine.ts`
+calls as `resolveCard`) branches `target==='self'` (old, unchanged) vs
+chosen (mirrors `putCounterTarget`'s own case byte-for-byte, same real
+primitives reused). In-lane fix: `match-sink.ts`'s `walkEffects` `case
+'putCounter'` used to hardcode `target:'self'` — now branches correctly.
+
+New `CardDefinition.abilityType?: 'spell' | 'activated'` (only 2 real
+options — Forge's `ST$`/`DB$` don't apply to what `effects` models here,
+reasoning in the field's own doc comment).
+
+**Fleeting Flight migrated** (`fdn-cards/fleeting-flight/definition.ts`):
+`abilityType:'spell'`, producer effect converted `putCounterTarget` →
+unified `putCounter`. Checked collision risk with concurrent
+`counters.test.ts` FIRST — confirmed safe (that file only cites Fleeting
+Flight in a comment, never imports the real `CardDefinition`, uses mocks
+only). `justification.json`'s `effectKind` pointer updated to match
+(plain existence check per `coverage-justification.ts`, no index
+dependency — one-string swap sufficient). Exemplar of Light needed NO
+edit — its own `target:'self'` was already byte-compatible with the
+widened type.
+
+Point 1 (generalize `cause`'s own new fields toward one `target`-style
+param) — considered, no code change: neither in-scope trigger needed any
+NEW `cause` field beyond what `TriggerOld` already had identically, so
+nothing to generalize yet; recorded as the principle for the next genuinely
+new `cause` field.
+
+Re-gated BOTH cards — both `blue`, `reasons:[]`; Fleeting Flight's
+`engineSupport` stayed `"on"` (confirmed nothing in engine-support-registry
+keys off `putCounterTarget`). Full suite 120/1329/0/5 unchanged throughout.
+Same 9 pre-existing flagged `engine`-owned `tsc` diagnostics, zero new
+in-lane. Full detail: `.claude/contracts/card-schema.md`'s new dated
+section ("`putCounter`/`PutCounterChosenTarget` unification +
+`CardDefinition.abilityType`").

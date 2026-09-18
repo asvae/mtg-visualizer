@@ -3147,3 +3147,120 @@ passed/0 failed/5 skipped), identical after every step of this change.
 `engine`-owned files above — zero new diagnostics anywhere in this
 agent's own lane. Re-gated `exemplar-of-light` directly (not `--all`) —
 `blue`, `reasons: []`, unchanged.
+
+## `putCounter`/`PutCounterChosenTarget` unification + `CardDefinition.abilityType` (2026-09-19, even later still #2, schema agent)
+
+Third layered course correction, same live task. User's own words: "yes I
+want us to strictly match forge" + "'spell' thing - I also want to use."
+Real Forge citations (`Card-scripting-API/AbilityFactory.md`): every
+ability line is `A:<AB/SP/DB/ST>$` — AB (Activated), SP (Spell, an
+Instant/Sorcery's own root cast ability), DB (Drawback/subsidiary, "only
+used to chain AFs together... will never be the root AF"), ST (Static,
+"resolves without using the stack"). Two concrete asks:
+1. `putCounter`/`putCounterTarget` are genuinely ONE real Forge ability
+   (`PutCounter`), forking on `Defined$ Self` (fixed) vs `ValidTgts$
+   <Type>` (targeted choice) — not two abilities. Real citations: Exemplar
+   of Light's own `DB$ PutCounter | Defined$ Self | CounterType$ P1P1 |
+   CounterNum$ 1` vs Fleeting Flight's own `A:SP$ PutCounter | ValidTgts$
+   Creature | CounterType$ P1P1 | CounterNum$ 1`. This schema splitting
+   Forge's single-mechanism-plus-parameter shape into separately-named
+   `Effect.kind` variants is the SAME pattern the `Trigger`/`cause`
+   restructure (two sections up) already flagged and corrected on the
+   trigger side (`enter`/`otherPermanentEnters` etc.) — new schema work
+   should mirror Forge's real shape directly instead.
+2. Explicit `SP$`/`AB$`/`DB$`/`ST$` tagging, not inferred from
+   `activationCost`'s own presence/absence the way `effects`'s own doc
+   comment previously described it.
+
+**Scope — unchanged from the `Trigger` restructure above**: additive only,
+still just the two cards already in active scope (Exemplar of Light,
+Fleeting Flight) — no other card touched.
+
+**`Effect.kind:'putCounter'` widened** (`card.ts`) — `target: 'self' |
+PutCounterChosenTarget` (was `target: 'self'` only). New exported
+`PutCounterChosenTarget` interface (`chosen: true; validType; qty?;
+owner?; grant?`) reuses the EXACT SAME real targeting fields the
+pre-existing, separate `putCounterTarget` kind already carries — not
+re-invented. `putCounterTarget`/`putCounterAll` themselves are completely
+UNCHANGED and stay real (every pre-existing card using them — Cloudbound
+Moogle, Ultima, the rest of the FDN pool's own `putCounterTarget` users —
+keeps compiling/behaving identically); the widened `putCounter` is a
+second, coexisting way to express the same real shape, not a replacement,
+mirroring the `Trigger`/`TriggerOld` coexistence pattern exactly.
+
+**Resolver wiring** (`card.ts`'s own `applyEffect`, the same real
+interpreter `engine.ts` calls into as `resolveCard`) — `case 'putCounter'`
+now branches on `effect.target === 'self'` (old path, byte-identical
+behavior) vs the new chosen-target branch, which mirrors `case
+'putCounterTarget'` immediately below it byte-for-byte (same
+`battlefieldPool`/`resolveTargets`/`actions.putCounter`/
+`actions.installCounterConditionalGrant` primitives, genuinely reused not
+reimplemented). A second switch (the tag-generation/fingerprint function)
+also updated for parity, non-functional.
+
+**In-lane consumer fix**: `sink-model/match-sink.ts`'s own `walkEffects`
+`case 'putCounter'` previously hardcoded `target: 'self'` unconditionally
+in its derived `ProducerOccurrence` (true for every pre-existing real
+usage, but now wrong for the new chosen-target branch) — fixed to branch
+the same way, mirroring its own `case 'putCounterTarget'` immediately
+below for the chosen-target occurrence shape.
+
+**`CardDefinition.abilityType?: 'spell' | 'activated'`** (`card.ts`, new
+field, sibling to `effects`) — only these two real options grounded:
+Forge's own `ST$` is categorically never what `effects` models here (a
+Forge static ability is `continuousKeywordGrants`/etc. in this schema,
+never `effects`), and Forge's own `DB$` is categorically never what this
+ROOT-level field describes either (`Trigger.effects` is already
+unconditionally DB$-shaped by construction — an execute chain off a
+trigger's own condition — needing no separate per-trigger tag for
+something true of literally every real trigger). Omitted for a card with
+no top-level `effects` at all (Exemplar of Light — its whole real
+behavior lives in `triggers`, nothing here to tag).
+
+**Fleeting Flight migrated** (`fdn-cards/fleeting-flight/definition.ts`)
+— both changes applied: `abilityType: 'spell'` (real `A:SP$ PutCounter |
+...`), and its own producer effect converted from the pre-existing
+`putCounterTarget` kind to the new unified `putCounter` (`target:
+{chosen: true, validType: 'creature'}`). Checked for collision risk with
+the concurrent `counters.test.ts` rewrite before converting (per this
+task's own earlier caution about that file) — confirmed SAFE: that file
+only cites "Fleeting Flight" in a code COMMENT for real-card grounding, it
+never imports the real `fleetingFlight` `CardDefinition` at all (only
+mocked `CardDefinition`s, per this pool's own established "predicate
+corpus uses mocks" convention) — so converting its real effect kind
+cannot affect that file. `justification.json`'s own `effectKind` pointer
+updated `'putCounterTarget'` → `'putCounter'` to match (verified via
+`coverage-justification.ts`'s own `collectEffects(definition).some((e) =>
+e.kind === coveredBy.effectKind)` check — a plain existence check, no
+index/position dependency, so this one-string swap is sufficient). Exemplar
+of Light needed NO edit for the Effect-unification half — its own
+producer effect already used `target: 'self'`, which the widened type
+accepts byte-identically (same literal, zero data change); it already
+"uses" the new shape in the sense that the shape now covers it, without
+needing a diff.
+
+**Point 1 (cause's own internal shape) — considered, no code change
+needed**: checked whether `TriggerCause`'s own NEW fields (this same
+task's earlier work) should generalize `enter`/`otherPermanentEnters`-
+style scope-splitting into one internal `target`/`defined`-vs-`validTgts`
+parameter rather than inventing further split-enum variants. Neither of
+the two triggers in scope (`onLifeGain`/`onCounterAdded`) needed any NEW
+`cause` field beyond what already existed identically on `TriggerOld`
+(`on`/`counterAddedMatch`/`activationLimit`) — no split-scope trigger
+field was invented for either, so there was nothing to generalize today.
+Recorded here as the principle to apply the NEXT time a genuinely new
+`cause` field is needed, not retroactively applied to the pre-existing
+`enter`/`otherPermanentEnters` pair (out of scope, unmigrated, per the
+`Trigger` restructure's own explicit scope limits).
+
+**Verification**: `npx vitest run functional-model` — 120/120 files,
+1329/1329 passed, 5 skipped, identical to baseline, re-confirmed after
+this pass too. `npm run typecheck` — same 9 pre-existing flagged
+`engine`-owned diagnostics as the `Trigger` restructure above (line
+numbers shifted from added doc comments only), zero new diagnostics in
+this agent's own lane. Re-gated both `exemplar-of-light` AND
+`fleeting-flight` directly — both `blue`, `reasons: []`; Fleeting Flight's
+own `engineSupport` stayed `"on"` (unaffected by the effect-kind swap,
+confirming nothing in the engine-support classification keys off
+`putCounterTarget` specifically — grepped `engine-support-registry.ts`,
+zero `putCounter` references there).

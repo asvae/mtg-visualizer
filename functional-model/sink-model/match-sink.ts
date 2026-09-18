@@ -284,7 +284,17 @@ function walkEffects(effects: Effect[] | undefined, via: string, out: ProducerOc
         out.push({ event: 'damage', controller: 'you', via: `${via}:dealDamageAnyTarget` });
         break;
       case 'putCounter':
-        out.push({ event: 'putCounter', counterType: effect.counterType, target: 'self', via: `${via}:putCounter` });
+        if (effect.target === 'self') {
+          out.push({ event: 'putCounter', counterType: effect.counterType, target: 'self', via: `${via}:putCounter` });
+        } else {
+          // New (2026-09-19, even later still) chosen-target branch of the
+          // unified `putCounter` kind (Forge's own real `ValidTgts$` fork of
+          // its ONE `PutCounter` ability — see that field's own doc comment,
+          // `card.ts`) — mirrors `putCounterTarget` immediately below
+          // byte-for-byte, since it's the exact same real targeting shape.
+          const types = typeConstraintForValidType(effect.target.validType);
+          out.push({ event: 'putCounter', counterType: effect.counterType, ...(types ? { target: { types } } : {}), via: `${via}:putCounter-chosen` });
+        }
         break;
       case 'putCounterTarget': {
         const types = typeConstraintForValidType(effect.validType);

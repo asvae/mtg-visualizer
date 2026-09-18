@@ -683,7 +683,36 @@ export type Effect =
        */
       shuffleAfter?: boolean;
     }
-  | { kind: 'putCounter'; target: 'self'; counterType: string; amount: Computed<number> }
+  | {
+      /**
+       * Real Forge `PutCounter` — ONE ability, forking on its own
+       * `Defined$ Self` (fixed — no player choice) vs `ValidTgts$ <Type>`
+       * (CR 601.2c targeted choice) parameter, not two separate abilities
+       * (real citations: Exemplar of Light's own `DB$ PutCounter | Defined$
+       * Self | CounterType$ P1P1 | CounterNum$ 1` vs Fleeting Flight's own
+       * `A:SP$ PutCounter | ValidTgts$ Creature | CounterType$ P1P1 |
+       * CounterNum$ 1`, `res/cardsfolder/{e/exemplar_of_light,
+       * f/fleeting_flight}.txt`). `target: 'self'` (2026-09-18, unchanged)
+       * is every real pre-existing usage of this `kind` — the widened
+       * `PutCounterChosenTarget` object variant (2026-09-19, even later
+       * still) is new, additive surface area mirroring `ValidTgts$` — see
+       * that type's own doc comment. Deliberately NOT a second `kind`
+       * string the way the pre-existing, separate `putCounterTarget` kind
+       * below is — the whole point of this widening is representing
+       * Forge's own ONE real ability directly instead of splitting it by
+       * scope for authoring ergonomics, the same correction this session's
+       * `Trigger`/`TriggerCause` restructure already applied on the
+       * trigger side (see that type's own doc comment). `putCounterTarget`
+       * itself is UNCHANGED and stays real — every pre-existing card using
+       * it (Cloudbound Moogle, Ultima, etc.) keeps compiling/behaving
+       * identically; this is a second, coexisting way to express the exact
+       * same real shape, not a replacement.
+       */
+      kind: 'putCounter';
+      target: 'self' | PutCounterChosenTarget;
+      counterType: string;
+      amount: Computed<number>;
+    }
   | {
       /** A counter on a CHOSEN target (Cloudbound Moogle's "put a +1/+1 counter on target creature," Ultima's "put a blight counter on target land") — as opposed to `putCounter`'s always-self target. `qty` targets chosen the same up-to-N pattern as `move`'s targeted branch. */
       kind: 'putCounterTarget';
@@ -1082,6 +1111,28 @@ export type Effect =
        */
       kind: 'endTurn';
     };
+
+/**
+ * The chosen-target (Forge `ValidTgts$`) branch of `putCounter`'s own
+ * `target` field (2026-09-19, even later still) — see that field's own doc
+ * comment for the full "one real Forge ability, not two" reasoning. Same
+ * real fields the pre-existing, separate `putCounterTarget` kind already
+ * carries for its own targeting (`validType`/`qty`/`owner`/`grant`) —
+ * reused verbatim rather than re-invented, since it's the exact same real
+ * targeting shape either way; `counterType`/`amount` stay on the OUTER
+ * `putCounter` effect (siblings of `target`, not duplicated in here), same
+ * split `putCounterTarget` itself already has between itself and its own
+ * outer fields.
+ */
+export interface PutCounterChosenTarget {
+  chosen: true;
+  validType: 'creature' | 'land' | 'artifact' | 'creature-or-artifact' | 'any';
+  qty?: Computed<number>;
+  /** See `dealDamageTarget`'s own doc comment above — same owner-restriction fix, same bug. */
+  owner?: EffectOwner;
+  /** See `putCounterTarget.grant`'s own doc comment — identical field/semantics. */
+  grant?: Omit<CounterConditionalGrant, 'counterType'>;
+}
 
 /** An alternate way to cast this card — Flashback, Jump-start, Escape, casting from exile, etc. Real rule text, not a derived fact, so it's declared per-card rather than computed. */
 export interface AlternateCost {
@@ -2630,6 +2681,31 @@ export interface CardDefinition {
    */
   readonly effects?: Effect[];
   /**
+   * Real Forge `A:<AB/SP/DB/ST>$` ability-type prefix, made explicit
+   * (2026-09-19, even later still) rather than inferred from
+   * `activationCost`'s own presence/absence the way `effects`'s own doc
+   * comment above currently describes (`tmp/mtg-forge/docs/Card-scripting-
+   * API/AbilityFactory.md`: "AB for Activated Abilities... SP for
+   * Spell..."). Only `'spell'`/`'activated'` are real options for THIS
+   * field — Forge's own `ST$` (Static, "resolves without using the stack")
+   * is categorically never what `effects` models in this schema (a Forge
+   * static ability is `continuousKeywordGrants`/`continuousPTGrants`/etc.
+   * here, never `effects`), and Forge's own `DB$` (Drawback/subsidiary,
+   * "only used to chain AFs together... will never be the root AF") is
+   * categorically never what THIS field (the ROOT `effects`) describes
+   * either — a Trigger's own `effects` is already unconditionally DB$-
+   * shaped by construction (an execute chain off a trigger's own
+   * condition), needing no separate per-trigger tag for something true of
+   * every single real trigger. `'spell'`: Fleeting Flight's own real
+   * `A:SP$ PutCounter | ...` (an Instant's cast ability,
+   * `res/cardsfolder/f/fleeting_flight.txt`). `'activated'`: paired with
+   * `activationCost` (or an `abilities[]` entry's own `cost` above) —
+   * Forge's real `A:AB$ ...`. Omitted for a card with no top-level
+   * `effects` at all (Exemplar of Light — its whole real behavior lives in
+   * `triggers`, so this tag has nothing here to describe).
+   */
+  readonly abilityType?: 'spell' | 'activated';
+  /**
    * PROTOTYPE (PRD_AUTOMATED_AUTHORING.md, 2026-09-13, scoped trial —
    * fin/1-10 only) — see `Trigger.annotation`'s own doc comment for the
    * shape/semantics; applied here to the top-level `effects` above (an
@@ -3385,7 +3461,22 @@ function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void
       return;
     }
     case 'putCounter':
-      actions.putCounter(ctx.self, effect.counterType, resolve(effect.amount, ctx));
+      if (effect.target === 'self') {
+        actions.putCounter(ctx.self, effect.counterType, resolve(effect.amount, ctx));
+      } else {
+        // New (2026-09-19, even later still) chosen-target branch — mirrors
+        // `putCounterTarget` immediately below byte-for-byte (same real
+        // targeting primitives), since `target`'s own doc comment explains
+        // this is the exact same real Forge shape, just reached via the
+        // unified `putCounter` kind instead of the separate one.
+        const pool = battlefieldPool(playersFor(effect.target.owner ?? 'each', ctx), effect.target.validType);
+        const qty = resolve(effect.target.qty ?? 1, ctx);
+        const chosen = resolveTargets(pool, qty, ctx, actions);
+        for (const target of chosen) {
+          actions.putCounter(target, effect.counterType, resolve(effect.amount, ctx));
+          if (effect.target.grant) actions.installCounterConditionalGrant(target, { ...effect.target.grant, counterType: effect.counterType });
+        }
+      }
       return;
     case 'putCounterTarget': {
       const pool = battlefieldPool(playersFor(effect.owner ?? 'each', ctx), effect.validType);
@@ -3636,7 +3727,7 @@ export function synergyTags(card: CardDefinition): string[] {
         );
         break;
       case 'putCounter':
-        tags.push(`counters:${effect.counterType}`);
+        tags.push(effect.target === 'self' ? `counters:${effect.counterType}` : `counters-target:${effect.counterType}:${effect.target.validType}`);
         break;
       case 'putCounterTarget':
         tags.push(`counters-target:${effect.counterType}:${effect.validType}`);
