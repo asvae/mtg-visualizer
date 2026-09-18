@@ -1,5 +1,5 @@
 // Sink CATALOG entry status — a review axis for `functional-model/
-// sink-model/catalog/<slug>.ts` entries (the shared, curated `SinkQuery`
+// sink-model/catalog/*.ts` entries (the shared, curated `SinkQuery`
 // catalog — see `catalog/entry.ts`'s own doc comment for the "catalog, not
 // per-card, not bespoke storage" design). Genuinely different from (and NOT
 // a fold into) `sink-derivation-status.ts`, which tracks a different,
@@ -15,10 +15,8 @@
 // baseline+review-overlay color, unlike `pipeline-status.ts`'s single-flat-
 // file-per-card shape):
 //
-//   gray   — the catalog entry exists (real `catalog/<slug>.ts` module,
-//            listed in `SINK_CATALOG`) but its own structural-gate corpus
-//            manifest (`catalog/<slug>.corpus.json`) is missing or empty —
-//            drafted, not yet gated.
+//   gray   — the group's combined corpus coverage (see "Family-scoped review
+//            status" below) is missing or empty — drafted, not yet gated.
 //   purple — a corpus manifest exists but doesn't show every real fixture
 //            case agreeing (`passing < total`) — built, not fully verified.
 //   blue   — the corpus manifest shows every real fixture case agreeing
@@ -28,15 +26,14 @@
 //            and found a real disagreement/wrong verdict (required note).
 //   green  — (overlay, not computed here) a human reviewed and confirmed it.
 //   re-review — (computed, never stored) a human confirmed `green`, then
-//            this entry's own `<slug>.ts`/`<slug>.corpus.json` content
-//            changed since — same drift concept `pipeline-status.ts`'s own
-//            `re-review` and `sink-derivation-status.ts`'s own `re-review`
-//            already establish.
+//            this group's own real source (see below) changed since — same
+//            drift concept `pipeline-status.ts`'s own `re-review` and
+//            `sink-derivation-status.ts`'s own `re-review` already establish.
 //
 // **Discovery is the real, statically-imported `SINK_CATALOG` array**
 // (`sink-model/catalog/index.ts`), NOT a second hand-seeded metadata array
 // and NOT a filesystem directory scan. Every entry in that array already
-// has a real `catalog/<slug>.ts` module by construction (it's a value
+// has a real, live catalog module backing it by construction (it's a value
 // import) — so there is no "gray, module doesn't exist yet" case the way
 // `sink-derivation-status.ts` has for a not-yet-built predicate; a
 // not-yet-authored catalog entry simply isn't in `SINK_CATALOG` at all yet
@@ -51,10 +48,58 @@
 // explicit correction) — adding a new file under `catalog/` plus one import
 // line in `catalog/index.ts` is the whole "register a new entry" act, no
 // second array to keep in sync by hand.
+//
+// **Family-scoped review status (2026-09-18, real scope change, not
+// cosmetic)** — see `SinkCatalogEntry.family`'s own doc comment
+// (`sink-model/catalog/entry.ts`) for the full reasoning. Every real
+// `SINK_CATALOG` entry (a "sink INSTANCE") is grouped by `entry.family ??
+// entry.slug` before anything else in this file runs — a plain, non-
+// factory-built singleton instance (`lifegain`/`graveyard-fodder`/`etb`,
+// no `family` field at all) becomes its own trivial one-member group keyed
+// on its own slug, so every existing singleton's own baseline/color/
+// fingerprint computation is COMPLETELY UNCHANGED (grouping with 1 member
+// degenerates to exactly today's per-instance behavior — no separate code
+// path needed for "singleton" vs "family"). A real multi-instance group
+// (`battlefield-presence`: `battlefield-presence-cats`/`-creatures`/
+// `-hare-apparent`; `counters`: `counters-plus1plus1`) instead produces
+// exactly ONE `SinkCatalogStatusEntry` for the whole group — its own
+// `slug` field IS the family key, `category` is the family's own display
+// label, `instanceSlugs` lists the real member slugs it aggregates, and its
+// `baseline`/`evidence` are computed off the SUM of every member's own real
+// corpus coverage (see `computeSinkCatalogStatus` below) — a human review
+// verdict (`sink-catalog-reviews.json`, keyed the same way, by group key)
+// therefore now applies to the whole family at once, not one instance in
+// isolation. Every real INSTANCE still does its own independent, unaffected
+// MATCHING (`SinkInstance`'s own `entry(candidate)` call — `card-
+// interactions.ts`'s per-`SINK_CATALOG`-entry loop, the server API route's
+// `computeRealMatches`) — this restructuring only changes how REVIEW status
+// is grouped/reported, never how a candidate is matched against any one
+// instance's own `query`/consumer signals.
+//
+// **`server/api/sink-catalog/index.get.ts`/`./review.post.ts` do NOT yet
+// read/key off `entry.family`** (both routes are out of scope for this
+// refactor, per the task's own explicit instruction not to touch them) —
+// both still assume `computeSinkCatalogStatus()` returns one row per real
+// `SINK_CATALOG` slug, which is no longer true for the 2 real families
+// (5 real instances now collapse into 2 grouped rows, `slug` values
+// `'battlefield-presence'`/`'counters'` that don't match ANY single
+// `SINK_CATALOG` entry's own `.slug`). Concretely, once a follow-up picks
+// this up: `index.get.ts`'s `SINK_CATALOG.find((e) => e.slug === entry.slug)`
+// needs to become "find every member instance in this group" (via
+// `instanceSlugs`) rather than a single exact match; `loadSourceFiles`
+// needs to read the group's own real source file(s) (derivable as
+// `${entry.slug}.ts` for a real family group, since `entry.slug` IS the
+// family key and this file's own convention already names the shared
+// source file identically to the family key — see
+// `computeSinkCatalogFingerprint` below) instead of `${slug}.ts` per
+// instance; `review.post.ts`'s own `key` validation needs to accept a
+// family key, not just an instance slug. Flagged, not silently worked
+// around.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { SINK_CATALOG } from './sink-model/catalog/index';
+import type { SinkCatalogEntry } from './sink-model/catalog/entry';
 import { readFunctionalModelFile } from './source-files';
 
 export type SinkCatalogBaseline = 'gray' | 'purple' | 'blue';
@@ -65,21 +110,121 @@ export interface SinkCatalogCorpusManifest {
   passing: number;
 }
 
-export interface SinkCatalogEvidence {
+/** Real, per-INSTANCE corpus evidence — one per real `SINK_CATALOG` member
+ * of a group (length 1 for a singleton, N for a real family). Nothing about
+ * a group's own aggregated coverage is ever lost behind the summed
+ * top-level `SinkCatalogEvidence` fields — a consumer that needs the real
+ * per-instance breakdown (e.g. "which ONE of Battlefield presence's 3
+ * instances isn't fully passing yet") reads this array. */
+export interface SinkCatalogMemberEvidence {
+  slug: string;
   corpusManifestPath: string;
   corpusManifestExists: boolean;
   corpusTotal: number;
   corpusPassing: number;
 }
 
+export interface SinkCatalogEvidence {
+  /** For a singleton group: that instance's own real corpus manifest path.
+   * For a real multi-instance family group: the FIRST member's own path —
+   * a representative, not-fully-general value kept only so pre-existing
+   * code that reads this single field (e.g. the not-yet-updated
+   * `server/api/sink-catalog/index.get.ts`) still gets a real, valid,
+   * readable path rather than an empty/garbage one; `members` below is the
+   * real, complete per-instance answer. */
+  corpusManifestPath: string;
+  /** True iff EVERY member instance's own corpus manifest exists. */
+  corpusManifestExists: boolean;
+  /** Sum of every member instance's own real `corpusTotal`. */
+  corpusTotal: number;
+  /** Sum of every member instance's own real `corpusPassing`. */
+  corpusPassing: number;
+  /** Real per-instance breakdown — always present, length 1 for a
+   * singleton group. */
+  members: SinkCatalogMemberEvidence[];
+}
+
 export interface SinkCatalogStatusEntry {
+  /** The group's own identity — a real family key (`'battlefield-
+   * presence'`/`'counters'`) for a multi-instance group, or the singleton
+   * instance's own `slug` otherwise (unchanged from before this file's
+   * family-scoping pass). This is also the review-overlay key
+   * (`sink-catalog-reviews.json`). */
   slug: string;
+  /** The group's own display category — a real family label
+   * (`FAMILY_LABELS` below) for a multi-instance group, or the singleton
+   * instance's own `query.category` otherwise. */
   category: string;
   baseline: SinkCatalogBaseline;
   evidence: SinkCatalogEvidence;
+  /** Real member instance slugs this group aggregates — present ONLY for a
+   * genuine multi-instance family group (`undefined`, not an empty array,
+   * for a singleton — mirrors `SinkCatalogEntry.consumerTriggerNames`'s own
+   * "presence itself is the signal" optionality convention elsewhere in
+   * this codebase). */
+  instanceSlugs?: string[];
 }
 
 const CATALOG_DIR = join('functional-model', 'sink-model', 'catalog');
+
+/** Hand-maintained display label per real family key — deliberately a
+ * small, explicit, hand-authored map (not derived from any instance's own
+ * `query.category`, which is instance-specific, e.g. "Cats") rather than
+ * a third data field threaded through every factory config; grow this by
+ * one line whenever a real new multi-instance family is added, same
+ * "organic growth, explicit" discipline `SINK_DERIVATION_MECHANISMS`/
+ * `SINK_CATALOG` themselves already follow. */
+const FAMILY_LABELS: Record<string, string> = {
+  'battlefield-presence': 'Battlefield presence',
+  counters: 'Counters',
+};
+
+interface CatalogGroup {
+  /** Family key (`entry.family`) for a real family group, or the
+   * singleton's own `slug` otherwise. */
+  key: string;
+  /** True iff this group was formed off a real, EXPLICIT `entry.family`
+   * declaration — i.e. a genuine family, never a member-count heuristic.
+   * Deliberately NOT `members.length > 1`: `counters` is a real family with
+   * only 1 real configured instance today (`counters-plus1plus1`) — it's
+   * still reviewed/reported as "Counters," not silently folded back into
+   * plain-singleton treatment just because no `-1/-1`/loyalty sibling has
+   * been authored yet. See `SinkCatalogEntry.family`'s own doc comment
+   * (`sink-model/catalog/entry.ts`). */
+  isFamily: boolean;
+  members: SinkCatalogEntry[];
+}
+
+/** Groups every real `SINK_CATALOG` entry by `entry.family ?? entry.slug` —
+ * the one real place this file's whole family-vs-singleton distinction is
+ * decided; every function below builds on this instead of re-deriving it. */
+function groupCatalogByFamily(): CatalogGroup[] {
+  const order: string[] = [];
+  const groups = new Map<string, SinkCatalogEntry[]>();
+  for (const entry of SINK_CATALOG) {
+    const key = entry.family ?? entry.slug;
+    const existing = groups.get(key);
+    if (existing) {
+      existing.push(entry);
+    } else {
+      groups.set(key, [entry]);
+      order.push(key);
+    }
+  }
+  return order.map((key) => {
+    const members = groups.get(key)!;
+    return { key, isFamily: members.some((m) => m.family !== undefined), members };
+  });
+}
+
+/** The real source file a group's own logic/config lives in — `${key}.ts`
+ * for a real multi-instance family group (every real family's own shared
+ * factory file is named identically to its family key, by convention —
+ * `battlefield-presence.ts`/`counters.ts`), or `${slug}.ts` for a singleton
+ * (the pre-existing, unchanged one-file-per-slug convention). */
+function sourceFileFor(group: CatalogGroup): string {
+  return group.isFamily ? `${group.key}.ts` : `${group.members[0]!.slug}.ts`;
+}
 
 function loadCorpusManifest(path: string): SinkCatalogCorpusManifest {
   if (!existsSync(path)) return { total: 0, passing: 0 };
@@ -93,19 +238,26 @@ function loadCorpusManifest(path: string): SinkCatalogCorpusManifest {
   }
 }
 
+function memberEvidenceFor(entry: SinkCatalogEntry, root: string): SinkCatalogMemberEvidence {
+  const corpusManifestPath = join(CATALOG_DIR, `${entry.slug}.corpus.json`);
+  const corpusManifestExists = existsSync(join(root, corpusManifestPath));
+  const { total: corpusTotal, passing: corpusPassing } = corpusManifestExists ? loadCorpusManifest(join(root, corpusManifestPath)) : { total: 0, passing: 0 };
+  return { slug: entry.slug, corpusManifestPath, corpusManifestExists, corpusTotal, corpusPassing };
+}
+
 /**
- * Computes the real gray/purple/blue baseline for every real catalog entry
- * (`SINK_CATALOG`), off real filesystem presence of `<slug>.corpus.json` —
- * `root` defaults to `process.cwd()`, matching `computeSinkDerivationStatus`
- * /`computeEngineStatus`'s own contract.
+ * Computes the real gray/purple/blue baseline for every real GROUP (a
+ * family's combined instances, or a singleton instance standing alone) —
+ * off real filesystem presence of each member's own `<slug>.corpus.json`,
+ * summed per group. `root` defaults to `process.cwd()`, matching
+ * `computeSinkDerivationStatus`/`computeEngineStatus`'s own contract.
  */
 export function computeSinkCatalogStatus(root: string = process.cwd()): SinkCatalogStatusEntry[] {
-  return SINK_CATALOG.map((entry): SinkCatalogStatusEntry => {
-    const corpusManifestPath = join(CATALOG_DIR, `${entry.slug}.corpus.json`);
-    const corpusManifestExists = existsSync(join(root, corpusManifestPath));
-    const { total: corpusTotal, passing: corpusPassing } = corpusManifestExists
-      ? loadCorpusManifest(join(root, corpusManifestPath))
-      : { total: 0, passing: 0 };
+  return groupCatalogByFamily().map((group): SinkCatalogStatusEntry => {
+    const members = group.members.map((entry) => memberEvidenceFor(entry, root));
+    const corpusManifestExists = members.every((m) => m.corpusManifestExists);
+    const corpusTotal = members.reduce((sum, m) => sum + m.corpusTotal, 0);
+    const corpusPassing = members.reduce((sum, m) => sum + m.corpusPassing, 0);
 
     let baseline: SinkCatalogBaseline;
     if (!corpusManifestExists || corpusTotal === 0) baseline = 'gray';
@@ -113,10 +265,11 @@ export function computeSinkCatalogStatus(root: string = process.cwd()): SinkCata
     else baseline = 'blue';
 
     return {
-      slug: entry.slug,
-      category: entry.query.category,
+      slug: group.key,
+      category: group.isFamily ? (FAMILY_LABELS[group.key] ?? group.key) : group.members[0]!.query.category,
       baseline,
-      evidence: { corpusManifestPath, corpusManifestExists, corpusTotal, corpusPassing },
+      evidence: { corpusManifestPath: members[0]!.corpusManifestPath, corpusManifestExists, corpusTotal, corpusPassing, members },
+      ...(group.isFamily ? { instanceSlugs: group.members.map((e) => e.slug) } : {}),
     };
   });
 }
@@ -145,43 +298,69 @@ function loadReviewVerdicts(root: string): Record<string, SinkCatalogReviewVerdi
   }
 }
 
-/**
- * sha256 of THIS entry's own real, current `<slug>.ts` + `<slug>.corpus
- * .json` content — the two real, checkable inputs `computeSinkCatalogStatus`
- * itself reads to decide gray/purple/blue for this entry (mirrors
- * `computeSinkDerivationFingerprint`'s own identical two-input hash).
- */
-export function computeSinkCatalogFingerprint(slug: string, root: string = process.cwd()): string | null {
-  const found = SINK_CATALOG.find((e) => e.slug === slug);
-  if (!found) return null;
+/** Resolves a caller-supplied key — a real single INSTANCE slug (what
+ * `card-interactions.ts`/the server API route's `computeRealMatches` still
+ * pass, one real `SINK_CATALOG` entry's own `.slug`) OR a real GROUP/family
+ * key (what a future review-status consumer keyed on
+ * `computeSinkCatalogStatus()`'s own `slug` field would pass) — to the
+ * group key `computeSinkCatalogStatus`/review storage actually use. An
+ * instance slug and its own group's key are DELIBERATELY interchangeable
+ * here — this is what lets `card-interactions.ts`'s existing, unchanged
+ * `isSinkCatalogEntryUsable(entry.slug, root)` call (looping per real
+ * `SINK_CATALOG` instance) keep working verbatim while review status itself
+ * is now computed per family underneath it. Falls back to treating an
+ * unrecognized key as already-a-group-key (matches `computeSinkCatalogStatus`'s
+ * own "unknown slug -> gray, never throws" convention below). */
+function resolveGroupKey(key: string): string {
+  const found = SINK_CATALOG.find((e) => e.slug === key);
+  return found ? (found.family ?? found.slug) : key;
+}
 
-  const entryResult = readFunctionalModelFile(root, join(CATALOG_DIR, `${slug}.ts`));
-  const corpusResult = readFunctionalModelFile(root, join(CATALOG_DIR, `${slug}.corpus.json`));
+/**
+ * sha256 of a group's own real, current source (see `sourceFileFor`) + every
+ * real member instance's own `<slug>.corpus.json` content — the same real,
+ * checkable inputs `computeSinkCatalogStatus` itself reads to decide
+ * gray/purple/blue for the group (mirrors `computeSinkDerivationFingerprint`'s
+ * own identical two-input-class hash, generalized from 1 corpus file to N).
+ * `key` may be a real instance slug or the group's own key — see
+ * `resolveGroupKey`.
+ */
+export function computeSinkCatalogFingerprint(key: string, root: string = process.cwd()): string | null {
+  const groupKey = resolveGroupKey(key);
+  const group = groupCatalogByFamily().find((g) => g.key === groupKey);
+  if (!group) return null;
+
+  const entryResult = readFunctionalModelFile(root, join(CATALOG_DIR, sourceFileFor(group)));
 
   const hash = createHash('sha256');
   hash.update(`entry:${entryResult.exists ? (entryResult.content ?? '') : '<missing>'}`);
-  hash.update(`corpus:${corpusResult.exists ? (corpusResult.content ?? '') : '<missing>'}`);
+  for (const entry of [...group.members].sort((a, b) => a.slug.localeCompare(b.slug))) {
+    const corpusResult = readFunctionalModelFile(root, join(CATALOG_DIR, `${entry.slug}.corpus.json`));
+    hash.update(`corpus:${entry.slug}:${corpusResult.exists ? (corpusResult.content ?? '') : '<missing>'}`);
+  }
   return hash.digest('hex');
 }
 
-/** Live color for ONE catalog entry — baseline, or the yellow/green/
- * re-review human-review overlay on top of it. Uncached — see
- * `isSinkCatalogEntryUsable` below for the cached, gate-facing entry point.
- * A review overlay is only ever meaningful on a `blue` baseline (same
- * "confirm/reject presupposes a real verified baseline" rule
- * `sink-derivation-status.ts`'s own `computeSinkDerivationColor` already
- * enforces) — a stale/hand-authored review record sitting on a
- * `gray`/`purple` entry is silently ignored, falling back to the plain
+/** Live color for ONE group (a family, or a singleton instance standing
+ * alone) — baseline, or the yellow/green/re-review human-review overlay on
+ * top of it. `key` may be a real instance slug or the group's own key — see
+ * `resolveGroupKey`. Uncached — see `isSinkCatalogEntryUsable` below for the
+ * cached, gate-facing entry point. A review overlay is only ever meaningful
+ * on a `blue` baseline (same "confirm/reject presupposes a real verified
+ * baseline" rule `sink-derivation-status.ts`'s own `computeSinkDerivationColor`
+ * already enforces) — a stale/hand-authored review record sitting on a
+ * `gray`/`purple` group is silently ignored, falling back to the plain
  * baseline, never trusted into `green`/`yellow`. */
-export function computeSinkCatalogColor(slug: string, root: string = process.cwd()): SinkCatalogColor {
-  const entry = computeSinkCatalogStatus(root).find((e) => e.slug === slug);
+export function computeSinkCatalogColor(key: string, root: string = process.cwd()): SinkCatalogColor {
+  const groupKey = resolveGroupKey(key);
+  const entry = computeSinkCatalogStatus(root).find((e) => e.slug === groupKey);
   const baseline: SinkCatalogBaseline = entry?.baseline ?? 'gray';
   if (baseline !== 'blue') return baseline;
 
-  const review = loadReviewVerdicts(root)[slug];
+  const review = loadReviewVerdicts(root)[groupKey];
   if (review?.verdict === 'reject') return 'yellow';
   if (review?.verdict === 'confirm') {
-    const currentFingerprint = computeSinkCatalogFingerprint(slug, root);
+    const currentFingerprint = computeSinkCatalogFingerprint(groupKey, root);
     if (!review.fingerprint || !currentFingerprint || review.fingerprint !== currentFingerprint) return 're-review';
     return 'green';
   }
@@ -191,19 +370,24 @@ export function computeSinkCatalogColor(slug: string, root: string = process.cwd
 // Per-root memoization — same rationale/shape `sink-derivation-status.ts`'s
 // own cache establishes (real, benchmarked fs-read cost, called once per
 // tracked entry on every consultation of `isSinkCatalogEntryUsable`, static
-// for the life of one process run).
+// for the life of one process run). Cached by the CALLER-SUPPLIED key
+// (instance slug or group key) — every instance slug in the same family
+// resolves to and caches the identical color value, so the redundant lookup
+// cost per distinct instance slug is real but small (one extra
+// `computeSinkCatalogStatus()` pass, already itself cheap and already
+// re-run per distinct cache miss today).
 const colorCache = new Map<string, Map<string, SinkCatalogColor>>();
 
-function cachedColor(slug: string, root: string): SinkCatalogColor {
+function cachedColor(key: string, root: string): SinkCatalogColor {
   let cache = colorCache.get(root);
   if (!cache) {
     cache = new Map();
     colorCache.set(root, cache);
   }
-  let color = cache.get(slug);
+  let color = cache.get(key);
   if (color === undefined) {
-    color = computeSinkCatalogColor(slug, root);
-    cache.set(slug, color);
+    color = computeSinkCatalogColor(key, root);
+    cache.set(key, color);
   }
   return color;
 }
@@ -215,7 +399,8 @@ export function resetSinkCatalogColorCacheForTests(): void {
 }
 
 /**
- * Is catalog entry `slug`'s LIVE status usable — i.e. trustworthy enough to
+ * Is `key`'s (a real instance slug, or its own group/family key — see
+ * `resolveGroupKey`) LIVE status usable — i.e. trustworthy enough to
  * actually rely on for real matching (`card-interactions.ts`'s own
  * on-the-fly catalog-first categorization, no persisted per-card attachment
  * concept exists — see `pipeline-status.ts`'s own "tried then reverted"
@@ -223,7 +408,7 @@ export function resetSinkCatalogColorCacheForTests(): void {
  * `re-review` return `false` — the caller must treat the entry as not
  * (yet, or no longer) trustworthy, never throw. Cached per `root`.
  */
-export function isSinkCatalogEntryUsable(slug: string, root: string = process.cwd()): boolean {
-  const color = cachedColor(slug, root);
+export function isSinkCatalogEntryUsable(key: string, root: string = process.cwd()): boolean {
+  const color = cachedColor(key, root);
   return color === 'blue' || color === 'green';
 }

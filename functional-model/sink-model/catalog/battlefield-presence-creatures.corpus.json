@@ -6,7 +6,7 @@
       "case": "PRODUCER: any real creature",
       "mirrors": "virtually every real Creature card in the pool — its own baseline entersBattlefield occurrence",
       "expectedVerdict": "matches",
-      "note": "Mocked Creature — Human Soldier, no effects. Verified in battlefield-presence-creatures.test.ts via matchSink. Deliberately broad by design — see this entry's own header."
+      "note": "Mocked Creature — Human Soldier, no effects. Verified in battlefield-presence.test.ts via matchSink. Deliberately broad by design — see this entry's own header."
     },
     {
       "case": "PRODUCER: creates a creature token (any subtype)",

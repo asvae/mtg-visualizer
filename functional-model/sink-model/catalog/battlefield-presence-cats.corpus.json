@@ -1,6 +1,6 @@
 {
-  "total": 11,
-  "passing": 11,
+  "total": 14,
+  "passing": 14,
   "cases": [
     {
       "case": "PRODUCER: real Cat creature",
@@ -67,6 +67,24 @@
       "mirrors": "the same face-plurality convention matchesConsumerTriggerNames/matchesConsumerTriggerOn already honor",
       "expectedVerdict": "matches",
       "note": "Mocked front/back face pair; costReduction:{perControlled:{subtype:'Cat'}} lives only on backFace. Verified via matchesBattlefieldPresenceConsumer."
+    },
+    {
+      "case": "CALLABLE: producer-only match returns real detail",
+      "mirrors": "the real Cat-creature PRODUCER case above, exercised via the new CallableSink contract instead of matchSink directly",
+      "expectedVerdict": "matches (producer.via set, no consumer)",
+      "note": "2026-09-18 factory refactor — proves entry(candidate) faithfully carries through matchSink's own verdict. Verified in battlefield-presence.test.ts."
+    },
+    {
+      "case": "CALLABLE: consumer-only match returns real detail",
+      "mirrors": "the real Affinity-for-Cats CONSUMER case above, exercised via the new CallableSink contract instead of matchesBattlefieldPresenceConsumer directly",
+      "expectedVerdict": "matches (consumer.via:'battlefieldPresence' set, no producer)",
+      "note": "2026-09-18 factory refactor — proves entry(candidate) faithfully carries through matchesBattlefieldPresenceConsumer's own verdict. Verified in battlefield-presence.test.ts."
+    },
+    {
+      "case": "CALLABLE: no producer or consumer signal returns null",
+      "mirrors": "the real vanilla-card no-match case above, exercised via the new CallableSink contract",
+      "expectedVerdict": "no-match (null)",
+      "note": "2026-09-18 factory refactor — proves entry(candidate) returns null, not a falsy match object, when neither signal fires. Verified in battlefield-presence.test.ts."
     }
   ]
 }

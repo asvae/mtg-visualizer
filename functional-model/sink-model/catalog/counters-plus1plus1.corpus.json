@@ -1,6 +1,6 @@
 {
-  "total": 9,
-  "passing": 9,
+  "total": 12,
+  "passing": 12,
   "cases": [
     {
       "case": "PRODUCER: plain self-targeted putCounter, counterType '+1/+1'",
@@ -55,6 +55,24 @@
       "mirrors": "a transforming DFC whose back face carries the reactive trigger",
       "expectedVerdict": "matches",
       "note": "Mocked front/back face pair; the 'onCounterAdded' trigger lives only on backFace.triggers. Verified via matchesConsumerTriggerNames."
+    },
+    {
+      "case": "CALLABLE: producer-only match returns real detail",
+      "mirrors": "the real plain self-targeted putCounter PRODUCER case above, exercised via the new CallableSink contract instead of matchSink directly",
+      "expectedVerdict": "matches (producer.via set, no consumer)",
+      "note": "2026-09-18 factory refactor — proves entry(candidate) faithfully carries through matchSink's own verdict. Verified in counters.test.ts."
+    },
+    {
+      "case": "CALLABLE: consumer-only match returns real detail",
+      "mirrors": "the real 'onCounterAdded' CONSUMER case above, exercised via the new CallableSink contract instead of matchesConsumerTriggerNames directly",
+      "expectedVerdict": "matches (consumer.via:'triggerName' set, no producer)",
+      "note": "2026-09-18 factory refactor — proves entry(candidate) faithfully carries through matchesConsumerTriggerNames's own verdict. Verified in counters.test.ts."
+    },
+    {
+      "case": "CALLABLE: no producer or consumer signal returns null",
+      "mirrors": "the real vanilla-creature no-match case above, exercised via the new CallableSink contract",
+      "expectedVerdict": "no-match (null)",
+      "note": "2026-09-18 factory refactor — proves entry(candidate) returns null, not a falsy match object, when neither signal fires. Verified in counters.test.ts."
     }
   ]
 }

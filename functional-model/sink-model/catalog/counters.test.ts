@@ -1,16 +1,21 @@
 // Real corpus verification for the `counters-plus1plus1` sink catalog
-// entry — see `lifegain.test.ts`'s own header for the "mocked fixtures, not
-// real cards" convention this mirrors (the structural gate cares about the
-// STRUCTURAL SHAPE `matchSink`/`matchesConsumerTriggerNames` recognize, not
-// which real card happens to have it). See `counters-plus1plus1.ts`'s own
-// header for the full "one shared matcher, parametrized per counter type"
-// design writeup — the real motivating card is Exemplar of Light (FDN #11).
+// instance (the ONE real configuration of the shared `CountersSink` family
+// factory, `counters.ts`, as of the 2026-09-18 factory refactor) — see
+// `lifegain.test.ts`'s own header for the "mocked fixtures, not real cards"
+// convention this mirrors (the structural gate cares about the STRUCTURAL
+// SHAPE `matchSink`/`matchesConsumerTriggerNames` recognize, not which real
+// card happens to have it). See `counters.ts`'s own header for the full
+// "one shared matcher, parametrized per counter type" design writeup — the
+// real motivating card is Exemplar of Light (FDN #11).
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, Effect } from '../../card';
 import { matchesConsumerTriggerNames, matchSink } from '../match-sink';
-import { entry, query } from './counters-plus1plus1';
+import { countersPlus1Plus1 } from './counters';
 
 describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
+  const entry = countersPlus1Plus1;
+  const { query } = entry;
+
   it('PRODUCER: matches a plain self-targeted putCounter effect with counterType "+1/+1" (the real Exemplar of Light, FDN #11, shape)', () => {
     const card: CardDefinition = {
       name: 'Mock Counter Creature',
@@ -110,5 +115,48 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       },
     };
     expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(true);
+  });
+
+  // -------------------------------------------------------------------------
+  // CallableSink contract (2026-09-18, new with the factory refactor) — see
+  // `battlefield-presence.test.ts`'s own identical section header for the
+  // full "first real callers of entry(candidate)" writeup; same 3-case
+  // shape reused here, against this family's own real fixtures.
+  it('CALLABLE: producer-only match returns real detail (producer.via set, no consumer)', () => {
+    const card: CardDefinition = {
+      name: 'Mock Counter Creature',
+      manaCost: '{2}{W}',
+      typeLine: 'Creature — Angel',
+      pt: [2, 2],
+      effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
+    };
+    const result = entry(card);
+    expect(result).not.toBeNull();
+    expect(result!.producer?.via).toEqual(expect.any(String));
+    expect(result!.consumer).toBeUndefined();
+  });
+
+  it('CALLABLE: consumer-only match returns real detail (consumer.via set, no producer)', () => {
+    const card: CardDefinition = {
+      name: 'Mock Counter Reactor',
+      manaCost: '{1}{W}',
+      typeLine: 'Creature — Human Cleric',
+      pt: [1, 1],
+      triggers: [{ name: 'onCounterAdded', effects: [{ kind: 'drawCard', amount: 1 } satisfies Effect] }],
+    };
+    const result = entry(card);
+    expect(result).not.toBeNull();
+    expect(result!.consumer).toEqual({ via: 'triggerName' });
+    expect(result!.producer).toBeUndefined();
+  });
+
+  it('CALLABLE: no producer or consumer signal at all returns null', () => {
+    const card: CardDefinition = {
+      name: 'Mock Vanilla Creature',
+      manaCost: '{2}{W}',
+      typeLine: 'Creature — Human',
+      pt: [2, 2],
+    };
+    expect(entry(card)).toBeNull();
   });
 });
