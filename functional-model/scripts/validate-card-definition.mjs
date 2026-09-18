@@ -6,23 +6,57 @@
 //   - `ok: true`                          — safe to mark `blue`.
 //   - `ok: false, failureKind: 'capacity-gap'` — a genuine, detected
 //     engine-capacity/vocabulary gap (references an Effect/combinator
-//     `kind` this engine has never heard of, or uses the pool's own
-//     established "documented no-op placeholder" convention for one) — the
-//     caller may mark the pipeline-status `purple` (renamed from an
-//     earlier `red`, 2026-09-18, later same day, per a two-step explicit
-//     user ruling — see `functional-model/pipeline-status.ts`'s own header
-//     for the full rename/broadened-meaning writeup, including why
-//     `purple` — the shared axis's own "schema support only, unverified"
-//     color — won over an intermediate `incomplete` choice; this
-//     `failureKind` string itself deliberately stays `'capacity-gap'`, a
-//     lower-level diagnostic distinct from the higher-level status name
-//     it backs).
+//     `kind` this engine has never heard of, uses the pool's own
+//     established "documented no-op placeholder" convention for one, OR
+//     — see part 0 below, 2026-09-18, later same day again — carries ANY
+//     non-empty `staticAbilities` entry at all) — the caller may mark the
+//     pipeline-status `purple` (renamed from an earlier `red`, 2026-09-18,
+//     later same day, per a two-step explicit user ruling — see
+//     `functional-model/pipeline-status.ts`'s own header for the full
+//     rename/broadened-meaning writeup, including why `purple` — the
+//     shared axis's own "schema support only, unverified" color — won
+//     over an intermediate `incomplete` choice; this `failureKind` string
+//     itself deliberately stays `'capacity-gap'`, a lower-level diagnostic
+//     distinct from the higher-level status name it backs).
 //   - `ok: false, failureKind: 'other'`   — anything else (a real bug: a
 //     module that doesn't import, a shape that doesn't compile, a missing
 //     required `CardDefinition` field, ...) — the caller must hard-fail
 //     LOUDLY (throw / write to a distinct blocked-other marker), never fold
 //     this into `'capacity-gap'`/`purple` — that carries a specific,
 //     verified "capacity gap" meaning that must never be assumed.
+//
+// ## `staticAbilities` presence is ALSO an automatic capacity-gap
+// (2026-09-18, later same day again — real bug found: Inspiring Paladin
+// carried a whole second real ability with NO functional counterpart at
+// all — expressed only as free-text `staticAbilities` prose plus a code
+// comment admitting the gap — and this gate still returned `ok:true`
+// (`blue`) for it, since neither check below (part 1's vocabulary walk,
+// part 2's type-check) has any way to notice that a `staticAbilities`
+// STRING went completely unbacked by any real `Effect`/`Trigger`/
+// `continuousKeywordGrants` entry; `card-status.ts`'s own
+// `isUnsupportedNoOp` doc comment already named this exact case as "a
+// known, accepted blind spot of this check, not silently claimed as
+// covered.").
+//
+// A fully general "does every real oracle-text clause have a matching
+// functional counterpart" check is NOT feasible here (that's NLP-complete
+// oracle-text-vs-effects matching, not a deterministic structural gate) —
+// but the user's own explicit, simpler ruling replaces the fuzzier
+// per-entry heuristic this file first explored: `CardDefinition
+// .staticAbilities` (`card.ts`'s own doc comment: real free text, "does
+// nothing" mechanically) is BY DEFINITION inert. Its mere presence — even
+// a single entry, even one that duplicates a clause modeled correctly
+// elsewhere on the same card, as Inspiring Paladin's own first ability
+// does — means the engine cannot prove every real printed ability is
+// backed by executable logic, which is a genuine capacity gap on its own
+// terms, full stop; no case-by-case judgment call needed or attempted.
+// `findStaticAbilityGapReasons` below is the one, deterministic
+// implementation: any non-empty `staticAbilities` array on EITHER face
+// produces one reason per entry, folded into the exact same
+// `failureKind: 'capacity-gap'` result the vocabulary walk already
+// produces (never `'other'` — this is a real, expected, non-buggy state
+// for a still-in-progress card, same bucket as an unknown-kind
+// placeholder).
 //
 // ## Two independent checks, in a specific, deliberate order
 //
@@ -187,6 +221,29 @@ function findVocabularyGaps(definition) {
 }
 
 /**
+ * The blunt, deterministic `staticAbilities`-presence rule — see this
+ * file's own header for the full "why" (real bug: Inspiring Paladin).
+ * Walks both faces (same dual-face convention `findUnsupportedConstructs`/
+ * `collectEffects` already use) — one reason per real, non-empty entry,
+ * `[]` when the card has none on either face. Exported (not just a local
+ * helper) so it can be unit-tested directly against a mocked
+ * `CardDefinition`, mirroring `check-verified-regressions.mjs`'s own
+ * "export the pure primitive for direct testing" precedent — this
+ * function needs no fs/tsc/vite-node dependency to exercise.
+ */
+export function findStaticAbilityGapReasons(definition) {
+  const reasons = [];
+  const walk = (def, faceLabel) => {
+    for (const text of def.staticAbilities ?? []) {
+      reasons.push(`non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart)${faceLabel}: "${text}"`);
+    }
+    if (def.backFace) walk(def.backFace, ' [back face]');
+  };
+  walk(definition, '');
+  return reasons;
+}
+
+/**
  * Real, scoped `tsc --noEmit` against just `absDefinitionPath` — see this
  * file's own header, part 2, for the config shape and why `.nuxt/tsconfig
  * .server.json` (not the bare root `tsconfig.json`) is the real base.
@@ -298,12 +355,17 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
       reasons: [`unexpected error while walking effects/program tree (not a recognized 'unhandled ...' vocabulary signal): ${err instanceof Error ? err.message : String(err)}`],
     };
   }
-  if (vocabGapReasons) {
+  // The blunt `staticAbilities`-presence rule (see this file's own
+  // header) — combined with any real vocabulary-walk reasons above into
+  // ONE capacity-gap result, never a separate/competing classification.
+  const staticAbilityReasons = findStaticAbilityGapReasons(definition);
+  const combinedGapReasons = [...(vocabGapReasons ?? []), ...staticAbilityReasons];
+  if (combinedGapReasons.length > 0) {
     const engineStatus = computeEngineStatus(root);
     return {
       ok: false,
       failureKind: 'capacity-gap',
-      reasons: vocabGapReasons,
+      reasons: combinedGapReasons,
       engineGapsContext: {
         gray: engineStatus.filter((e) => e.baseline === 'gray').map((e) => e.title),
         purple: engineStatus.filter((e) => e.baseline === 'purple').map((e) => e.title),
