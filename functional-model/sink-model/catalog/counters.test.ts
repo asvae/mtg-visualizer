@@ -80,15 +80,17 @@ function mockCard(name: string, overrides: Partial<CardDefinition> = {}): CardDe
 }
 
 describe('counters-plus1plus1 sink instance (mocked CardDefinition fixtures)', () => {
-  // Mirrors the real Exemplar of Light's own two triggers (see this file's
-  // own header) — MUST keep producing `counterType: '+1/+1'` /
-  // `consumerTriggerNames: ['onCounterAdded']` when derived, or this test
-  // silently stops testing the real production configuration.
+  // MUST keep producing `counterType: '+1/+1'` / `consumerTriggerNames:
+  // ['onCounterAdded']` when derived, or this test silently stops testing
+  // the real production configuration (Exemplar of Light, FDN #11). The
+  // real card wraps its own +1/+1-granting effect inside an `onLifeGain`
+  // trigger ("whenever you gain life...") — irrelevant here, since
+  // `deriveCounterTypes` reads an effect's own `kind`/`counterType`
+  // regardless of what triggers it (or whether anything does), so this mock
+  // states the producer effect directly at the top level instead.
   const mockDrivingDefinition = mockCard('Mock Sink-Defining Card', {
-    triggers: [
-      { name: 'onLifeGain', on: 'lifeGained', effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] },
-      { name: 'onCounterAdded', effects: [] },
-    ],
+    effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
+    triggers: [{ name: 'onCounterAdded', effects: [] }],
   });
   // `CountersSink` returns `SinkInstance[]` (2026-09-19, later still — one
   // instance per distinct `counterType`) — Exemplar of Light only ever
@@ -136,7 +138,7 @@ describe('counters-plus1plus1 sink instance (mocked CardDefinition fixtures)', (
     expect(sinkInstance(card)).toBe(false);
   });
 
-  it('SINK CANDIDATE: matches a card whose own named trigger is "onCounterAdded" (the real Exemplar of Light, FDN #733, consumer half: "Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn.") even with no putCounter effect walked for THIS check — proves the sink-candidate signal is a genuinely separate check from the source-candidate check', () => {
+  it('SINK CANDIDATE: matches a card whose own named trigger is "onCounterAdded" (the real Exemplar of Light, FDN #11, consumer half: "Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn.") even with no putCounter effect walked for THIS check — proves the sink-candidate signal is a genuinely separate check from the source-candidate check', () => {
     const card = mockCard('Exemplar of Light', {
       typeLine: 'Creature',
       triggers: [{ name: 'onCounterAdded', activationLimit: 1, effects: [{ kind: 'drawCard', amount: 1 } satisfies Effect] }],
