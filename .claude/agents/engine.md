@@ -26,7 +26,14 @@ for current design/known gaps.
 - `functional-model/cards/<slug>/definition.ts` + `scenarios.ts` (the
   per-card functional model itself — NOT `synergy.json`/`trace.json`,
   which are generated output the `card` agent also reads; if you regenerate
-  them, say so).
+  them, say so). FIN's pool here is reference-only for new authoring as
+  of 2026-09-18 (see that directory's own `README.md`) — new card
+  authoring for the FDN sink-only-synergy-model experiment lives in the
+  sibling `functional-model/fdn-cards/<slug>/` instead (just
+  `definition.ts` + `pipeline-status.json`, no Facts/synergy.json by
+  design — see `functional-model/pipeline-status.ts` and
+  `.claude/contracts/card-schema.md`'s "FDN authoring-pipeline status"
+  section).
 - `functional-model/scripts/*.mjs` (compute-weights, find-synergies,
   run-scenarios, verify-synergy, etc).
 - All `*.test.ts` under `functional-model/`.
