@@ -191,12 +191,37 @@
 // own `destroy all creatures` program satisfies its own unconstrained
 // destroy-a-creature want) in `card-interactions.test.ts` — no synthetic
 // fixture needed for either.
+//
+// ---------------------------------------------------------------------------
+// **SUPERSEDED, 2026-09-18, later still — catalog-only now, the raw
+// structural fallback below no longer contributes to this function's
+// returned categories at all.** Everything above (the whole "raw fallback,
+// same `describeFact` vocabulary the old paired source+sink Fact model
+// used" design, and the "CATALOG-FIRST CATEGORIZATION" section right below
+// it) is kept verbatim as the real investigation that led here — nothing in
+// it was wrong, it's just no longer what this function DOES. The user's own
+// correction: the Interactions panel should "only consider sink resources
+// there" — a raw, uncurated `describeFact` label like "enters the
+// battlefield"/"counters" (Ajani's Pridemate's own pre-this-change output,
+// alongside its real "Lifegain" catalog match) is noise next to a genuine,
+// human-reviewed `SINK_CATALOG` entry, not a useful second-tier category.
+// Concretely: Ajani's Pridemate now returns ONLY `"Lifegain"`; Day of
+// Judgment now returns ONLY `"Graveyard fodder"`. A card with zero
+// catalog-covered occurrences now returns `[]` (same empty-array shape as
+// always — `CardDetailTabs.vue`'s own `v-if="fdnInteractions.length"` guard
+// already handles that with no further change needed).
+//
+// `toSinkQuery`/`labelFor` (the raw-occurrence-to-category machinery) and
+// the `deriveOccurrences` call that fed them are DELETED outright, not just
+// unused-in-place — confirmed nothing else in the repo imports either
+// function (grepped before removing), so keeping them around as dead code
+// would just be a second, silent way to reintroduce the fallback later by
+// accident. `deriveOccurrences`/`matchSink`'s own sink-only-model machinery
+// is untouched — this file is still the same thin aggregation layer over
+// it, just catalog-entries-only now.
+// ---------------------------------------------------------------------------
 import type { CardDefinition } from './card';
-import { deriveOccurrences, matchesConsumerTriggerNames, matchSink } from './sink-model/match-sink';
-import type { ProducerOccurrence } from './sink-model/match-sink';
-import type { SinkQuery } from './sink-model/sink-query';
-import type { Fact } from './synergy';
-import { describeFact } from './synergy';
+import { matchesConsumerTriggerNames, matchSink } from './sink-model/match-sink';
 import { SINK_CATALOG } from './sink-model/catalog/index';
 import { isSinkCatalogEntryUsable } from './sink-catalog-status';
 
@@ -215,44 +240,20 @@ export interface CardInteractionCategory {
 }
 
 /**
- * Strips the fields that only make sense for a SPECIFIC occurrence's own
- * identity (`via` — debug provenance; `resolvedAttrs` — a created token's
- * own resolved stats; `subject`/a bare `target: 'self'` — both always mean
- * "this same card," which has no meaning once generalized into a pool-wide
- * query) — keeping a `target` that's a real `Constraints` OBJECT (a genuine
- * filter, e.g. Day of Judgment's own `target: {types: {has: ['Creature']}}`
- * on its `destroy` occurrence), since that's real, general constraint data,
- * not a self-reference.
- */
-function toSinkQuery(occ: ProducerOccurrence, category: string): SinkQuery {
-  const { via, resolvedAttrs, subject, target, ...rest } = occ;
-  const keepTarget = target !== undefined && typeof target === 'object' ? target : undefined;
-  return { ...rest, ...(keepTarget !== undefined ? { target: keepTarget } : {}), category };
-}
-
-/**
- * Human-readable label for one occurrence — a thin, direct reuse of
- * `synergy.ts`'s own `describeFact` (the EXACT same function the old
- * paired source+sink Fact model already used to render a Facts-tab label),
- * not a re-derived parallel vocabulary. `describeFact` only ever reads
- * `role`/`event`/`zone`/`to`/`from` off its argument — a synthetic
- * `role: 'source'` wrapper is enough for a correct label; the cast bypasses
- * `Fact.annotations`'s own required-tuple type (SYNERGY_DESIGN.md: "no
- * annotation if undefined" doesn't apply here — this object is never
- * served/persisted as a real `Fact`, purely a label-rendering shim).
- */
-function labelFor(occ: ProducerOccurrence): string {
-  const { via, ...rest } = occ;
-  return describeFact({ role: 'source', ...rest } as unknown as Fact);
-}
-
-/**
- * Every real interaction category `definition` structurally participates
- * in, against `poolDefinitions` (whatever set/pool is currently in view —
- * the caller's job to assemble; this function does no fs/db reads of its
- * own). Pure — same `root` passthrough convention `deriveOccurrences`/
- * `matchSink` already establish (only a test simulating a not-yet-blue
- * sink-derivation mechanism would ever override it).
+ * Every real, CATALOG-COVERED interaction category `definition`
+ * structurally participates in, against `poolDefinitions` (whatever
+ * set/pool is currently in view — the caller's job to assemble; this
+ * function does no fs/db reads of its own). Pure — same `root` passthrough
+ * convention `matchSink` already establishes (only a test simulating a
+ * not-yet-blue sink-derivation mechanism would ever override it).
+ *
+ * **Catalog-only, 2026-09-18, later still** — see this file's own header
+ * "SUPERSEDED" note for the full writeup: a category is real ONLY when a
+ * usable `SINK_CATALOG` entry actually matches (producer-shaped `query` via
+ * `matchSink`, or consumer-shaped `consumerTriggerNames`). There is
+ * deliberately no raw structural fallback anymore — a `definition` with no
+ * catalog-covered occurrence at all returns `[]`, not a lower-quality
+ * "at least something" category.
  *
  * `definition` is NOT excluded from `poolDefinitions` internally — pass a
  * pool that already excludes it if a caller wants self-matches dropped
@@ -261,12 +262,7 @@ function labelFor(occ: ProducerOccurrence): string {
  * explicit requirement, the default here is to include it.
  */
 export function computeCardInteractions(definition: CardDefinition, poolDefinitions: CardDefinition[], root: string = process.cwd()): CardInteractionCategory[] {
-  const occurrences = deriveOccurrences(definition, root);
   const matchesByCategory = new Map<string, Set<string>>();
-  // Which derived occurrence(s) (`via`) already got a real catalog-entry
-  // category below — see this file's own "CATALOG-FIRST CATEGORIZATION"
-  // header for why the raw fallback loop must skip these.
-  const consumedVia = new Set<string>();
 
   for (const entry of SINK_CATALOG) {
     if (!isSinkCatalogEntryUsable(entry.slug, root)) continue; // not-yet-verified catalog data must never drive real matching
@@ -280,24 +276,12 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
     const selfProducerMatch = matchSink(entry.query, definition, root);
     const selfConsumerMatch = matchesConsumerTriggerNames(entry.consumerTriggerNames, definition);
     if (!selfProducerMatch.matched && !selfConsumerMatch) continue;
-    if (selfProducerMatch.matched && selfProducerMatch.via) consumedVia.add(selfProducerMatch.via);
     const category = entry.query.category;
     const matchedNames = matchesByCategory.get(category) ?? new Set<string>();
     for (const candidate of poolDefinitions) {
       if (matchSink(entry.query, candidate, root).matched || matchesConsumerTriggerNames(entry.consumerTriggerNames, candidate)) {
         matchedNames.add(candidate.name);
       }
-    }
-    matchesByCategory.set(category, matchedNames);
-  }
-
-  for (const occ of occurrences) {
-    if (occ.via && consumedVia.has(occ.via)) continue; // already categorized under a real catalog entry above
-    const category = labelFor(occ);
-    const query = toSinkQuery(occ, category);
-    const matchedNames = matchesByCategory.get(category) ?? new Set<string>();
-    for (const candidate of poolDefinitions) {
-      if (matchSink(query, candidate, root).matched) matchedNames.add(candidate.name);
     }
     matchesByCategory.set(category, matchedNames);
   }

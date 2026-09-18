@@ -9,13 +9,12 @@
 // out of sync with what the full page actually renders. Both now import this
 // one interface and get the FULL response, since both render the same
 // `CardDetailTabs.vue` content.
-import type { EnrichedInteractionGroup, ContinuousKeywordGrant, AnnotatedNonFactSpan } from '../../server/api/card/[set]/[number]';
+import type { EnrichedInteractionGroup, EnrichedCardInteractionCategory, ContinuousKeywordGrant, AnnotatedNonFactSpan } from '../../server/api/card/[set]/[number]';
 import type { CardData, EdgeData, ThemeData, AnnotatedCard } from '../types';
 import type { LogEntry, Scenario } from '../../functional-model/harness';
 import type { Fact } from '../../functional-model/synergy';
 import type { CardStatusEntry } from '../../functional-model/card-status';
 import type { PipelineStatusFile } from '../../functional-model/pipeline-status';
-import type { CardInteractionCategory } from '../../functional-model/card-interactions';
 
 export interface CardResponse {
   card: CardData;
@@ -73,11 +72,13 @@ export interface CardResponse {
     // categories against the current FDN pool
     // (`functional-model/card-interactions.ts`'s `computeCardInteractions`,
     // catalog-first, self-inclusive — see `.claude/contracts/
-    // card-schema.md`'s own dated section). Always `[]` for a `fin` entry —
-    // that set still uses the top-level `interactions` field below (the
-    // older paired source+sink Fact model's own cross-card join), a
-    // genuinely different mechanism.
-    cardInteractions: CardInteractionCategory[];
+    // card-schema.md`'s own dated section), enriched server-side with real
+    // set/collectorNumber/image per match (see server/api/card/[set]/
+    // [number].ts's own `EnrichedCardInteractionCategory` doc comment).
+    // Always `[]` for a `fin` entry — that set still uses the top-level
+    // `interactions` field below (the older paired source+sink Fact
+    // model's own cross-card join), a genuinely different mechanism.
+    cardInteractions: EnrichedCardInteractionCategory[];
   } | null;
   interactions: EnrichedInteractionGroup[];
 }

@@ -33,7 +33,7 @@ import type { DisplayRow, FactRow, NonFactSpanRow } from '../lib/factOrder';
 import { describeFact } from '../../functional-model/synergy';
 import type { Fact } from '../../functional-model/synergy';
 import { TYPE_DERIVED_RECOGNIZER_IDS } from '../../functional-model/recognizers/types';
-import type { EnrichedInteractionGroup, AnnotatedNonFactSpan } from '../../server/api/card/[set]/[number]';
+import type { EnrichedInteractionGroup, EnrichedCardInteractionCategory, AnnotatedNonFactSpan } from '../../server/api/card/[set]/[number]';
 import type { ReviewStatus } from '../types';
 import type { CardResponse } from '../lib/cardResponse';
 import { StoreKey } from '../composables/useGraphStore';
@@ -928,7 +928,11 @@ const orderedInteractions = computed<EnrichedInteractionGroup[]>(() => {
 // (catalog-first, self-inclusive, pool-scoped-not-deck-scoped — see
 // `.claude/contracts/card-schema.md`'s own dated section), computed
 // server-side (`server/api/card/[set]/[number].ts`'s `FunctionalModelData.
-// cardInteractions`) against the current FDN pool of `CardDefinition`s.
+// cardInteractions`) against the current FDN pool of `CardDefinition`s, and
+// enriched server-side (same file's `enrichCardInteractions`) with real
+// set/collectorNumber/image per match — reusing the same
+// `resolveFunctionalModelCardMeta` join `loadInteractionGroups` below
+// already uses for the FIN panel, not a second thumbnail-lookup convention.
 // NOT a generalization of `orderedInteractions` above — that panel is tied
 // to the OLD paired source+sink Fact model (`props.data.interactions`,
 // `factKey`/`factOrderIndex`), which FDN structurally has nothing to run
@@ -938,7 +942,7 @@ const orderedInteractions = computed<EnrichedInteractionGroup[]>(() => {
 // (`computeCardInteractions`'s own count-desc/category-asc order); no
 // client-side reordering needed, unlike `orderedInteractions`, since there
 // is no Facts-tab text position for a catalog category to line up with.
-const fdnInteractions = computed(() => props.data.functionalModel?.cardInteractions ?? []);
+const fdnInteractions = computed<EnrichedCardInteractionCategory[]>(() => props.data.functionalModel?.cardInteractions ?? []);
 
 // Functional model's own four views, tabbed instead of stacked
 // <details>/<summary> spoilers — Facts is the default (the primary,
@@ -2014,8 +2018,8 @@ watch(
               v-for="m in group.matches"
               :key="m.card"
               :to="m.set && m.collectorNumber ? `/app/card/${m.set}/${m.collectorNumber}` : undefined"
-              class="block shrink-0"
-              :class="{ 'pointer-events-none': !(m.set && m.collectorNumber) }"
+              class="block shrink-0 rounded-md"
+              :class="[{ 'pointer-events-none': !(m.set && m.collectorNumber) }, m.selfInteraction ? 'ring-2 ring-primary' : '']"
               :title="m.selfInteraction ? `Self-interaction: ${m.selfInteraction}` : undefined"
             >
               <img v-if="m.image" :src="m.image" :alt="m.card" class="block w-[220px] min-w-0 rounded-md" />
@@ -2032,12 +2036,20 @@ watch(
   <!-- FDN's own real Interactions section — see `fdnInteractions`'s own doc
        comment above for why this is a clearly-labeled, SEPARATE block from
        the FIN-only panel above rather than a shared/generalized one.
-       Category label + count + matching card names (self-inclusive), same
+       Category label + count + matching cards (self-inclusive), same
        "shaped like the graph's own node display" shape
        `.claude/contracts/card-schema.md`'s own `computeCardInteractions`
-       section specifies — no images/links (a catalog category has no
-       per-card thumbnail metadata the way the old Fact-pair join does), just
-       the plain real card names. -->
+       section specifies. Real thumbnails now (2026-09-18, later still) —
+       `fdnInteractions`'s own doc comment above covers the server-side join
+       that attaches them; same gallery shape as the FIN panel just above
+       (`NuxtLink` to `/app/card/<set>/<number>` when resolved, plain
+       text-fallback box otherwise), not a merge of the two mechanisms —
+       `EnrichedCardInteractionMatch.self` (name-equality against the card
+       being viewed) drives the SAME `ring-2 ring-primary` self-outline the
+       FIN panel above now also uses, for a consistent visual language
+       across both panels even though the two `self` signals come from
+       genuinely different plumbing (`selfInteraction`'s own fact-pair
+       provenance vs. this mechanism's plain name-equality check). -->
   <div v-if="isFdn && fdnInteractions.length" class="mt-4 w-full max-w-full">
     <div class="mb-1 flex items-center gap-2">
       <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Interactions</span>
@@ -2051,13 +2063,19 @@ watch(
             >
           </summary>
           <div class="mt-1.5 flex flex-wrap gap-1.5">
-            <span
-              v-for="n in cat.matchingCardNames"
-              :key="n"
-              class="rounded bg-bg px-2 py-0.5 text-[11px] text-muted"
-              :class="{ 'font-semibold text-text': n === card.name }"
-              >{{ n }}</span
+            <NuxtLink
+              v-for="m in cat.matches"
+              :key="m.card"
+              :to="m.set && m.collectorNumber ? `/app/card/${m.set}/${m.collectorNumber}` : undefined"
+              class="block shrink-0 rounded-md"
+              :class="[{ 'pointer-events-none': !(m.set && m.collectorNumber) }, m.self ? 'ring-2 ring-primary' : '']"
+              :title="m.self ? 'This card' : undefined"
             >
+              <img v-if="m.image" :src="m.image" :alt="m.card" class="block w-[220px] min-w-0 rounded-md" />
+              <span v-else class="flex h-[307px] w-[220px] items-center justify-center rounded-md bg-bg text-center text-xs text-muted">{{
+                m.card
+              }}</span>
+            </NuxtLink>
           </div>
         </details>
       </li>

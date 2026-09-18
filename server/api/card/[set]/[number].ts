@@ -290,7 +290,19 @@ interface FunctionalModelData {
   // model's own cross-card join, `loadInteractionGroups` below), a
   // genuinely different mechanism FDN structurally has nothing to run
   // against (no synergy.json at all).
-  cardInteractions: CardInteractionCategory[];
+  //
+  // **Enriched server-side, 2026-09-18, later still** — `computeCardInteractions`
+  // itself stays pure (`CardInteractionCategory.matchingCardNames: string[]`,
+  // plain names, no fs/db reads — see that function's own doc comment/the
+  // contract file), same as `loadInteractionGroups`/`EnrichedInteractionGroup`
+  // below already does for the FIN panel: this route joins each matched name
+  // against real Scryfall data via the SAME `resolveFunctionalModelCardMeta`
+  // that join already uses (no second FDN-pool-query convention invented —
+  // an FDN card is a real printed card, already covered by that function's
+  // `dbLookupByName`/`resolveLiveCardMeta` legs against `data/cards.db`,
+  // which is synced across every set, not just `fin`) — see
+  // `EnrichedCardInteractionCategory` below.
+  cardInteractions: EnrichedCardInteractionCategory[];
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -744,7 +756,8 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
   // defensive rather than assuming `.find` always succeeds).
   const pool = await loadFdnDefinitionPool(root);
   const definition = pool.find((d) => d.name === name);
-  const cardInteractions = definition ? computeCardInteractions(definition, pool, root) : [];
+  const rawCardInteractions = definition ? computeCardInteractions(definition, pool, root) : [];
+  const cardInteractions = await enrichCardInteractions(rawCardInteractions, name);
   return {
     source,
     synergy: null,
@@ -910,6 +923,49 @@ async function resolveFunctionalModelCardMeta(name: string): Promise<{ set: stri
   const live = await resolveLiveCardMeta(name);
   cardMetaCache.set(name, live);
   return live;
+}
+
+// `computeCardInteractions` (`functional-model/card-interactions.ts`) is a
+// pure function over `CardDefinition[]` — its own `CardInteractionCategory.
+// matchingCardNames` is plain `string[]`, no fs/db reads, by explicit design
+// (see that function's own doc comment). Real thumbnail metadata is a
+// route-level concern layered on here, reusing `resolveFunctionalModelCardMeta`
+// AS-IS rather than inventing a second FDN-pool-query convention: an FDN
+// card is a real, currently-printed Scryfall card (`data/cards.db` is synced
+// across every set, not just `fin`, same as `server/api/card-status/
+// [set].get.ts`'s own `set_code = 'fdn'` query on that same DB), so that
+// function's existing `dbLookupByName`/`resolveLiveCardMeta` fallback legs
+// already cover it correctly — only its first leg (`resolveFinCardMeta`,
+// FIN-only `fin_scryfall.json`) can never match an FDN-only name, which is
+// fine, it's just one more ordinary miss that falls through to the next leg.
+export interface EnrichedCardInteractionMatch {
+  card: string;
+  /** True only for the served card's own name — lets the UI outline its own
+   * thumbnail. No richer per-match label the way `EnrichedInteractionMatch.
+   * selfInteraction` carries (that one distinguishes WHICH of a card's own
+   * facts self-satisfied); this mechanism has exactly one reason a match can
+   * be "self" (name equality against the card being viewed), so a plain
+   * boolean is honest, not a stand-in for missing detail. */
+  self?: boolean;
+  set?: string;
+  collectorNumber?: string;
+  image: string | null;
+}
+export interface EnrichedCardInteractionCategory extends Omit<CardInteractionCategory, 'matchingCardNames'> {
+  matches: EnrichedCardInteractionMatch[];
+}
+async function enrichCardInteractions(categories: CardInteractionCategory[], selfName: string): Promise<EnrichedCardInteractionCategory[]> {
+  return Promise.all(
+    categories.map(async (cat) => {
+      const matches = await Promise.all(
+        cat.matchingCardNames.map(async (name): Promise<EnrichedCardInteractionMatch> => {
+          const ref = await resolveFunctionalModelCardMeta(name);
+          return { card: name, self: name === selfName || undefined, set: ref?.set, collectorNumber: ref?.collectorNumber, image: ref?.image ?? null };
+        }),
+      );
+      return { category: cat.category, count: cat.count, matches };
+    }),
+  );
 }
 
 // InteractionGroup/InteractionMatch (functional-model/synergy.ts v2) carry

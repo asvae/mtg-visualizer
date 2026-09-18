@@ -73,3 +73,49 @@ with it either way (the served shape/signature didn't change). If a future
 task's own brief cites the old "Ajani never gets Lifegain" framing, treat
 it as superseded — check `card-interactions.ts`'s own header for the
 current, real designed behavior rather than trusting an older report.
+
+## 2026-09-18, later still — real thumbnails, self-outline, catalog-only
+
+Two follow-ups landed together, both live-verified:
+
+1. **Real thumbnails/links, not plain name chips.** The "no per-card
+   thumbnail metadata" framing above is now stale — `computeCardInteractions`
+   itself stayed pure (`CardInteractionCategory.matchingCardNames: string[]`,
+   no fs/db reads, unchanged), but `server/api/card/[set]/[number].ts` now
+   enriches it server-side via a NEW `enrichCardInteractions` helper, reusing
+   `resolveFunctionalModelCardMeta` AS-IS (same function
+   `loadInteractionGroups`/the FIN panel already uses) — no second
+   FDN-pool-query convention invented, since an FDN card is a real printed
+   card already covered by that function's `dbLookupByName`/
+   `resolveLiveCardMeta` legs against `data/cards.db` (synced across every
+   set). Served shape is now `FunctionalModelData.cardInteractions:
+   EnrichedCardInteractionCategory[]` (`{category, count, matches:
+   {card, self?, set?, collectorNumber?, image}[]}`), not the raw
+   `CardInteractionCategory[]` — `cardResponse.ts`'s hand-mirrored type
+   updated to match (see `cardresponse-hand-mirror-gotcha` topic — checked
+   this one specifically).
+2. **Self-outline, both panels.** `EnrichedCardInteractionMatch.self` (plain
+   name-equality against the viewed card) drives a `ring-2 ring-primary`
+   class on the thumbnail `NuxtLink` in the FDN block. Same class was ALSO
+   added to the pre-existing FIN `orderedInteractions` panel (keyed off its
+   own `m.selfInteraction`, previously tooltip-only) for visual consistency
+   across both panels — deliberate, not an accidental generalization; the
+   two `self` signals still come from genuinely different plumbing
+   (`selfInteraction`'s fact-pair provenance vs. this mechanism's plain name
+   check), only the CSS treatment is shared.
+3. **Catalog-only, no raw fallback (separate follow-up task, same session).**
+   `computeCardInteractions` no longer emits a category for an occurrence
+   with no matching `SINK_CATALOG` entry — the old `toSinkQuery`/`labelFor`
+   raw-fallback machinery (the `describeFact`-labeled second loop) was
+   deleted outright (confirmed nothing else in the repo imported either
+   function). Ajani's Pridemate now shows ONLY "Lifegain" (its own baseline
+   "enters the battlefield"/"counters" raw categories are gone); Day of
+   Judgment shows ONLY "Graveyard fodder" (its "moves to graveyard" raw
+   category is gone). A card matching no catalog entry at all now returns
+   `[]` — the existing `v-if="fdnInteractions.length"` guard already handles
+   that with no template change. `card-interactions.test.ts` updated to
+   assert the raw labels' ABSENCE rather than deleting those tests outright.
+   `.claude/contracts/card-schema.md`'s own `computeCardInteractions`/
+   "CATALOG-FIRST CATEGORIZATION" sections were NOT updated by this agent
+   (contracts are the orchestrator's to fix) — flagged back, still describes
+   the old "raw fallback + catalog" two-tier design.
