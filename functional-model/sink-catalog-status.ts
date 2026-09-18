@@ -216,8 +216,10 @@ export function resetSinkCatalogColorCacheForTests(): void {
 
 /**
  * Is catalog entry `slug`'s LIVE status usable — i.e. trustworthy enough to
- * actually attach to a card (`sink-attachment.ts`) or otherwise rely on for
- * real matching? Only `blue`/`green` are; `gray`/`purple`/`yellow`/
+ * actually rely on for real matching (`card-interactions.ts`'s own
+ * on-the-fly catalog-first categorization, no persisted per-card attachment
+ * concept exists — see `pipeline-status.ts`'s own "tried then reverted"
+ * header note)? Only `blue`/`green` are; `gray`/`purple`/`yellow`/
  * `re-review` return `false` — the caller must treat the entry as not
  * (yet, or no longer) trustworthy, never throw. Cached per `root`.
  */

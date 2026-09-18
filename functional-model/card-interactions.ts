@@ -104,6 +104,61 @@
 // doesn't line up with the historically-hand-authored one" situation,
 // documented rather than silently forced to agree.
 //
+// ---------------------------------------------------------------------------
+// CATALOG-FIRST CATEGORIZATION (2026-09-18, follow-up pass, same day as the
+// sink-attachment revert — see `pipeline-status.ts`'s own header note and
+// this project's own `.claude/contracts/card-schema.md` for the full
+// "tried, then reverted" writeup on the attachment concept this replaces).
+//
+// The user's own explicit instruction: no persisted per-card decision of
+// any kind — "which cards own the sink and which cards are selected for
+// the sink... these we can derive on-the-fly for now." Real `SINK_CATALOG`
+// entries (`sink-model/catalog/*.ts`) now exist with real category labels
+// ("Lifegain", "Graveyard fodder") — so `computeCardInteractions` checks
+// `definition` against EVERY usable (`blue`/`green`, `isSinkCatalogEntryUsable`)
+// catalog entry's own `query` FIRST, via the exact same `matchSink` the
+// catalog's own corpus tests already use (`matchSink(entry.query,
+// definition, root)`). A match means `definition` itself structurally
+// satisfies that entry's query — the catalog's real `query.category` label
+// is used instead of the raw `describeFact` label, and the pool-wide count/
+// matchingCardNames for that category is computed against the SAME
+// `entry.query` (self-inclusive, same convention as the raw path). The
+// occurrence that satisfied the catalog entry (`SinkMatchResult.via`) is
+// marked "consumed" so it doesn't ALSO show up a second time under its own
+// raw structural label — an occurrence not consumed by any catalog entry
+// still falls back to the pre-existing raw `describeFact` labeling.
+//
+// **Honest limit, not fixed here**: `matchSink` returns only the FIRST
+// occurrence (in `deriveOccurrences` order) whose `via` satisfies a given
+// query — if a card had two DIFFERENT occurrences that would each
+// independently satisfy the SAME catalog entry, only the first is marked
+// consumed; the second would still separately appear under its own raw
+// label. No real FDN card in the 10-card pool hits this today (checked);
+// flagged rather than silently assumed impossible.
+//
+// **Flagged, not forced — a catalog entry's query is PRODUCER-shaped, never
+// a consumer/want signal, so this does NOT make every intuitively-related
+// card land in the "right" category.** Concretely: Ajani's Pridemate's own
+// `name:'onLifeGained'` trigger does NOT make it categorize under
+// "Lifegain" here, even with a real `lifegain` catalog entry now existing —
+// confirmed live: `matchSink(lifegainQuery, ajanisPridemate)` is `false`,
+// because Ajani's Pridemate doesn't itself have a `gainLife` effect; its
+// trigger only REACTS to some OTHER source of lifegain, a consumer-side
+// signal this file's own EARLIER investigation (below, "the real design
+// question") already found has no safe, closed-vocabulary structural
+// derivation (`Trigger.name` is free-text, `Trigger.on`'s closed enum has
+// no lifegain member, and FDN cards carry no `oracleText` to fall back on
+// the way `recognizers/lifegain-trigger-structural.ts` does for the
+// equivalent FIN cards). Making the catalog query real didn't change that
+// finding — it only gave a real, reusable label for cards that genuinely
+// ARE producers of a cataloged category (Day of Judgment's own "destroy all
+// creatures" now correctly shows "Graveyard fodder" instead of the old raw
+// "destroy" label, a real, verified win this pass). Getting a genuine
+// consumer-side card like Ajani into a category needs either (a) trusting
+// the free-text trigger name (declined, same reasoning, twice now) or (b) a
+// real `Trigger.on` vocabulary addition with actual engine wiring — neither
+// attempted here.
+//
 // **Self-inclusion is real and unconditional** (explicit task requirement):
 // `poolDefinitions` is walked with NO exclusion of `definition` itself —
 // if `definition`'s own derived occurrences satisfy `definition`'s own
@@ -120,6 +175,8 @@ import type { ProducerOccurrence } from './sink-model/match-sink';
 import type { SinkQuery } from './sink-model/sink-query';
 import type { Fact } from './synergy';
 import { describeFact } from './synergy';
+import { SINK_CATALOG } from './sink-model/catalog/index';
+import { isSinkCatalogEntryUsable } from './sink-catalog-status';
 
 export interface CardInteractionCategory {
   /** Human-readable label, reused verbatim from `synergy.ts`'s own
@@ -184,8 +241,26 @@ function labelFor(occ: ProducerOccurrence): string {
 export function computeCardInteractions(definition: CardDefinition, poolDefinitions: CardDefinition[], root: string = process.cwd()): CardInteractionCategory[] {
   const occurrences = deriveOccurrences(definition, root);
   const matchesByCategory = new Map<string, Set<string>>();
+  // Which derived occurrence(s) (`via`) already got a real catalog-entry
+  // category below — see this file's own "CATALOG-FIRST CATEGORIZATION"
+  // header for why the raw fallback loop must skip these.
+  const consumedVia = new Set<string>();
+
+  for (const entry of SINK_CATALOG) {
+    if (!isSinkCatalogEntryUsable(entry.slug, root)) continue; // not-yet-verified catalog data must never drive real matching
+    const selfMatch = matchSink(entry.query, definition, root);
+    if (!selfMatch.matched) continue;
+    if (selfMatch.via) consumedVia.add(selfMatch.via);
+    const category = entry.query.category;
+    const matchedNames = matchesByCategory.get(category) ?? new Set<string>();
+    for (const candidate of poolDefinitions) {
+      if (matchSink(entry.query, candidate, root).matched) matchedNames.add(candidate.name);
+    }
+    matchesByCategory.set(category, matchedNames);
+  }
 
   for (const occ of occurrences) {
+    if (occ.via && consumedVia.has(occ.via)) continue; // already categorized under a real catalog entry above
     const category = labelFor(occ);
     const query = toSinkQuery(occ, category);
     const matchedNames = matchesByCategory.get(category) ?? new Set<string>();

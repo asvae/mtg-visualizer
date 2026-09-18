@@ -16,10 +16,13 @@ import type { SinkQuery } from '../sink-query';
  */
 export interface SinkCatalogEntry {
   /** Stable identity key — matches this entry's own filename
-   * (`catalog/<slug>.ts`) and is also the review/attachment key
-   * (`sink-catalog-status.ts`'s review overlay, `sink-attachment.ts`'s
-   * per-card `attachedSlugs`). Never reuse a retired slug for a
-   * different mechanic. */
+   * (`catalog/<slug>.ts`) and is also the review key
+   * (`sink-catalog-status.ts`'s review overlay). No per-card attachment
+   * concept exists (tried, then reverted the same day it was built — see
+   * `pipeline-status.ts`'s own header note) — which cards own/select for a
+   * given sink is computed live, on the fly, by
+   * `card-interactions.ts`, never persisted against this slug. Never reuse
+   * a retired slug for a different mechanic. */
   slug: string;
   /**
    * The actual curated query — today's `sink` Fact shape minus
