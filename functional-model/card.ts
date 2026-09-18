@@ -1640,6 +1640,11 @@ export type BoardStateCondition =
  * .triggers?: (Trigger | TriggerOld)[]`. NOT a rework of any existing
  * card — see this rename's own commit/`.claude/contracts/card-schema.md`
  * dated section for the full "why now, why this narrow" reasoning.
+ *
+ * Real Forge `TriggerZones$` is absent from this shape too, for exactly
+ * the reasons `TriggerCause`'s own doc comment below spells out (structural
+ * battlefield-only dispatch; non-battlefield zones a documented known gap)
+ * — not repeated here to avoid a second, driftable copy.
  */
 export interface TriggerOld {
   /** Short label — 'onEnter'/'onAttack'/'onDealsDamage'/etc. Matches a scenario's own `trigger` field. */
@@ -1840,6 +1845,30 @@ export interface TriggerOld {
    *    pre-existing `activationLimit: 1` field (already real, per-turn-reset
    *    Forge `ActivationLimit$ N` semantics — functionally identical outcome
    *    to Forge's own `FirstTime$ True` here), not a second `on` value.
+   *    The `ValidPlayer$ You` half of that real script is part of THIS
+   *    value's own meaning, NOT a missing separate param (2026-09-19, even
+   *    later still #3 — audited explicitly, same discipline
+   *    `counterAddedMatch.source`'s own `ValidSource$` check used). Real
+   *    pool-wide distribution, all 104 real `Mode$ LifeGained` lines in
+   *    `res/cardsfolder/`: 100 `ValidPlayer$ You`, 2 `ValidPlayer$
+   *    Opponent` (Kavu Predator, Punishing Fire), 1 bare `ValidPlayer$
+   *    Player` = any player (False Cure), 1 compound `ValidPlayer$
+   *    Player.Opponent+Active+controlsArtifact.namedWedding Ring` (Wedding
+   *    Ring), and ZERO lines omitting the param — so "omitted" has no real
+   *    Forge meaning to model here in the first place. The non-`You`
+   *    variants are real but genuinely different occasions, and THIS
+   *    schema's own established convention for the who-does-it axis is to
+   *    bake the scope into the `on` value's own name rather than
+   *    parameterize it — `'opponentLifeLost'` below is exactly that
+   *    (`Mode$ LifeLost | ValidPlayer$ Opponent`) sitting beside a
+   *    hypothetical you-scoped sibling, the same way `'dies'`/
+   *    `'otherCreatureDies'` and `'dealsCombatDamageToPlayer'`/
+   *    `'creatureYouControlDealsCombatDamageToPlayer'` split. A real
+   *    "whenever an OPPONENT gains life" card would therefore get its own
+   *    sibling `on` value (`'opponentGainedLife'`), not a `ValidPlayer$`
+   *    param on this one; none of the 4 non-`You` cards above is in the
+   *    FDN pool (checked against `data/fdn/fdn_scryfall.json`), so that
+   *    sibling stays unbuilt rather than speculatively added.
    *  - `'dies'` — real Forge `TriggerChangesZone`/`Mode$ ChangesZone |
    *    Origin$ Battlefield | Destination$ Graveyard | ValidCard$ Card.Self`:
    *    "when this creature dies" — the exact self-only zone-change mirror of
@@ -2203,6 +2232,33 @@ export type TriggerOnValue = NonNullable<TriggerOld['on']>;
  * with no real `on` value has no reason to carry an (empty) `cause` object
  * at all and should simply omit `cause` (name-only trigger, mirroring
  * `TriggerOld`'s own pre-existing name-only convention).
+ *
+ * **Real Forge `TriggerZones$` — deliberately NOT a field here** (audited
+ * 2026-09-19, even later still #3, when Exemplar of Light's own two real
+ * `T:` lines were walked param-by-param). Forge semantics first: an ABSENT
+ * `TriggerZones$` means active in EVERY zone, not battlefield-only —
+ * `Trigger.java`'s constructor only calls `setActiveZone(...)` when the
+ * param is present, and `TriggerReplacementBase.zonesCheck` passes
+ * unconditionally while `validHostZones == null`. So `TriggerZones$
+ * Battlefield` is a real, load-bearing RESTRICTION in Forge, written
+ * explicitly on 8381 of the 17088 real `T:Mode$` lines in
+ * `res/cardsfolder/` (8980 carry the param at all: 8381 `Battlefield`,
+ * 443 `Command`, 127 `Graveyard`, 19 `Exile`, plus 11 multi-zone combos
+ * like `Battlefield,Graveyard`). In THIS schema it needs no field because
+ * battlefield-only is structural, not conventional: a `Trigger` lives on a
+ * `CardDefinition`, and every auto-fire dispatch site in `engine.ts`
+ * iterates a player's `battlefield` list to find one — a trigger on a card
+ * in hand/graveyard/exile is unreachable by construction, so `TriggerZones$
+ * Battlefield` is already faithfully (if implicitly) represented and
+ * nothing is silently dropped for such a card. The honest KNOWN GAP is the
+ * other direction: a real non-battlefield trigger zone (Forge's `Command`/
+ * `Graveyard`/`Exile` — e.g. Punishing Fire's own graveyard-active `Mode$
+ * LifeGained | TriggerZones$ Graveyard`) is currently UNREPRESENTABLE and
+ * would need a real `zones` field plus real `engine.ts` dispatch off a
+ * non-battlefield zone. No FDN pool card needs one today, so this stays
+ * documented-not-built rather than a speculatively-added optional field —
+ * the same posture `tapLandForManaColor`'s own "omitted = any color"
+ * note takes. Identical for `TriggerOld` (same absence, same reasoning).
  */
 export interface TriggerCause {
   on: TriggerOnValue;

@@ -33,7 +33,7 @@
         "name": "onLifeGain"
       }
     ],
-    "reasoning": "This card's own `onLifeGain` name-only trigger (no dedicated `on` value exists for \"you gain life\" yet) runs a `putCounter` effect (`target:'self', counterType:'+1/+1', amount:1`) — the exact real counter this sentence describes."
+    "reasoning": "This card's own `onLifeGain` trigger fires on `cause.on:'lifeGained'` (real Forge `T:Mode$ LifeGained | ValidPlayer$ You` — the `You` scope is part of that `on` value's own meaning, see its doc comment) and runs a `putCounter` effect (`target:'self', counterType:'+1/+1', amount:1`) — the exact real counter this sentence describes, matching the real `SVar:TrigPutCounter:DB$ PutCounter | Defined$ Self | CounterType$ P1P1 | CounterNum$ 1` param-for-param."
   },
   {
     "type": "definition",
@@ -56,6 +56,6 @@
         "name": "onCounterAdded"
       }
     ],
-    "reasoning": "This card's own `onCounterAdded` name-only trigger (no dedicated `on` value exists for \"a counter was put on this creature\" yet) runs a `drawCard(amount:1)` effect — the exact \"draw a card\" outcome. \"This ability triggers only once each turn\" is the exact real Forge `ActivationLimit$ 1` cap, structurally recorded on this SAME trigger's own `activationLimit: 1` field (game-wide reset at Cleanup, `triggers.ts`'s own `fireTrigger` chokepoint)."
+    "reasoning": "This card's own `onCounterAdded` trigger fires on `cause.on:'counterAdded'` with `counterAddedMatch:{counterType:'+1/+1', source:'you'}` (real Forge `T:Mode$ CounterAddedOnce | CounterType$ P1P1 | ValidSource$ You | ValidCard$ Card.Self` — the `Card.Self` scope is part of that `on` value's own meaning) and runs a `drawCard(amount:1)` effect — the exact \"draw a card\" outcome. \"This ability triggers only once each turn\" is the exact real Forge `ActivationLimit$ 1` cap, structurally recorded on this SAME trigger's own `activationLimit: 1` field (game-wide reset at Cleanup, `triggers.ts`'s own `fireTrigger` chokepoint)."
   }
 ]

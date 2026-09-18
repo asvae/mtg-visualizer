@@ -13,6 +13,10 @@ export const exemplarOfLight: CardDefinition = {
   // `Execute$`-pointed effect are two separate real objects, not one flat
   // blob. This card is the one real, in-active-scope place this shape is
   // used today (`.claude/contracts/card-schema.md`'s own dated section).
+  // Param-by-param audit of both real `T:` lines against what's modeled
+  // here (including the two params NOT given fields — `ValidPlayer$ You`,
+  // `TriggerZones$ Battlefield` — and why each is genuinely represented
+  // anyway) lives in this card's own NOTES.md.
   triggers: [
     {
       name: 'onLifeGain',

@@ -3264,3 +3264,90 @@ own `engineSupport` stayed `"on"` (unaffected by the effect-kind swap,
 confirming nothing in the engine-support classification keys off
 `putCounterTarget` specifically — grepped `engine-support-registry.ts`,
 zero `putCounter` references there).
+
+## Exemplar of Light param-by-param Forge audit — two "gaps" resolved as no-gap, one stale-doc bug fixed (2026-09-19, even later still #3, schema agent)
+
+Fourth pass in the same live task, this one an AUDIT rather than a schema
+change: the card's own two real `T:` lines walked param by param
+(`Mode$`/`ValidPlayer$`/`TriggerZones$`/`Execute$`/`TriggerDescription$`,
+plus both `SVar:` effects' `DB$`/`Defined$`/`CounterType$`/`CounterNum$`
+and trigger 2's `ValidSource$`/`ValidCard$`/`ActivationLimit$`) against
+what `fdn-cards/exemplar-of-light/definition.ts` actually represents.
+Outcome: **zero new schema fields** — both flagged suspects verified as
+genuinely represented, but both were UNDOCUMENTED assumptions, now
+explicitly written down.
+
+**1. `ValidPlayer$ You` (trigger 1) — NOT a gap.** Checked with the same
+real-distribution discipline `counterAddedMatch.source`'s own
+`ValidSource$` investigation used, on this DIFFERENT trigger mode rather
+than assuming the earlier conclusion carried: all 104 real `Mode$
+LifeGained` lines in `res/cardsfolder/` — 100 `ValidPlayer$ You`, 2
+`ValidPlayer$ Opponent` (Kavu Predator, Punishing Fire), 1 bare
+`ValidPlayer$ Player` = any player (False Cure), 1 compound (Wedding
+Ring), and ZERO omitting the param (so unlike `ValidSource$`, "omitted"
+has no real Forge meaning here at all). Real non-`You` variants therefore
+exist — but this schema's own established convention for the who-does-it
+axis is to bake the scope into the `on` VALUE's name, not parameterize it:
+`'opponentLifeLost'` is literally `Mode$ LifeLost | ValidPlayer$
+Opponent` already sitting in the union, the same split as `'dies'`/
+`'otherCreatureDies'` and `'dealsCombatDamageToPlayer'`/
+`'creatureYouControlDealsCombatDamageToPlayer'`. So `'lifeGained'` MEANS
+the `You`-scoped trigger (its own doc comment already said so; this pass
+made the "and a non-`You` card gets a sibling `on` value, not a param"
+rule explicit, with the distribution cited). None of the 4 non-`You`
+cards is in the FDN pool (checked against `data/fdn/fdn_scryfall.json`),
+so no sibling value was speculatively added.
+
+**2. `TriggerZones$ Battlefield` (both triggers) — NOT a gap for this
+card; a documented known gap for other zones.** Forge semantics checked
+in source first: an ABSENT `TriggerZones$` means active in EVERY zone —
+`Trigger.java`'s constructor only calls `setActiveZone(...)` when the
+param is present, and `TriggerReplacementBase.zonesCheck` returns true
+unconditionally while `validHostZones == null`. So `TriggerZones$
+Battlefield` is a real restriction, not boilerplate: 8980 of 17088 real
+`T:Mode$` lines carry the param (8381 `Battlefield`, 443 `Command`, 127
+`Graveyard`, 19 `Exile`, 11 multi-zone). In this schema it needs no field
+because battlefield-only is STRUCTURAL: a `Trigger` hangs off a
+`CardDefinition` and every auto-fire dispatch site in `engine.ts` iterates
+a player's `battlefield` list, so an off-battlefield trigger is
+unreachable by construction. The honest gap is the other direction — a
+real `Command`/`Graveyard`/`Exile`-zoned trigger (Punishing Fire's own
+graveyard-active `Mode$ LifeGained | TriggerZones$ Graveyard`) is
+currently unrepresentable and would need both a `zones` field and real
+non-battlefield dispatch in `engine.ts`. No FDN card needs one, so it
+stays documented-not-built (same posture as `tapLandForManaColor`'s own
+"omitted = any color" note), written up on `TriggerCause`'s own doc
+comment with a pointer from `TriggerOld`'s.
+
+**3. Real stale-doc bug found and fixed** (the pass's only non-doc-comment
+substantive finding): this card's own `NOTES.md` AND both of its
+`justification.json` `reasoning` strings still claimed each trigger was a
+"name-only trigger (no dedicated `on` value exists ... yet)" — false since
+the `'lifeGained'`/`'counterAdded'` work earlier the same day. Both
+rewritten to describe the real `cause.on`/`counterAddedMatch`/
+`activationLimit` structure that's actually there. Spans untouched, so the
+span verifier is unaffected. `NOTES.md` also gained the full param-by-param
+table above as this card's durable record.
+
+**Everything else on both lines verified represented**: `Mode$
+CounterAddedOnce` -> `on:'counterAdded'` (the `Once`/`All`/plain
+three-class distinction still deliberately unmodeled, already declared);
+`CounterType$ P1P1` -> `counterAddedMatch.counterType`; `ValidSource$ You`
+-> `counterAddedMatch.source`; `ValidCard$ Card.Self` -> baked into
+`'counterAdded'`'s documented self-only scope; `ActivationLimit$ 1` ->
+`activationLimit`; `Execute$ <SVar>` -> the `cause`/`effects` split
+itself; `DB$ PutCounter | Defined$ Self | CounterType$ P1P1 | CounterNum$
+1` -> `putCounter/target:'self'/'+1/+1'/1`; `DB$ Draw` ->
+`drawCard{amount:1}` (Forge's `DrawEffect` defaults absent `NumCards$` to
+1 and absent `Defined$` to the controller, matching the explicit `amount`
+and the omitted `owner`); `DB$` itself needs no per-trigger tag (already
+declared on `CardDefinition.abilityType`); `DeckHas:`/`DeckHints:` are
+Forge deck-builder hints, not game rules. `abilityType` correctly omitted
+(no top-level `effects` on this card at all).
+
+**Verification**: `npx vitest run functional-model` — 120/120 files,
+1329/1329 passed, 5 skipped, identical to baseline. `npm run typecheck` —
+same pre-existing diagnostics as the baseline taken immediately before
+this pass (4 `functional-model`/`server` ones plus 3 `CardDetailTabs.vue`
+ones from the `card` agent's concurrent Forge-tab work), zero new. Re-gated
+`exemplar-of-light` — still `blue`, `reasons: []`.
