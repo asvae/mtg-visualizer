@@ -1,0 +1,56 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 52,
+        "text": "+1: Put a +1/+1 counter on up to one target creature"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "+1"
+      }
+    ],
+    "reasoning": "This card's own '+1' ability (putCounterTarget, validType:'creature', qty:1, amount:1) is the exact real loyalty ability this line describes; `cost: 'Loyalty: +1'` is documentary free text, the same recognized-but-inert convention every other loyalty-cost prefix in this pool already uses (kaito-cunning-infiltrator, e.g.) — not itself a declared gap."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 54,
+        "to": 122,
+        "text": "−3: Target creature gains flying and double strike until end of turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "-3"
+      }
+    ],
+    "reasoning": "This card's own '-3' ability (two grantKeywordTarget effects, Flying + DoubleStrike, both untilEndOfTurn) is the exact real loyalty ability this line describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 124,
+        "to": 194,
+        "text": "−8: Create X 2/2 white Cat creature tokens, where X is your life total"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "-8"
+      }
+    ],
+    "reasoning": "This card's own '-8' ability (createToken, a real 2/2 Cat TokenInfo, amount: (ctx) => ctx.you.getLife()) is the exact real loyalty ability this line describes — X-is-your-life-total is a real, functional Computed<number> reading live life total, not an approximation."
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 18,
+        "text": "Flying, deathtouch"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      },
+      {
+        "kind": "keyword",
+        "keyword": "Deathtouch"
+      }
+    ],
+    "reasoning": "Two printed keywords on one line, both present in this card's own keywords array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 19,
+        "to": 75,
+        "text": "Whenever an opponent loses life, you gain that much life"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onOpponentLifeLoss"
+      }
+    ],
+    "reasoning": "This card's own onOpponentLifeLoss trigger (real gainLife effect, amount read from ctx.triggerInput.lifeAmount — the same per-trigger fixed-fact convention Kain, Traitorous Dragoon's own 'that much damage' already establishes) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists for a life-loss event) — this FDN pool's own gate automatically classifies it as a capacity gap."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 77,
+        "to": 106,
+        "text": "(Damage causes loss of life.)"
+      }
+    ],
+    "reasoning": "Reminder text clarifying that combat/spell damage counts as life loss — a rules restatement, not independent rules content."
+  }
+]

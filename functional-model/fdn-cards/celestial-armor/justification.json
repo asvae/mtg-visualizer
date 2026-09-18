@@ -1,0 +1,110 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 5,
+        "text": "Flash"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flash"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 6,
+        "to": 67,
+        "text": "(You may cast this spell any time you could cast an instant.)"
+      }
+    ],
+    "reasoning": "Reminder text for Flash directly above — a rules restatement, not independent rules content."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 68,
+        "to": 203,
+        "text": "When this Equipment enters, attach it to target creature you control. That creature gains hexproof and indestructible until end of turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      },
+      {
+        "kind": "effect",
+        "effectKind": "custom"
+      }
+    ],
+    "reasoning": "This card's own onEnter trigger (on:'enter') runs a real (non-empty) custom closure: chooses a real controlled-creature target, calls actions.equip then actions.grantKeyword(Hexproof)/actions.grantKeyword(Indestructible) both untilEndOfTurn — the exact real, functional sequence this sentence describes (a custom closure is needed since a single onEnter effect must both equip AND grant two keywords to whichever creature was actually chosen, not a documented no-op placeholder)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 205,
+        "to": 248,
+        "text": "Equipped creature gets +2/+0 and has flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "continuousPTGrants"
+      },
+      {
+        "kind": "field",
+        "field": "continuousKeywordGrants"
+      }
+    ],
+    "reasoning": "This card's own continuousPTGrants ({power:2, toughness:0, includeSelf:false, equippedBySelf:true}) and continuousKeywordGrants ({keywords:['Flying'], includeSelf:false, equippedBySelf:true}) entries together are the exact real, always-live Equipment bonus this sentence describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 250,
+        "to": 262,
+        "text": "Equip {3}{W}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "activationCost"
+      },
+      {
+        "kind": "effect",
+        "effectKind": "custom"
+      }
+    ],
+    "reasoning": "This card's own activationCost ('{3}{W}') paired with a real (non-empty) custom closure (chooses a controlled-creature target, calls actions.equip) is the exact real Equip ability this line describes."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 263,
+        "to": 336,
+        "text": "({3}{W}: Attach to target creature you control. Equip only as a sorcery.)"
+      }
+    ],
+    "reasoning": "Reminder text for Equip directly above — a rules restatement of the Equip ability just described, not independent rules content."
+  }
+]

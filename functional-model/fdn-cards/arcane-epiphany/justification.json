@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 57,
+        "text": "This spell costs {1} less to cast if you control a Wizard"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "costReduction"
+      }
+    ],
+    "reasoning": "This card's own costReduction.perControlled entry ({amountPerMatch:1, subtype:'Wizard'}) is the exact real board-counted discount this sentence describes (CR 601.2f-style Affinity template)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 59,
+        "to": 75,
+        "text": "Draw three cards"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "drawCard"
+      }
+    ],
+    "reasoning": "This card's own top-level drawCard effect (amount:3) is the exact real effect this sentence describes."
+  }
+]

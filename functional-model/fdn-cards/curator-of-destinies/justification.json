@@ -1,0 +1,60 @@
+[
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 29,
+        "text": "This spell can't be countered"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered — no replacement-effect/\"can't happen\" vocabulary exists for overriding the counter-spell rule; declared as a real capacity gap."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 31,
+        "to": 37,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 38,
+        "to": 270,
+        "text": "When this creature enters, look at the top five cards of your library and separate them into a face-down pile and a face-up pile. An opponent chooses one of those piles. Put that pile into your hand and the other into your graveyard"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      },
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 1
+      }
+    ],
+    "reasoning": "The onEnter trigger itself (on:'enter', real self-only ETB auto-fire) is real structure, but its own effect is a documented no-op custom placeholder — the real pile-management/opponent-choice gap is declared via missingSchemaFunctionality[1] rather than silently dropped."
+  }
+]

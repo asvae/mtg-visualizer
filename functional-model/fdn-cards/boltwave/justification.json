@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 40,
+        "text": "Boltwave deals 3 damage to each opponent"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "dealDamage"
+      }
+    ],
+    "reasoning": "This card's own top-level dealDamage effect (target:'opponents', amount:3) is the exact real effect this sentence describes."
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 57,
+        "text": "Instant and sorcery spells you cast cost {1} less to cast"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered — SpellCostReductionGrant only gates on colors, never card type, so a flat type-gated broadcast discount can't be declared; formally declared as a real capacity gap rather than left as undeclared prose."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 59,
+        "to": 117,
+        "text": "Whenever you cast an instant or sorcery spell, draw a card"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onInstantOrSorceryCast"
+      }
+    ],
+    "reasoning": "This card's own onInstantOrSorceryCast trigger (real drawCard effect, amount:1) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists for a spell-cast-by-type event) — this FDN pool's own gate automatically classifies any name-only trigger as a capacity gap, so this card lands at purple via BOTH this and the cost-reduction gap above."
+  }
+]

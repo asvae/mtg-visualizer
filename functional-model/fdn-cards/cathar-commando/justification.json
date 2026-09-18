@@ -1,0 +1,42 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 5,
+        "text": "Flash"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flash"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 6,
+        "to": 74,
+        "text": "{1}, Sacrifice this creature: Destroy target artifact or enchantment"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "activationCost"
+      },
+      {
+        "kind": "effect",
+        "effectKind": "program"
+      }
+    ],
+    "reasoning": "This card's own activationCost ('{1}, sacrifice this creature') is the exact real cost prefix, and its own program effect (selectUpTo one qualifying artifact/enchantment permanent, then destroy it — combinator.ts's FilterPredicate.cardType OR-matching ['artifact','enchantment']) is the exact real destroy effect this sentence describes."
+  }
+]

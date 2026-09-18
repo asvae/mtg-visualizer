@@ -1,7 +1,35 @@
 {
-  "status": "gray",
+  "status": "purple",
   "reasons": [
-    "missing/empty justification manifest — every FDN card needs a real, span-verified functional-model/fdn-cards/<slug>/justification.json (see coverage-justification.ts's own CoverageJustificationEntry doc comment)"
+    "documented unsupported construct (kind:'custom' no-op placeholder): look at top 5 cards of your library and separate into face-down/face-up piles; opponent chooses which pile goes to hand/graveyard (vocabulary gap: no pile management or opponent choice)",
+    "declared missingSchemaFunctionality entry: clause: \"This spell can't be countered.\" — demand: \"No replacement-effect/\"can't happen\" vocabulary exists anywhere in this schema for overriding a game rule (CR 616-style \"this can't be countered\") — there is no field on a spell/Effect that can suppress a future counter attempt against this specific object.\"",
+    "declared missingSchemaFunctionality entry: clause: \"look at the top five cards of your library and separate them into a face-down pile and a face-up pile. An opponent chooses one of those piles. Put that pile into your hand and the other into your graveyard.\" — demand: \"No \"pile\" primitive exists: looking at a fixed number of library cards, splitting them into two player-assigned piles, and letting an OPPONENT (not the controller) choose which pile goes where has no `move`/`custom`-adjacent declarative shape — `move`'s own `qty`/`target` fields choose a single pool of cards for the controller's own benefit, never a two-pile split with an opposing player's choice deciding the outcome.\""
   ],
-  "computedAt": "2026-09-18T16:51:19.518Z"
+  "failureKind": "capacity-gap",
+  "engineGapsContext": {
+    "gray": [
+      "No \"copy a permanent, with overrides\" mechanic — real, OPEN, documented (not built), singleton",
+      "Meld (`AlternateMode:Meld`/`MeldPair`) — entirely unmodeled, real, OPEN, documented (not built)",
+      "Spell-copy + event-keyed (\"next time X happens\") delayed trigger — entirely unmodeled, real, OPEN, documented (not built) — `ether` (fin/53)"
+    ],
+    "purple": [
+      "Combat: blockers, damage, first/double strike, trample",
+      "State-based actions (704)",
+      "Turn-structure completeness (2-player only — see Accepted simplifications above for the >2-player exclusion)",
+      "Hybrid/`{X}` mana symbols",
+      "Alternate costs, modal/split costs, casting from anywhere but hand",
+      "Activated-ability cost components beyond `{T}` + mana",
+      "CR 305 \"playing a land\" — real special-action mechanics, still only closed for the harness/trace-generation path, not `engine.ts`'s own real pilot",
+      "Trigger-doubling (\"Panharmonicon effect\") — no general machinery for \"a triggered ability triggers an additional time\" under a condition",
+      "Continuous, turn-conditional static keyword/P&T/type grants",
+      "Coin flips / random outcomes, and replacement effects on them",
+      "No \"play a card from the top of your library\" primitive, and no persistent \"attacked this turn\" condition",
+      "\"Insert one more of this same step before the turn moves on\" — a real, still-OPEN gap affecting multiple real FIN cards, structurally distinct from extra turns (500.7, gap #3)",
+      "A static effect locking a DIFFERENT permanent's own activated-ability activation — real, still OPEN",
+      "`grantKeywordAll` had no `'attacking-creatures'` predicate — CLOSED (2026-09-16)",
+      "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
+    ]
+  },
+  "computedAt": "2026-09-18T17:46:39.130Z",
+  "engineSupport": "on"
 }

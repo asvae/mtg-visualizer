@@ -1,0 +1,42 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array (fixed a real lowercase 'flying' typo to the real 'Flying' Keyword-union member while authoring this manifest)."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 7,
+        "to": 65,
+        "text": "When this creature enters, exile target player's graveyard"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      },
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "The onEnter trigger itself (on:'enter', real self-only ETB auto-fire) is real structure, but its own effect is a documented no-op custom placeholder — the real capability gap (targeting a PLAYER, then moving that player's ENTIRE graveyard to exile unconditionally) is declared via missingSchemaFunctionality[0] rather than silently dropped."
+  }
+]

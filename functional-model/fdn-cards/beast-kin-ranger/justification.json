@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 7,
+        "text": "Trample"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Trample"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 8,
+        "to": 99,
+        "text": "(This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+      }
+    ],
+    "reasoning": "Reminder text for Trample directly above — a rules restatement, not independent rules content."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 100,
+        "to": 188,
+        "text": "Whenever another creature you control enters, this creature gets +1/+0 until end of turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onOtherCreatureEnters"
+      }
+    ],
+    "reasoning": "This card's own onOtherCreatureEnters trigger (real pumpSelf +1/+0 untilEndOfTurn) is the exact real structure this sentence describes. It's a name-only trigger, deliberately NOT using on:'otherPermanentEnters' — that shape's own otherPermanentEntersMatch filter only supports a creature SUBTYPE, never a bare 'must be a Creature' type filter, so using it unfiltered would incorrectly also match a land/artifact/enchantment entering; no real dispatch value covers a generic-creature watch yet, so this FDN pool's own gate automatically classifies this as a capacity gap."
+  }
+]

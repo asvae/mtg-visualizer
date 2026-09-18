@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 48,
+        "text": "Double target creature's power until end of turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "custom"
+      }
+    ],
+    "reasoning": "This card's own top-level custom effect has a REAL (non-empty) run body: it chooses a real target from both players' battlefields, then calls actions.pump(target, target.getNetPower(), 0, {untilEndOfTurn:true}) — doubling the CHOSEN target's own current power requires reading that target's live power after resolution, which no declarative pumpTarget Computed<number> field can do (those fields only ever receive EffectContext, never the resolved target itself); this is a legitimate, narrowly-scoped functional escape hatch, not a documented no-op placeholder."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 50,
+        "to": 69,
+        "text": "Flashback {4}{R}{R}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "alternateCosts"
+      }
+    ],
+    "reasoning": "This card's own alternateCosts entry (flashback('{4}{R}{R}')) is the exact real Flashback cost this line describes."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 70,
+        "to": 153,
+        "text": "(You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+      }
+    ],
+    "reasoning": "Reminder text for Flashback directly above — a rules restatement, not independent rules content."
+  }
+]

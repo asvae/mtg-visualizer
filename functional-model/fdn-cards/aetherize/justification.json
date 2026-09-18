@@ -1,0 +1,20 @@
+[
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 52,
+        "text": "Return all attacking creatures to their owner's hand"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered — move has no \"attacking creature\" predicate and no per-owner-fanout return semantics for a mixed-owner group; declared as a real capacity gap."
+  }
+]

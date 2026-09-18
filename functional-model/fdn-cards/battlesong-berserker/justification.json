@@ -1,0 +1,32 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 94,
+        "text": "Whenever you attack, target creature you control gets +1/+0 and gains menace until end of turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onAttack"
+      }
+    ],
+    "reasoning": "This card's own onAttack trigger (real pumpTarget +1/+0 and grantKeywordTarget Menace, both owner:'you'/untilEndOfTurn:true) is the exact real structure this sentence describes. It's a name-only trigger — the real printed precondition ('whenever YOU attack,' i.e. once per combat regardless of which creature(s) attack, Forge's own Mode$ AttackersDeclared) is genuinely broader than this schema's on:'attacks' (which only fires for THIS card's own self-attack) — no real dispatch value exists for the broader trigger yet, so this FDN pool's own gate automatically classifies it as a capacity gap."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 96,
+        "to": 150,
+        "text": "(It can't be blocked except by two or more creatures.)"
+      }
+    ],
+    "reasoning": "Reminder text for Menace directly above — a rules restatement, not independent rules content."
+  }
+]

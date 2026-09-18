@@ -1,7 +1,38 @@
 {
-  "status": "gray",
+  "status": "purple",
   "reasons": [
-    "missing/empty justification manifest — every FDN card needs a real, span-verified functional-model/fdn-cards/<slug>/justification.json (see coverage-justification.ts's own CoverageJustificationEntry doc comment)"
+    "documented unsupported construct (kind:'custom' no-op placeholder): exile the top three cards of your library, choose one, you may play that card this turn (see missingSchemaFunctionality[0])",
+    "documented unsupported construct (kind:'custom' no-op placeholder): create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token\" (see missingSchemaFunctionality[1])",
+    "documented unsupported construct (kind:'custom' no-op placeholder): Chandra deals 8 damage divided as you choose among any number of target creatures and/or planeswalkers (see missingSchemaFunctionality[2])",
+    "declared missingSchemaFunctionality entry: clause: \"Exile the top three cards of your library. Choose one. You may play that card this turn.\" — demand: \"No \"impulse draw\" primitive exists: exiling a fixed number of library cards face up and letting the controller choose one to be playable from exile for a limited time has no declarative `move`/`custom`-adjacent shape today — `move`'s own `qty`/`target` fields move cards between named zones, they don't grant a temporary \"may play from exile this turn\" permission.\"",
+    "declared missingSchemaFunctionality entry: clause: \"Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\"\" — demand: \"No \"copy a permanent, with overrides\" mechanic exists anywhere in this schema (same already-tracked gray-tier engine gap `abyssal-harvester` also needs) — `createToken` only ever builds a fixed `TokenInfo`, never a copy of a chosen target plus an added keyword and an added self-sacrifice trigger.\"",
+    "declared missingSchemaFunctionality entry: clause: \"Chandra deals 8 damage divided as you choose among any number of target creatures and/or planeswalkers.\" — demand: \"No \"divided damage among a chosen number of targets\" primitive exists — `dealDamageTarget` only ever hits a SINGLE targeted creature (no planeswalker option, no player-chosen division of a damage total across more than one target).\""
   ],
-  "computedAt": "2026-09-18T16:51:18.582Z"
+  "failureKind": "capacity-gap",
+  "engineGapsContext": {
+    "gray": [
+      "No \"copy a permanent, with overrides\" mechanic — real, OPEN, documented (not built), singleton",
+      "Meld (`AlternateMode:Meld`/`MeldPair`) — entirely unmodeled, real, OPEN, documented (not built)",
+      "Spell-copy + event-keyed (\"next time X happens\") delayed trigger — entirely unmodeled, real, OPEN, documented (not built) — `ether` (fin/53)"
+    ],
+    "purple": [
+      "Combat: blockers, damage, first/double strike, trample",
+      "State-based actions (704)",
+      "Turn-structure completeness (2-player only — see Accepted simplifications above for the >2-player exclusion)",
+      "Hybrid/`{X}` mana symbols",
+      "Alternate costs, modal/split costs, casting from anywhere but hand",
+      "Activated-ability cost components beyond `{T}` + mana",
+      "CR 305 \"playing a land\" — real special-action mechanics, still only closed for the harness/trace-generation path, not `engine.ts`'s own real pilot",
+      "Trigger-doubling (\"Panharmonicon effect\") — no general machinery for \"a triggered ability triggers an additional time\" under a condition",
+      "Continuous, turn-conditional static keyword/P&T/type grants",
+      "Coin flips / random outcomes, and replacement effects on them",
+      "No \"play a card from the top of your library\" primitive, and no persistent \"attacked this turn\" condition",
+      "\"Insert one more of this same step before the turn moves on\" — a real, still-OPEN gap affecting multiple real FIN cards, structurally distinct from extra turns (500.7, gap #3)",
+      "A static effect locking a DIFFERENT permanent's own activated-ability activation — real, still OPEN",
+      "`grantKeywordAll` had no `'attacking-creatures'` predicate — CLOSED (2026-09-16)",
+      "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
+    ]
+  },
+  "computedAt": "2026-09-18T17:46:39.080Z",
+  "engineSupport": "on"
 }

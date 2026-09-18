@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 60,
+        "text": "Whenever you gain life, put a +1/+1 counter on this creature"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onLifeGained"
+      }
+    ],
+    "reasoning": "This card's own onLifeGained trigger (putCounter, target:'self', counterType:'+1/+1', amount:1) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists for a lifegain event) — this FDN pool's own gate automatically classifies any name-only trigger as a capacity gap (no scenarios.ts exists here to invoke it manually either), so this card is expected to land at purple even though the structure itself is real and complete."
+  }
+]

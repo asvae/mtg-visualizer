@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 81,
+        "text": "Whenever you cast a noncreature spell, this creature gets +3/+0 until end of turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "NoncreatureSpellCast"
+      }
+    ],
+    "reasoning": "This card's own NoncreatureSpellCast trigger (real pumpSelf effect, +3/+0, untilEndOfTurn) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists for a spell-cast-by-type event) — this FDN pool's own gate automatically classifies it as a capacity gap."
+  }
+]

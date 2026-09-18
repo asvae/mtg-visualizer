@@ -1,0 +1,64 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 9,
+        "text": "Vigilance"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Vigilance"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 10,
+        "to": 57,
+        "text": "(Attacking doesn't cause this creature to tap.)"
+      }
+    ],
+    "reasoning": "Reminder text for Vigilance directly above — a rules restatement, not independent rules content."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 58,
+        "to": 95,
+        "text": "When this creature enters, choose one"
+      },
+      {
+        "from": 98,
+        "to": 153,
+        "text": "• Put two +1/+1 counters on target creature you control"
+      },
+      {
+        "from": 155,
+        "to": 172,
+        "text": "• You gain 4 life"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      },
+      {
+        "kind": "effect",
+        "effectKind": "modal"
+      }
+    ],
+    "reasoning": "This card's own onEnter trigger (on:'enter') with a real modal effect (two modes: putCounterTarget +1/+1 x2 on a controlled creature, and gainLife amount:4) is the exact real structure this choose-one ability describes."
+  }
+]

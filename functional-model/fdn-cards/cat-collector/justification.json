@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 46,
+        "text": "When this creature enters, create a Food token"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own onEnter trigger (on:'enter') with a real createToken effect (TOKENS.c_a_food_sac, amount:1) is the exact real structure this sentence describes."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 48,
+        "to": 122,
+        "text": "(It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")"
+      }
+    ],
+    "reasoning": "Reminder text defining the Food token directly above — a rules restatement, not independent rules content beyond the token creation itself."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 123,
+        "to": 229,
+        "text": "Whenever you gain life for the first time during each of your turns, create a 1/1 white Cat creature token"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onGainLifeFirst"
+      }
+    ],
+    "reasoning": "This card's own onGainLifeFirst trigger (real createToken effect, a 1/1 Cat TokenInfo, amount:1) is the exact real token-creation outcome this sentence describes; the 'first time during each of your turns' gating is not itself separately enforced (no lifegain-event tracking or once-per-turn condition exists), same recognized-but-real-structure story as the trigger's own missing `on` dispatch value. It's a name-only trigger — this FDN pool's own gate automatically classifies it as a capacity gap."
+  }
+]

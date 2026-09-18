@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 7,
+        "text": "Trample"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Trample"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 8,
+        "to": 156,
+        "text": "Whenever this creature attacks, another target creature you control gains trample and gets +X/+X until end of turn, where X is this creature's power"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onAttacks"
+      }
+    ],
+    "reasoning": "This card's own onAttacks trigger (on:'attacks', real auto-fire) runs a real pumpTarget effect (power/toughness both Computed as ctx.self.getNetPower(), owner:'you', notSelf:true, untilEndOfTurn:true) AND a real grantKeywordTarget effect (Trample, same owner/notSelf/untilEndOfTurn) — together the exact real structure this sentence describes; X-is-this-creature's-power is a real, functional Computed<number>, not an approximation. Both effects independently call chooseTarget against the same real pool, resolving to the same creature by this engine's own deterministic first-candidate rule (documented, not coincidental)."
+  }
+]

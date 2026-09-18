@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 81,
+        "text": "Whenever this creature attacks, creatures you control get +1/+1 until end of turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onAttack"
+      }
+    ],
+    "reasoning": "This card's own onAttack trigger (on:'attacks', real auto-fire) with a real pumpAll effect (predicate:'creatures-you-control', +1/+1, untilEndOfTurn) is the exact real structure this sentence describes."
+  }
+]

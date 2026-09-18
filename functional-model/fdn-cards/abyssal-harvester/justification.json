@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 3,
+        "text": "{T}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "activationCost"
+      }
+    ],
+    "reasoning": "Real {T} activation cost, present verbatim as this card's own activationCost field."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 5,
+        "to": 220,
+        "text": "Exile target creature card from a graveyard that was put there this turn. Create a token that's a copy of it, except it's a Nightmare in addition to its other types. Then exile all other Nightmare tokens you control"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered — no \"copy a permanent, with overrides\" mechanic exists (createToken only builds a fixed TokenInfo), no graveyard-arrived-this-turn filter, and no sweep-exile-own-prior-tokens primitive; declared as a real capacity gap rather than left as a bare no-op custom placeholder with no formal declaration."
+  }
+]

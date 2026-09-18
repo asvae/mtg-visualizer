@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 5,
+        "text": "Flash"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flash"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 6,
+        "to": 67,
+        "text": "(You may cast this spell any time you could cast an instant.)"
+      }
+    ],
+    "reasoning": "Reminder text for Flash directly above — a rules restatement, not independent rules content."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 68,
+        "to": 139,
+        "text": "When this creature enters, exile up to one target card from a graveyard"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own onEnter trigger (on:'enter', real self-only ETB auto-fire) with a real move effect (from:'Graveyard', to:'Exile', qty:1, target:true, optional:true) is the exact real structure this sentence describes."
+  }
+]

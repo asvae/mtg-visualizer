@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 31,
+        "text": "Creatures you control get +1/+1"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "continuousPTGrants"
+      }
+    ],
+    "reasoning": "This card's own continuousPTGrants entry ({power:1, toughness:1, includeSelf:false}) is the exact, unconditional, 613.3/layer-7c broadcast this sentence describes (includeSelf:false is correct — Anthem of Champions is an Enchantment, not itself a creature, so there's no self-inclusion question either way)."
+  }
+]

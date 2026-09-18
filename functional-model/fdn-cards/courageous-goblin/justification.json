@@ -1,0 +1,68 @@
+[
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 30,
+        "text": "Whenever this creature attacks"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "AttackWithPowerGate"
+      }
+    ],
+    "reasoning": "This card's own AttackWithPowerGate trigger exists as real structure covering the attack-precondition half of this sentence (it's also a name-only trigger with no real `on` dispatch value, automatically classified as a capacity gap by this FDN pool's own gate)."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 31,
+        "to": 83,
+        "text": "while you control a creature with power 4 or greater"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered — no BoardStateCondition kind gates on a live board-state POWER threshold on the controller's own creatures; the trigger as currently written fires UNCONDITIONALLY, silently dropping this clause entirely if not declared. Formally declared as a real capacity gap via missingSchemaFunctionality[0]."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 85,
+        "to": 144,
+        "text": "this creature gets +1/+0 and gains menace until end of turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "AttackWithPowerGate"
+      }
+    ],
+    "reasoning": "This card's own AttackWithPowerGate trigger's real effects (pumpSelf +1/+0, grantKeywordSelf Menace, both untilEndOfTurn) are the exact real outcome this clause describes, independent of the still-missing power-4 gate declared above."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 146,
+        "to": 200,
+        "text": "(It can't be blocked except by two or more creatures.)"
+      }
+    ],
+    "reasoning": "Reminder text for Menace directly above — a rules restatement, not independent rules content."
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 9,
+        "text": "Vigilance"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Vigilance"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 10,
+        "to": 57,
+        "text": "(Attacking doesn't cause this creature to tap.)"
+      }
+    ],
+    "reasoning": "Reminder text for Vigilance directly above — a rules restatement, not independent rules content."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 58,
+        "to": 158,
+        "text": "Whenever you attack with three or more creatures, put a +1/+1 counter on target creature you control"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onMassAttack"
+      }
+    ],
+    "reasoning": "This card's own onMassAttack trigger (real putCounterTarget effect, validType:'creature', owner:'you', +1/+1 x1) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists yet for a per-combat attacker-count precondition) — this FDN pool's own gate automatically classifies any name-only trigger as a capacity gap, so this card is expected to land at purple even though the structure itself is real and complete."
+  }
+]

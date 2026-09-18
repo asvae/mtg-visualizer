@@ -1,0 +1,61 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 12,
+        "text": "First strike"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "FirstStrike"
+      }
+    ],
+    "reasoning": "Printed keyword, present verbatim as 'FirstStrike' in this card's own keywords array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 13,
+        "to": 63,
+        "text": "Whenever Alesha attacks, put a +1/+1 counter on it"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onAttacks"
+      }
+    ],
+    "reasoning": "This card's own onAttacks trigger (on:'attacks', real auto-fire dispatch — Forge's own ValidCard$ Card.Self scope) with a real putCounter effect is the exact structure this sentence describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 65,
+        "to": 69,
+        "text": "Raid"
+      },
+      {
+        "from": 72,
+        "to": 253,
+        "text": "At the beginning of your end step, if you attacked this turn, return target creature card with mana value less than or equal to Alesha's power from your graveyard to the battlefield"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEndStepRaid"
+      }
+    ],
+    "reasoning": "This card's own onEndStepRaid trigger (on:'endStep', condition:{kind:'attackedThisTurn'} — the real Raid template) with a narrowly-scoped custom closure reading ctx.self's own live power to filter the graveyard pool is the exact real structure this Raid ability describes. The BoardStateCondition itself is recognized-but-inert (no live GameState is threaded into this engine's resolveCard today — see BoardStateCondition's own doc comment), same Ward-class pattern as every other unenforced-but-real construct in this pool; the 'Raid —' ability-word label and the effect text are one continuous real clause, split into two disjoint spans only because 'Raid' itself is a keyword-styled label, not because of any real gap between them."
+  }
+]

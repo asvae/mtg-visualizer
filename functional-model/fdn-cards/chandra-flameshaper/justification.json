@@ -1,0 +1,86 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 17,
+        "text": "+2: Add {R}{R}{R}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "+2"
+      }
+    ],
+    "reasoning": "This card's own '+2' ability's first effect (addMana, color:'R', amount:3) is the exact real mana-add this clause describes; `cost: 'Loyalty: +2'` is documentary free text, the same recognized-but-inert convention every other loyalty-cost prefix in this pool already uses."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 19,
+        "to": 106,
+        "text": "Exile the top three cards of your library. Choose one. You may play that card this turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "+2"
+      },
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "The '+2' ability's second effect is a documented no-op custom placeholder for this clause — genuinely uncovered (no impulse-draw primitive exists), declared as a real capacity gap via missingSchemaFunctionality[0] rather than silently dropped."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 108,
+        "to": 254,
+        "text": "+1: Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\""
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "+1"
+      },
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 1
+      }
+    ],
+    "reasoning": "This card's own '+1' ability exists (cost:'Loyalty: +1') but its whole effect is a documented no-op custom placeholder — the real \"copy a permanent, with overrides\" gap is declared via missingSchemaFunctionality[1] rather than silently dropped."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 255,
+        "to": 361,
+        "text": "−4: Chandra deals 8 damage divided as you choose among any number of target creatures and/or planeswalkers"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "-4"
+      },
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 2
+      }
+    ],
+    "reasoning": "This card's own '-4' ability exists (cost:'Loyalty: -4') but its whole effect is a documented no-op custom placeholder — the real divided-damage-among-a-chosen-number-of-targets gap is declared via missingSchemaFunctionality[2] rather than silently dropped."
+  }
+]
