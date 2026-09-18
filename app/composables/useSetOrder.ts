@@ -10,9 +10,22 @@
 // (module-scope Map, not inside the composable function — same "outlives one
 // component instance" shape this app's other standing caches already use,
 // e.g. server/api/card/[set]/[number].ts's own cardMetaCache) so repeated
-// Previous/Next navigation within one set (app/pages/app/card/[set]/[number]
-// .vue's own default, no-active-filter fallback path) never re-fetches it —
-// only a genuinely different set visited later triggers its own new fetch.
+// Previous/Next navigation within one set never re-fetches it — only a
+// genuinely different set visited later triggers its own new fetch.
+//
+// 2026-09-18, standalone-page consolidation: this composable's own consumer
+// moved from the old standalone `app/pages/app/card/[set]/[number].vue`
+// (deleted) into `app/pages/app/engine/cards/[set]/[[number]].vue`'s own
+// `genericMode` branch — the ONE real card-detail page now — same role,
+// same "no active deck/query filter" default-Previous/Next path, just a
+// different file. Deliberately NOT deleted alongside that old page (unlike
+// that page's own now-dead deckQty/global-filter-scoped-Previous/Next
+// logic): this composable/its server route
+// (server/api/cards/set-order/[set].ts) were already written generic-over-
+// any-set, not FIN-specific — confirmed by reading both before assuming
+// either was safe to remove — and remain the one real mechanism for
+// Previous/Next on a card whose `:set` isn't one of that page's own
+// tracked-corpus sets (fin/fdn) at all, e.g. any live `?sf=`-query card.
 // Caches the in-flight PROMISE (not just the settled value), so two
 // near-simultaneous callers for the same not-yet-cached set share one
 // request instead of racing two.

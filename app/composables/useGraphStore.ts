@@ -171,13 +171,20 @@ const scryfallQuery = typeof window !== 'undefined' ? new URLSearchParams(window
 const SET_CODE = scryfallQuery ? `q:${scryfallQuery}` : 'fin';
 
 // Whatever's currently in the persistent Deck (see DECK_STORAGE_KEY above),
-// as the flat `{name, qty}[]` shape both this file's own getActiveFilterMode
-// below and the standalone card-detail page (which imports this directly —
-// see app/pages/app/card/[set]/[number].vue) already expect. `null` for an
-// empty/nonexistent deck, never an empty array — same "absent, not empty"
-// convention the old deck-import version of this function used. Reads
-// straight off localStorage (module-scope, no live store instance needed)
-// so the standalone card page can call this with no store injected.
+// as the flat `{name, qty}[]` shape this file's own getActiveFilterMode
+// below expects. `null` for an empty/nonexistent deck, never an empty array
+// — same "absent, not empty" convention the old deck-import version of this
+// function used. Reads straight off localStorage (module-scope, no live
+// store instance needed) — originally so the standalone card detail page
+// (`app/pages/app/card/[set]/[number].vue`) could call this with no store
+// injected; that page is gone as of 2026-09-18's consolidation into
+// `app/pages/app/engine/cards/[set]/[[number]].vue`, which has no
+// deck-building concept at all and doesn't call this — this export (and
+// getActiveFilterMode below) are consequently orphaned as of that change,
+// left in place rather than pruned since this Deck concept is very much
+// alive elsewhere (the main graph page) and a future deck-builder PRD may
+// well want this exact shape again; `card` lane's own call, flagged here
+// rather than silently deleted.
 export function getKnownDeckCards(): ParsedDeckCard[] | null {
   const persisted = loadPersistedDeck();
   if (!persisted) return null;
@@ -188,31 +195,27 @@ export function getKnownDeckCards(): ParsedDeckCard[] | null {
 // Query mode's own sticky breadcrumb (QUERY_ACTIVE_KEY, declared near the
 // top of this file) — unlike `sf` itself (real, shareable URL content, read
 // fresh above), a query-mode session otherwise has NO way to signal itself
-// outside that URL param. That's fine for the main graph page (it re-reads
-// `sf` every load anyway) but breaks the standalone card detail page below:
-// GraphCanvas.vue opens it via `window.open` with a bare
-// `/app/card/<set>/<number>` URL, no query string carried over, so without
-// this it has no way to even know a query filter is active elsewhere, let
-// alone what it was. AppHeader.vue writes/clears this (see
+// outside that URL param. AppHeader.vue writes/clears this (see
 // submitScryfallQuery below) — sticky, explicit-clear-only, not auto-cleared
-// by a bare `/app` visit.
+// by a bare `/app` visit. Originally also needed by the standalone card
+// detail page (GraphCanvas.vue used to open it via `window.open` with a
+// bare `/app/card/<set>/<number>` URL, no query string carried over) — that
+// page is gone as of 2026-09-18's consolidation (see getKnownDeckCards's
+// own comment just above), so this breadcrumb's only remaining real
+// consumer is getActiveFilterMode below, itself now orphaned too.
 
 export type ActiveFilter = { mode: 'deck'; cards: { name: string; qty: number }[] } | { mode: 'query'; query: string } | null;
 
 // Single source of truth for "is a global card filter active right now, and
-// what defines it" — read by the standalone card detail page to scope its
-// own Previous/Next to whichever filter's card list, since that page has no
-// access to the main graph's own already-loaded `store.graph.value.cards`
-// (a deliberately standalone route — see that page's own header comment).
-// Deck wins whenever it has any entries at all — PRD 01 dropped the old
-// "Global filter by deck" checkbox that used to gate this (Deck no longer
-// competes with Scope for what the MAIN graph shows, so there's nothing left
-// to opt into there), but this page's own Previous/Next and Interactions-
-// panel scoping is still a genuinely useful "browse just my deck" mode, and
-// having any Deck entries at all is the closest still-meaningful signal for
-// it. Flagged for `card` lane to sanity-check: this makes that scoping
-// switch on automatically the moment a Deck is non-empty, where it used to
-// require an explicit opt-in.
+// what defines it" — originally read by the standalone card detail page
+// (deleted 2026-09-18, see getKnownDeckCards's own comment above) to scope
+// its own Previous/Next to whichever filter's card list, since that page
+// had no access to the main graph's own already-loaded
+// `store.graph.value.cards` (a deliberately standalone route). Its
+// replacement (`app/pages/app/engine/cards/[set]/[[number]].vue`) has no
+// deck-building concept and doesn't call this — orphaned as of that change,
+// same "left in place, `card` lane's own call" reasoning as
+// getKnownDeckCards above, not pruned here.
 export function getActiveFilterMode(): ActiveFilter {
   const deck = getKnownDeckCards();
   if (deck) return { mode: 'deck', cards: deck };

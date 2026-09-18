@@ -92,9 +92,10 @@ const store = inject(StoreKey)!;
 
     <!-- PRD 02 "Navigation" — mounted ONLY here (the graph page) and
          app/pages/app/status/index.vue, never from the card detail page's
-         own route: that's what actually guarantees a direct visit to
-         /app/card/[set]/[number] never shows this, whatever `?card=`
-         happens to be in the URL at the time. -->
+         own route (app/pages/app/engine/cards/[set]/[[number]].vue, since
+         2026-09-18's standalone-page consolidation): that's what actually
+         guarantees a direct visit to /app/engine/cards/[set]/[number] never
+         shows this, whatever `?card=` happens to be in the URL at the time. -->
     <CardPeekPanel />
   </div>
 </template>

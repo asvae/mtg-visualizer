@@ -15,8 +15,10 @@ const route = useRoute();
 const isGraphPage = computed(() => route.path === '/app');
 
 // Owns the store — kept alive across navigation between the graph view
-// (pages/app/index.vue) and the card detail page (pages/app/card/[set]/[number].vue),
-// since Nuxt keeps a layout mounted across route changes that use the same
+// (pages/app/index.vue) and the card detail page
+// (pages/app/engine/cards/[set]/[[number]].vue, since 2026-09-18's
+// standalone-page consolidation — was pages/app/card/[set]/[number].vue
+// before that), since Nuxt keeps a layout mounted across route changes that use the same
 // layout name; only the page slotted into it remounts. Avoids re-fetching
 // the whole graph (and re-resolving scryfall-query mode) on every navigation
 // between them.

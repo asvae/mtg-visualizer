@@ -32,6 +32,8 @@ import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functio
 import { fmBundle } from '../../../utils/fmBundle';
 import { isStandardPrint } from '../../../utils/isStandardPrint';
 import type { CardStatusEntry } from '../../../../functional-model/card-status';
+import { readPipelineStatus, effectivePipelineStatus } from '../../../../functional-model/pipeline-status';
+import type { PipelineStatusFile } from '../../../../functional-model/pipeline-status';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
@@ -232,6 +234,31 @@ interface FunctionalModelData {
   // branches below for how dev (live) vs production (bundle-time-precomputed,
   // via `scripts/build-fm-bundle.mjs`) each populate this.
   cardStatus: CardStatusEntry | null;
+  // **`fdn`-only, 2026-09-18** — `functional-model/fdn-cards/<slug>/
+  // pipeline-status.json`'s own real authoring-PIPELINE-STAGE entry
+  // (`functional-model/pipeline-status.ts`, see `.claude/contracts/
+  // card-schema.md`'s "FDN authoring-pipeline status" section) — a
+  // GENUINELY DIFFERENT axis from every field above (those are all real for
+  // a `fin` entry, meaningless for `fdn` since an FDN card has no Facts/
+  // synergy.json/scenarios at all by design; this field is the reverse:
+  // real for `fdn`, always `null` for `fin`). `status` here is already
+  // resolved through the drift-aware `effectivePipelineStatus` (a stored
+  // `green` entry whose `definition.ts` has since changed is served with
+  // `status: 're-review'`, not the possibly-stale raw `green` on disk) —
+  // every other field (`reasons`/`reviewNote`/`reviewedAt`/...) is passed
+  // through verbatim from the raw stored file. `null` when there's no
+  // `functional-model/fdn-cards/<slug>/` folder/pipeline-status.json at all
+  // yet (the common case — most of FDN's real 271-card pool hasn't entered
+  // the pipeline), or trivially for any `fin` entry.
+  pipelineStatus: PipelineStatusFile | null;
+  // **`fdn`-only** — the `functional-model/fdn-cards/<slug>/` folder name,
+  // so `CardDetailTabs.vue`'s own Confirm/Reject UI can `POST
+  // /api/fdn-cards/:slug/review` without re-deriving the slugify
+  // convention client-side (same precedent `CardStatusPageEntry.slug`
+  // already set for the Cards-tab list route). `null` for a `fin` entry
+  // (identity there is `number`, already a real route param) or an `fdn`
+  // entry with no folder at all yet (nothing to review).
+  slug: string | null;
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -440,6 +467,10 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       reviewSnapshotAt: entry.reviewSnapshotAt ?? null,
       continuousKeywordGrants: front || back ? { front, back } : null,
       annotatedNonFactSpans: entry.annotatedNonFactSpans ?? [],
+      // `fin`-only fields never populate these two `fdn`-only fields — see
+      // `FunctionalModelData.pipelineStatus`/`.slug`'s own doc comments.
+      pipelineStatus: null,
+      slug: null,
       // Precomputed at `npm run sync:fm-bundle` build time (scripts/
       // build-fm-bundle.mjs, same classifyCardStatus/computeTextCoverage
       // recipe as the dev branch below and compute-card-status.mjs) —
@@ -509,12 +540,84 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       // verified-snapshot.json is optional — a card can exist without one
       // (never confirmed, or not yet backfilled)
     }
-    data = { source, synergy, traces, annotatedCard, review, reviewCaveat, scenariosReview, interactionsReview, reviewSnapshotAt, continuousKeywordGrants, annotatedNonFactSpans, cardStatus };
+    // `fin`-only branch — never populates the two `fdn`-only fields, see
+    // `FunctionalModelData.pipelineStatus`/`.slug`'s own doc comments.
+    data = { source, synergy, traces, annotatedCard, review, reviewCaveat, scenariosReview, interactionsReview, reviewSnapshotAt, continuousKeywordGrants, annotatedNonFactSpans, cardStatus, pipelineStatus: null, slug: null };
   } catch {
     data = null;
   }
   functionalModelCache.set(slug, { signature, facesKey, data });
   return data;
+}
+
+// **`fdn` branch — a genuinely different computation, not a generalization
+// of `loadFunctionalModel` above** (same "two real branches, not a fake
+// generalization" pattern `server/api/card-status/[set].get.ts`'s own
+// header already establishes for this exact set split). An FDN card has no
+// Facts/synergy.json/scenarios.ts/progress.json at all by design (the
+// sink-only-synergy-model experiment's whole point) — the only real content
+// to serve is its own `definition.ts` source (same
+// FunctionalModelScript/FunctionalModelText-renderable text FIN cards serve
+// via `source`, just pointed at `functional-model/fdn-cards/<slug>/`
+// instead of `functional-model/cards/<slug>/`) plus its authoring-PIPELINE
+// status (`functional-model/pipeline-status.ts`). No caching layer like
+// `functionalModelCache` above — this axis has nowhere near FIN's traces/
+// annotatedCard/cardStatus computation cost (a single `readFileSync` +
+// two small pure JSON-file reads), so recomputing fresh on every request is
+// cheap enough not to bother.
+//
+// Dev-only, no production branch at all — same reasoning
+// `server/api/card-status/[set].get.ts`'s own header documents for why the
+// WHOLE `fdn` pipeline-status axis is dev-only (`functional-model/
+// fdn-cards/` isn't shipped in a Netlify Function bundle any more than
+// `functional-model/cards/` is — there is no `fmBundle`-equivalent
+// precomputed snapshot for this axis, and building one is real, separate,
+// not-yet-started scope). Returns `null` in production, same "degrades to
+// no functional-model section rendered at all" behavior a `fin` card with
+// no functional-model directory already gets.
+async function loadFdnFunctionalModel(name: string): Promise<FunctionalModelData | null> {
+  if (process.env.NODE_ENV === 'production') return null;
+  const slug = slugify(name);
+  const root = process.cwd();
+  let source: string;
+  try {
+    source = readFileSync(join(root, 'functional-model', 'fdn-cards', slug, 'definition.ts'), 'utf8');
+  } catch {
+    // No functional-model/fdn-cards/<slug>/definition.ts at all — the
+    // common case (most of FDN's real 271-card pool hasn't entered the
+    // authoring pipeline yet). Nothing real to serve; `null` degrades to
+    // "no functional-model section at all," same as a `fin` card with no
+    // functional-model directory.
+    return null;
+  }
+  // `effectivePipelineStatus` (drift-aware: a stored `green` entry whose
+  // `definition.ts` has since changed reads as `re-review`, not a possibly-
+  // stale `green`) decides the SERVED `status`; every other field
+  // (`reasons`/`reviewNote`/`reviewedAt`/...) is carried straight through
+  // from the raw stored file — see `FunctionalModelData.pipelineStatus`'s
+  // own doc comment. `raw` can be `undefined` even though `definition.ts`
+  // exists (a folder created but pipeline-status.json not yet written) —
+  // served as `pipelineStatus: null` (this axis's own "not started" state,
+  // same as the folder not existing at all).
+  const raw = readPipelineStatus(slug, root);
+  const effective = raw ? effectivePipelineStatus(slug, root) : undefined;
+  const pipelineStatus: PipelineStatusFile | null = raw ? { ...raw, status: effective ?? raw.status } : null;
+  return {
+    source,
+    synergy: null,
+    traces: [],
+    annotatedCard: null,
+    review: null,
+    reviewCaveat: null,
+    scenariosReview: 'draft',
+    interactionsReview: 'draft',
+    reviewSnapshotAt: null,
+    continuousKeywordGrants: null,
+    annotatedNonFactSpans: [],
+    cardStatus: null,
+    pipelineStatus,
+    slug,
+  };
 }
 
 // data/fin/fin_scryfall.json — real, current Scryfall data for every FIN
@@ -900,11 +1003,20 @@ export default defineEventHandler(async (event) => {
     colorIndicator: !f.mana_cost && f.color_indicator?.length ? f.color_indicator : undefined,
   }));
 
+  // `fin` and `fdn` load GENUINELY DIFFERENT functional-model shapes — see
+  // `loadFdnFunctionalModel`'s own header for why this is a real branch,
+  // not a generalized rule. `set` (the route param) decides which, not the
+  // resolved `card.set` — a card's own Scryfall `set` can differ from the
+  // route's `:set` for a reprint looked up via `dbLookupByName`'s DFC
+  // fallback, but the route's OWN identity (what folder this request is
+  // "about") is always the `:set` it was requested under.
+  const functionalModel = set === 'fdn' ? await loadFdnFunctionalModel(card.name) : await loadFunctionalModel(card.name, card.collector_number || number, faces);
+
   return {
     card: cardData,
     edges,
     themes,
-    functionalModel: await loadFunctionalModel(card.name, card.collector_number || number, faces),
+    functionalModel,
     interactions: await loadInteractionGroups(card.name, filterNames),
   };
 });

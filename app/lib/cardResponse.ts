@@ -14,6 +14,7 @@ import type { CardData, EdgeData, ThemeData, AnnotatedCard } from '../types';
 import type { LogEntry, Scenario } from '../../functional-model/harness';
 import type { Fact } from '../../functional-model/synergy';
 import type { CardStatusEntry } from '../../functional-model/card-status';
+import type { PipelineStatusFile } from '../../functional-model/pipeline-status';
 
 export interface CardResponse {
   card: CardData;
@@ -50,6 +51,11 @@ export interface CardResponse {
     // bundle in production. `null` when it couldn't be computed at all (no
     // functional-model card directory/definition for this card).
     cardStatus: CardStatusEntry | null;
+    // `fdn`-only — see server/api/card/[set]/[number].ts's own
+    // `FunctionalModelData.pipelineStatus`/`.slug` doc comments. Always
+    // `null` for a `fin` entry.
+    pipelineStatus: PipelineStatusFile | null;
+    slug: string | null;
   } | null;
   interactions: EnrichedInteractionGroup[];
 }

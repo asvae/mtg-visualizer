@@ -29815,3 +29815,246 @@ how much changed together).
 - **Open Forge-verification needed: none** — this whole pass is
   UI/dashboard/dev-tooling plumbing (routes, server API shaping, directory
   layout), no engine rules/behavior touched at all.
+
+## 2026-09-18, later same day: FDN pipeline-status confirm/reject + re-review/fingerprint drift
+
+Applied the SAME confirm/reject + re-review shape `engine-status.ts`/
+`sink-derivation-status.ts` already had to `pipeline-status.ts` (the
+per-FDN-card authoring-pipeline-STAGE axis), per explicit spec (the `card`
+agent was building UI against this contract in parallel, so followed it
+closely rather than deviating).
+
+- `functional-model/pipeline-status.ts`: `PipelineStatus` widened to a 6th
+  value, `re-review` (unlike the OTHER two axes, did NOT split a separate
+  `Baseline`/`Color` type pair — the task's own explicit call, since this
+  axis's `status` was already a single flat type with no pre-existing
+  split to preserve). New `PipelineStatusFile.reviewedFingerprint?: string`
+  (sha256 of `definition.ts`'s content at confirm time). New exports:
+  `computePipelineDefinitionFingerprint(slug, root)` (hashes
+  `functional-model/fdn-cards/<slug>/definition.ts` via
+  `readFunctionalModelFile`) and `effectivePipelineStatus(slug, root)` —
+  the ONE shared drift-aware status function every real consumer (the
+  card-status route AND the new review route AND, per the spec, a
+  `card`-owned per-card route) must call instead of trusting a raw stored
+  `status` blindly. `applyPipelineReview`'s `'ok'` branch now accepts an
+  optional `reviewedFingerprint` on its action object — kept the function
+  itself pure/fs-read-free per its own pre-existing documented property;
+  the caller (the new review route) computes the hash and passes it in,
+  not this function reaching into the filesystem itself.
+  `assertPipelineStatusInvariants` now also rejects a literal stored
+  `status: 're-review'` (computed-at-read-time-only, never a real stored
+  value) and a stray `reviewedFingerprint` on a non-green entry, while
+  deliberately NOT requiring `reviewedFingerprint` on every green entry
+  (an old, pre-fingerprint green is tolerated — treated as a mismatch by
+  `effectivePipelineStatus`, not a malformed file).
+- `server/api/card-status/[set].get.ts`'s `fdn` branch now calls
+  `effectivePipelineStatus` instead of trusting `pipeline?.status`
+  directly — `/app/engine/cards`'s FDN view picks up a drifted
+  `re-review` with zero changes on that page's own side.
+- New `server/api/fdn-cards/[slug]/review.post.ts` — `POST
+  /api/fdn-cards/:slug/review`, body `{verdict:'ok'}` or
+  `{verdict:'not-ok', reviewNote}`. 404 if no `pipeline-status.json` at
+  all; 400 if the EFFECTIVE status isn't `blue` (covers both a genuinely
+  non-blue card and a stale/drifted `re-review`, same wording precedent as
+  the other two axes' own review routes); on success calls
+  `applyPipelineReview`, writes the file back, returns the updated
+  `PipelineStatusFile` directly as the response body (not wrapped in
+  `{key, color}` like the other two axes — no separate id/key here, the
+  slug is already the route param).
+- `.claude/contracts/card-schema.md`'s "FDN authoring-pipeline status"
+  section updated: documented the new `re-review`/fingerprint mechanism +
+  the review endpoint's exact request/response contract, and flagged two
+  pieces of pre-existing staleness found while there (the section's own
+  now-wrong `functional-model/cards/<slug>/` path — should have said
+  `fdn-cards/` since the move happened later the same day — and its
+  "no 6th status is needed" claim, both corrected in place with forward
+  pointers, not silently rewritten out of the historical record).
+- Tests: extended `functional-model/pipeline-status.test.ts` — fingerprint
+  stamping on `'ok'` (with and without a supplied fingerprint),
+  `assertPipelineStatusInvariants` rejecting a stored `'re-review'` and a
+  stray `reviewedFingerprint`, `computePipelineDefinitionFingerprint`
+  (null on missing file, deterministic + changes-on-edit hash), and a full
+  `effectivePipelineStatus` suite (undefined on no folder; gray/purple/
+  blue/yellow pass through unchanged; green with a matching fingerprint
+  stays green; green with a changed `definition.ts` OR a missing
+  fingerprint at all flips to `re-review`).
+- **Verified live** against a real running dev server (not JSON-only):
+  `serra-angel` (real `blue` FDN card) -> `POST .../review
+  {verdict:'ok'}` -> `green` with a real 64-char sha256
+  `reviewedFingerprint`; `/api/card-status/fdn` immediately reflected
+  `green`/blue-baseline for it; hand-appended a comment line to its real
+  `definition.ts` (no JSON touched) -> `/api/card-status/fdn` flipped that
+  same card to `re-review` on the very next read, and a follow-up
+  `{verdict:'ok'}` POST correctly 400'd ("currently re-review, not blue
+  (or a stale, drifted re-review)..."); also spot-checked 404 (unknown
+  slug), 400 (a real `purple`-baseline card, `aetherize`), 400 (`not-ok`
+  missing `reviewNote`), and a full `not-ok` success path (`yellow` with
+  the note) on `ajani-s-pridemate`. Every hand-edited fixture
+  (`serra-angel`'s `definition.ts` + `pipeline-status.json`,
+  `ajani-s-pridemate`'s `pipeline-status.json`) restored to its original
+  committed content afterward — `git status --short` on
+  `functional-model/fdn-cards/` came back empty before finishing.
+- Full suite (`npx vitest run`) and `npx nuxt typecheck` both re-run at
+  the end: same pre-existing baseline (5 unrelated `scripts/
+  relations.test.mjs` failures — missing `tagging/sets/*` fixtures,
+  historical-sets-sweep territory, not touched by this task;
+  pre-existing `CardDetailTabs.vue`/`card-status.ts`/`card.ts`/`mana.ts`/
+  `tokens/by-key.ts` typecheck errors, confirmed via a scoped `git stash`
+  isolation pass to predate this task's own changes and belong to the
+  `card` agent's own concurrent in-flight work, not introduced by this
+  pass) — 0 new failures/errors anywhere in the files this task touched.
+  Confirmed via the same stash-isolation pass that `effectivePipelineStatus`/
+  `computePipelineDefinitionFingerprint`'s naming already matches exactly
+  what `card`'s own concurrent `server/api/card/[set]/[number].ts` work was
+  already importing.
+- **Open Forge-verification needed: none** — this whole pass is dashboard/
+  review-flow plumbing (a status axis, a JSON file, an API route), no
+  engine rules/behavior touched.
+
+## 2026-09-18, later same day: follow-up — misdirected UI correction + review.post.ts gating fix (not mine, doc updated)
+
+A coordinator message asking me to keep the Scenarios tab / omit Facts /
+drop per-tab confirm buttons on the FDN card page, plus clean up a stray
+`verify-fdn.scratch.mjs` at repo root, turned out to describe work I never
+built (`CardDetailTabs.vue`, Facts/Scenarios tab rendering, Confirm/Reject
+UI) — that's `card`-agent territory; flagged back rather than guessed at.
+Confirmed (read-only check) that no code under `functional-model/` writes
+a `synergy.json`/Facts file for an FDN card — already structurally
+enforced by the `fdn-cards/` vs `cards/` directory split, no action
+needed. Did NOT touch `verify-fdn.scratch.mjs` (not my artifact, and its
+content drives UI I never built — a concurrent session's own script).
+
+One real thing in my own lane: `server/api/fdn-cards/[slug]/review.post.ts`
+had been fixed directly (not by me) to gate confirm/reject on a FRESH
+re-run of `validate-card-definition-cli.mjs` against the current
+`definition.ts`, instead of on the stored `pipeline-status.json`/
+`effectivePipelineStatus` (my original design) — needed so reject-after-
+confirm and confirm-after-reject both work, matching
+`engine-status`/`sink-derivations`' own "baseline always recomputed fresh,
+never frozen by a prior review" behavior. `pipeline-status.ts` itself
+needed no code change (`effectivePipelineStatus`/
+`computePipelineDefinitionFingerprint` are still real, used exports —
+display-time drift detection + fingerprint-stamping — just no longer the
+review route's own gating check). Since I own the contract doc, updated
+`.claude/contracts/card-schema.md`'s "FDN pipeline-status review action"
+section to describe the REAL current gating mechanism instead of leaving
+it stale; request/response shape unchanged. Re-ran
+`functional-model/pipeline-status.test.ts` (41 tests) clean after.
+
+## 2026-09-18, later same day: `computeCardInteractions` — card-page "Interactions" section, real design decision on trigger-precondition auto-derivation
+
+Task: given Ajani's Pridemate's real `name:'onLifeGained'` trigger (no
+curated `sink-model/sink-query.ts` `SinkQuery` exists for it — that's a
+LATER pipeline stage, not reached for any of the 10 FDN cards) build a
+general `computeCardInteractions(definition, poolDefinitions)` producing
+one row per synergy category (`{category, count, matchingCardNames}`),
+self-inclusion unconditional (no `notSelf`), pool = whatever's currently
+loaded (FIN's ~300 or FDN's 10 — this function does no fs/db reads itself).
+
+- **The real design question, resolved against the real engine, not
+  guessed**: could a trigger's own firing PRECONDITION be auto-derived into
+  a matchable `SinkQuery` with no hand-curation (option (a) in the task —
+  "this trigger's condition implies: any card with an effect of kind
+  `gainLife`")? Checked 3 independent real signals: (1) `card.ts`'s
+  `Trigger.on` — the ONLY closed, auto-fired precondition vocabulary the
+  engine has (`'enter'|'upkeep'|'endStep'|'tapLandForMana'|'attacks'|
+  'equippedAttacks'`) — has no lifegain member, and Ajani's own trigger
+  doesn't set it at all. (2) `card.ts`'s own `CardDefinition.authoredFacts`
+  doc comment already says, VERBATIM, that `Trigger.name` is a free-text
+  label with "no SAFE general structural rule" to derive a precondition
+  from — citing THIS EXACT trigger name (`onLifeGained`) as its own worked
+  example (alongside Ashe's `onAttack`/Ambrosia's `onLandfall`). (3) The
+  project already tried to solve this exact trigger name for real —
+  `recognizers/lifegain-trigger-structural.ts` (grepped the WHOLE FIN pool:
+  3 real `onLifeGained` triggers — excalibur-ii, minwu-white-mage, AND
+  aerith-gainsborough, the SAME trigger name Ajani's Pridemate reuses) —
+  and it does NOT trust the trigger name either, it matches literal ORACLE
+  TEXT ("Whenever you gain life") instead. FDN `CardDefinition`s (checked
+  all 10 files) carry NO `oracleText` field at all, so even that
+  more-robust, already-established fallback is unavailable here.
+  **Verdict: option (b) — `name:'onLifeGained'` is a naming convention, not
+  a real engine-understood structural signal; option (a) does not hold up
+  beyond `Trigger.on`'s closed enum.** Building a name-based lookup table
+  anyway (even a tiny hand-curated one) would just move the SAME per-card
+  curation problem the sink-only experiment exists to remove from oracle
+  text onto an equally-unreliable free-text field — declined explicitly,
+  not silently.
+- **What was built instead, real and general, zero curation**: every one
+  of `definition`'s own `deriveOccurrences(definition, root)` results
+  (`sink-model/match-sink.ts` — already covers `effects`/
+  `triggers[].effects`/`abilities[].effects`, `program`-AST nodes, the 2
+  baseline permanent/instant-sorcery rules, and the Saga/Crew
+  engine-automation predicates) becomes its own pool-wide category:
+  labeled via `synergy.ts`'s own `describeFact` (reusing the OLD paired
+  source+sink Fact model's own categorization vocabulary — "life gain",
+  "dying", "counters", "damage", "card draw", ... — per the task's own
+  explicit instruction not to invent a parallel one), then re-run as a
+  `SinkQuery` against every `poolDefinitions` entry via the EXISTING
+  `matchSink`. Occurrences sharing a label are merged (matched-name sets
+  unioned). New helper `toSinkQuery`/`labelFor` (`card-interactions.ts`)
+  strip only the fields that mean "this same object" (`via`,
+  `resolvedAttrs`, `subject`, a bare `target:'self'`) — a real `target`
+  CONSTRAINT object (Day of Judgment's own `{types:{has:['Creature']}}` on
+  its `destroy` occurrence) is kept, since that's real, general filter
+  data, not a self-reference.
+- **Real, reported-not-oversold consequence**: Ajani's Pridemate's own
+  derived categories under this honest design are `"enters the
+  battlefield"` (baseline creature) and `"counters"` (its own `putCounter`
+  trigger effect) — **not** `"Lifegain"`. Getting Ajani specifically into
+  a lifegain-shaped category needs either the later curated per-card
+  `SinkQuery`-authoring pipeline stage the plan already anticipates, or a
+  genuine `Trigger.on` vocabulary addition (same class of change
+  `'tapLandForMana'` was when a real card needed it) — neither attempted
+  here, per "flagged/omitted, never guessed at with a wrong category."
+- **Self-inclusion proven for real, no synthetic fixture needed**: Ajani's
+  Pridemate's own `"counters"` category includes Ajani's Pridemate itself
+  (puts a +1/+1 counter on itself, satisfying its own bare `counters`
+  want); Day of Judgment's own `"destroy"` category includes Day of
+  Judgment itself (its own "destroy all creatures" program satisfies its
+  own unconstrained destroy-a-creature want). Both against REAL FDN
+  `CardDefinition`s, not mocks.
+- **One mocked `CardDefinition` used, per this project's own established
+  "predicate/matching-logic corpus uses mocks" convention**: a synthetic
+  `kind:'gainLife'`-effect card, since the real FDN 10-card pool has ZERO
+  cards with an actual `gainLife` EFFECT today (Healer's Hawk's Lifelink is
+  a KEYWORD, not an Effect — `deriveOccurrences` deliberately doesn't walk
+  `keywords` at all, a real, correctly out-of-scope-here gap, unchanged) —
+  used to prove the general per-occurrence category mechanism (non-zero
+  count against a real gainLife producer, self-inclusion) end-to-end,
+  honestly labeled as a substitution in both the test file and this
+  contract note rather than forcing Ajani into a category it doesn't
+  actually, honestly belong to.
+- New files: `functional-model/card-interactions.ts` (full (a)/(b)
+  investigation in its own header comment), `functional-model/
+  card-interactions.test.ts` (8 tests). `.claude/contracts/card-schema.md`
+  updated with the function's full contract (shape, self-inclusion
+  semantics, category-derivation mechanism, the same (a)/(b) writeup
+  summarized) for the `card` agent to build a route/UI against next — NOT
+  wired into any route/UI this pass, per the task's own explicit
+  instruction to defer that.
+- **Verified**: `npx vitest run functional-model/card-interactions.test.ts`
+  8/8 green. Full `npx vitest run functional-model` — 110 files/1163
+  passed + 5 skipped (unchanged baseline +1 file/+8 tests). Full-repo
+  `npx vitest run` — 114/115 files passed, 1235/1245 tests passed, the
+  same 5 pre-existing `scripts/relations.test.mjs` failures (missing
+  `tagging/sets/{lea,leb,2ed,arn}`/`card-enrichment-status.json`
+  fixtures — historical-sets-sweep territory, untouched by this task).
+  `npm run typecheck` (real `nuxt typecheck`) — same pre-existing baseline
+  errors (`CardDetailTabs.vue` ×4, `card-status.ts:263`, `card.ts:2970`,
+  `mana.ts:275`, `server/api/tokens/by-key.ts:32`), 0 new errors anywhere
+  in the files this task touched. Scoped `npx tsc -p functional-model/
+  tsconfig.json` (a stricter, node-types-less config the real project
+  typecheck doesn't use) shows exactly ONE new line
+  (`card-interactions.ts`'s own `process.cwd()` default param) — the SAME
+  pre-existing `TS2591`/missing-node-types error CLASS `sink-model/
+  match-sink.ts`'s own two `process.cwd()` occurrences already trigger
+  under this same scoped config, confirmed via a real stash-and-rerun
+  diff, not assumed.
+- **Noticed, not touched, flagged so it isn't mistaken for my own work**: a
+  stray `verify-fdn2.scratch.mjs` appeared at the repo root mid-task (after
+  a `git stash`/`stash pop` round-trip used to isolate a typecheck
+  baseline) — not created by this task, almost certainly a concurrent
+  agent's own in-flight scratch file in this shared working tree (per this
+  project's own "concurrent-agent git staging" memory) — left untouched.
+- **Open Forge-verification needed: none** — this task is synergy-matching
+  aggregation logic, no engine rules/behavior touched.

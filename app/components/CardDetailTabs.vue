@@ -2,7 +2,9 @@
 // The card-detail "content" block — CardMedia + review-status table +
 // annotated oracle text + the Facts/Scenarios/Facts Json/Card Json/Card
 // Definition tab strip + Interactions + the Scryfall link — factored out of
-// `app/pages/app/card/[set]/[number].vue` (2026-09-15) so the graph page's
+// `app/pages/app/card/[set]/[number].vue` (2026-09-15; that standalone page
+// itself is gone as of 2026-09-18's consolidation — the SAME content now
+// mounts from `app/pages/app/engine/cards/[set]/[[number]].vue` instead) so the graph page's
 // peek panel (`CardPeekPanel.vue`) can render the EXACT SAME content instead
 // of its own separate, older `CardMedia` + `CardRelations` pairing (dropped
 // entirely — `CardRelations.vue` itself is unused now; nothing else in the
@@ -36,6 +38,9 @@ import { CARD_STATUS_META } from '../lib/cardStatus';
 import type { CardStatusBucket } from '../lib/cardStatus';
 import { cardStatusBaseline } from '../../functional-model/card-status';
 import { emitReviewStatusChanged } from '../composables/useReviewStatusBus';
+import { PIPELINE_STATUS_META } from '../lib/pipelineStatus';
+import { statusBadgeStyle } from '../lib/badgeColor';
+import type { PipelineStatusFile } from '../../functional-model/pipeline-status';
 
 // Debug column showing each row's raw `Fact` JSON, so it's inspectable
 // without switching to the separate JSON tab or opening devtools. On by
@@ -57,6 +62,46 @@ const props = defineProps<{
 }>();
 
 const card = computed(() => props.data.card);
+
+// **`fdn` vs `fin` are two genuinely different card kinds this one shared
+// component now renders, not a generalized "any set" rule** — same "real
+// branch, not a fake generalization" pattern this session already applied
+// server-side (`server/api/card/[set]/[number].ts`'s own `loadFdnFunctional
+// Model`, `server/api/card-status/[set].get.ts`'s own header). An FDN card
+// has no Facts/synergy.json/interactions at all, FULL STOP — a firm
+// policy, not just today's incidental state, structurally enforced by the
+// `functional-model/fdn-cards/`-vs-`cards/` directory split itself (no code
+// path anywhere writes a synergy.json for an FDN card). `scenarios.ts`
+// (and therefore real `traces`) is different: no real FDN card has one
+// TODAY (that only gets authored later, when a reviewer rejects a `blue`
+// card and a smart-tier model writes one to investigate), but the
+// Scenarios tab/its rendering machinery stay wired and ready for when one
+// does — everything gated on this below either hides content that has no
+// real FDN analog at all (the Facts tab, the Facts/Scenarios/Interactions
+// review-status table — there is exactly ONE card-level review action on
+// an FDN card, the pipeline-status Confirm/Reject block, no per-tab
+// analogs) or swaps in the real, different thing FDN cards DO have instead
+// (that same authoring-PIPELINE-STAGE Confirm/Reject block, see
+// `pipelineStatusEntry` below). Keyed off `props.set` (not
+// `props.data.functionalModel?.slug`, which is `null` for the common "no
+// functional-model/fdn-cards/<slug> folder yet" case) — every caller of
+// this component already has its own real `set` route param to hand.
+const isFdn = computed(() => props.set === 'fdn');
+
+// FDN's own authoring-pipeline-status axis (`functional-model/
+// pipeline-status.ts`) — declared up here (not alongside the rest of the
+// Confirm/Reject review logic further below) because the pre-existing
+// `watch(() => props.data.functionalModel, ..., { immediate: true })`
+// below resets it on every card load and runs its callback SYNCHRONOUSLY
+// at `watch()`-call time — a `const` declared textually AFTER that call
+// would still be in its temporal-dead-zone the instant that immediate
+// callback fires, a real `ReferenceError` confirmed the hard way while
+// building this. See the fuller doc comment on the rest of this axis
+// (`canReviewPipeline`/`submitPipelineReview`/...) further down this file.
+const pipelineStatusOverride = ref<PipelineStatusFile | null>(null);
+const pipelineStatusEntry = computed<PipelineStatusFile | null>(() => pipelineStatusOverride.value ?? props.data.functionalModel?.pipelineStatus ?? null);
+const pipelineStatusColor = computed(() => pipelineStatusEntry.value?.status ?? 'gray');
+const pipelineStatusMeta = computed(() => PIPELINE_STATUS_META[pipelineStatusColor.value]);
 
 // Per-card (not per-face) fact-authoring status badge — LIVE, computed
 // fresh per request by the API route itself (server/api/card/[set]/
@@ -923,6 +968,9 @@ watch(
     // narrowing from a PRIOR card's own review-status click must not leak
     // onto this one (see cardStatus's own doc comment above).
     cardStatusOverride.value = null;
+    // Same reasoning, for the FDN pipeline-status axis's own optimistic
+    // overlay (see pipelineStatusOverride's own doc comment above).
+    pipelineStatusOverride.value = null;
   },
   { immediate: true }
 );
@@ -1016,13 +1064,89 @@ const factsSnapshotTitle = computed(() => {
 // ever change without a full reload.
 const factsCount = computed(() => (synergy.value ? synergy.value.source.length + synergy.value.sink.length : 0));
 const scenariosCount = computed(() => props.data.functionalModel?.traces?.length ?? 0);
-const functionalModelTabs = computed(() => [
-  { label: 'Facts', value: 'facts' as const, badge: factsCount.value || undefined },
-  { label: 'Scenarios', value: 'scenarios' as const, badge: scenariosCount.value || undefined },
-  { label: 'Facts Json', value: 'json' as const },
-  { label: 'Card Json', value: 'cardJson' as const },
-  { label: 'Card Definition', value: 'definition' as const },
-]);
+// FDN gets "Scenarios" + "Card Definition" only — no Facts (and, firmly,
+// never will: no `synergy.json`/Facts JSON is ever generated for an FDN
+// card at all, structurally enforced by the `fdn-cards/`-vs-`cards/`
+// directory split itself, not just a UI-side omission — see `isFdn`'s own
+// doc comment) and no Facts Json/Card Json either (both would just be
+// empty: `functionalModelJson`/`cardJson` below are `null` whenever
+// `synergy`/`annotatedCard` are, which is always true for an `fdn` entry —
+// an empty tab that LOOKS like real content is worse than not offering it).
+// Scenarios' own RENDERING machinery (the `v-else-if="scenarios"` branch
+// below) stays ready for every real FDN card regardless — `scenarios.ts`
+// only gets authored later, when a reviewer rejects a `blue` card and a
+// smart-tier model writes one to investigate — no FDN-specific casing
+// needed there, it already tolerates an empty `traces` array generically.
+// The TAB itself, though (updated 2026-09-18, later still — see
+// `functionalModelTabs` below's own current comment): omitted entirely
+// whenever `scenariosCount` is zero, for either card kind, rather than
+// shown and degrading to "No scenarios recorded." text — a tab that can
+// only ever open onto empty-state text isn't a real affordance.
+// Scenarios tab itself is omitted entirely (not shown with a "No scenarios
+// recorded." body) whenever this card has zero real traces — added
+// 2026-09-18, later still: a tab that can only ever render empty-state text
+// is noise, not a real affordance, for the (currently-common) FDN case
+// where no `scenarios.ts` has been authored yet, and equally for any real
+// FIN card with a genuinely empty `traces` array. `functionalModelTabValue`
+// below has its own matching read-only fallback for when the user's stored
+// tab preference happens to be `'scenarios'` on a card that doesn't offer
+// it right now.
+const functionalModelTabs = computed(() =>
+  isFdn.value
+    ? [
+        ...(scenariosCount.value > 0 ? [{ label: 'Scenarios', value: 'scenarios' as const, badge: scenariosCount.value || undefined }] : []),
+        { label: 'Card Definition', value: 'definition' as const },
+      ]
+    : [
+        { label: 'Facts', value: 'facts' as const, badge: factsCount.value || undefined },
+        ...(scenariosCount.value > 0 ? [{ label: 'Scenarios', value: 'scenarios' as const, badge: scenariosCount.value || undefined }] : []),
+        { label: 'Facts Json', value: 'json' as const },
+        { label: 'Card Json', value: 'cardJson' as const },
+        { label: 'Card Definition', value: 'definition' as const },
+      ],
+);
+// The active tab VALUE, wrapping the shared `store.functionalModelTab` (see
+// that ref's own comment for why it's shared/session-persisted across
+// every caller of this component). `set` always writes straight through
+// unconditionally — both `'scenarios'` and `'definition'` (the only two
+// values `functionalModelTabs` ever offers for an `fdn` card, so `set` can
+// never be called with anything else while `isFdn`) are equally valid
+// values for a `fin` card too, so there's no FDN-specific value that would
+// corrupt the FIN-facing selection by leaking across a kind switch. `get`
+// DOES need an FDN-specific fallback, though: a store value left over from
+// a previously-viewed FIN card (`'facts'`/`'json'`/`'cardJson'`) has no
+// matching tab for an `fdn` card at all — without this, the raw
+// `v-else-if` chain below (which switches on the tab VALUE directly,
+// independent of what `functionalModelTabs` currently lists) would render
+// that branch's own FIN-flavored "not yet migrated to v2 synergy.json"
+// fallback text for an FDN card, which is actively misleading (an FDN card
+// was never "migrated" to anything — it simply never gets a synergy.json
+// at all, a very different statement). Falls back to `'definition'`,
+// read-only — never writes that fallback back into the store, so
+// navigating back to the FIN card afterward still resumes exactly where it
+// left off.
+//
+// Second, independent fallback (same read-only shape, added 2026-09-18,
+// later still, alongside `functionalModelTabs`'s own new zero-scenarios
+// omission above): a stored `'scenarios'` value is only ever meaningful
+// when the CURRENT card actually has a Scenarios tab to select at all — a
+// card with zero traces doesn't offer one (see `functionalModelTabs`
+// above), so without this the raw `v-else-if` chain below would render
+// nothing for that value. Falls back to whichever tab is this card kind's
+// own sensible default (`'definition'` for `isFdn`, `'facts'` otherwise) —
+// read-only, never written back, so a user who genuinely prefers Scenarios
+// still resumes there the next time they land on a card that has some.
+const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition'>({
+  get: () => {
+    const stored = store.functionalModelTab.value;
+    if (isFdn.value && stored !== 'scenarios') return 'definition';
+    if (stored === 'scenarios' && scenariosCount.value === 0) return isFdn.value ? 'definition' : 'facts';
+    return stored;
+  },
+  set: (v) => {
+    store.functionalModelTab.value = v;
+  },
+});
 
 // Dev-only — see server/api/card/review-status.ts's own header for why
 // (writes into the repo's functional-model/ source tree; refused outright
@@ -1203,6 +1327,92 @@ function confirmUncertain() {
   const trimmed = entered.trim();
   void confirmFactsReviewWithCaveat(trimmed.length > 0 ? trimmed : undefined);
 }
+
+// --- FDN authoring-pipeline status + Confirm/Reject review UI
+// (`functional-model/pipeline-status.ts`) — a genuinely different review
+// axis from every `factsReviewStatus`/`scenariosReviewStatus`/
+// `interactionsReviewStatus` mechanism above (those are all `fin`-only,
+// meaningless for `fdn`; see `isFdn`'s own doc comment). Pattern copied
+// deliberately from `app/pages/app/engine/predicates/[[slug]].vue`'s own
+// established Confirm/"Reject…"+note-modal shape (same button labels,
+// same `pendingKey`-style in-flight guard, same reject-modal shape) rather
+// than inventing a new one for this one axis.
+const toast = useToast();
+
+// Confirm/"Reject…" are only ever meaningful on a genuinely `blue` card —
+// NOT `re-review` too, despite this task's own original dispatch assuming
+// otherwise ("this includes the re-review state, since re-review only ever
+// sits on a blue-rooted card"). Checked directly against the REAL, now-live
+// `POST /api/fdn-cards/:slug/review` (`server/api/fdn-cards/[slug]/
+// review.post.ts`, built concurrently by the engine agent): that route
+// gates on `effectivePipelineStatus(...) !== 'blue'` and explicitly 400s a
+// `re-review` entry too ("a stale, drifted re-review is refused here too,
+// same as a genuinely non-blue card") — a drifted confirmation must go
+// back through the authoring pipeline to become a fresh `blue` again
+// before it's reviewable, it can't be re-confirmed directly. Matching the
+// REAL server precondition here (confirmed live, not guessed) rather than
+// showing a clickable button that would just 400 — see this task's own
+// report for the full flagged mismatch against the dispatch's assumption.
+// Requires a real `slug` too (never true for the common "no folder at all"
+// case — nothing to review yet).
+const canReviewPipeline = computed(() => isFdn.value && !!props.data.functionalModel?.slug && pipelineStatusColor.value === 'blue');
+const pipelineReviewSaving = ref(false);
+async function submitPipelineReview(action: { verdict: 'ok' } | { verdict: 'not-ok'; reviewNote: string }) {
+  const slug = props.data.functionalModel?.slug;
+  if (!slug || pipelineReviewSaving.value) return;
+  pipelineReviewSaving.value = true;
+  try {
+    const updated = await $fetch<PipelineStatusFile>(`/api/fdn-cards/${slug}/review`, { method: 'POST', body: action });
+    pipelineStatusOverride.value = updated;
+  } catch (err: any) {
+    toast.add({
+      title: 'Review not saved',
+      // `server/api/fdn-cards/[slug]/review.post.ts`'s own error shape is a
+      // plain `{ error: string }` body (not h3's `createError`), so ofetch's
+      // parsed `err.data.error` is the real message; `statusMessage`/
+      // `message` stay as fallbacks for a network-level failure with no
+      // parsed body at all.
+      description: err?.data?.error ?? err?.data?.statusMessage ?? err?.message ?? 'Request failed.',
+      color: 'error',
+      icon: 'i-lucide-triangle-alert',
+    });
+  } finally {
+    pipelineReviewSaving.value = false;
+  }
+}
+function confirmPipeline() {
+  void submitPipelineReview({ verdict: 'ok' });
+}
+const pipelineRejectOpen = ref(false);
+const pipelineRejectNote = ref('');
+function openPipelineReject() {
+  pipelineRejectNote.value = '';
+  pipelineRejectOpen.value = true;
+}
+async function submitPipelineReject() {
+  if (!pipelineRejectNote.value.trim()) return;
+  await submitPipelineReview({ verdict: 'not-ok', reviewNote: pipelineRejectNote.value });
+  pipelineRejectOpen.value = false;
+}
+// No "Unconfirm"/"Clear review" affordance here, unlike every other review
+// axis in this file (Facts' Unconfirm, Predicates'/Features' own "Clear
+// review") — a REAL, confirmed mismatch, not an oversight: `pipeline-
+// status.ts`'s own `applyPipelineReview` is a PURE `blue -> yellow|green`
+// transition with no reverse edge at all (`PipelineReviewAction` has no
+// `verdict: null`/clear case), so there is nothing for a clear-review click
+// to even call. Flagged in this task's own report for the engine agent/
+// orchestrator rather than silently inventing a fake clear action or a
+// client-only revert that the server could never actually persist.
+
+// Only ever needed once functionalModel/pipelineStatusOverride can change —
+// folded onto the SAME watcher `factsReviewStatus` etc. already use (see
+// that watcher above) rather than a second, parallel one.
+watch(
+  () => props.data.functionalModel,
+  () => {
+    pipelineStatusOverride.value = null;
+  },
+);
 </script>
 
 <template>
@@ -1242,8 +1452,10 @@ function confirmUncertain() {
          distinguishable, neither is a loud color). Same shared status
          computeds/toggleReviewStatus (and its already-optimistic local
          state flip) as before — no parallel status system, just a
-         different layout for the same data. -->
-    <div class="mt-2 shrink-0">
+         different layout for the same data. FIN-only — see the `v-else`
+         sibling below for FDN's own, genuinely different pipeline-status
+         Confirm/Reject block. -->
+    <div v-if="!isFdn" class="mt-2 shrink-0">
       <table class="border-collapse text-xs">
         <thead>
           <tr class="text-left text-[10px] font-semibold tracking-wide text-muted uppercase">
@@ -1357,6 +1569,39 @@ function confirmUncertain() {
         </tbody>
       </table>
     </div>
+
+    <!-- FDN's own real, genuinely different review axis (`functional-model/
+         pipeline-status.ts` — see `isFdn`'s own doc comment above): no
+         Facts/Scenarios/Interactions to review at all, so this isn't the
+         same table above with different labels — it's the card's own
+         authoring-PIPELINE-STAGE status plus a Confirm/"Reject…" action,
+         pattern copied from `app/pages/app/engine/predicates/[[slug]].vue`'s
+         own established Confirm/Reject shape (same button labels, same
+         reject-note-modal shape). No "Unconfirm"/"Clear review" affordance
+         — see `submitPipelineReview`'s own doc comment for why that's a
+         real, confirmed mismatch against `pipeline-status.ts`'s own
+         `applyPipelineReview` (a pure one-way `blue -> yellow|green`
+         transition), not an oversight. -->
+    <div v-else class="mt-2 shrink-0 rounded-md border border-border-subtle bg-panel p-3">
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Pipeline status</span>
+        <UBadge :style="statusBadgeStyle(pipelineStatusMeta.color)" size="sm" variant="solid">{{ pipelineStatusMeta.label }}</UBadge>
+      </div>
+      <ul v-if="pipelineStatusEntry?.reasons?.length" class="mt-1.5 flex flex-col gap-1">
+        <li v-for="(r, i) in pipelineStatusEntry.reasons" :key="i" class="text-[11px] leading-relaxed text-muted">{{ r }}</li>
+      </ul>
+      <p v-else-if="!data?.functionalModel" class="mt-1.5 text-[11px] text-muted italic">
+        No functional-model/fdn-cards/&lt;slug&gt;/ folder for this card yet.
+      </p>
+      <p v-if="pipelineStatusEntry?.reviewNote" class="mt-1.5 text-[11px] leading-relaxed text-muted">{{ pipelineStatusEntry.reviewNote }}</p>
+      <p v-if="pipelineStatusEntry?.reviewedAt" class="mt-1.5 text-[11px] text-muted">Confirmed {{ pipelineStatusEntry.reviewedAt }}</p>
+      <div v-if="canReviewPipeline" class="mt-2 flex items-center gap-2">
+        <UButton size="xs" color="success" variant="subtle" :disabled="pipelineReviewSaving" :loading="pipelineReviewSaving" @click="confirmPipeline">
+          Confirm
+        </UButton>
+        <UButton size="xs" color="warning" variant="subtle" :disabled="pipelineReviewSaving" @click="openPipelineReject">Reject…</UButton>
+      </div>
+    </div>
   </div>
 
   <!-- functional-model/ — a declarative CardDefinition
@@ -1406,7 +1651,7 @@ function confirmUncertain() {
          table (this one comes from the generated `/app/status` dashboard
          data, per-card not per-tab-section), so it doesn't belong in
          that table. -->
-    <UTabs v-model="store.functionalModelTab.value" :items="functionalModelTabs" variant="link" size="xs" class="mb-2">
+    <UTabs v-model="functionalModelTabValue" :items="functionalModelTabs" variant="link" size="xs" class="mb-2">
       <template #leading="{ item }">
         <span
           v-if="item.value === 'facts' && cardStatus"
@@ -1417,7 +1662,7 @@ function confirmUncertain() {
       </template>
     </UTabs>
 
-    <template v-if="store.functionalModelTab.value === 'facts'">
+    <template v-if="functionalModelTabValue === 'facts'">
       <!-- Three-way fact-provenance filter, one compact line (2026-09-14
            condensed from two separate, count-gated rows into this —
            user request: always visible regardless of per-card counts,
@@ -1648,7 +1893,7 @@ function confirmUncertain() {
       <div v-else class="text-xs text-muted italic">Not yet migrated to v2 synergy.json.</div>
     </template>
 
-    <template v-else-if="store.functionalModelTab.value === 'scenarios'">
+    <template v-else-if="functionalModelTabValue === 'scenarios'">
       <ScenarioReplay
         v-if="data.functionalModel.traces?.length"
         :traces="data.functionalModel.traces"
@@ -1664,14 +1909,14 @@ function confirmUncertain() {
       <div v-else class="text-xs text-muted italic">No scenarios recorded.</div>
     </template>
 
-    <template v-else-if="store.functionalModelTab.value === 'json'">
+    <template v-else-if="functionalModelTabValue === 'json'">
       <JsonHighlight
         :json="functionalModelJson ?? ''"
         class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-2"
       />
     </template>
 
-    <template v-else-if="store.functionalModelTab.value === 'cardJson'">
+    <template v-else-if="functionalModelTabValue === 'cardJson'">
       <JsonHighlight
         :json="cardJson ?? ''"
         class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-2"
@@ -1719,7 +1964,7 @@ function confirmUncertain() {
             <NuxtLink
               v-for="m in group.matches"
               :key="m.card"
-              :to="m.set && m.collectorNumber ? `/app/card/${m.set}/${m.collectorNumber}` : undefined"
+              :to="m.set && m.collectorNumber ? `/app/engine/cards/${m.set}/${m.collectorNumber}` : undefined"
               class="block shrink-0"
               :class="{ 'pointer-events-none': !(m.set && m.collectorNumber) }"
               :title="m.selfInteraction ? `Self-interaction: ${m.selfInteraction}` : undefined"
@@ -1750,6 +1995,27 @@ function confirmUncertain() {
       <div v-if="recognizerSourceModalLoading" class="text-xs text-muted italic">Loading recognizer source…</div>
       <div v-else-if="recognizerSourceModalError" class="text-xs text-red-400">{{ recognizerSourceModalError }}</div>
       <FunctionalModelScript v-else :code="recognizerSourceModalCode" />
+    </template>
+  </UModal>
+
+  <!-- FDN pipeline-status "Reject…" note modal — same shape as Predicates'
+       own reject modal (app/pages/app/engine/predicates/[[slug]].vue): a
+       required, non-empty note, submit-disabled until one's entered. -->
+  <UModal v-model:open="pipelineRejectOpen" title="Reject transcription">
+    <template #body>
+      <p class="mb-2 text-xs text-muted">
+        Explain why this card's <code class="rounded bg-surface px-1 py-0.5">definition.ts</code> is wrong. A note
+        is required (that's the whole point of yellow).
+      </p>
+      <UTextarea v-model="pipelineRejectNote" class="w-full" :rows="4" placeholder="e.g. spot-checked against real Forge source, the transcription mishandles..." autofocus />
+    </template>
+    <template #footer="{ close }">
+      <div class="flex w-full justify-end gap-2">
+        <UButton color="neutral" variant="subtle" @click="close">Cancel</UButton>
+        <UButton color="warning" :disabled="!pipelineRejectNote.trim() || pipelineReviewSaving" :loading="pipelineReviewSaving" @click="submitPipelineReject">
+          Reject
+        </UButton>
+      </div>
     </template>
   </UModal>
 </template>

@@ -1,0 +1,201 @@
+// Card-page "Interactions" section — pure aggregation over the sink-only
+// matcher (2026-09-18). Task brief: given ONE card's own `CardDefinition`
+// and a POOL of `CardDefinition`s (whatever set is currently in view — FIN's
+// ~300 or FDN's 10, per `.claude/contracts/card-schema.md`'s own "current
+// scope" note; this file itself does no fs/db reads, a caller assembles the
+// pool), produce one row per real synergy CATEGORY this card structurally
+// participates in — `{ category, count, matchingCardNames }` — shaped like
+// the graph's own node display ("Lifegain [7] v"), with the card's own
+// `CardDefinition` always checked against its own derived categories too
+// (no `notSelf`/self-exclusion anywhere in this file, by explicit
+// instruction).
+//
+// ---------------------------------------------------------------------------
+// THE REAL DESIGN QUESTION, investigated before writing a line of matching
+// code — worked example throughout: Ajani's Pridemate
+// (`fdn-cards/ajani-s-pridemate/definition.ts`):
+//
+//   triggers: [{ name: 'onLifeGained', effects: [{ kind: 'putCounter', ... }] }]
+//
+// No curated `sink-model/sink-query.ts` `SinkQuery` exists for this trigger
+// today (that's a LATER pipeline stage — see the task brief / this project's
+// `project_sink_only_synergy_experiment` memory — not reached for any of the
+// 10 FDN cards yet). Two options were on the table:
+//
+//   (a) On-the-fly derivation: given a card's own trigger, derive a MINIMAL
+//       `SinkQuery` automatically from its STRUCTURAL shape (no hand-
+//       curation) — e.g. "this trigger's condition implies: any card with a
+//       `gainLife` effect."
+//   (b) Determine `name: 'onLifeGained'` is NOT a real, closed, auto-fired
+//       engine signal at all (just a naming CONVENTION), in which case (a)
+//       would be building on sand — and fall back to the narrower, always-
+//       safe alternative: categorize by the trigger's/card's OWN EFFECT
+//       KIND directly, regardless of what triggers it.
+//
+// **Checked against the real engine first, per the task's own instruction —
+// verdict: (b), confirmed from THREE independent angles, not assumed:**
+//
+// 1. `card.ts`'s own `Trigger.on` field (the engine's ONLY real, closed,
+//    auto-fired trigger-precondition vocabulary) is a fixed union —
+//    `'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks' |
+//    'equippedAttacks'` — with NO `'lifeGained'`/`'gainLife'` member.
+//    Ajani's Pridemate's own trigger sets neither `on` at all; only `name`.
+// 2. `Trigger.name`'s own doc comment (`card.ts`, on `CardDefinition.
+//    authoredFacts`) says this explicitly, citing THIS EXACT case: "
+//    `Trigger.name` is a free-text label (`harness.ts`'s own
+//    `Scenario.trigger` match key), not a closed, typed vocabulary the way
+//    `Trigger.on` is ... so there is no SAFE general structural rule to
+//    derive 'this named trigger's precondition is event X'." Ashe, Princess
+//    of Dalmasca's `onAttack` and Ambrosia Whiteheart's `onLandfall` are
+//    named as the SAME shape of gap.
+// 3. The project ALREADY tried to solve this exact trigger name for real,
+//    twice — `recognizers/lifegain-trigger-structural.ts` (grepped every
+//    real `name: 'onLifeGained'` trigger pool-wide: excalibur-ii, minwu-
+//    white-mage, aerith-gainsborough — note Aerith is the SAME trigger name
+//    Ajani's Pridemate reuses) — and it did NOT trust the trigger name
+//    either: it matches the literal ORACLE TEXT clause "Whenever you gain
+//    life" instead, falling back to name-based inference not at all. FDN
+//    `CardDefinition`s (checked every one of the 10 files) carry NO
+//    `oracleText` field whatsoever — so even that more-robust, already-
+//    established fallback isn't available here. There is genuinely no
+//    structural signal on an FDN card weaker than "trust the free-text
+//    trigger name," which the engine's own docs already call unsafe.
+//
+// **Conclusion: (a) does not hold up beyond `Trigger.on`'s closed enum.**
+// Building a generic "trigger name implies event X" inference (even a small
+// hand-curated one) would be re-introducing exactly the kind of per-card,
+// per-name curation the sink-only experiment's whole premise is to remove
+// (see `project_sink_only_synergy_experiment` — "supersedes source-fact
+// recognizers") — just moved from oracle text onto an equally-unreliable
+// free-text label. Declined, per the task's own instruction: "anything not
+// cleanly derivable this way should be flagged/omitted, never guessed at
+// with a wrong category."
+//
+// **What this file actually builds instead — narrower, real, general, zero
+// curation**: reuses `sink-model/match-sink.ts`'s existing
+// `deriveOccurrences` (already the sink-only model's own answer to "what
+// does this card structurally, unconditionally guarantee" — it already
+// walks every `effects`/`triggers[].effects`/`abilities[].effects` array,
+// `program`-AST nodes, and the 2 baseline + 2 engine-automation-predicate
+// families) and turns EACH of a card's own derived `ProducerOccurrence`s
+// into its own pool-wide category, labeled via `synergy.ts`'s own
+// `describeFact` — reusing the EXACT categorization vocabulary the OLD
+// paired source+sink Fact model already established ("life gain", "dying",
+// "counters", "damage", ...) rather than inventing a parallel one, per the
+// task's own explicit instruction. This is a real generalization of the
+// sink-only model in its own right: given ANY `CardDefinition`, its own
+// occurrences ARE the query to run against the pool — no curated
+// `SinkQuery` needed for THIS card, only reuse of the ALREADY-EXISTING
+// matcher.
+//
+// **Consequence for the worked example, reported plainly, not oversold**:
+// under this honest design, Ajani's Pridemate's own derived categories are
+// "enters the battlefield" (baseline — it's a normal creature) and
+// "counters" (from its own `putCounter` trigger effect) — **not**
+// "Lifegain". Getting Ajani specifically into a "Lifegain" bucket needs
+// either (i) the later curated per-card `SinkQuery`-authoring pipeline
+// stage this project's own plan already anticipates for exactly this
+// reason, or (ii) a genuine `Trigger` schema extension adding a REAL closed
+// precondition vocabulary entry (the same kind of change `on:
+// 'tapLandForMana'` was, when a real card needed it) — neither attempted
+// here; doing either silently would be exactly the "guessed wrong category"
+// the task warned against. See this project's own `match-sink.test.ts`'s
+// sink B/B' pair for precedent: the identical "the honest structural shape
+// doesn't line up with the historically-hand-authored one" situation,
+// documented rather than silently forced to agree.
+//
+// **Self-inclusion is real and unconditional** (explicit task requirement):
+// `poolDefinitions` is walked with NO exclusion of `definition` itself —
+// if `definition`'s own derived occurrences satisfy `definition`'s own
+// derived category, `definition.name` appears in that category's own
+// `matchingCardNames`. Demonstrated for real by Ajani's Pridemate's own
+// "counters" category (it puts a counter on itself, satisfying its own
+// bare "counters" want) and Day of Judgment's own "destroy" category (its
+// own `destroy all creatures` program satisfies its own unconstrained
+// destroy-a-creature want) in `card-interactions.test.ts` — no synthetic
+// fixture needed for either.
+import type { CardDefinition } from './card';
+import { deriveOccurrences, matchSink } from './sink-model/match-sink';
+import type { ProducerOccurrence } from './sink-model/match-sink';
+import type { SinkQuery } from './sink-model/sink-query';
+import type { Fact } from './synergy';
+import { describeFact } from './synergy';
+
+export interface CardInteractionCategory {
+  /** Human-readable label, reused verbatim from `synergy.ts`'s own
+   * `describeFact` vocabulary ("life gain", "dying", "counters", ...) — see
+   * this file's own header for why a parallel vocabulary was NOT invented. */
+  category: string;
+  /** Count of `poolDefinitions` entries (INCLUDING `definition` itself, if
+   * it structurally satisfies its own derived category) that match. */
+  count: number;
+  /** `name` of every matching pool card, sorted for a stable, testable
+   * order — not an index/id, matching this project's own "card identity key
+   * is Scryfall name" convention. */
+  matchingCardNames: string[];
+}
+
+/**
+ * Strips the fields that only make sense for a SPECIFIC occurrence's own
+ * identity (`via` — debug provenance; `resolvedAttrs` — a created token's
+ * own resolved stats; `subject`/a bare `target: 'self'` — both always mean
+ * "this same card," which has no meaning once generalized into a pool-wide
+ * query) — keeping a `target` that's a real `Constraints` OBJECT (a genuine
+ * filter, e.g. Day of Judgment's own `target: {types: {has: ['Creature']}}`
+ * on its `destroy` occurrence), since that's real, general constraint data,
+ * not a self-reference.
+ */
+function toSinkQuery(occ: ProducerOccurrence, category: string): SinkQuery {
+  const { via, resolvedAttrs, subject, target, ...rest } = occ;
+  const keepTarget = target !== undefined && typeof target === 'object' ? target : undefined;
+  return { ...rest, ...(keepTarget !== undefined ? { target: keepTarget } : {}), category };
+}
+
+/**
+ * Human-readable label for one occurrence — a thin, direct reuse of
+ * `synergy.ts`'s own `describeFact` (the EXACT same function the old
+ * paired source+sink Fact model already used to render a Facts-tab label),
+ * not a re-derived parallel vocabulary. `describeFact` only ever reads
+ * `role`/`event`/`zone`/`to`/`from` off its argument — a synthetic
+ * `role: 'source'` wrapper is enough for a correct label; the cast bypasses
+ * `Fact.annotations`'s own required-tuple type (SYNERGY_DESIGN.md: "no
+ * annotation if undefined" doesn't apply here — this object is never
+ * served/persisted as a real `Fact`, purely a label-rendering shim).
+ */
+function labelFor(occ: ProducerOccurrence): string {
+  const { via, ...rest } = occ;
+  return describeFact({ role: 'source', ...rest } as unknown as Fact);
+}
+
+/**
+ * Every real interaction category `definition` structurally participates
+ * in, against `poolDefinitions` (whatever set/pool is currently in view —
+ * the caller's job to assemble; this function does no fs/db reads of its
+ * own). Pure — same `root` passthrough convention `deriveOccurrences`/
+ * `matchSink` already establish (only a test simulating a not-yet-blue
+ * sink-derivation mechanism would ever override it).
+ *
+ * `definition` is NOT excluded from `poolDefinitions` internally — pass a
+ * pool that already excludes it if a caller wants self-matches dropped
+ * (same "this function itself takes no stance" convention `match-sink.ts`'s
+ * own `countMatchesForSink` already documents); per this task's own
+ * explicit requirement, the default here is to include it.
+ */
+export function computeCardInteractions(definition: CardDefinition, poolDefinitions: CardDefinition[], root: string = process.cwd()): CardInteractionCategory[] {
+  const occurrences = deriveOccurrences(definition, root);
+  const matchesByCategory = new Map<string, Set<string>>();
+
+  for (const occ of occurrences) {
+    const category = labelFor(occ);
+    const query = toSinkQuery(occ, category);
+    const matchedNames = matchesByCategory.get(category) ?? new Set<string>();
+    for (const candidate of poolDefinitions) {
+      if (matchSink(query, candidate, root).matched) matchedNames.add(candidate.name);
+    }
+    matchesByCategory.set(category, matchedNames);
+  }
+
+  return [...matchesByCategory.entries()]
+    .map(([category, names]) => ({ category, count: names.size, matchingCardNames: [...names].sort() }))
+    .sort((a, b) => b.count - a.count || a.category.localeCompare(b.category));
+}

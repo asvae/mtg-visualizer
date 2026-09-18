@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import {
   applyPipelineReview,
   assertPipelineStatusInvariants,
+  computePipelineDefinitionFingerprint,
+  effectivePipelineStatus,
   pipelineStatusFromGateResult,
   readPipelineStatus,
   type PipelineStatusFile,
@@ -79,6 +81,17 @@ describe('applyPipelineReview', () => {
     expect(() => applyPipelineReview(entry, { verdict: 'ok' })).toThrow(/not 'blue'/);
     expect(() => applyPipelineReview(entry, { verdict: 'not-ok', reviewNote: 'x' })).toThrow(/not 'blue'/);
   });
+
+  it("'ok' with a caller-supplied reviewedFingerprint stamps it straight through (pure — no fs read inside this function)", () => {
+    const entry = applyPipelineReview(blueEntry, { verdict: 'ok', reviewedFingerprint: 'abc123' }, '2026-09-18T01:00:00.000Z');
+    expect(entry.status).toBe('green');
+    expect(entry.reviewedFingerprint).toBe('abc123');
+  });
+
+  it("'ok' with no reviewedFingerprint supplied leaves it undefined, not a guessed value", () => {
+    const entry = applyPipelineReview(blueEntry, { verdict: 'ok' }, '2026-09-18T01:00:00.000Z');
+    expect(entry.reviewedFingerprint).toBeUndefined();
+  });
 });
 
 describe('assertPipelineStatusInvariants', () => {
@@ -133,6 +146,36 @@ describe('assertPipelineStatusInvariants', () => {
     expect(() =>
       assertPipelineStatusInvariants({ status: 'blue', reasons: [], reviewedAt: '2026-09-18T00:00:00.000Z', computedAt: '2026-09-18T00:00:00.000Z' }),
     ).toThrow(/only be set on a 'green' entry/);
+  });
+
+  it("rejects a stored status of 're-review' — computed at-read-time-only, never a real stored value", () => {
+    expect(() =>
+      assertPipelineStatusInvariants({ status: 're-review', reasons: [], computedAt: '2026-09-18T00:00:00.000Z' } as PipelineStatusFile),
+    ).toThrow(/computed, at-read-time-only status/);
+  });
+
+  it('accepts a green entry carrying reviewedFingerprint', () => {
+    expect(() =>
+      assertPipelineStatusInvariants({
+        status: 'green',
+        reasons: [],
+        reviewedAt: '2026-09-18T00:00:00.000Z',
+        reviewedFingerprint: 'abc123',
+        computedAt: '2026-09-18T00:00:00.000Z',
+      }),
+    ).not.toThrow();
+  });
+
+  it('accepts a green entry WITHOUT reviewedFingerprint (old, pre-fingerprint entries are tolerated, not malformed)', () => {
+    expect(() =>
+      assertPipelineStatusInvariants({ status: 'green', reasons: [], reviewedAt: '2026-09-18T00:00:00.000Z', computedAt: '2026-09-18T00:00:00.000Z' }),
+    ).not.toThrow();
+  });
+
+  it('rejects reviewedFingerprint stray-set on a non-green entry', () => {
+    expect(() =>
+      assertPipelineStatusInvariants({ status: 'blue', reasons: [], reviewedFingerprint: 'abc123', computedAt: '2026-09-18T00:00:00.000Z' }),
+    ).toThrow(/reviewedFingerprint must only be set on a 'green' entry/);
   });
 });
 
@@ -190,6 +233,139 @@ describe('readPipelineStatus — "(no folder)" and unreadable cases fall back to
       mkdirSync(dir, { recursive: true });
       writeFileSync(join(dir, 'pipeline-status.json'), JSON.stringify({ reasons: [] }));
       expect(readPipelineStatus('some-fdn-card', root)).toBeUndefined();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('computePipelineDefinitionFingerprint', () => {
+  const makeRoot = () => mkdtempSync(join(tmpdir(), 'pipeline-status-fingerprint-test-'));
+
+  it('no definition.ts at all -> null', () => {
+    const root = makeRoot();
+    try {
+      expect(computePipelineDefinitionFingerprint('nope', root)).toBeNull();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('a real definition.ts hashes deterministically, and changes when its content changes', () => {
+    const root = makeRoot();
+    try {
+      const dir = join(root, 'functional-model', 'fdn-cards', 'some-fdn-card');
+      mkdirSync(dir, { recursive: true });
+      const defPath = join(dir, 'definition.ts');
+      writeFileSync(defPath, 'export const definition = { name: "Some FDN Card" };\n');
+      const first = computePipelineDefinitionFingerprint('some-fdn-card', root);
+      expect(first).toMatch(/^[0-9a-f]{64}$/);
+      expect(computePipelineDefinitionFingerprint('some-fdn-card', root)).toBe(first);
+
+      writeFileSync(defPath, 'export const definition = { name: "Some FDN Card", changed: true };\n');
+      const second = computePipelineDefinitionFingerprint('some-fdn-card', root);
+      expect(second).not.toBe(first);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("effectivePipelineStatus — the real, drift-aware status a consumer should trust, never a stored 'green' blindly", () => {
+  const makeRoot = () => mkdtempSync(join(tmpdir(), 'pipeline-status-effective-test-'));
+
+  function setUpCard(root: string, slug: string, definitionContent: string, pipeline: PipelineStatusFile): void {
+    const dir = join(root, 'functional-model', 'fdn-cards', slug);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'definition.ts'), definitionContent);
+    writeFileSync(join(dir, 'pipeline-status.json'), JSON.stringify(pipeline));
+  }
+
+  it('no folder at all -> undefined, same as readPipelineStatus', () => {
+    const root = makeRoot();
+    try {
+      expect(effectivePipelineStatus('nope', root)).toBeUndefined();
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it.each(['gray', 'purple', 'blue', 'yellow'] as const)('a stored %s entry passes through unchanged (drift only matters for green)', (status) => {
+    const root = makeRoot();
+    try {
+      const entry: PipelineStatusFile =
+        status === 'purple'
+          ? { status, reasons: ['x'], failureKind: 'capacity-gap', computedAt: '2026-09-18T00:00:00.000Z' }
+          : status === 'yellow'
+            ? { status, reasons: [], reviewNote: 'wrong', computedAt: '2026-09-18T00:00:00.000Z' }
+            : { status, reasons: [], computedAt: '2026-09-18T00:00:00.000Z' };
+      setUpCard(root, 'some-fdn-card', 'export const definition = {};\n', entry);
+      expect(effectivePipelineStatus('some-fdn-card', root)).toBe(status);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('a green entry whose reviewedFingerprint matches the current definition.ts stays green', () => {
+    const root = makeRoot();
+    try {
+      const definitionContent = 'export const definition = { name: "Serra Angel" };\n';
+      setUpCard(root, 'serra-angel', definitionContent, {
+        status: 'blue',
+        reasons: [],
+        computedAt: '2026-09-18T00:00:00.000Z',
+      });
+      const fingerprint = computePipelineDefinitionFingerprint('serra-angel', root);
+      setUpCard(root, 'serra-angel', definitionContent, {
+        status: 'green',
+        reasons: [],
+        reviewedAt: '2026-09-18T01:00:00.000Z',
+        reviewedFingerprint: fingerprint!,
+        computedAt: '2026-09-18T01:00:00.000Z',
+      });
+      expect(effectivePipelineStatus('serra-angel', root)).toBe('green');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("a green entry whose definition.ts changed SINCE confirmation flips to 're-review'", () => {
+    const root = makeRoot();
+    try {
+      const originalContent = 'export const definition = { name: "Serra Angel" };\n';
+      const fingerprint = (() => {
+        setUpCard(root, 'serra-angel', originalContent, { status: 'blue', reasons: [], computedAt: '2026-09-18T00:00:00.000Z' });
+        return computePipelineDefinitionFingerprint('serra-angel', root)!;
+      })();
+      setUpCard(root, 'serra-angel', originalContent, {
+        status: 'green',
+        reasons: [],
+        reviewedAt: '2026-09-18T01:00:00.000Z',
+        reviewedFingerprint: fingerprint,
+        computedAt: '2026-09-18T01:00:00.000Z',
+      });
+      expect(effectivePipelineStatus('serra-angel', root)).toBe('green');
+
+      // Hand-edit definition.ts (e.g. touching a comment) WITHOUT touching pipeline-status.json.
+      const dir = join(root, 'functional-model', 'fdn-cards', 'serra-angel');
+      writeFileSync(join(dir, 'definition.ts'), originalContent + '// a real, later edit\n');
+
+      expect(effectivePipelineStatus('serra-angel', root)).toBe('re-review');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("a green entry with NO reviewedFingerprint at all (an old, pre-fingerprint entry) is treated as a mismatch -> 're-review'", () => {
+    const root = makeRoot();
+    try {
+      setUpCard(root, 'serra-angel', 'export const definition = { name: "Serra Angel" };\n', {
+        status: 'green',
+        reasons: [],
+        reviewedAt: '2026-09-18T01:00:00.000Z',
+        computedAt: '2026-09-18T01:00:00.000Z',
+      });
+      expect(effectivePipelineStatus('serra-angel', root)).toBe('re-review');
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

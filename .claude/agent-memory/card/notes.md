@@ -6505,3 +6505,253 @@ request. `app/components/CardDetailTabs.vue`:
   the real code precisely; the "not yet done as of this writing" note in
   that file is now stale and should be updated to reflect this fix (flagging
   for orchestrator, not editing that shared contract file myself).
+
+## 2026-09-18: FDN cards get a real `CardDetailTabs.vue` page (Workstream 5's card-side half)
+
+Replaced `/app/engine/cards` FDN detail pane's old one-off "source dump"
+(`definition.ts` text + pipeline-status reasons, no real card-page
+treatment) with the SAME shared `CardDetailTabs.vue` FIN cards use — the
+whole point of this task. Ran concurrently with an `engine` agent building
+`functional-model/pipeline-status.ts`'s `effectivePipelineStatus`/
+`server/api/fdn-cards/[slug]/review.post.ts` from the same spec — both
+landed mid-task, confirmed live against the real routes rather than mocked.
+
+- **`server/api/card/[set]/[number].ts`**: new `loadFdnFunctionalModel(name)`
+  (dev-only, `null` in production — mirrors `server/api/card-status/
+  [set].get.ts`'s own "fdn is dev-only, no production branch" posture) —
+  reads `functional-model/fdn-cards/<slug>/definition.ts` as `source`,
+  `readPipelineStatus`+`effectivePipelineStatus` for a drift-aware
+  `pipelineStatus: PipelineStatusFile | null` (raw file's other fields
+  carried through, only `status` overridden to the effective value), and
+  the `slug` itself. `synergy`/`traces`/`annotatedCard`/`cardStatus` all
+  `null`/`[]` — never fabricated. `FunctionalModelData` interface (+
+  `app/lib/cardResponse.ts`'s mirror) gained these two new
+  `fdn`-only/`fin`-always-null fields. Main handler branches on `set ===
+  'fdn'` vs the pre-existing `loadFunctionalModel` call — genuinely
+  different computations, not a generalized rule (same pattern
+  `card-status/[set].get.ts` already established for this exact split).
+- **`app/components/CardDetailTabs.vue`**: new `isFdn` computed
+  (`props.set === 'fdn'`). `functionalModelTabs` narrows to
+  `Scenarios`+`Card Definition` only for `isFdn` (NOT just "Card
+  Definition" — see correction below) — no Facts tab, ever (no
+  synergy.json exists for FDN, full stop, structurally enforced by the
+  `fdn-cards/`-vs-`cards/` directory split itself, not just this UI
+  omission) and no Facts Json/Card Json (both would be empty, tied to
+  `synergy`/`annotatedCard` which are always null for `fdn`).
+  `functionalModelTabValue` wraps the shared `store.functionalModelTab`
+  with a get-side-only FDN fallback (a stray FIN-only stored value like
+  `'facts'` displays as `'definition'` for an FDN card without ever being
+  written back, so returning to a FIN card resumes unaffected) — `set`
+  always writes straight through unconditionally now (`'scenarios'`/
+  `'definition'` are valid on both kinds, so no FDN-specific corruption
+  risk). The FIN-only Facts/Scenarios/Interactions review-status table is
+  now `v-if="!isFdn"`, with a `v-else` sibling: a `PIPELINE_STATUS_META`
+  (new `app/lib/pipelineStatus.ts`, mirrors `app/lib/cardStatus.ts`'s
+  established shape) badge + reasons/reviewNote/reviewedAt + Confirm/
+  "Reject…" buttons, copied from `app/pages/app/engine/predicates/
+  [[slug]].vue`'s established shape (button labels, reject-note-modal
+  shape, `pendingKey`-style in-flight guard). Wired against the real,
+  now-live `POST /api/fdn-cards/:slug/review`.
+- **Two real, confirmed mismatches flagged rather than silently
+  guessed/worked around** (both documented inline at their exact call
+  sites too):
+  1. **No Unconfirm/"Clear review" for the pipeline axis.** Every OTHER
+     review axis in this app (FIN's own Facts Unconfirm,
+     Predicates'/Features' "Clear review") has a reverse-to-baseline
+     affordance; `pipeline-status.ts`'s `applyPipelineReview` is a PURE
+     one-way `blue -> yellow|green` transition with no `verdict: null`
+     case at all — there is nothing for a clear-review click to call, so
+     none was added. Flagging for whoever owns that file/route next in
+     case a reverse transition gets added later.
+  2. **Confirm/Reject gates on `blue` ONLY, not `blue`-or-`re-review`** —
+     this task's own original dispatch assumed re-review should be
+     reviewable directly ("re-review only ever sits on a blue-rooted
+     card"), but the REAL, now-live `server/api/fdn-cards/[slug]/
+     review.post.ts` explicitly 400s a drifted `re-review` entry too
+     ("confirm/reject is only meaningful once the card has actually
+     reached blue" — a re-review must go back through the authoring
+     pipeline to become fresh `blue` again first, it can't be
+     re-confirmed directly). `canReviewPipeline` matches the REAL server
+     precondition (confirmed live), not the dispatch's original
+     assumption.
+- **Mid-task correction** (relayed from the user via the orchestrator,
+  after this task was already in flight): the original dispatch said omit
+  BOTH Facts and Scenarios tabs for FDN — corrected to KEEP Scenarios (no
+  FDN card has a `scenarios.ts` yet — that only gets authored later, when a
+  reviewer rejects a `blue` card and a smart-tier model writes one to
+  investigate — but the tab/its rendering machinery stay ready for when one
+  does). Confirmed `ScenarioReplay`'s existing `v-else` "No scenarios
+  recorded." fallback already degrades correctly for an FDN card's empty
+  `traces: []` with zero FDN-specific casing needed. Also confirmed (no
+  code change needed) the correction's point 3: no separate per-tab
+  Scenario/Interaction confirm affordance was ever added — the pipeline
+  Confirm/Reject block is the one and only review control on an FDN card
+  page, matching this session's own long-standing "scenarios/interactions
+  confirm buttons removed as a category" policy.
+- **Standalone `/app/card/[set]/[number].vue` route**: NOT touched/verified
+  — out of this task's explicit "nice-to-have, don't block on it" scope.
+  From reading `server/api/card/[set]/[number].ts` and `CardDetailTabs.vue`,
+  neither has any FIN-specific assumption baked in that would obviously
+  block `set=fdn` there too (both are now genuinely set-generic), so it may
+  well "just work" already — genuinely untested, flagging rather than
+  claiming it works.
+- **Live-verified** via a scratch Playwright script (chromium, run from the
+  repo root so `node_modules/playwright` resolves, deleted after use — not
+  committed) against the already-running dev server: clicking `serra-angel`
+  (blue) from `/app/engine/cards/fdn`'s sidebar navigates to `/app/engine/
+  cards/fdn/147` and renders exactly `["Scenarios", "Card Definition"]` as
+  the tab strip (no Facts/Facts Json/Card Json), the pipeline-status badge
+  ("PIPELINE STATUS" — visually uppercase via CSS, real text is "Pipeline
+  status") shows "Transcribed" with real Confirm/Reject… buttons, the
+  Reject… modal opens/gates its submit button on a non-empty note/closes on
+  Cancel, and a REAL end-to-end Confirm click (on `day-of-judgment`, a
+  different untouched blue card, to avoid reusing the same one twice) wrote
+  a real `green` `pipeline-status.json` on disk and made the UI badge flip
+  to "Confirmed" with both buttons disappearing — reverted the on-disk file
+  back to its pristine `blue` content immediately after (confirmed via
+  `git diff --stat` showing zero changes under `functional-model/
+  fdn-cards/` at the end). `aetherize` (purple/Blocked) and `abrade` (gray/
+  Not started, no folder at all) both correctly show zero Confirm/Reject
+  buttons and their own real reasons/"no folder yet" text. `fin/4`
+  (regression check) still renders its full, unchanged
+  Facts/Scenarios/Facts Json/Card Json/Card Definition tab strip and
+  Facts/Scenarios/Interactions review table, with no "Pipeline status" text
+  anywhere on the page.
+- `npx tsc --noEmit` clean (0 errors — the task's own dispatch mentioned 4
+  known pre-existing baseline errors, but none exist as of this writing;
+  likely fixed by concurrent work elsewhere in this same session). `npx
+  vitest run` — same 5 pre-existing failures as always
+  (`scripts/relations.test.mjs`, missing `tagging/sets/{leb,2ed,arn}/
+  *_relations.json`/`tagging/card-enrichment-status.json` — the
+  historical-sets tagging sweep's own in-progress files, unrelated); every
+  other test passes (1235, up from 1227 at task start — the increase is the
+  concurrent engine agent's own new `card-interactions`/`pipeline-status`
+  tests, not mine).
+- Files touched: `app/components/CardDetailTabs.vue`, `app/lib/
+  cardResponse.ts`, `app/pages/app/engine/cards/[set]/[[number]].vue`,
+  `server/api/card/[set]/[number].ts`, new `app/lib/pipelineStatus.ts`.
+  Did NOT touch `functional-model/pipeline-status.ts`,
+  `server/api/card-status/[set].get.ts`, `server/api/fdn-cards/`, or
+  `.claude/contracts/card-schema.md` — all concurrent `engine` agent work
+  landing in the same window; confirmed via `git status --short` right
+  before finishing that none of those show up as changes I made.
+- No NEW contract mismatch found beyond the two flagged above (both
+  already inline-documented at their call sites, not left implicit) —
+  `.claude/contracts/card-schema.md`'s "FDN authoring-pipeline status"
+  section's own "Nothing in this section is wired to anything real yet...
+  Workstream 5... is a separate, not-yet-started task" note is now stale
+  (Workstream 5's card-side half — this task — is done); flagging for
+  orchestrator to update, not editing that shared file myself since the
+  concurrent `engine` agent was actively mid-edit on it during this task.
+
+## 2026-09-18 (later): Standalone `/app/card/[set]/[number]` route deleted — `/app/engine/cards/[set]/[[number]].vue` is now THE ONE real card page
+
+Consolidation task: eliminate the second, separately-maintained page
+wrapper around `CardDetailTabs.vue`. The standalone page
+(`app/pages/app/card/[set]/[number].vue`) is deleted; every real in-app
+link that pointed there now points at `/app/engine/cards/<set>/<number>`
+instead: `RecognizerEntryCard.vue:143`, `SearchBox.vue:332`,
+`CardPeekPanel.vue:130` (its "Open full card page" expand action),
+`GraphCanvas.vue:99` (ctrl/cmd-click new-tab), `CardDetailTabs.vue:1939`
+(the Interactions tab's matched-card thumbnail links — turned out NOT to
+be a meld/other-face link specifically as the dispatch guessed, just the
+same kind of card-thumbnail link).
+
+- **Previous/Next**: NOT reimplemented as separate chrome. The engine
+  Cards tab's existing `EngineConsoleShell` (arrow-key + click Prev/Next,
+  same Predicates/Features pattern) already walks the exact same
+  "adjacent real card" semantics the old page's `useSetOrder`-backed
+  default path had — confirmed both `/api/card-status/fin`'s cards array
+  (backed by `data/fin/fin_scryfall.json`, verified 312 entries / 312
+  unique names, zero reprint duplicates) and the `fdn` branch's own
+  explicit per-name dedupe are ALREADY "one row per real card," matching
+  `useSetOrder`'s own "mechanically unique" guarantee — not a downgrade.
+  Dropped, not ported: the old page's Previous/Next could ALSO scope
+  itself to an active global graph filter (deck paste order / live query
+  result list) — a graph-page-only concept with no equivalent on this dev
+  console tab.
+- **Deck-qty badge**: dropped entirely, not ported — confirmed
+  `getKnownDeckCards`/`getActiveFilterMode` (`useGraphStore.ts`) have no
+  meaning on a tab with no deck-building concept. Both exports left in
+  place (not `card` lane's call alone to prune a shared graph-store
+  export used by "the main graph page might revisit this for a future
+  deck-builder PRD" reasoning) but flagged inline as newly-orphaned in
+  that file's own comments.
+- **Real regression caught before calling this done**: a card whose
+  `:set` ISN'T one of this tab's own tracked-corpus sets (`/api/card-status/sets`
+  — today just `fin`/`fdn`) is a REAL, first-class case here — any live
+  `?sf=` Scryfall-query card (CLAUDE.md: arbitrary live queries are
+  supported, not a niche edge case) can be from literally any real MTG
+  set, and all 5 real call sites above can link to one. The naive
+  redirect-everything-unknown-away logic already on this page would have
+  silently broken every one of those. Added `genericMode`: skips the
+  whole card-status sidebar/list machinery for that one case and falls
+  back to a real single-card view, with Previous/Next restored via
+  `useSetOrder`/`neighborsInSetOrder` — confirmed by READING that
+  composable/its server route (`/api/cards/set-order/[set].ts`) before
+  assuming they were safe to delete alongside the old page: both were
+  ALREADY written generic-over-any-set (live Scryfall `unique=cards`
+  fallback when the set isn't in the local `cards.db`), not FIN-specific
+  — so nothing needed to change there, just a new consumer. Almost deleted
+  both as "now-orphaned" cleanup before catching this — don't repeat that
+  mistake; `useSetOrder.ts`'s own header now documents the new consumer.
+  The bare-`:set`-no-`:number` "stale set, redirect to first available"
+  behavior is UNCHANGED (only fires when no specific card was requested).
+- Also fixed in the same pass: the `ENGINE_SETS_LAST_SET_KEY` localStorage
+  write (used by the bare `/app/engine/cards` index redirect) used to be
+  an unconditional `onMounted`, which would have let a one-off
+  `genericMode` visit clobber "last viewed set" with an arbitrary
+  non-corpus code. Moved into the `availableSets` watch, gated on
+  `sets.includes(SET)`.
+- **Mid-task addition from the orchestrator** (unrelated to the page
+  consolidation itself, folded into the same session since it was the
+  same file): Scenarios tab now omitted ENTIRELY (not shown with "No
+  scenarios recorded." text) whenever `scenariosCount === 0`, for either
+  `fin` or `fdn`. `functionalModelTabValue`'s existing FDN-fallback `get`
+  (a read-only fallback, never writes back) got a second, independent
+  fallback clause for this: a stored `'scenarios'` value on a card with
+  zero traces reads as `'facts'` (fin) / `'definition'` (fdn) instead,
+  WITHOUT touching the stored value — confirmed live: selected Scenarios
+  on fin/8 (2 traces) → navigated to fin/273 (0 traces, real card, no
+  Scenarios tab, fell back to Facts) → back to fin/8, Scenarios selection
+  intact. Also confirmed FDN's `serra-angel` (fdn/147, 0 traces) shows
+  Card Definition only, no Scenarios tab.
+- **Live-verified** (scratch Playwright, dev server already running,
+  run from repo root under a gitignored `.scratch/` dir, deleted after):
+  old `/app/card/fin/8` → real client-side 404 ("Page not found");
+  new `/app/engine/cards/fin/8` → full Facts(4)/Scenarios(2)/Facts
+  Json/Card Json/Card Definition tabs, 5 review-control buttons, correct
+  title, Prev/Next buttons present; SearchBox row click → peek panel
+  (`?card=fin/8`) → "Open full card page" → lands on
+  `/app/engine/cards/fin/8` (takes several real seconds — the Cards tab's
+  own `/api/card-status/:set` spawns a vite-node subprocess, a pre-existing
+  cost unrelated to this change, initially mistook the resulting delay for
+  a broken click before waiting longer disproved that); GraphCanvas
+  ctrl-click on a real force-graph node → new tab lands on
+  `/app/engine/cards/fin/279` (needed `page.keyboard.down('Control')`
+  held across a raw mouse down/move/up rather than `.click({modifiers})`
+  — d3-drag's own click-vs-drag gesture recognition doesn't reliably see
+  Playwright's synthetic modifier-click as a real held key; NOT an app
+  bug, a synthetic-input quirk against this file's own known-fiddly
+  drag/click event plumbing); `/app/recognizers` matched-card links
+  resolve to `/app/engine/cards/...`. Zero console errors throughout.
+- `npx tsc --noEmit` clean. `npx vitest run`: same 5 pre-existing
+  failures (historical-sets sweep's own in-progress `tagging/` files),
+  1235 passed, unchanged from before this task.
+- Files changed: `app/pages/app/engine/cards/[set]/[[number]].vue` (the
+  real page-logic work), `app/components/{RecognizerEntryCard,SearchBox,
+  CardPeekPanel,GraphCanvas,CardDetailTabs}.vue` (link updates + comment
+  fixes), `app/composables/{useSetOrder,useGraphStore}.ts` (comment-only —
+  new consumer / newly-orphaned-export notes), `app/pages/app/index.vue`,
+  `app/layouts/graph.vue` (comment-only, stale path references).  Deleted
+  `app/pages/app/card/[set]/[number].vue` (and its now-empty parent dirs).
+  Left plenty of OTHER comment-only path references to the deleted file
+  untouched (`ScenarioReplay.vue`, `ScenarioReplayTrace.vue`,
+  `factConditions.ts`, `factOrder.ts`, `ReviewStatusBadge.vue`, `types.ts`,
+  `server/api/card/[set]/[number].ts`) — all just "which page consumes
+  this data shape" doc-comment pointers, still substantively true, didn't
+  seem worth a repo-wide comment sweep for this task; flagging in case a
+  future pass wants full cleanup.
+- No contract mismatch found — didn't need to read `card-schema.md`/
+  `state-event-format.md` for this task at all (pure page-routing/UI
+  consolidation, no engine-shape questions).

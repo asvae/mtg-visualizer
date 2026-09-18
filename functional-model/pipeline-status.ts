@@ -124,6 +124,8 @@
 // real writer that calls it and persists the result.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { readFunctionalModelFile } from './source-files';
 
 // `validate-card-definition.mjs`'s own real return shape, duplicated here
 // as a type only (that script is plain `.mjs` — no exported TS types to
@@ -138,7 +140,28 @@ export interface CardDefinitionValidationResult {
   engineGapsContext?: { gray: string[]; purple: string[] };
 }
 
-export type PipelineStatus = 'gray' | 'purple' | 'blue' | 'yellow' | 'green';
+// `re-review` (2026-09-18, later same day) is a SEVENTH-in-name-but-really-
+// SIXTH-real-state addition, mirroring `engine-status.ts`'s
+// `EngineStatusColor`/`sink-derivation-status.ts`'s `SinkDerivationColor` —
+// same bright/light-blue `#7dd3fc` semantics, same "a human confirmed it,
+// then the underlying thing drifted since" meaning, adapted to THIS axis's
+// own single reviewed artifact: `status: 'green'` means a human confirmed a
+// `blue` card; `re-review` means that confirmation is now STALE because
+// `functional-model/fdn-cards/<slug>/definition.ts` (the one, whole file
+// this axis's `blue` gate itself checked) has changed since. Unlike the
+// other two axes, this one does NOT split a separate `Baseline`/`Color`
+// pair of types — `PipelineStatus` itself is widened to include it, since
+// (a) this axis's `status` field is a single flat value already, with no
+// pre-existing baseline/overlay type split to preserve, and (b) simplicity
+// was the explicit ask for this axis, not a mechanical copy of the other
+// two's own type shape. Consequence, stated plainly: `PipelineStatusFile.
+// status` — the literal value ever WRITTEN to `pipeline-status.json` on
+// disk — never actually holds `'re-review'`; only `effectivePipelineStatus`
+// below (a computed, at-read-time value, never itself stored) can return
+// it. `pipelineStatusFromGateResult`/`applyPipelineReview` (the only two
+// writers) are UNCHANGED by this addition — neither one can produce
+// `'re-review'`.
+export type PipelineStatus = 'gray' | 'purple' | 'blue' | 'yellow' | 'green' | 're-review';
 
 export interface PipelineStatusFile {
   status: PipelineStatus;
@@ -168,6 +191,18 @@ export interface PipelineStatusFile {
   /** Set iff `status === 'green'` — ISO timestamp of the confirming review
    * action (Workstream 5's own "Ok" action). */
   reviewedAt?: string;
+  /** Set iff `status === 'green'` (2026-09-18, later same day) —
+   * `computePipelineDefinitionFingerprint(slug)`'s own sha256 value, at the
+   * moment of confirmation, of `functional-model/fdn-cards/<slug>/
+   * definition.ts`'s real current content — the one thing this axis's
+   * `blue` gate itself checked. Compared against a FRESH fingerprint on
+   * every read by `effectivePipelineStatus` below; a mismatch (or this
+   * field being missing entirely — an old, pre-fingerprint `green` entry)
+   * means the effective status is `re-review`, not a trusted `green`.
+   * Deliberately NOT populated by `applyPipelineReview` itself reading the
+   * filesystem — see that function's own doc comment for why the hash is
+   * the CALLER's job. */
+  reviewedFingerprint?: string;
   /** ISO timestamp this entry was last computed/written — informational
    * only, never consulted by any classification/transition logic here. */
   computedAt: string;
@@ -200,7 +235,21 @@ export function pipelineStatusFromGateResult(result: CardDefinitionValidationRes
   );
 }
 
-export type PipelineReviewAction = { verdict: 'ok'; reviewedAt?: string } | { verdict: 'not-ok'; reviewNote: string };
+// `reviewedFingerprint` on the `'ok'` branch (2026-09-18, later same day) is
+// deliberately PRE-COMPUTED by the caller (`server/api/fdn-cards/[slug]/
+// review.post.ts`, via `computePipelineDefinitionFingerprint` below), not
+// computed inside this function from a bare `slug`/`root` — keeps this
+// function's own long-established "pure decision logic, no fs reads
+// inside the transition function itself" property genuinely intact (see
+// this file's own header, "Review actions") rather than only documented.
+// Optional (not required) so existing callers/tests that don't care about
+// drift detection still compile unchanged; omitting it simply means the
+// resulting `green` entry has no `reviewedFingerprint` at all, which
+// `effectivePipelineStatus` below treats exactly like a mismatch (an old,
+// pre-fingerprint confirmation is never assumed still valid).
+export type PipelineReviewAction =
+  | { verdict: 'ok'; reviewedAt?: string; reviewedFingerprint?: string }
+  | { verdict: 'not-ok'; reviewNote: string };
 
 /**
  * The pure `blue -> yellow|green` transition rule (see this file's own
@@ -222,11 +271,69 @@ export function applyPipelineReview(
     );
   }
   if (action.verdict === 'ok') {
-    return { status: 'green', reasons: [], reviewedAt: action.reviewedAt ?? now, computedAt: now };
+    return {
+      status: 'green',
+      reasons: [],
+      reviewedAt: action.reviewedAt ?? now,
+      reviewedFingerprint: action.reviewedFingerprint,
+      computedAt: now,
+    };
   }
   const note = action.reviewNote?.trim();
   if (!note) throw new Error("a 'not-ok' review action requires a real, non-empty reviewNote.");
   return { status: 'yellow', reasons: [], reviewNote: note, computedAt: now };
+}
+
+/**
+ * Real, current sha256 of `functional-model/fdn-cards/<slug>/
+ * definition.ts` — the one file this axis's own `blue` gate
+ * (`validate-card-definition.mjs`) checks, and therefore the one real
+ * input `effectivePipelineStatus` below drift-checks a `green`
+ * confirmation against. Uses `readFunctionalModelFile` (same read-only,
+ * scope-safe primitive `engine-status.ts`/`sink-derivation-status.ts` use
+ * for their own fingerprints) rather than a bare `readFileSync`, so a
+ * missing file (should never happen for a real `blue`/`green` card, but
+ * never assumed) returns `null` instead of throwing.
+ */
+export function computePipelineDefinitionFingerprint(slug: string, root: string = process.cwd()): string | null {
+  const result = readFunctionalModelFile(root, join('functional-model', 'fdn-cards', slug, 'definition.ts'));
+  if (!result.exists) return null;
+  const hash = createHash('sha256');
+  hash.update(result.content ?? '');
+  return hash.digest('hex');
+}
+
+/**
+ * The real, drift-aware status a consumer should ACTUALLY trust — never
+ * the raw stored `status` blindly (see this file's own header addition on
+ * `re-review`, above `PipelineStatus`'s own type). Mirrors
+ * `readPipelineStatus`'s own `undefined`-for-"no folder at all" contract:
+ * returns `undefined` when no `pipeline-status.json` exists yet (the
+ * caller decides its own "not started" display fallback, same as every
+ * existing `readPipelineStatus` call site already does). For a stored
+ * `'green'` entry, compares its `reviewedFingerprint` against a FRESH
+ * `computePipelineDefinitionFingerprint` — any mismatch, OR a missing
+ * `reviewedFingerprint` at all (an old, pre-fingerprint entry), downgrades
+ * the effective status to `'re-review'` rather than trusting a possibly-
+ * stale `'green'`. Every other stored status (`gray`/`purple`/`blue`/
+ * `yellow`) passes through unchanged — drift only ever matters for a
+ * confirmed `green`.
+ *
+ * The SAME shared function `server/api/card-status/[set].get.ts`'s `fdn`
+ * branch and `server/api/fdn-cards/[slug]/review.post.ts` both call — see
+ * this file's own contract note in `.claude/contracts/card-schema.md`'s
+ * "FDN authoring-pipeline status" section for why it must not be
+ * reimplemented per route.
+ */
+export function effectivePipelineStatus(slug: string, root: string = process.cwd()): PipelineStatus | undefined {
+  const stored = readPipelineStatus(slug, root);
+  if (!stored) return undefined;
+  if (stored.status !== 'green') return stored.status;
+  const currentFingerprint = computePipelineDefinitionFingerprint(slug, root);
+  if (!stored.reviewedFingerprint || !currentFingerprint || stored.reviewedFingerprint !== currentFingerprint) {
+    return 're-review';
+  }
+  return 'green';
 }
 
 /**
@@ -239,6 +346,15 @@ export function applyPipelineReview(
  * it, and for this file's own tests.
  */
 export function assertPipelineStatusInvariants(entry: PipelineStatusFile): void {
+  // `re-review` (2026-09-18, later same day) is a COMPUTED, at-read-time-only
+  // value (see `effectivePipelineStatus`) — never a real value written to
+  // disk. A stored `pipeline-status.json` whose own `status` field is
+  // literally `'re-review'` is itself a violation, same "never guess/persist
+  // a color this axis doesn't really produce" posture the rest of this
+  // function already enforces.
+  if (entry.status === 're-review') {
+    throw new Error("'re-review' is a computed, at-read-time-only status (see effectivePipelineStatus) — it must never be the literal stored status value.");
+  }
   if (entry.status === 'purple') {
     if (entry.failureKind !== 'capacity-gap') throw new Error("a 'purple' entry must carry failureKind:'capacity-gap'.");
     if (entry.reasons.length === 0) throw new Error("a 'purple' entry must carry at least one real reason.");
@@ -254,6 +370,14 @@ export function assertPipelineStatusInvariants(entry: PipelineStatusFile): void 
     if (!entry.reviewedAt) throw new Error("a 'green' entry must carry reviewedAt.");
   } else if (entry.reviewedAt !== undefined) {
     throw new Error(`reviewedAt must only be set on a 'green' entry, found it on '${entry.status}'.`);
+  }
+  // `reviewedFingerprint` is only ever meaningful alongside `green` — but,
+  // deliberately, NOT required there (an old, pre-fingerprint `green` entry
+  // is a real, tolerated case — see `effectivePipelineStatus`'s own doc
+  // comment: a missing fingerprint downgrades the EFFECTIVE status to
+  // `re-review` rather than being treated as a malformed file).
+  if (entry.status !== 'green' && entry.reviewedFingerprint !== undefined) {
+    throw new Error(`reviewedFingerprint must only be set on a 'green' entry, found it on '${entry.status}'.`);
   }
 }
 

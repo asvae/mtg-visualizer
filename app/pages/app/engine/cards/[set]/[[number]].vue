@@ -48,31 +48,83 @@
 // branches, not a fake generalization" decision the API route already
 // made.
 //
-// **FDN detail pane is deliberately MINIMAL, not `CardDetailTabs.vue`**
-// (explicit scope decision, flagged rather than silently solved): that
-// shared component (`GET /api/card/:set/:number`) assumes a full FIN-style
-// card — Facts/synergy/scenarios/etc — and would 404/error on a real FDN
-// card, which has none of that. Making it FDN-aware is real scope for a
-// later Workstream 5 UI decision, out of scope here. Instead: clicking an
-// FDN card shows its own real `definition.ts` source (via the SAME
-// generic, already-existing `GET /api/engine-status/source` route
-// Features/Predicates use for THEIR own source citations — no new route
-// needed, `readFunctionalModelFile` is scoped to all of `functional-model/`,
-// not just what Features/Predicates cite) plus its pipeline-status
-// `reasons` — real content, not a stub, just narrower than FIN's own
-// tabbed view. Chosen over disabling the click entirely because the real
-// content was already one `EngineConsoleCodeSection` + a reasons list away,
-// genuinely less total work than building a disabled-with-a-note state AND
-// still useful today (a reviewer can read exactly what the agent wrote).
+// **2026-09-18, later still: this is now THE ONE real card-detail page** —
+// the old standalone `/app/card/[set]/[number].vue` route (a second,
+// separately-maintained page wrapper around the exact same
+// `CardDetailTabs.vue`) is gone; every real in-app link that used to point
+// there (`RecognizerEntryCard.vue`, `SearchBox.vue`, `CardPeekPanel.vue`'s
+// own "Open full card page" action, `GraphCanvas.vue`'s new-tab link,
+// `CardDetailTabs.vue`'s own meld/other-face link) now points here instead.
+// Two real capabilities that page's own chrome had, evaluated on the merge:
+//   - **Previous/Next**: NOT reimplemented as separate chrome — this page's
+//     existing sidebar (`EngineConsoleShell`'s own canPrev/canNext arrow-
+//     key+click nav, the SAME pattern Predicates/Features already use)
+//     already walks this exact set's own unique-card list
+//     (`/api/card-status/:set`'s `cards` array is already one row per real
+//     card name — FIN's own checked-in `data/fin/fin_scryfall.json` has zero
+//     duplicate names, and the `fdn` branch below explicitly dedupes by name
+//     too — so this is genuinely the same "adjacent real card" semantics the
+//     old page's own `useSetOrder`-backed default path had, not a
+//     downgrade), so nothing to port for a `fin`/`fdn` card. The one thing
+//     that ISN'T ported: the old page's Previous/Next could additionally
+//     scope itself to an ACTIVE GLOBAL graph filter (an imported deck's own
+//     paste order, or a live Scryfall query's result list) — a genuinely
+//     graph-page concept (`useGraphStore.ts`'s deck/query filter) with no
+//     equivalent on this dev/engine console tab, which has its own unrelated
+//     search+status-color filter instead; dropped, not silently — same
+//     "doesn't apply here" call the deckQty badge below makes.
+//   - **Deck-qty badge** (`getKnownDeckCards`/`getActiveFilterMode` from
+//     `useGraphStore.ts`): DROPPED, not ported — this tab has no
+//     deck-building concept at all (it's a fact-authoring/pipeline-status
+//     dev console, not a graph-browsing view), so "copies in your imported
+//     deck" has no meaning here. `useGraphStore.ts`'s own exports are left
+//     untouched (that composable/its Deck concept is very much alive
+//     elsewhere, e.g. the main graph page) — only this now-deleted page's
+//     own USE of them is gone.
+// A card whose `:set` ISN'T one of this tab's own tracked-corpus sets
+// (`/api/card-status/sets`' answer — today just `fin`/`fdn`) but that a real
+// link above still points at (any live `?sf=` Scryfall-query card, which can
+// be from literally any real MTG set) is NOT force-redirected away — see
+// `genericMode` below, the one genuinely new piece of logic this merge
+// needed: skips the whole card-status sidebar/list machinery (there's no
+// per-card status to show for a set this tab was never built to track) and
+// falls back to a plain single-card view, Previous/Next restored via the
+// SAME per-set `useSetOrder`/`neighborsInSetOrder` the old standalone page
+// used for this exact case (that composable/its server route
+// (`/api/cards/set-order/:set`) were already written generic-over-any-set,
+// not FIN-specific, precisely for this "arbitrary live query set" path —
+// confirmed by reading both before assuming they were safe to delete
+// alongside the old page). The bare-`:set`-no-`:number` redirect-to-
+// first-available-set behavior below is UNCHANGED for this case (a stale/
+// typo'd set with no specific card requested is still a real "fix it for
+// me" case, not a live-query card view).
+//
+// **FDN detail pane now mounts the SAME `CardDetailTabs.vue` FIN uses,
+// 2026-09-18, later same day** (superseding the "deliberately MINIMAL, not
+// CardDetailTabs.vue" scope decision this file's own header used to
+// document here) — `GET /api/card/:set/:number` (`server/api/card/[set]/
+// [number].ts`'s own `loadFdnFunctionalModel`) now has a real, explicit
+// `fdn` branch serving that card's real `definition.ts` source (rendered
+// via the same `FunctionalModelScript` FIN's own "Card Definition" tab
+// already uses) plus its real authoring-pipeline status
+// (`functional-model/pipeline-status.ts`), and `CardDetailTabs.vue` itself
+// now has a matching `isFdn` branch: only "Scenarios" + "Card Definition"
+// show (no Facts — an FDN card never gets a synergy.json at all, full
+// stop), and the FIN-only Facts/Scenarios/Interactions review-status table
+// is replaced by a real Confirm/"Reject…" block against the pipeline-status
+// axis (`POST /api/fdn-cards/:slug/review`) — the ONE card-level review
+// action an FDN card page has. See that component's own
+// `isFdn` doc comment for the full design; nothing card-kind-specific is
+// left to build in THIS file anymore — `selectedCardKey`/`cardData`/the
+// `<CardDetailTabs>` mount below now work identically for either set.
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { onReviewStatusChanged } from '../../../../../composables/useReviewStatusBus';
 import type { ReviewStatusChange } from '../../../../../composables/useReviewStatusBus';
 import { useStatusFilterList } from '../../../../../composables/useStatusFilterList';
 import type { StatusFilterOption } from '../../../../../composables/useStatusFilterList';
+import { useSetOrder, neighborsInSetOrder, type SetOrderData } from '../../../../../composables/useSetOrder';
 import type { CardResponse } from '../../../../../lib/cardResponse';
-import { statusBadgeStyle } from '../../../../../lib/badgeColor';
 import type { CardStatusPageEntry } from '../../../../../../server/api/card-status/[set].get';
-import type { SourceFileResult } from '../../../../../../functional-model/source-files';
 
 const route = useRoute();
 // Keys this whole page component on `:set` — see this file's own header,
@@ -86,6 +138,12 @@ definePageMeta({ layout: 'graph', key: (r) => (typeof r.params.set === 'string' 
 const SET = typeof route.params.set === 'string' ? route.params.set : 'fin';
 const IS_FDN = SET === 'fdn';
 
+// The URL's own `:number` segment, if given — declared this early (rather
+// than alongside the rest of the deep-linking block further down) because
+// `genericMode` below (used by the `availableSets` redirect-guard watch,
+// which runs `{ immediate: true }` at setup time) needs it in scope already.
+const routeNumber = computed(() => (typeof route.params.number === 'string' ? route.params.number : undefined));
+
 interface CardStatusFile {
   generatedAt: string;
   set: string;
@@ -93,20 +151,39 @@ interface CardStatusFile {
 }
 
 const ENGINE_SETS_LAST_SET_KEY = 'engine-sets-last-set';
-onMounted(() => {
-  if (typeof localStorage !== 'undefined') localStorage.setItem(ENGINE_SETS_LAST_SET_KEY, SET);
-});
 
 const { data: availableSets } = useFetch<string[]>('/api/card-status/sets');
-// A stale/typed-by-hand :set that no longer has real data falls back to the
-// first real available set instead of silently 404ing/erroring forever.
+// A stale/typed-by-hand :set with no `:number` (bare set-picker visit) that
+// no longer has real data falls back to the first real available set
+// instead of silently 404ing/erroring forever. Does NOT fire when a
+// `:number` IS given — that's `genericMode` below's own case (a real link
+// to a specific card whose set was never meant to be one of THIS tab's
+// tracked/selectable sets at all, e.g. any live `?sf=`-query card), which
+// gets a real single-card fallback view instead of being redirected away.
+//
+// Also where "last viewed set" gets persisted (used to be an unconditional
+// `onMounted`) — moved here and gated on `sets.includes(SET)` so a one-off
+// `genericMode` visit (an arbitrary non-corpus set) never clobbers this with
+// a set the bare `/app/engine/cards` index redirect couldn't usefully land
+// on anyway.
 watch(
   availableSets,
   (sets) => {
-    if (sets?.length && !sets.includes(SET)) navigateTo(`/app/engine/cards/${sets[0]}`, { replace: true });
+    if (!sets?.length) return;
+    if (sets.includes(SET)) {
+      if (typeof localStorage !== 'undefined') localStorage.setItem(ENGINE_SETS_LAST_SET_KEY, SET);
+    } else if (!routeNumber.value) {
+      navigateTo(`/app/engine/cards/${sets[0]}`, { replace: true });
+    }
   },
   { immediate: true },
 );
+// True once we KNOW (availableSets resolved) this :set is genuinely outside
+// this tab's own tracked corpus AND a specific card was asked for — false
+// (not just "unknown yet") while availableSets is still in flight, so the
+// normal corpus-mode UI renders first rather than flashing into generic mode
+// speculatively. See this file's own header for the full rationale.
+const genericMode = computed(() => !!availableSets.value && !availableSets.value.includes(SET) && !!routeNumber.value);
 
 const { data: statusFile, pending: statusPending, error: statusError } = useFetch<CardStatusFile>(`/api/card-status/${SET}`, {
   key: `card-status-${SET}`,
@@ -202,8 +279,14 @@ const STATUS_OPTIONS_FDN: StatusFilterOption<CardStatusPageEntry['color']>[] = [
     color: '#3b82f6',
     description: 'The agent completed transcription and it passed the deterministic schema-validation gate. Not yet human-reviewed.',
   },
-  { value: 'yellow', label: 'Not ok', color: '#eab308', description: 'A human reviewed this transcription and found it wrong — see its own review note.' },
-  { value: 'green', label: 'Ok', color: '#22c55e', description: 'A human reviewed this transcription and confirmed it.' },
+  { value: 'yellow', label: 'Rejected', color: '#eab308', description: 'A human reviewed this transcription and found it wrong — see its own review note.' },
+  { value: 'green', label: 'Confirmed', color: '#22c55e', description: 'A human reviewed this transcription and confirmed it.' },
+  {
+    value: 're-review',
+    label: 'Needs re-review',
+    color: '#7dd3fc',
+    description: 'A human previously confirmed this transcription, but its definition.ts has since changed — the old confirmation is stale and needs another look.',
+  },
 ];
 const STATUS_OPTIONS = IS_FDN ? STATUS_OPTIONS_FDN : STATUS_OPTIONS_FIN;
 
@@ -235,11 +318,16 @@ function statusMeta(color: CardStatusPageEntry['color']) {
   return STATUS_OPTIONS.find((o) => o.value === color)!;
 }
 
-useHead({ title: computed(() => (selectedEntry.value ? `Engine | Cards | ${selectedEntry.value.name}` : 'Engine | Cards')) });
+// This card's own real name for the tab title — `selectedEntry` (the
+// corpus-mode path) in the normal case, the directly-fetched `cardData`
+// (below) in `genericMode`, where there IS no `selectedEntry` at all.
+const displayName = computed(() => (genericMode.value ? cardData.value?.card.name : selectedEntry.value?.name));
+useHead({ title: computed(() => (displayName.value ? `Engine | Cards | ${displayName.value}` : 'Engine | Cards')) });
 
 // --- URL deep-linking (route <-> selection sync) for `:number` only — `:set`
 // itself never changes without a full remount, see this file's own header.
-const routeNumber = computed(() => (typeof route.params.number === 'string' ? route.params.number : undefined));
+// (`routeNumber` itself is declared up top, near `genericMode` — see that
+// declaration's own comment for why.)
 watch(
   [routeNumber, rawCards],
   ([number, entries]) => {
@@ -262,16 +350,50 @@ function goNext() {
   if (idx >= 0 && idx < list.visible.value.length - 1) pickEntry(list.visible.value[idx + 1]!);
 }
 
-// --- FIN detail pane: real card content inline, via `CardDetailTabs.vue`
-// (the shared component `CardPeekPanel.vue`/the standalone `/app/card/
-// [set]/[number]` page both also mount) — unchanged from before this task,
-// just gated off entirely for `fdn` (see `selectedCardKey` below).
+// --- `genericMode` only: Previous/Next via this set's own real per-set
+// order (`useSetOrder`/`neighborsInSetOrder` — see this file's own header
+// for why this is the same mechanism the old standalone page used for this
+// exact "not one of this tab's tracked corpus sets" case, not a new one
+// invented for this merge). Fetched lazily — only once `genericMode` is
+// actually true, never for the (overwhelmingly common) corpus-mode path.
+const { getSetOrder } = useSetOrder();
+const genericSetOrder = ref<SetOrderData>({ collectorNumbers: [], representativeByNumber: {} });
+const genericSetOrderLoaded = ref(false);
+watch(
+  genericMode,
+  async (isGeneric) => {
+    if (!isGeneric || genericSetOrderLoaded.value) return;
+    genericSetOrder.value = await getSetOrder(SET);
+    genericSetOrderLoaded.value = true;
+  },
+  { immediate: true },
+);
+const genericNeighbors = computed(() =>
+  routeNumber.value ? neighborsInSetOrder(genericSetOrder.value, routeNumber.value) : { prev: null, next: null },
+);
+function goGenericPrev() {
+  if (genericNeighbors.value.prev) navigateTo(`/app/engine/cards/${SET}/${encodeURIComponent(genericNeighbors.value.prev)}`);
+}
+function goGenericNext() {
+  if (genericNeighbors.value.next) navigateTo(`/app/engine/cards/${SET}/${encodeURIComponent(genericNeighbors.value.next)}`);
+}
+
+// --- Detail pane: real card content inline, via `CardDetailTabs.vue` (the
+// shared component `CardPeekPanel.vue` also mounts) — works identically for
+// `fin` and `fdn` now (2026-09-18, later same day: `GET /api/card/:set/
+// :number` grew a real `fdn` branch, see this file's own header) — no more
+// `IS_FDN` gating here.
 const responseCache = new Map<string, CardResponse>();
 const cardData = ref<CardResponse | null>(null);
 const cardLoading = ref(false);
 const cardNotFound = ref(false);
 
-const selectedCardKey = computed(() => (!IS_FDN && selectedEntry.value ? `${SET}/${selectedEntry.value.number}` : null));
+// Keyed off `routeNumber` directly in `genericMode` (there's no
+// `selectedEntry` at all in that mode — no card-status list to select
+// from), off `selectedEntry`'s own number otherwise — see this file's own
+// header for the full `genericMode` rationale.
+const activeNumber = computed(() => (genericMode.value ? routeNumber.value ?? null : selectedEntry.value?.number ?? null));
+const selectedCardKey = computed(() => (activeNumber.value ? `${SET}/${activeNumber.value}` : null));
 
 watch(
   selectedCardKey,
@@ -304,153 +426,117 @@ watch(
   { immediate: true },
 );
 
-// --- FDN detail pane: minimal, real content — see this file's own header
-// for why this isn't `CardDetailTabs.vue`. Reuses the SAME generic
-// `GET /api/engine-status/source` route Features/Predicates already use
-// for their own source citations (`readFunctionalModelFile` is scoped to
-// all of `functional-model/`, not an allowlist of paths those two tabs
-// happen to cite) — no new server route needed.
-const fdnSourceCache = new Map<string, SourceFileResult>();
-const fdnSource = ref<SourceFileResult | null>(null);
-const fdnSourceLoading = ref(false);
-
-const selectedFdnSlug = computed(() => (IS_FDN ? selectedEntry.value?.slug : undefined));
-watch(
-  selectedFdnSlug,
-  async (slug) => {
-    fdnSource.value = null;
-    if (!slug) return;
-    const cached = fdnSourceCache.get(slug);
-    if (cached) {
-      fdnSource.value = cached;
-      return;
-    }
-    fdnSourceLoading.value = true;
-    try {
-      const path = `functional-model/fdn-cards/${slug}/definition.ts`;
-      const result = await $fetch<SourceFileResult>('/api/engine-status/source', { query: { path } });
-      fdnSourceCache.set(slug, result);
-      fdnSource.value = result;
-    } finally {
-      fdnSourceLoading.value = false;
-    }
-  },
-  { immediate: true },
-);
+// FDN detail pane used to fetch its own minimal `definition.ts` source
+// directly via `GET /api/engine-status/source` (Features'/Predicates' own
+// source-citation route) — retired 2026-09-18, later same day, now that
+// `CardDetailTabs`/its own `GET /api/card/:set/:number` fetch above serves
+// the exact same source (plus real pipeline-status + Confirm/Reject) as
+// part of the SAME request every card on this tab already makes; no
+// second source-fetch mechanism needed.
 </script>
 
 <template>
   <EngineConsoleShell
-    :pending="statusPending && !statusFile"
-    :error="statusError"
-    :can-prev="list.canPrev.value"
-    :can-next="list.canNext.value"
-    :position-label="list.positionLabel.value"
-    @prev="goPrev"
-    @next="goNext"
+    :pending="genericMode ? cardLoading && !cardData : statusPending && !statusFile"
+    :error="genericMode ? null : statusError"
+    :can-prev="genericMode ? !!genericNeighbors.prev : list.canPrev.value"
+    :can-next="genericMode ? !!genericNeighbors.next : list.canNext.value"
+    :position-label="genericMode ? (activeNumber ? `#${activeNumber}` : '') : list.positionLabel.value"
+    @prev="genericMode ? goGenericPrev() : goPrev()"
+    @next="genericMode ? goGenericNext() : goNext()"
   >
     <template #nav>
-      <div class="mb-1 flex items-center gap-2 px-1.5">
-        <h1 class="text-sm font-semibold text-text">{{ IS_FDN ? 'FDN authoring-pipeline status' : 'Fact-authoring status' }}</h1>
-        <USelect
-          :model-value="SET"
-          @update:model-value="(v) => navigateTo(`/app/engine/cards/${String(v)}`)"
-          :items="(availableSets ?? [SET]).map((s) => ({ label: s.toUpperCase(), value: s }))"
-          size="xs"
-          class="ml-auto w-20"
-        />
-      </div>
-      <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
-        <template v-if="IS_FDN">
-          One row per real FDN-set card, colored by which stage of the two-tier sink-only-synergy-model authoring
-          pipeline it's reached — most are "Not started" until the pipeline actually processes them.
-        </template>
-        <template v-else>
-          One row per card, colored by how far its functional-model facts have come along, on the same
-          gray/purple/blue/yellow/green axis as
-          <NuxtLink to="/app/engine/predicates" class="text-text underline">Predicate status</NuxtLink> and
-          <NuxtLink to="/app/engine/features" class="text-text underline">Feature status</NuxtLink> — see
-          <code class="rounded bg-bg px-1 py-0.5">scripts/AI_FACT_ELIMINATION_PROCESS.md</code> for the underlying
-          per-card fact-authoring process.
-        </template>
-        <template v-if="statusFile">
-          Computed as of {{ new Date(statusFile.generatedAt).toLocaleString() }}.
-        </template>
-      </p>
+      <template v-if="genericMode">
+        <!-- This card's `:set` isn't one of this tab's own tracked-corpus
+             sets (today just fin/fdn) — no card-status list to show, so no
+             search/filter/list here at all, just a real single-card view in
+             the detail pane (see this file's own header for the full
+             rationale) with Previous/Next still walking this set's own real
+             per-set order. -->
+        <div class="mb-1 px-1.5 text-sm font-semibold text-text">{{ SET.toUpperCase() }} · standalone card</div>
+        <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
+          Not one of this tab's own tracked sets ({{ (availableSets ?? []).map((s) => s.toUpperCase()).join('/') || '…' }}) —
+          showing this one card standalone. Previous/Next still walks {{ SET.toUpperCase() }}'s own real collector-number
+          order.
+        </p>
+        <NuxtLink to="/app/engine/cards" class="px-1.5 text-[11px] text-text underline">&larr; Browse the Cards tab</NuxtLink>
+      </template>
+      <template v-else>
+        <div class="mb-1 flex items-center gap-2 px-1.5">
+          <h1 class="text-sm font-semibold text-text">{{ IS_FDN ? 'FDN authoring-pipeline status' : 'Fact-authoring status' }}</h1>
+          <USelect
+            :model-value="SET"
+            @update:model-value="(v) => navigateTo(`/app/engine/cards/${String(v)}`)"
+            :items="(availableSets ?? [SET]).map((s) => ({ label: s.toUpperCase(), value: s }))"
+            size="xs"
+            class="ml-auto w-20"
+          />
+        </div>
+        <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
+          <template v-if="IS_FDN">
+            One row per real FDN-set card, colored by which stage of the two-tier sink-only-synergy-model authoring
+            pipeline it's reached — most are "Not started" until the pipeline actually processes them.
+          </template>
+          <template v-else>
+            One row per card, colored by how far its functional-model facts have come along, on the same
+            gray/purple/blue/yellow/green axis as
+            <NuxtLink to="/app/engine/predicates" class="text-text underline">Predicate status</NuxtLink> and
+            <NuxtLink to="/app/engine/features" class="text-text underline">Feature status</NuxtLink> — see
+            <code class="rounded bg-bg px-1 py-0.5">scripts/AI_FACT_ELIMINATION_PROCESS.md</code> for the underlying
+            per-card fact-authoring process.
+          </template>
+          <template v-if="statusFile">
+            Computed as of {{ new Date(statusFile.generatedAt).toLocaleString() }}.
+          </template>
+        </p>
 
-      <EngineConsoleStatusFilterControls
-        :search-query="list.searchQuery.value"
-        search-placeholder="Search cards…"
-        :status-options="STATUS_OPTIONS"
-        :active-filters="list.activeFilters.value"
-        :counts="list.countsByStatus.value"
-        :visible-count="list.visible.value.length"
-        :total-count="rawCards.length"
-        @update:search-query="(v: string) => (list.searchQuery.value = v)"
-        @toggle="list.toggleFilter"
-      >
-        <template #help>
-          <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS" />
-        </template>
-      </EngineConsoleStatusFilterControls>
+        <EngineConsoleStatusFilterControls
+          :search-query="list.searchQuery.value"
+          search-placeholder="Search cards…"
+          :status-options="STATUS_OPTIONS"
+          :active-filters="list.activeFilters.value"
+          :counts="list.countsByStatus.value"
+          :visible-count="list.visible.value.length"
+          :total-count="rawCards.length"
+          @update:search-query="(v: string) => (list.searchQuery.value = v)"
+          @toggle="list.toggleFilter"
+        >
+          <template #help>
+            <EngineConsoleStatusHelp :status-options="STATUS_OPTIONS" />
+          </template>
+        </EngineConsoleStatusFilterControls>
 
-      <EngineConsoleEntryListPanel
-        :entries="list.visible.value"
-        :key-of="(e: CardStatusPageEntry) => e.number"
-        :selected-key="list.selectedKey.value"
-        empty-message="No cards match the current search/filters."
-        @select="pickEntry"
-      >
-        <template #row="{ entry }">
-          <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.color).color }" />
-          <span class="shrink-0 text-[10px] tabular-nums text-muted/70">#{{ entry.number }}</span>
-          <span class="truncate">{{ entry.name }}</span>
-        </template>
-      </EngineConsoleEntryListPanel>
+        <EngineConsoleEntryListPanel
+          :entries="list.visible.value"
+          :key-of="(e: CardStatusPageEntry) => e.number"
+          :selected-key="list.selectedKey.value"
+          empty-message="No cards match the current search/filters."
+          @select="pickEntry"
+        >
+          <template #row="{ entry }">
+            <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.color).color }" />
+            <span class="shrink-0 text-[10px] tabular-nums text-muted/70">#{{ entry.number }}</span>
+            <span class="truncate">{{ entry.name }}</span>
+          </template>
+        </EngineConsoleEntryListPanel>
+      </template>
     </template>
 
     <template #detail>
-      <template v-if="selectedEntry">
-        <!-- FDN: minimal detail view, real content, deliberately NOT
-             `CardDetailTabs.vue` — see this file's own header. -->
-        <div v-if="IS_FDN" class="rounded-md border border-border-subtle bg-panel p-3">
-          <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span class="text-sm font-semibold text-text">{{ selectedEntry.name }}</span>
-            <span class="text-[11px] text-muted">#{{ selectedEntry.number }}</span>
-            <UBadge :style="statusBadgeStyle(statusMeta(selectedEntry.color).color)" size="sm" variant="solid">
-              {{ statusMeta(selectedEntry.color).label }}
-            </UBadge>
-          </div>
-          <p class="mt-2 text-[11px] leading-relaxed text-muted italic">
-            Minimal FDN detail view — the full Facts/synergy/scenarios tabs FIN cards get aren't built for FDN's
-            sink-only model yet (real, separate, not-yet-started UI scope).
-          </p>
-          <div v-if="selectedEntry.reasons.length" class="mt-3 border-t border-border-subtle pt-3">
-            <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Reasons</div>
-            <ul class="mt-1.5 flex flex-col gap-1">
-              <li v-for="(r, i) in selectedEntry.reasons" :key="i" class="text-[11px] leading-relaxed text-muted">{{ r }}</li>
-            </ul>
-          </div>
-          <div class="mt-3 border-t border-border-subtle pt-3">
-            <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Source</div>
-            <div class="mt-1.5">
-              <EngineConsoleCodeSection
-                title="definition.ts"
-                language="ts"
-                :loading="fdnSourceLoading"
-                :result="fdnSource"
-                not-found-label="No functional-model/fdn-cards/<slug>/definition.ts yet."
-                default-open
-              />
-            </div>
-          </div>
-        </div>
-        <!-- FIN: real full card content inline, via `CardDetailTabs.vue`. -->
-        <template v-else>
-          <CardImageSkeleton v-if="cardLoading && !cardData" />
-          <p v-else-if="cardNotFound" class="text-xs text-muted italic">Card not found.</p>
-          <CardDetailTabs v-else-if="cardData" :data="cardData" :set="SET" :number="selectedEntry.number" />
-        </template>
+      <!-- Real full card content inline, via `CardDetailTabs.vue` — same
+           component for `fin` and `fdn` (2026-09-18, later same day, see
+           this file's own header); that component's own `isFdn` branch
+           renders FDN's genuinely different content (no Facts tab — an FDN
+           card never gets a synergy.json — but Scenarios/Card Definition
+           stay; a pipeline-status Confirm/Reject block instead of the
+           FIN-only review table). Also the one card page ANY real in-app
+           link (search, graph nodes, the peek panel, recognizer match
+           lists) now points to — including `genericMode`, a card whose own
+           `:set` isn't tracked by this tab's sidebar at all. -->
+      <template v-if="genericMode || selectedEntry">
+        <CardImageSkeleton v-if="cardLoading && !cardData" />
+        <p v-else-if="cardNotFound" class="text-xs text-muted italic">Card not found.</p>
+        <CardDetailTabs v-else-if="cardData" :data="cardData" :set="SET" :number="activeNumber!" />
       </template>
       <p v-else class="text-xs text-muted italic">Pick a card from the sidebar.</p>
     </template>

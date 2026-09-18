@@ -65,7 +65,7 @@
 import type { CardStatusBaseline, CardStatusColor, CardStatusBucket, CardStatusEntry } from '../../../functional-model/card-status';
 import { cardStatusBaseline, cardStatusColor } from '../../../functional-model/card-status';
 import type { PipelineStatus } from '../../../functional-model/pipeline-status';
-import { readPipelineStatus } from '../../../functional-model/pipeline-status';
+import { readPipelineStatus, effectivePipelineStatus } from '../../../functional-model/pipeline-status';
 import finCardStatusData from '../../../data/fin/fin_card_status.json';
 import { DatabaseSync } from 'node:sqlite';
 import { existsSync } from 'node:fs';
@@ -99,7 +99,9 @@ interface CardStatusFile {
 // (2026-09-18, later same day, added for `fdn`)** — for a `fin` entry this
 // is still the real 8-bucket fact-authoring classification, unchanged. For
 // an `fdn` entry it is instead the raw pipeline-STAGE value itself
-// (`gray`/`purple`/`blue`/`yellow`/`green`) — see
+// (`gray`/`purple`/`blue`/`yellow`/`green`/`re-review` — the last one
+// computed at read time by `effectivePipelineStatus`, never itself stored,
+// see `functional-model/pipeline-status.ts`'s own header) — see
 // `computeFdnCardStatusPage` below. Same field name, GENUINELY DIFFERENT
 // meaning depending on which set produced the entry — a consumer must
 // treat this field as opaque display data (which is all `/app/engine/cards`
@@ -175,10 +177,12 @@ interface FdnCardRow {
 }
 
 /** `PipelineStatus` is already display-color-shaped (`gray`/`purple`/
- * `blue`/`yellow`/`green`) — the only fold this axis needs is `baseline`:
- * `yellow`/`green` are both real human-REVIEW overlays sitting on top of a
- * card that already passed the `blue` gate (`pipeline-status.ts`'s own
- * `applyPipelineReview` only ever transitions FROM `blue`), so both fold to
+ * `blue`/`yellow`/`green`/`re-review`) — the only fold this axis needs is
+ * `baseline`: `yellow`/`green`/`re-review` are all real human-REVIEW-overlay
+ * states sitting on top of a card that already passed the `blue` gate
+ * (`pipeline-status.ts`'s own `applyPipelineReview` only ever transitions
+ * FROM `blue`; `re-review` is a drift-detected NARROWING of a stored
+ * `green`, itself only ever reachable from `blue` too), so all three fold to
  * `blue` baseline — same "review overlay never changes the underlying
  * completeness baseline" split `card-status.ts`'s own `cardStatusBaseline`
  * already establishes for FIN's `verified`/`uncertain`/`re-review`. */
@@ -233,11 +237,16 @@ function computeFdnCardStatusPage(root: string): CardStatusPageFile {
   const cards: CardStatusPageEntry[] = canonicalRows.map((row) => {
     const slug = slugify(row.name);
     const pipeline = readPipelineStatus(slug, root);
+    // Effective, drift-aware status (2026-09-18, later same day) — NOT the
+    // raw stored `pipeline?.status` blindly: a `green` entry whose
+    // `definition.ts` has since changed reports `re-review` here instead,
+    // via the ONE shared function `functional-model/pipeline-status.ts`'s
+    // own `effectivePipelineStatus` — see that function's own doc comment.
     // No folder/file at all -> the real "not started" baseline+color, same
     // visual meaning as FIN's own `gray` bucket ("nothing done yet") — NOT
     // an error; almost every real in-scope fdn card is in this state today
     // (10 of ~271 have actually entered the pipeline as of this writing).
-    const status: PipelineStatus = pipeline?.status ?? 'gray';
+    const status: PipelineStatus = effectivePipelineStatus(slug, root) ?? 'gray';
     const reasons = pipeline?.reasons?.length
       ? pipeline.reasons
       : pipeline

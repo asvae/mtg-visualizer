@@ -1563,8 +1563,10 @@ otherwise ordinary review pass, never a separate/weaker kind of confirm.
 New, separate from every FIN-facing schema above — a genuinely different
 axis for a genuinely different (not-yet-built) pipeline: the FDN sink-only-
 synergy-model experiment's two-tier authoring pipeline (approved plan,
-Workstream 4). Per-card file, `functional-model/cards/<slug>/pipeline-
-status.json` — **not** a reuse of `progress.json` (that tracks fact-quality
+Workstream 4). Per-card file, `functional-model/fdn-cards/<slug>/pipeline-
+status.json` (moved out of `functional-model/cards/<slug>/`, later the
+same day — see the "FDN wired into..." section below) — **not** a reuse of
+`progress.json` (that tracks fact-quality
 AUDITING of already-authored facts; this tracks how far along the
 authoring PIPELINE ITSELF is, before any Fact/sink authoring has started).
 Type + pure decision logic: `functional-model/pipeline-status.ts`
@@ -1601,16 +1603,25 @@ deliberately narrower, lower-level diagnostic string than the broader
 rather than ever writing any status for a `failureKind:'other'` (doesn't
 compile / malformed shape / import failure) gate result; a caller must
 catch that throw and hard-fail/flag it separately, never fold it into
-`purple`. `gray`/`purple`/`blue`/`yellow`/`green` is the complete, final
-5-state list for this axis — no 6th status is needed.
+`purple`. `gray`/`purple`/`blue`/`yellow`/`green` was the complete 5-state
+list for this axis as of this section's own writing — **superseded,
+2026-09-18, later same day**: a 6th, `re-review`, was added after all — see
+the "FDN pipeline-status review action..." section below for why (a
+computed-at-read-time-only drift signal, never itself a stored value, same
+shape the OTHER two axes' own 6th `re-review` state already has).
 
-**Nothing in this section is wired to anything real yet** — no FDN card
-folder exists, no authoring script calls `pipelineStatusFromGateResult`
-yet, and Workstream 5 (the review UI — `card` agent, "Ok"/"Not ok" buttons
-writing `green`/`yellow` via `applyPipelineReview`) is a separate, not-yet-
-started task. This section exists now specifically so `card` doesn't have
-to read `functional-model/pipeline-status.ts`'s source directly once that
-task starts.
+**Nothing in this section is wired to anything real yet** (STALE, as of
+2026-09-18, later same day — see the "FDN wired into..." and "FDN
+pipeline-status review action..." sections below for what's real now: 10
+real FDN card folders exist, and Workstream 5's own review-action backend
+— `POST /api/fdn-cards/:slug/review` — is built; only its actual UI
+buttons remain a `card`-agent task) — no FDN card folder exists, no
+authoring script calls `pipelineStatusFromGateResult` yet, and Workstream 5
+(the review UI — `card` agent, "Ok"/"Not ok" buttons writing `green`/
+`yellow` via `applyPipelineReview`) is a separate, not-yet-started task.
+This section exists now specifically so `card` doesn't have to read
+`functional-model/pipeline-status.ts`'s source directly once that task
+starts.
 
 **Resolved, 2026-09-18** (was previously flagged here as an unresolved
 conflict against this same file's earlier "Display-axis translation..."
@@ -1701,3 +1712,141 @@ None of this touches FIN's own live production graph/matching
 (`app/lib/buildGraph.ts`/`server/api/graph-links.ts`/`functional-model/
 synergy.ts`) or the per-card `GET /api/card/:set/:number` route's `fin`
 behavior at all.
+
+## FDN pipeline-status review action (confirm/reject) + `re-review`/fingerprint drift, 2026-09-18, later same day
+
+Real, wired Workstream-5 mechanism (was previously flagged in the
+"scaffolding only" section above as "Workstream 5 ... a separate,
+not-yet-started task") — the SAME confirm/reject + re-review shape
+`engine-status`/`sink-derivation-status` already established for their own
+axes, applied to this axis. See `functional-model/pipeline-status.ts`'s own
+header/doc comments for the full rationale; this section is the
+served/consumer-facing contract only.
+
+**`PipelineStatus` widened to a 6th value, `re-review`** — same bright-blue
+`#7dd3fc` semantics/meaning as the other two axes' own 6th value
+("confirmed, then the underlying thing drifted since"), adapted here to
+mean: a human confirmed `green`, then `functional-model/fdn-cards/<slug>/
+definition.ts` — the one file this axis's own `blue` gate checks — changed
+since. Unlike `engine-status`/`sink-derivation-status`, this axis does NOT
+split a separate `Baseline`/`Color` type pair — `PipelineStatus` itself
+(the single flat type this axis already had) is simply widened to include
+it, since this axis never had a pre-existing baseline/overlay type split to
+preserve and simplicity was the explicit design goal here. Consequence: a
+STORED `pipeline-status.json`'s own `status` field never literally holds
+`'re-review'` — only a computed, at-read-time value can be `'re-review'`
+(`assertPipelineStatusInvariants` now throws if it ever finds a stored
+`'re-review'`). `pipelineStatusFromGateResult`/`applyPipelineReview` (the
+only two writers) are unchanged by this — neither can produce it.
+
+**Fingerprint, `PipelineStatusFile.reviewedFingerprint?: string`** — set
+only on a `'green'` entry: `computePipelineDefinitionFingerprint(slug)`'s
+sha256 of `definition.ts`'s real current content, at the moment of
+confirmation. `applyPipelineReview` itself does NOT compute this hash (kept
+a pure function, no fs reads inside — the plan's own established property
+of this function) — the CALLER (the review endpoint below) computes it via
+`computePipelineDefinitionFingerprint` and passes it in as part of the
+`'ok'` review action.
+
+**`effectivePipelineStatus(slug, root)`** (exported from
+`functional-model/pipeline-status.ts`) is the shared DISPLAY-time function
+a read-only consumer should call instead of trusting a raw stored `status`
+blindly — mirrors `readPipelineStatus`'s own `undefined`-for-"no folder at
+all" contract (the caller decides its own "not started" fallback). For a
+stored `'green'` entry it recomputes the current fingerprint and compares;
+mismatch OR a missing `reviewedFingerprint` (an old, pre-fingerprint entry)
+returns `'re-review'` instead of `'green'`. Every other stored status
+passes through unchanged. `server/api/card-status/[set].get.ts`'s `fdn`
+branch calls this (previously it read `pipeline?.status ?? 'gray'`
+directly) — so `/app/engine/cards`'s FDN view reflects a drifted
+`re-review` without any change on that page's own side. **NOT** used by
+the review route's own confirm/reject GATING decision — see the note
+below, corrected same day after this section's own first draft.
+
+**`POST /api/fdn-cards/:slug/review`** — new endpoint, dev-only (no
+production branch — `functional-model/fdn-cards/` isn't shipped to
+production any more than `data/cards.db` is), mirrors
+`server/api/engine-status/review.post.ts`/`server/api/sink-derivations/
+review.post.ts`'s own shape, adapted to this axis's simpler one-file-per-
+card storage (no separate `*-reviews.json` overlay map — the verdict is
+written directly into that card's own `pipeline-status.json`):
+
+- Request body: `{ verdict: 'ok' } | { verdict: 'not-ok', reviewNote: string }`.
+  `reviewNote` is required, non-empty, for `'not-ok'` — enforced with a 400,
+  same as the other two axes' own `note`-for-reject requirement.
+- 404 if `functional-model/fdn-cards/<slug>/pipeline-status.json` doesn't
+  exist at all (this card hasn't even entered the pipeline — nothing to
+  review).
+- **Gating, corrected same day (2026-09-18) from this section's own first
+  draft** — 400 if a FRESH re-run of the deterministic gate
+  (`functional-model/scripts/validate-card-definition-cli.mjs`, spawned as
+  a real `vite-node` subprocess, same "can't dynamic-import
+  `functional-model/`'s raw source tree from a bundled Nitro route"
+  reasoning `server/api/card-status/[set].get.ts`'s own
+  `computeAllCardStatusLive` already established) against the card's
+  CURRENT `definition.ts` doesn't pass — **NOT** gated on the stored
+  `pipeline-status.json`'s own `status`/`effectivePipelineStatus` (this
+  section's own first-draft design). Reason for the correction: gating on
+  the stored/effective status meant a card once reviewed (`yellow` or
+  `green`) could never be re-reviewed the other way — reading `yellow`/
+  `green`/`re-review`, never `'blue'`, `effectivePipelineStatus` would
+  refuse EVERY later action forever, including "reject an already-
+  confirmed card" and "confirm an already-rejected one." Re-running the
+  gate fresh instead means the review route's own precondition is always
+  "does the CURRENT content actually pass," independent of any prior
+  review outcome — the same "baseline is always recomputed fresh from real
+  content, never frozen by a prior review" property
+  `engine-status`/`sink-derivations`' own review routes already have (their
+  `baseline` is never mutated by a confirm/reject either). Error wording:
+  `"<slug>" currently fails the schema-validation gate (<failureKind>) —
+  confirm/reject is only meaningful once the card's current definition.ts
+  actually passes it: <reasons>`.
+- On success: builds a fresh `{status: 'blue', ...}` from that gate re-run
+  (not the stale stored file) and calls `applyPipelineReview` against it
+  (stamping a fresh `reviewedFingerprint` via
+  `computePipelineDefinitionFingerprint` for an `'ok'` verdict), writes the
+  resulting `PipelineStatusFile` back to `pipeline-status.json`, and
+  returns that updated file as the JSON response body directly (not
+  wrapped in `{key, color}` like the other two axes' review routes — no
+  separate id/key here, the slug is already the route param, and the whole
+  point of returning the file is so a UI can render the fresh `status`/
+  `reasons`/`reviewNote`/`reviewedAt`/`reviewedFingerprint` without a
+  second GET round-trip).
+- **Naming**: `yellow` = "Rejected", `green` = "Confirmed" — the same
+  labels Predicates'/Features'/Cards' own `STATUS_OPTIONS` arrays already
+  use; no new synonym coined anywhere in this endpoint's own error
+  messages/comments.
+
+Request/response shape (body in, `PipelineStatusFile` out) is UNCHANGED by
+the gating correction above — only the internal precondition check moved
+from "trust the stored/effective status" to "re-run the real gate" — so no
+consumer built against the shape documented here needs to change anything.
+`effectivePipelineStatus`/`computePipelineDefinitionFingerprint` remain
+real, used exports (display-time drift detection on the card-status route;
+the fingerprint-stamping half of a successful review here) — only the
+review route's own GATING precondition stopped using
+`effectivePipelineStatus`.
+
+## `computeCardInteractions` — card-page "Interactions" section, pure function (2026-09-18)
+
+New: `functional-model/card-interactions.ts`'s `computeCardInteractions(definition: CardDefinition, poolDefinitions: CardDefinition[], root?: string): CardInteractionCategory[]`, where:
+
+```ts
+interface CardInteractionCategory {
+  category: string;          // human-readable label, reused verbatim from `synergy.ts`'s `describeFact` vocabulary ("life gain", "dying", "counters", "damage", "card draw", "destroy", ...)
+  count: number;              // === matchingCardNames.length
+  matchingCardNames: string[]; // Scryfall `name`s, sorted, includes `definition.name` itself when it self-satisfies
+}
+```
+
+Not wired into any route/UI yet (explicitly deferred to a follow-up dispatch, per the task that created this) — this section documents the function's own contract so the `card` agent can build a route/UI against it next: one row per category, shaped like the graph's own node display (`Lifegain [7] ⌄`), expandable to `matchingCardNames`.
+
+**Pure, no fs/db reads of its own.** `poolDefinitions` is whatever "current scope" means for the caller — FIN's ~300 `functional-model/cards/*/definition.ts` when viewing `fin`, FDN's 10 `functional-model/fdn-cards/*/definition.ts` when viewing `fdn` (NOT deck-scoped — this app has no deck-building concept yet) — assembling that array (reading the right directory for the right set) is the CALLER's job, same "pure function over already-loaded `CardDefinition`s" split `sink-model/match-sink.ts`'s own `matchSink`/`countMatchesForSink` already establish. `root` is passed straight through to `deriveOccurrences`/`matchSink` (only a test simulating a not-yet-blue sink-derivation mechanism would ever override it — same convention those two already use).
+
+**Self-inclusion is real and unconditional, by explicit design** — `definition` is never excluded from `poolDefinitions` internally. If `definition`'s own structurally-derived occurrences satisfy `definition`'s own derived category, `definition.name` appears in that category's own `matchingCardNames` (and `count` reflects it). A caller wanting self-matches dropped must pre-filter `poolDefinitions` itself — this function takes no stance, same convention `countMatchesForSink`'s own doc comment already states.
+
+**How a category is derived — reuses the EXISTING sink-only matcher, does not add a second one.** Every one of `definition`'s own `deriveOccurrences(definition, root)` results (`sink-model/match-sink.ts` — already walks `effects`/`triggers[].effects`/`abilities[].effects`, `program`-AST nodes via `extractOccurrences`, the 2 baseline permanent/instant-sorcery rules, and the Saga/Crew engine-automation predicates) becomes its own category: labeled via `synergy.ts`'s own `describeFact` (a synthetic `{role:'source', ...occurrence}` wrapper — reuses the OLD paired source+sink Fact model's own categorization vocabulary rather than inventing a parallel one, per this project's own instruction), then re-run as a `SinkQuery` (`sink-model/sink-query.ts`) against every entry in `poolDefinitions` via `matchSink`. Occurrences sharing the same label are merged (their matched-name sets unioned) into one row.
+
+**Real design investigation, NOT overclaimed — see `card-interactions.ts`'s own header comment for the full writeup, summarized here**: the task that created this function asked whether a trigger's own FIRING PRECONDITION (e.g. Ajani's Pridemate's `name:'onLifeGained'`) could be auto-derived into a matchable category ("any card with a `gainLife` effect") with no hand-curation. Checked directly against `card.ts` first: `Trigger.on` (the engine's only real, closed, auto-fired precondition vocabulary — `'enter'|'upkeep'|'endStep'|'tapLandForMana'|'attacks'|'equippedAttacks'`) has no lifegain-shaped member, and `Trigger.name` is documented, in `card.ts` itself, as a free-text label with "no SAFE general structural rule" to derive a precondition from — citing this exact trigger name as its own worked example. `recognizers/lifegain-trigger-structural.ts` already independently confirms this the hard way: it solves the identical `onLifeGained` trigger name (on 3 FIN cards) by matching literal ORACLE TEXT, never the trigger name — and FDN `CardDefinition`s carry no `oracleText` field at all, so even that fallback isn't available here. **Verdict: generic precondition-to-category auto-derivation does not hold up beyond `Trigger.on`'s closed enum** — building it anyway (even a small hand-curated name table) would re-introduce exactly the per-card curation the sink-only experiment exists to remove, just moved onto an equally-unreliable free-text field. Real, narrower consequence: Ajani's Pridemate's own derived categories under `computeCardInteractions` are `"enters the battlefield"` (baseline — it's a normal creature) and `"counters"` (its own `putCounter` trigger effect) — **not** `"Lifegain"`. Getting Ajani specifically into a lifegain-shaped category needs either the later curated per-card `SinkQuery`-authoring pipeline stage this project's plan already anticipates, or a genuine `Trigger.on` vocabulary addition (the same kind of change `'tapLandForMana'` was) — neither attempted here, flagged rather than guessed.
+
+Tests: `functional-model/card-interactions.test.ts` — Ajani's Pridemate's own real categories (and the explicit absence of a lifegain-shaped one), self-inclusion (Ajani's own `"counters"` category, Day of Judgment's own `"destroy"` category, both against REAL FDN `CardDefinition`s), a real `gainLife`-effect-bearing card (one MOCKED `CardDefinition` — the real FDN 10-card pool has none today, only Healer's Hawk's un-walked Lifelink KEYWORD) producing a non-zero-count `"life gain"` category with self-inclusion, a card with no matchable triggers/effects (a bare mocked Land) producing `[]` rather than throwing, a real `on:'enter'` trigger (Helpful Hunter's own "draw a card" ETB) producing a real `"card draw"` category, and sort-order/count-consistency invariants.
