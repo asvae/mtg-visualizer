@@ -116,6 +116,14 @@ describe('counters-plus1plus1 sink instance (mocked CardDefinition fixtures)', (
     expect(sinkInstance(card)).toBe(true);
   });
 
+  it('SOURCE CANDIDATE: matches a TARGETED, non-self putCounterTarget effect (the real Fleeting Flight, FDN #13, Instant: "Put a +1/+1 counter on target creature. It gains flying until end of turn. Prevent all combat damage that would be dealt to it this turn.") — proves the controller-compatibility check correctly treats an unresolvable/non-self controller as compatible; every SOURCE CANDIDATE case above only exercises `target: \'self\'`', () => {
+    const card = mockCard('Fleeting Flight', {
+      typeLine: 'Instant',
+      effects: [{ kind: 'putCounterTarget', validType: 'creature', counterType: '+1/+1', amount: 1 } satisfies Effect],
+    });
+    expect(sinkInstance(card)).toBe(true);
+  });
+
   it('SOURCE CANDIDATE: does NOT match a DIFFERENTLY-typed counter effect (counterType "-1/-1") — real discrimination on counter type, not "any putCounter counts"', () => {
     const card = mockCard('Mock -1/-1 Counter Spell', {
       effects: [{ kind: 'putCounterTarget', validType: 'creature', counterType: '-1/-1', amount: 1 } satisfies Effect],
@@ -128,9 +136,10 @@ describe('counters-plus1plus1 sink instance (mocked CardDefinition fixtures)', (
     expect(sinkInstance(card)).toBe(false);
   });
 
-  it('SINK CANDIDATE: matches a card whose own named trigger is "onCounterAdded" (the real Exemplar of Light shape) even with no putCounter effect walked for THIS check — proves the sink-candidate signal is a genuinely separate check from the source-candidate check', () => {
-    const card = mockCard('Mock Counter Sink', {
-      triggers: [{ name: 'onCounterAdded', effects: [] }],
+  it('SINK CANDIDATE: matches a card whose own named trigger is "onCounterAdded" (the real Exemplar of Light, FDN #733, consumer half: "Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn.") even with no putCounter effect walked for THIS check — proves the sink-candidate signal is a genuinely separate check from the source-candidate check', () => {
+    const card = mockCard('Exemplar of Light', {
+      typeLine: 'Creature',
+      triggers: [{ name: 'onCounterAdded', activationLimit: 1, effects: [{ kind: 'drawCard', amount: 1 } satisfies Effect] }],
     });
     expect(matchesConsumerTriggerNames(sinkInstance.consumerTriggerNames, card)).toBe(true);
   });
@@ -166,8 +175,9 @@ describe('counters-plus1plus1 sink instance (mocked CardDefinition fixtures)', (
   // of behavior not covered there: `isPredicateDerived`, the small, separate
   // accessor that survives from the old combined-detail contract.
   it('CALLABLE: a sink-candidate-only card (no producer match) is correctly NOT a source candidate — proves producer/consumer stay genuinely separate checks now', () => {
-    const card = mockCard('Mock Counter Sink', {
-      triggers: [{ name: 'onCounterAdded', effects: [] }],
+    const card = mockCard('Exemplar of Light', {
+      typeLine: 'Creature',
+      triggers: [{ name: 'onCounterAdded', activationLimit: 1, effects: [{ kind: 'drawCard', amount: 1 } satisfies Effect] }],
     });
     expect(sinkInstance(card)).toBe(false);
     expect(matchesConsumerTriggerNames(sinkInstance.consumerTriggerNames, card)).toBe(true);
