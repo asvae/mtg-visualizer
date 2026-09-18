@@ -11,6 +11,7 @@ what the current task actually needs. Session narration lives in
 - [CardPeekPanel design](topics/card-peek-panel-design.md) — URL sync via replace, flex-sibling layout (not overlay), resize width, click-outside excludes `#graph`, route-aware default action.
 - [SearchBox design](topics/search-box-design.md) — merged ranked row list, arm-then-confirm keyboard gesture, discover-fetch shape, open releasedAt sort gap.
 - [Engine console conventions](topics/engine-console-conventions.md) — `/app/engine/*` shared composable/components, Predicates-vs-Sinks distinction, Nuxt naming/shallowRef/URL-slug gotchas.
+- [Engine console Schema page](topics/engine-console-schema-page.md) — `/app/engine/schema` (overflow-only), extracts real `card.ts` type declarations via a brace/comment-aware text scanner, never a hand-copy.
 - [Nuxt UI quirks](topics/nuxt-ui-quirks.md) — no `UButtonGroup` (use `UFieldGroup`), `UButton` size values, `import.meta.dev` in templates, real lucide icon names.
 - [Scryfall data quirks](topics/scryfall-data-quirks.md) — split/adventure `mana_cost` concatenation, keywords-array-omits-grants, transform-DFC per-face keywords.
 - [Keywords page design](topics/keywords-page-design.md) — sidebar+slug layout, `namedCardArt` bystander-art fix, `setsUsed` gating rules.

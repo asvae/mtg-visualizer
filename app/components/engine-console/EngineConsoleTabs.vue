@@ -27,6 +27,14 @@
 // appended after Features per this task's own "your call, append after
 // Features unless a stronger reason" instruction — still ahead of the
 // Keywords overflow trigger.
+//
+// 2026-09-18, later still: added "Schema" (`/app/engine/schema`) to the
+// "…" overflow, same convention as Keywords — a static read-only
+// reference page (every card-authoring type, rooted at `CardDefinition`),
+// not a review/status axis, so it belongs in the overflow rather than the
+// primary tab row per that same "day-to-day primary row stays lean"
+// rationale. Appended AFTER Keywords in the overflow list per this
+// header's own convention of appending new overflow entries at the end.
 import { computed } from 'vue';
 
 const route = useRoute();
@@ -40,6 +48,8 @@ const TABS = [
 
 const activeTo = computed(() => TABS.find((t) => route.path.startsWith(t.match))?.to);
 const onKeywords = computed(() => route.path.startsWith('/app/engine/keywords'));
+const onSchema = computed(() => route.path.startsWith('/app/engine/schema'));
+const overflowActive = computed(() => onKeywords.value || onSchema.value);
 </script>
 
 <template>
@@ -57,7 +67,7 @@ const onKeywords = computed(() => route.path.startsWith('/app/engine/keywords'))
       <button
         type="button"
         class="shrink-0 rounded px-2 py-1 text-center text-[11px] font-medium"
-        :class="onKeywords ? 'bg-surface text-text' : 'text-muted hover:text-text'"
+        :class="overflowActive ? 'bg-surface text-text' : 'text-muted hover:text-text'"
         aria-label="More engine console tabs"
       >
         …
@@ -70,6 +80,13 @@ const onKeywords = computed(() => route.path.startsWith('/app/engine/keywords'))
             :class="onKeywords ? 'bg-surface text-text' : 'text-muted hover:bg-surface hover:text-text'"
           >
             Keywords
+          </NuxtLink>
+          <NuxtLink
+            to="/app/engine/schema"
+            class="block rounded px-2 py-1 text-[11px] font-medium whitespace-nowrap"
+            :class="onSchema ? 'bg-surface text-text' : 'text-muted hover:bg-surface hover:text-text'"
+          >
+            Schema
           </NuxtLink>
         </div>
       </template>
