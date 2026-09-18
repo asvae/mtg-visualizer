@@ -2,6 +2,7 @@
 - [Script CLI + typecheck gotchas](topics/script-cli-and-typecheck-gotchas.md) — inconsistent --slug=/positional args, `tsc -p .` is a silent no-op, vite-node doesn't preserve argv.
 - [Concurrent-session hazards](topics/concurrent-session-hazards.md) — shared scripts get rewritten mid-task; isolate diffs by file-swap, not git stash.
 - [Engine-status `blue` caveat](topics/engine-status-blue-caveat.md) — Features-tab blue means "cites a test file", not necessarily real scenario-verified.
+- [FDN gap triage 2026-09-18](topics/fdn-gap-triage-2026-09-18.md) — ENGINE_GAPS.md #30-#47 added; 2 false-positive `missingSchemaFunctionality` claims found (delayUntil, sorcery-speed cost-string check already exist).
 
 Schema/vocabulary/FDN-authoring-pipeline topics moved to the new `schema`
 agent hub (`.claude/agent-memory/schema/`) as of 2026-09-18 — see there,
