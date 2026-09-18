@@ -1,0 +1,37 @@
+import type { CardDefinition, Effect } from '../../card';
+
+export const infestationSage: CardDefinition = {
+  name: 'Infestation Sage',
+  manaCost: '{B}',
+  typeLine: 'Creature — Elf Warlock',
+  pt: [1, 1],
+
+  // Real Forge: `Mode$ ChangesZone | Origin$ Battlefield |
+  // Destination$ Graveyard | ValidCard$ Card.Self` — "When this creature
+  // dies, create a 1/1 black and green Insect creature token with
+  // flying." No `on` value exists for a dies event; kept as a name-only
+  // trigger. `TokenInfo` has no `colors` field (see tokens.ts's own
+  // b_5_5_demon entry for the same, already-documented "color isn't
+  // tracked anywhere in this model" limitation) — the token's black-and-
+  // green color identity is real but unrepresentable, only its real
+  // subtype/P&T/keyword survive.
+  triggers: [
+    {
+      name: 'onDeath',
+      effects: [
+        {
+          kind: 'createToken',
+          token: {
+            name: 'Insect',
+            manaCost: '0',
+            types: ['Creature', 'Insect'],
+            basePower: 1,
+            baseToughness: 1,
+            keywords: ['Flying'],
+          },
+          amount: 1,
+        } satisfies Effect,
+      ],
+    },
+  ],
+};
