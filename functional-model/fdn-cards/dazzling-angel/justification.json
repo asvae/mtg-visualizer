@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 7,
+        "to": 69,
+        "text": "Whenever another creature you control enters, you gain 1 life."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onOtherCreatureEnter"
+      }
+    ],
+    "reasoning": "This card's own `onOtherCreatureEnter` name-only trigger runs a `gainLife amount:1` effect — the exact real \"you gain 1 life\" outcome. No dedicated `on` auto-fire dispatch exists for this precise event (`on:'otherPermanentEnters'` exists but its own `otherPermanentEntersMatch` shape only supports a `subtype`/`nonToken`/`sameController` filter, not a general \"any creature\" class filter, so wiring it here would over-match non-creature permanents entering — same recognized-but-inert convention drake-hatcher's own `onCombatDamageToPlayer` trigger already establishes for an event with no exact-fit `on` value)."
+  }
+]

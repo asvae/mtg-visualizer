@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 30,
+        "text": "Counter target creature spell."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "counter"
+      }
+    ],
+    "reasoning": "This card's own `counter` effect (`describe:'Counter target creature spell.'`) is the exact, real (log-only — CounterEffect has no stack/object model to remove a target from, same documented limitation every `counter`-kind effect in this pool shares) representation of this whole sentence."
+  }
+]

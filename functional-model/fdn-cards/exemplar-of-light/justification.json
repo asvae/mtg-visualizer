@@ -1,0 +1,61 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 7,
+        "to": 68,
+        "text": "Whenever you gain life, put a +1/+1 counter on this creature."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onLifeGain"
+      }
+    ],
+    "reasoning": "This card's own `onLifeGain` name-only trigger (no dedicated `on` value exists for \"you gain life\" yet) runs a `putCounter` effect (`target:'self', counterType:'+1/+1', amount:1`) — the exact real counter this sentence describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 69,
+        "to": 143,
+        "text": "Whenever you put one or more +1/+1 counters on this creature, draw a card."
+      },
+      {
+        "from": 144,
+        "to": 186,
+        "text": "This ability triggers only once each turn."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onCounterAdded"
+      }
+    ],
+    "reasoning": "This card's own `onCounterAdded` name-only trigger (no dedicated `on` value exists for \"a counter was put on this creature\" yet) runs a `drawCard(amount:1)` effect — the exact \"draw a card\" outcome. \"This ability triggers only once each turn\" is the exact real Forge `ActivationLimit$ 1` cap, structurally recorded on this SAME trigger's own `activationLimit: 1` field (game-wide reset at Cleanup, `triggers.ts`'s own `fireTrigger` chokepoint)."
+  }
+]

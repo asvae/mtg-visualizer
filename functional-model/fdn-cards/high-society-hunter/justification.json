@@ -1,0 +1,61 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 7,
+        "to": 74,
+        "text": "Whenever this creature attacks, you may sacrifice another creature."
+      },
+      {
+        "from": 75,
+        "to": 123,
+        "text": "If you do, put a +1/+1 counter on this creature."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onAttack"
+      }
+    ],
+    "reasoning": "This card's own `onAttack` trigger (`on:'attacks'`, real auto-fired self-attack dispatch) runs `sacrifice(owner:'you', validType:'creature', notSelf:true, optional:true)` — the exact real optional sacrifice of another creature — followed by `putCounter(target:'self', counterType:'+1/+1', amount:1)`. \"If you do\" is modeled as an unconditional sequential second effect (no explicit intervening-if linking-clause primitive exists) — an accepted approximation, same convention faebloom-trick's own \"When you do\" clause already uses."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 124,
+        "to": 177,
+        "text": "Whenever another nontoken creature dies, draw a card."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onCreatureDies"
+      }
+    ],
+    "reasoning": "This card's own `onCreatureDies` name-only trigger (no dedicated `on` value exists for \"a creature dies\" yet, and no analogous \"other-creature-dies match\" filter field exists the way `otherPermanentEntersMatch` does for entering — same recognized-but-inert convention fiendish-panda's own `onDies` trigger already establishes for the un-filterable \"another\"/\"nontoken\" precision) runs a `drawCard(amount:1)` effect — the exact real card draw this sentence describes."
+  }
+]

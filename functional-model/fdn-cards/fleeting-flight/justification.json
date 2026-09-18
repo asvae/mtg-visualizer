@@ -1,0 +1,56 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 39,
+        "text": "Put a +1/+1 counter on target creature."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "putCounterTarget"
+      }
+    ],
+    "reasoning": "This card's own `putCounterTarget` effect (`validType:'creature', counterType:'+1/+1', amount:1`) is the exact real counter this sentence describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 40,
+        "to": 74,
+        "text": "It gains flying until end of turn."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "grantKeywordTarget"
+      }
+    ],
+    "reasoning": "This card's own second effect, `grantKeywordTarget` (`keyword:'Flying', validType:'creature', untilEndOfTurn:true`), is the exact real until-end-of-turn Flying grant this sentence describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 75,
+        "to": 137,
+        "text": "Prevent all combat damage that would be dealt to it this turn."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "grantKeywordTarget"
+      }
+    ],
+    "reasoning": "This card's own third effect, `grantKeywordTarget` (`keyword:'CombatDamagePrevention', validType:'creature', untilEndOfTurn:true`), is a real, engine-enforced CR 614.2 combat-damage-prevention grant (checked at `state.dealDamage`'s own chokepoint, gated on `opts.combat`, via `effectiveKeywords` — same mechanism Diamond Weapon's own printed keyword and Crystal Fragments' own granted-to-a-group keyword already use, ENGINE_GAPS.md gap #8 closed for this narrow subset) — the exact real \"prevent all combat damage ... this turn\" outcome, targeted at the same chosen creature (2026-09-18: replaced an earlier inert `custom` no-op placeholder with this real effect during the coverage-justification authoring pass)."
+  }
+]

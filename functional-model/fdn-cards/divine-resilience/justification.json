@@ -1,0 +1,88 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 13,
+        "text": "Kicker {2}{W}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Kicker"
+      },
+      {
+        "kind": "field",
+        "field": "keywordCosts"
+      }
+    ],
+    "reasoning": "Printed keyword (`keywords:['Kicker']`) plus its own real, non-default cost payload — this card's own `keywordCosts: [{keyword:'Kicker', cost:'{2}{W}'}]` (2026-09-18 schema-completeness pass; this card is `card.ts`'s own cited motivating example for the field) is the exact printed Kicker cost. Recognized-but-inert: no payment-tracking/modal-gating-on-payment mechanism exists anywhere in this engine (Ward pattern — see `engine-support-registry.ts`'s own `kicker-not-enforced` entry); a kicked/not-kicked branch is still modeled via the pre-existing `modal` mechanism below, not automatically gated on this fact."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 14,
+        "to": 72,
+        "text": "(You may pay an additional {2}{W} as you cast this spell.)"
+      }
+    ],
+    "reasoning": "Reminder text for Kicker directly above — a rules restatement, not independent rules content of its own."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 73,
+        "to": 140,
+        "text": "Target creature you control gains indestructible until end of turn."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "grantKeywordTarget"
+      }
+    ],
+    "reasoning": "This card's own `modal` effect's mode 0 (`grantKeywordTarget`, keyword:'Indestructible', validType:'creature', owner:'you', untilEndOfTurn:true) is the exact, real, single-target, until-end-of-turn Indestructible grant this sentence describes — the default (not-kicked) mode."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 141,
+        "to": 256,
+        "text": "If this spell was kicked, instead any number of target creatures you control gain indestructible until end of turn."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "modal"
+      },
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "The `modal` effect's own mode 1 is the real structural branch this \"if kicked, instead\" framing describes (a genuine second mode a scenario can select), but its own effect is a documented no-op `custom` placeholder — the real \"any number of targets\" multiplicity is a genuine capacity gap (no \"choose any number of targets\" primitive exists — every existing targeted-effect shape targets exactly one chosen target or up to a fixed declared maximum), declared via missingSchemaFunctionality[0] rather than silently dropped."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 257,
+        "to": 316,
+        "text": "(Damage and effects that say \"destroy\" don't destroy them.)"
+      }
+    ],
+    "reasoning": "Reminder text for Indestructible directly above — a rules restatement, not independent rules content of its own."
+  }
+]

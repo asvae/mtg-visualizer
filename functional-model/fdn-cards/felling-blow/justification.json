@@ -1,0 +1,25 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 51,
+        "text": "Put a +1/+1 counter on target creature you control."
+      },
+      {
+        "from": 52,
+        "to": 143,
+        "text": "Then that creature deals damage equal to its power to target creature an opponent controls."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "custom"
+      }
+    ],
+    "reasoning": "This card's own single `custom` effect implements exactly this: `actions.chooseTarget(ctx.you.getCreaturesInPlay())` picks the boosted creature, `actions.putCounter(boosted, '+1/+1', 1)` is the exact counter, and `actions.dealDamage(boosted, victim, boosted.getNetPower())` (after re-choosing the opponent's creature target) is the exact \"deals damage equal to its power\" clause — one shared local `boosted` variable ties both sentences to the SAME creature, same convention any single-custom-effect two-clause card in this pool uses when a later clause must reference an earlier target."
+  }
+]

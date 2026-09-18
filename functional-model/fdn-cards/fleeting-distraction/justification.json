@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 45,
+        "text": "Target creature gets -1/-0 until end of turn."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "pumpTarget"
+      }
+    ],
+    "reasoning": "This card's own `pumpTarget` effect (`power:-1, toughness:0, untilEndOfTurn:true`) is the exact real -1/-0 until-end-of-turn debuff this sentence describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 46,
+        "to": 58,
+        "text": "Draw a card."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "drawCard"
+      }
+    ],
+    "reasoning": "This card's own second, top-level `drawCard` effect is the exact real card draw this sentence describes."
+  }
+]

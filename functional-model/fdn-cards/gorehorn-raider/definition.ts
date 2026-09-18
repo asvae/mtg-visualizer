@@ -10,6 +10,7 @@ export const gorehornRaider: CardDefinition = {
     {
       name: 'onEnterRaid',
       on: 'enter',
+      condition: { kind: 'attackedThisTurn' },
       effects: [
         {
           kind: 'dealDamageAnyTarget',

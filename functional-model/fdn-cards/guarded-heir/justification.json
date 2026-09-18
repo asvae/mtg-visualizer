@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 8,
+        "text": "Lifelink"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Lifelink"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array. Mechanically REAL — `state.dealDamage`'s own real 702.15e Lifelink check."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 9,
+        "to": 80,
+        "text": "(Damage dealt by this creature also causes you to gain that much life.)"
+      }
+    ],
+    "reasoning": "Reminder text for Lifelink directly above — a rules restatement, not independent rules content of its own."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 81,
+        "to": 152,
+        "text": "When this creature enters, create two 3/3 white Knight creature tokens."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own `onEnter` trigger (`on:'enter'`) runs a `createToken` effect building a 3/3 'Knight' token, amount:2 — the exact real pair of tokens this sentence creates."
+  }
+]

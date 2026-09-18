@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 7,
+        "to": 15,
+        "text": "Lifelink"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Lifelink"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array. Mechanically REAL — `state.dealDamage`'s own real 702.15e Lifelink check."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 16,
+        "to": 87,
+        "text": "(Damage dealt by this creature also causes you to gain that much life.)"
+      }
+    ],
+    "reasoning": "Reminder text for Lifelink directly above — a rules restatement, not independent rules content of its own."
+  }
+]

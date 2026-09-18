@@ -1,0 +1,55 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 5,
+        "text": "Reach"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Reach"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 6,
+        "to": 54,
+        "text": "(This creature can block creatures with flying.)"
+      }
+    ],
+    "reasoning": "Reminder text for Reach directly above — a rules restatement, not independent rules content of its own."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 55,
+        "to": 65,
+        "text": "Landfall —"
+      },
+      {
+        "from": 66,
+        "to": 148,
+        "text": "Whenever a land you control enters, create a 1/1 green Elf Warrior creature token."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onLandfall"
+      }
+    ],
+    "reasoning": "\"Landfall —\" is this ability's own template label, fully expressed by this same trigger, not a separate clause of its own. This card's own `onLandfall` name-only trigger (no dedicated `on` value exists for \"a land you control enters,\" same recognized-but-inert convention drake-hatcher's own trigger already establishes) runs a `createToken` effect building a 1/1 'Elf Warrior' token — the exact real token this clause creates."
+  }
+]

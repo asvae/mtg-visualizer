@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 83,
+        "text": "Whenever you draw your second card each turn, put a +1/+1 counter on this creature."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onSecondDraw"
+      }
+    ],
+    "reasoning": "This card's own `onSecondDraw` name-only trigger (no dedicated `on` value exists for \"draw your second card each turn\" — real per-turn draw-count tracking this event would need doesn't exist anywhere in this engine, same recognized-but-inert convention drake-hatcher's own trigger already establishes) runs a `putCounter` effect (`target:'self', counterType:'+1/+1', amount:1)` — the exact real counter this sentence describes."
+  }
+]

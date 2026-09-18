@@ -1,7 +1,33 @@
 {
-  "status": "gray",
+  "status": "purple",
   "reasons": [
-    "missing/empty justification manifest — every FDN card needs a real, span-verified functional-model/fdn-cards/<slug>/justification.json (see coverage-justification.ts's own CoverageJustificationEntry doc comment)"
+    "declared missingSchemaFunctionality entry: clause: \"You may cast spells as though they had flash.\" — demand: \"No primitive exists to grant a caster-side casting-TIMING permission (real Forge: `S:Mode$ CastWithFlash | ValidCard$ Card | ValidSA$ Spell | Caster$ You`) — every existing keyword/continuous-grant mechanism broadcasts onto PERMANENTS on the battlefield (P/T, type, or a printed keyword), never onto the controller's own general casting rights over cards still in hand. Needs a new static-ability shape (e.g. a `castingPermissionGrants` field) that widens WHEN a controller may cast any spell, not WHAT a permanent has.\""
   ],
-  "computedAt": "2026-09-18T16:51:21.108Z"
+  "failureKind": "capacity-gap",
+  "engineGapsContext": {
+    "gray": [
+      "No \"copy a permanent, with overrides\" mechanic — real, OPEN, documented (not built), singleton",
+      "Meld (`AlternateMode:Meld`/`MeldPair`) — entirely unmodeled, real, OPEN, documented (not built)",
+      "Spell-copy + event-keyed (\"next time X happens\") delayed trigger — entirely unmodeled, real, OPEN, documented (not built) — `ether` (fin/53)"
+    ],
+    "purple": [
+      "Combat: blockers, damage, first/double strike, trample",
+      "State-based actions (704)",
+      "Turn-structure completeness (2-player only — see Accepted simplifications above for the >2-player exclusion)",
+      "Hybrid/`{X}` mana symbols",
+      "Alternate costs, modal/split costs, casting from anywhere but hand",
+      "Activated-ability cost components beyond `{T}` + mana",
+      "CR 305 \"playing a land\" — real special-action mechanics, still only closed for the harness/trace-generation path, not `engine.ts`'s own real pilot",
+      "Trigger-doubling (\"Panharmonicon effect\") — no general machinery for \"a triggered ability triggers an additional time\" under a condition",
+      "Continuous, turn-conditional static keyword/P&T/type grants",
+      "Coin flips / random outcomes, and replacement effects on them",
+      "No \"play a card from the top of your library\" primitive, and no persistent \"attacked this turn\" condition",
+      "\"Insert one more of this same step before the turn moves on\" — a real, still-OPEN gap affecting multiple real FIN cards, structurally distinct from extra turns (500.7, gap #3)",
+      "A static effect locking a DIFFERENT permanent's own activated-ability activation — real, still OPEN",
+      "`grantKeywordAll` had no `'attacking-creatures'` predicate — CLOSED (2026-09-16)",
+      "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
+    ]
+  },
+  "computedAt": "2026-09-18T17:49:53.722Z",
+  "engineSupport": "on"
 }

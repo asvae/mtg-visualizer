@@ -1,0 +1,68 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 5,
+        "text": "Flash"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flash"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 6,
+        "to": 67,
+        "text": "(You may cast this spell any time you could cast an instant.)"
+      }
+    ],
+    "reasoning": "Reminder text for Flash directly above — a rules restatement, not independent rules content of its own."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 68,
+        "to": 74,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 75,
+        "to": 120,
+        "text": "You may cast spells as though they had flash."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuine capacity gap — real Forge `S:Mode$ CastWithFlash | ValidCard$ Card | ValidSA$ Spell | Caster$ You`, a caster-side casting-TIMING permission grant. No existing static/continuous-grant shape fits: `continuousKeywordGrants`/`continuousPTGrants`/`continuousTypeGrants` all broadcast onto PERMANENTS on the battlefield (P/T, type, or a printed keyword), never onto the controller's own general casting permission over cards still in hand. Was previously a real, silent drop (no `missingSchemaFunctionality` entry, no placeholder `Effect` at all) — declared via missingSchemaFunctionality[0] during this coverage-justification authoring pass, caps this card at `purple`."
+  }
+]

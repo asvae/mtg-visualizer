@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 142,
+        "text": "Create a token that's a copy of target creature you control, except it has haste and \"At the beginning of the end step, sacrifice this token.\""
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "custom"
+      }
+    ],
+    "reasoning": "This card's own `custom` effect implements exactly this: `actions.copyPermanent(target, ctx.you)` creates the copy token, `actions.grantKeyword(copy, 'Haste')` grants haste, and `actions.delayUntil('EndOfTurn', () => actions.moveTo(copy, 'Graveyard'))` is the real, exact \"at the beginning of the end step, sacrifice this token\" delayed self-removal (modeled as a direct move to Graveyard rather than a literal `sacrifice` cost-payment, since the outcome — the token leaving the battlefield to the graveyard from its own controller — is identical)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 143,
+        "to": 162,
+        "text": "Flashback {2}{R}{R}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "alternateCosts"
+      }
+    ],
+    "reasoning": "This card's own `alternateCosts: [flashback('{2}{R}{R}')]` (the shared `flashback()` factory — `name:'Flashback', cost:'{2}{R}{R}', from:'graveyard', thenExile:true`) is the exact real Flashback cost this text prints."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 163,
+        "to": 246,
+        "text": "(You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+      }
+    ],
+    "reasoning": "Reminder text for Flashback directly above — a rules restatement, not independent rules content of its own."
+  }
+]

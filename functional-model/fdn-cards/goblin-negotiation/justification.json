@@ -1,0 +1,25 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 53,
+        "text": "Goblin Negotiation deals X damage to target creature."
+      },
+      {
+        "from": 54,
+        "to": 173,
+        "text": "Create a number of 1/1 red Goblin creature tokens equal to the amount of excess damage dealt to that creature this way."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "custom"
+      }
+    ],
+    "reasoning": "This card's own single `custom` effect implements both clauses against the SAME chosen target creature: `ctx.xPaid` (a real, already-declared `EffectContext` field, \"the value chosen for a card's own printed X in its mana cost,\" already used live by `cards/doppelgang`/`cards/rydia-summoner-of-mist`) is the exact real X, `actions.dealDamage(ctx.self, target, x)` is the exact damage, and `Math.max(0, x - target.getNetToughness())` (via the real `Card.getNetToughness()` method) plus `actions.createToken(ctx.you, {...Goblin...}, excess)` is the exact \"excess damage\" token count this sentence describes (an approximation — the `Card` interface exposes no already-marked-damage getter, so this accounts for this spell's own X damage against the target's full toughness only, not any damage the target was already carrying before this resolves; no real FDN scenario needs the finer case)."
+  }
+]

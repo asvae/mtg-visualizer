@@ -19,9 +19,10 @@ export const fleetingFlight: CardDefinition = {
       untilEndOfTurn: true,
     } satisfies Effect,
     {
-      kind: 'custom',
-      describe: 'prevent all combat damage that would be dealt to the target creature this turn',
-      run: () => {},
+      kind: 'grantKeywordTarget',
+      keyword: 'CombatDamagePrevention',
+      validType: 'creature',
+      untilEndOfTurn: true,
     } satisfies Effect,
   ],
 };

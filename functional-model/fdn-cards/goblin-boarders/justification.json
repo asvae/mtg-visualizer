@@ -1,0 +1,25 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Raid —"
+      },
+      {
+        "from": 7,
+        "to": 81,
+        "text": "This creature enters with a +1/+1 counter on it if you attacked this turn."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnterRaid"
+      }
+    ],
+    "reasoning": "\"Raid —\" is this ability's own template label, fully expressed by this same trigger's own `condition` field, not a separate clause of its own. This card's own `onEnterRaid` trigger (`on:'enter'`, real auto-fired ETB) carries `condition: {kind:'attackedThisTurn'}` (2026-09-18 schema-completeness pass, added during this same coverage-justification authoring pass — was previously a stale omission) — the exact real Raid gate — and runs `putCounter(target:'self', counterType:'+1/+1', amount:1)`, the exact real counter. Declaratively real but not yet engine-enforced (Ward pattern — no live per-turn attack-history tracking exists; see `engine-support-registry.ts`'s own `board-state-condition-not-enforced` entry)."
+  }
+]

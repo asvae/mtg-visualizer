@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 39,
+        "text": "When this creature enters, draw a card."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own `onEnter` trigger (`on:'enter'`) runs a `drawCard` effect — the exact real card draw this sentence describes."
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 22,
+        "text": "Destroy all creatures."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "program"
+      }
+    ],
+    "reasoning": "This card's own top-level `program` effect walks every permanent controlled by ANY player (`anyPlayer.permanentsInPlay()`), filters to creatures (`filter('cardType','creature')`), and destroys each (`destroyEach()`) — the exact, unconditional, unrestricted \"destroy all creatures\" broadcast this sentence describes."
+  }
+]

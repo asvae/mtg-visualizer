@@ -10,6 +10,7 @@ export const goblinBoarders: CardDefinition = {
     {
       name: 'onEnterRaid',
       on: 'enter',
+      condition: { kind: 'attackedThisTurn' },
       effects: [
         {
           kind: 'putCounter',

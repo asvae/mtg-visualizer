@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 78,
+        "text": "When this creature enters, create a 4/4 red Dragon creature token with flying."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own `onEnter` trigger (`on:'enter'`, this engine's real self-only auto-fired ETB) runs a `createToken` effect building a 4/4 'Dragon' token (`types:['Creature','Dragon']`, `keywords:['Flying']`) — the exact real token this sentence describes."
+  }
+]

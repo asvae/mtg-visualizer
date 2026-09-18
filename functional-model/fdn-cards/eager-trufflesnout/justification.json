@@ -1,0 +1,62 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 7,
+        "text": "Trample"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Trample"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array. Mechanically REAL (`combatDamage` resolution honors Trample), not merely documentary."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 8,
+        "to": 99,
+        "text": "(This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+      }
+    ],
+    "reasoning": "Reminder text for Trample directly above — a rules restatement, not independent rules content of its own."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 100,
+        "to": 176,
+        "text": "Whenever this creature deals combat damage to a player, create a Food token."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onCombatDamageToPlayer"
+      }
+    ],
+    "reasoning": "This card's own `onCombatDamageToPlayer` name-only trigger (no dedicated `on` value exists for a combat-damage-to-player event, same convention drake-hatcher's own identically-named trigger already establishes) runs a `createToken` effect building a real named 'Food' token (`types:['Artifact','Food']`, 0/0) — the exact \"create a Food token\" outcome."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 177,
+        "to": 251,
+        "text": "(It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")"
+      }
+    ],
+    "reasoning": "Reminder text for the Food token directly above — a rules restatement of the standard Food token ability, not independent rules content this card itself needs to represent."
+  }
+]

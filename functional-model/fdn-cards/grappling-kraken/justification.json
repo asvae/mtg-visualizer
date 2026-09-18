@@ -1,0 +1,37 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 10,
+        "text": "Landfall —"
+      },
+      {
+        "from": 11,
+        "to": 117,
+        "text": "Whenever a land you control enters, tap target creature an opponent controls and put a stun counter on it."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onLandfall"
+      }
+    ],
+    "reasoning": "\"Landfall —\" is this ability's own template label, fully expressed by this same trigger, not a separate clause of its own. This card's own `onLandfall` name-only trigger (no dedicated `on` value exists for \"a land you control enters\" yet) runs `tapTarget(validType:'creature', owner:'opponents')` — the exact real tap — then `putCounterTarget(validType:'creature', counterType:'stun', amount:1, owner:'opponents')` — the exact real stun counter."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 118,
+        "to": 205,
+        "text": "(If a permanent with a stun counter would become untapped, remove one from it instead.)"
+      }
+    ],
+    "reasoning": "Reminder text for stun counters directly above — a rules restatement of the standard stun-counter untap-replacement rule, not independent rules content this card itself needs to represent."
+  }
+]

@@ -1,0 +1,43 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 53,
+        "text": "Fiery Annihilation deals 5 damage to target creature."
+      },
+      {
+        "from": 54,
+        "to": 113,
+        "text": "Exile up to one target Equipment attached to that creature."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "custom"
+      }
+    ],
+    "reasoning": "This card's own single `custom` effect implements both clauses against the SAME chosen target creature (one shared local `target` variable, same \"combined clauses referencing an earlier target\" convention felling-blow's own definition already establishes): `actions.dealDamage(ctx.self, target, 5)` is the exact 5 damage, and `target.getEquippedBy()` (a real `Card` interface method — \"for a creature, every Equipment currently attached to it\") plus an optional `actions.chooseTarget`/`actions.moveTo(eq, 'Exile')` is the exact \"exile up to one target Equipment attached to that creature\" (gated on `!ctx.declineOptional` for the \"up to\" looseness)."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 114,
+        "to": 169,
+        "text": "If that creature would die this turn, exile it instead."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuine capacity gap — a real CR 614.2 death-replacement effect (intercepting the creature's own eventual graveyard-bound zone change and redirecting it to Exile, for the rest of the turn). `state.ts` has narrow per-keyword replacement hooks for damage/lifegain/untap but nothing intercepts the death/zone-change event itself. Declared via missingSchemaFunctionality[0] rather than silently dropped."
+  }
+]

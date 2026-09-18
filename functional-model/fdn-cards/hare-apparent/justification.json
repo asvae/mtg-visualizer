@@ -1,0 +1,32 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 150,
+        "text": "When this creature enters, create a number of 1/1 white Rabbit creature tokens equal to the number of other creatures you control named Hare Apparent."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own `onEnter` trigger (`on:'enter'`) runs a `createToken` effect building a 1/1 'Rabbit' token, with `amount: you.creaturesInPlay().filter('sameNameAsSelf').count()` — the real `'sameNameAsSelf'` `FilterPredicate` (2026-09-18, purpose-built for this exact card: `c.getName() === ctx.self.getName() && c.getId() !== ctx.self.getId()`, bakes in the self-exclusion) plus a real `count()` aggregate — the exact, declarative \"number of OTHER creatures you control named Hare Apparent\" this sentence describes, not an opaque closure."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 151,
+        "to": 207,
+        "text": "A deck can have any number of cards named Hare Apparent."
+      }
+    ],
+    "reasoning": "A real deck-construction LEGALITY rule (like every \"A deck can have any number of cards named ...\" template), not simulated gameplay text — this engine has no deckbuilding-legality concept at all, so this will never need a functional counterpart."
+  }
+]

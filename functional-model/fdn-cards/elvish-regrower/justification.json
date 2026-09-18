@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 89,
+        "text": "When this creature enters, return target permanent card from your graveyard to your hand."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own `onEnter` trigger (`on:'enter'`) runs a `move` effect (`from:'Graveyard', to:'Hand', validType:'any', qty:1, target:true`) — `validType:'any'` approximates \"permanent card\" (no dedicated \"permanent\" `move.validType` option exists, only 'creature'|'artifact'|'land'|'any' — same established approximation sun-blessed-healer's own \"nonland permanent card\" clause already uses, accepted pool-wide imprecision, not a novel gap)."
+  }
+]
