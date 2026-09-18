@@ -1620,13 +1620,32 @@ watch(
          real, confirmed mismatch against `pipeline-status.ts`'s own
          `applyPipelineReview` (a pure one-way `blue -> yellow|green`
          transition), not an oversight. -->
-    <div v-else class="mt-2 shrink-0 rounded-md border border-border-subtle bg-panel p-3">
+    <div v-else class="mt-2 min-w-0 max-w-xl rounded-md border border-border-subtle bg-panel p-3">
       <div class="flex items-center gap-2">
         <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Pipeline status</span>
         <UBadge :style="statusBadgeStyle(pipelineStatusMeta.color)" size="sm" variant="solid">{{ pipelineStatusMeta.label }}</UBadge>
       </div>
+      <!-- `min-w-0` (this div, dropped from `shrink-0`) + `max-w-xl` above are
+           load-bearing, not cosmetic: a real gate `reasons` string can now run
+           several hundred characters (e.g. Arahbo's own quoted-clause
+           `missingSchemaFunctionality` reason) with no natural short-word
+           break early on. Without a hard width cap somewhere in this chain,
+           this `<ul>`'s `flex flex-direction:column` (cross-axis defaults to
+           `align-items:stretch`) computes its own shrink-to-fit width from
+           each `<li>`'s UNWRAPPED max-content size during that stretch
+           calculation — a well-known flexbox circular-sizing quirk — so the
+           box silently grew to ~3200px instead of wrapping, and (this box
+           used to be `shrink-0`, refusing to give any of that width back)
+           took 100% of the negative space from its `CardMedia` flex sibling
+           in the row above, collapsing the card image to a real 0×0 box
+           (image data still loaded fine — no console error, nothing wrong
+           with `CardMedia`/the API response, purely a layout collapse).
+           `max-w-xl` breaks the circular estimation (gives the `<ul>` a real
+           width to wrap against); `min-w-0` (replacing `shrink-0`) lets this
+           box shrink further than that if the row is narrower still, rather
+           than refusing to shrink at all like before. -->
       <ul v-if="pipelineStatusEntry?.reasons?.length" class="mt-1.5 flex flex-col gap-1">
-        <li v-for="(r, i) in pipelineStatusEntry.reasons" :key="i" class="text-[11px] leading-relaxed text-muted">{{ r }}</li>
+        <li v-for="(r, i) in pipelineStatusEntry.reasons" :key="i" class="text-[11px] leading-relaxed break-words text-muted">{{ r }}</li>
       </ul>
       <p v-else-if="!data?.functionalModel" class="mt-1.5 text-[11px] text-muted italic">
         No functional-model/fdn-cards/&lt;slug&gt;/ folder for this card yet.

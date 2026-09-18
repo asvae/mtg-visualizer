@@ -14,6 +14,7 @@
 - [Card-lookup duplication precedent](topics/card-lookup-duplication-precedent.md) — several routes deliberately hand-roll their own card lookup; revisit only at a 4th consumer.
 - [Forge-model deletion](topics/forge-model-deletion.md) — `forge-model/`/`ForgeCardScript.vue` deleted 2026-09-11 for GPL-3.0 exposure; why it's gone from this agent's domain list.
 - [Facts-tab display ordering invariants](topics/facts-display-ordering-invariants.md) — toggles must filter, never re-sort; multi-fact-per-segment hover must highlight all of them.
+- [Flex-col text-overflow gotcha](topics/flex-col-text-overflow-gotcha.md) — a `shrink-0`/unbounded flex sibling holding long freeform text can collapse `CardMedia` to 0×0 via a flexbox circular-sizing quirk; needs explicit `max-w-*`+`min-w-0`, not just `break-words`.
 
 ## Known open item (not yet fixed, flagged to orchestrator each time)
 
