@@ -1681,14 +1681,26 @@ watch(
          design (see `isFdn`'s own doc comment), so `FunctionalModelText.vue`
          (which hard-depends on `annotatedCard`) doesn't apply here; this is
          a genuinely separate, deliberately minimal component
-         (`PlainOracleText.vue`) instead of a retrofit. Same "sits above the
-         tabs" position as the annotated block above, for the same reason —
-         it's the card's own real printed text, not one of the tabs below.
-         `null`/empty (e.g. a vanilla creature with no rules text) renders
-         nothing, same "no real text to show" empty state the annotated
-         path already has. -->
-    <div v-else-if="isFdn && data.functionalModel.oracleText" class="mb-2">
-      <PlainOracleText :oracle-text="data.functionalModel.oracleText" />
+         (`PlainOracleText.vue`) instead of a retrofit — same visual chrome
+         (name/mana-cost/type-line/oracle-text/P-T, real ManaSymbol icons)
+         but with none of that component's Fact/annotation/highlighting
+         machinery. Same "sits above the tabs" position as the annotated
+         block above, for the same reason — it's the card's own real printed
+         text, not one of the tabs below. Shown whenever this is an `fdn`
+         card at all (not gated on `oracleText` being non-empty) since the
+         name/mana-cost/type-line/P-T header must render even for a vanilla
+         creature with no rules text — `PlainOracleText` itself renders no
+         `<p>` at all for that empty-text case, same "no real text to show"
+         empty state the annotated path already has for its own body. -->
+    <div v-else-if="isFdn" class="mb-2">
+      <PlainOracleText
+        :name="card.name"
+        :mana-cost="card.manaCost"
+        :type-line="card.typeLine"
+        :power="card.power"
+        :toughness="card.toughness"
+        :oracle-text="data.functionalModel.oracleText"
+      />
     </div>
 
     <!-- Same "strip only, content switched separately" split AppHeader.vue's

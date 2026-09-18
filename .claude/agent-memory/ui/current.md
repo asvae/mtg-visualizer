@@ -18,5 +18,6 @@ what the current task actually needs. Session narration lives in
 - [Docs page + markdown renderer](topics/docs-page-markdown.md) — hand-rolled `app/lib/markdown.ts` (no markdown dependency), dev-only gating, shared by the Features-tab excerpt renderer.
 - [UI layout conventions](topics/ui-layout-conventions.md) — floating-overlay-corner placement, badge-vs-dot status display rule, `badgeColor.ts` reuse.
 - [Open flags to other agents](topics/open-flags-to-other-agents.md) — CardDetailTabs confirm/reject gating (`card`), `released_at` not threaded through card-owned routes (`card`).
+- [PlainOracleText chrome](topics/plain-oracle-text-chrome.md) — FDN card header/mana-icon rendering reused from FunctionalModelText.vue minus all Fact/annotation machinery; no live vanilla-creature card yet to verify empty-text path against.
 - [Engine console resizable nav](topics/engine-console-resizable-nav.md) — `EngineConsoleShell.vue` drag-handle pane resize, mirrors `CardPeekPanel.vue`'s pattern, shared width/localStorage key across all six tabs.
 - [Don't git stash on shared tree](topics/git-stash-concurrent-agents.md) — `git stash` grabs the whole tree, can silently carry a concurrent agent's uncommitted changes; use targeted `git diff`/`git show` instead.
