@@ -334,14 +334,24 @@ export type SinkInstance = SinkCatalogEntry & ((candidate: CardDefinition, root?
 /**
  * The shape of a SINK FAMILY constructor — `BattlefieldPresenceSink`/
  * `CountersSink` (`catalog/families/battlefield-presence.ts`/`catalog/
- * families/counters.ts`) are both real `SinkFamily<...>` values: a function taking one real
- * configuration (`BattlefieldPresenceSinkConfig`/`CountersSinkConfig`) and
- * returning ONE real, fully-configured `SinkInstance` for it (the Cats
- * instance, the +1/+1 instance, ...). Purely a naming/typing convenience —
- * every real family constructor already satisfies this shape structurally
- * without needing to import/annotate against it; exported so a doc comment
- * or a future family constructor can reference "a `SinkFamily`" as a real,
- * named concept instead of an ad-hoc `(config) => SinkInstance` shape typed
- * out by hand each time.
+ * families/counters.ts`) are both real `SinkFamily<...>` values: a function
+ * taking one real configuration and returning ONE real, fully-configured
+ * `SinkInstance` for it (the Cats instance, the +1/+1 instance, ...).
+ * Purely a naming/typing convenience — every real family constructor
+ * already satisfies this shape structurally without needing to
+ * import/annotate against it; exported so a doc comment or a future family
+ * constructor can reference "a `SinkFamily`" as a real, named concept
+ * instead of an ad-hoc `(config) => SinkInstance` shape typed out by hand
+ * each time.
+ *
+ * `Config` is NOT always a hand-authored config object — `BattlefieldPresenceSink`
+ * still takes one (`BattlefieldPresenceSinkConfig`), but `CountersSink`
+ * (2026-09-19, "Sink family should produce sink out of card definition. Not
+ * out of magical query" — user's own explicit instruction) instantiates
+ * this as `SinkFamily<CardDefinition>`: its own `Config` IS the real driving
+ * card's `CardDefinition` directly, with every other field
+ * (`slug`/`category`/`consumerTriggerNames`) derived from it internally —
+ * see `catalog/families/counters.ts`'s own header for the full derivation
+ * writeup. Both shapes satisfy this same generic type.
  */
 export type SinkFamily<Config> = (config: Config) => SinkInstance;

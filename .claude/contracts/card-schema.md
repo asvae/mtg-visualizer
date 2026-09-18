@@ -2598,3 +2598,93 @@ catalog/` besides the 3 plain singletons (`lifegain`/`graveyard-fodder`/
 `etb`) — whether those should also migrate, or whether `matchSink` stays
 legitimately in use for them long-term, is a real open question, not
 decided here.
+
+### 12. `CountersSink(definition: CardDefinition)` — the factory now takes a real card, not a config object (2026-09-19, `schema`-owned)
+
+Real, further architecture change on top of section 11 above — the public
+factory signature changed, not just the internal producer-matching
+mechanism. Per the user's own explicit instruction — "I don't care about
+magical configuration file. Sink(definition). Got it?" — `CountersSink`
+(`functional-model/sink-model/catalog/families/counters.ts`) is now
+`CountersSink(definition: CardDefinition): SinkInstance`. The old
+`CountersSinkConfig` type (`{slug, counterType, consumerTriggerNames}`) is
+GONE entirely — every field it used to require is now derived from
+`definition`'s own real structural fields by small, private, pure helper
+functions in the same file:
+
+- `deriveCounterType(definition)` — walks `definition.effects` AND
+  `definition.triggers[].effects` (the same two real places
+  `deriveOccurrences`'s own `walkEffects` looks, scoped to just this ONE
+  driving definition) for the first real `putCounter`/`putCounterTarget`/
+  `putCounterAll` effect, returns its own `counterType`. Throws if none
+  found — a definition with no counter-granting effect at all is a genuine
+  authoring mistake to surface loudly, not something to paper over with an
+  empty result.
+- `slugForCounterType(counterType)` — deterministically sanitizes
+  `counterType` into a stable slug (`'+1/+1'` -> `'counters-plus1plus1'`),
+  reproducing the real, pre-existing slug byte-for-byte so every
+  filesystem/review-status convention keyed off `entry.slug`
+  (`sink-catalog-status.ts`'s `sourceFileFor`/
+  `computeSinkCatalogFingerprint`/`memberEvidenceFor`) keeps resolving to
+  the real, UNRENAMED `catalog/counters-plus1plus1.ts`/`.corpus.json` files
+  with zero changes needed elsewhere.
+- `deriveConsumerTriggerNames(definition)` — the genuinely ambiguous one.
+  Investigated whether "this trigger has no `Trigger.on` field at all" was
+  already a meaningful, reserved discriminator for "reacts to a counter
+  being added" elsewhere in this codebase (`card.ts`'s own `Trigger.on` doc
+  comment, `match-sink.ts`) before assuming it — confirmed it is NOT: dozens
+  of real, currently-shipped FDN/FIN triggers are name-only for reasons
+  entirely unrelated to counters. Chosen discriminator instead: a small,
+  explicit, family-owned allowlist of recognized `Trigger.name` spellings
+  (`COUNTER_ADDED_TRIGGER_NAMES`, seeded with `'onCounterAdded'` — the one
+  real, already-established convention name in the pool), EXCLUDING any
+  trigger that also carries a real `on` value (already explained by a real,
+  closed auto-fire occasion; a coincidental free-text name match on top of
+  that is a collision, not a genuine second signal). Full writeup + all
+  derivation rules: `sink-model/SINK_MODEL_DESIGN.md`'s "2c" section.
+
+**The matching-against-candidate step also gained a real, NAMED
+"predicates" piece** — per a live user clarification mid-task sharpening
+this doc's own `Self → Sink → (Predicates) → Candidate` chain into
+`SinkFamily(sinkCandidateDefinition) -> (Predicates) -> Candidate
+Definition`: `withPredicates(counterType, consumerTriggerNames)` (same
+file) closes over one configured instance's own derived fields and returns
+`{producer, consumer}`, two named predicate functions the sink's own
+callable body now invokes instead of inlining both checks anonymously in
+its own closure. Purely a code-shape change — behavior identical to before
+this task.
+
+`catalog/counters-plus1plus1.ts` now imports and calls
+`CountersSink(exemplarOfLight)` (the real FDN #11 `CardDefinition`,
+`functional-model/fdn-cards/exemplar-of-light/definition.ts`) instead of a
+literal `{slug: 'counters-plus1plus1', counterType: '+1/+1',
+consumerTriggerNames: ['onCounterAdded']}` object. `counters.test.ts` no
+longer builds a `CountersSinkConfig` literal either — per this test file's
+own standing "everything visible in one file, mocks inline" convention, it
+builds an inline mock `CardDefinition` shaped like the real Exemplar of
+Light and calls `CountersSink(mockDefinition)` directly; 5 new
+derivation-focused test cases added.
+
+**Zero behavior regression, live-verified** (real dev server): `GET
+/api/sink-catalog`'s `counters` entry resolves `slug: 'counters-plus1plus1'`,
+`category: '+1/+1'`, `baseline: 'blue'`, and the same 19 source-candidate /
+1 sink-candidate (Exemplar of Light, self-included) match set as before
+this change; `GET /api/card/fdn/11`'s `functionalModel.cardInteractions`
+still reports Exemplar of Light's own `"+1/+1"` row with `count: 19` and
+`self: true` on its own entry. `/app/engine/sinks/counters` and
+`/app/engine/sinks/counters-plus1plus1` both still resolve 200.
+`npx vitest run functional-model`: 120 files / 1344 passed / 5 skipped
+(net +6 tests vs. the prior 1338/5 baseline — 5 new derivation cases, 1 net
+from the mock-definition rewrite). `npm run typecheck`: unchanged
+7-diagnostic pre-existing baseline, zero new.
+
+**Deliberately NOT done this task, flagged as open**:
+`BattlefieldPresenceSink` still has NOT migrated to this
+`Sink(definition)`-first shape — still a hand-authored
+`BattlefieldPresenceSinkConfig` object, per explicit task scope (Counters
+only). Separately, the user floated discarding the existing sink
+implementation more broadly the same session ("Right now it's complete
+bullshit — so we can throw away current implementation of sinks") — the
+coordinator confirmed this did NOT expand this task's own scope past
+Counters; whether it becomes a real follow-up task covering the other four
+families is undecided, not acted on here.

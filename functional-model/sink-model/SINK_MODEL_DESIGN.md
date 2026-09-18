@@ -345,6 +345,106 @@ axis for the predicate family) — nothing else in this pipeline needs
 one, because nothing else in this pipeline requires a human judgment
 call to get right in the first place.
 
+### 2c. `CountersSink` takes a real `CardDefinition` directly — no config object at all (2026-09-19)
+
+Per the user's own explicit instruction — "I don't care about magical
+configuration file. Sink(definition). Got it?" — `CountersSink`'s public
+signature is now `CountersSink(definition: CardDefinition): SinkInstance`.
+There is no `CountersSinkConfig` anymore, not even as an internal type: the
+`slug`/`category`/`consumerTriggerNames` a hand-authored config object used
+to carry are ALL derived from `definition`'s own real structural fields at
+construction time, by small, private, pure helper functions in
+`catalog/families/counters.ts` (`deriveCounterType`/`slugForCounterType`/
+`deriveConsumerTriggerNames`) — the user was explicit that HOW this
+derivation happens internally didn't matter ("Or do some
+Sink(extractConfig(definition))... I don't care"), only that the PUBLIC call
+takes a real `CardDefinition`. `catalog/counters-plus1plus1.ts` now calls
+`CountersSink(exemplarOfLight)` (the real FDN #11 `CardDefinition`) instead
+of a literal `{slug, counterType, consumerTriggerNames}` object.
+
+This also sharpens the chain this doc's own "The chain" section above
+names: the user's own later diagram for it was **`Self Definition → Sink →
+(Predicates) → Candidate Definition`**, concretely
+`SinkFamily(sinkCandidateDefinition) -> (Predicates) -> Candidate
+Definition`. Read against real code: `SinkFamily(sinkCandidateDefinition)`
+is the family-factory call (`CountersSink(definition)`) — `definition` here
+IS `self`, the card that OWNS this sink; the returned `SinkInstance`'s own
+existing callable contract (`instance(candidate, root?) => SinkMatchDetail
+| null`) is unchanged and already covers the "Candidate Definition" half —
+no new call shape was needed there. The one genuinely new piece: the
+middle "(Predicates)" step is now a real, NAMED piece of code —
+`withPredicates(counterType, consumerTriggerNames)` (a small closure factory
+in `families/counters.ts`, closing over this ONE configured instance's own
+derived fields) returns `{producer, consumer}`, two named predicate
+functions the sink's own callable body invokes instead of inlining the
+match checks directly. Not a generic predicate-composition framework —
+just making the step visible in the code instead of leaving it anonymous
+logic inside the closure, per the user's own explicit ask.
+
+Derivation rules, each documented at its own helper function
+(`catalog/families/counters.ts`):
+- **`counterType`** — the first real `putCounter`/`putCounterTarget`/
+  `putCounterAll` effect found walking `definition.effects` AND
+  `definition.triggers[].effects` (the SAME two places `deriveOccurrences`'s
+  own `walkEffects` looks, scoped down to just the one driving definition
+  being configured rather than an arbitrary runtime candidate). Exemplar of
+  Light's own `onLifeGain` trigger (`{kind:'putCounter', counterType:
+  '+1/+1', ...}`) resolves `counterType` to `'+1/+1'`. Throws — loudly, not
+  silently — if `definition` has no such effect at all: `CountersSink` only
+  makes sense called with a card that genuinely drives this family.
+- **`slug`** — deterministically sanitized FROM `counterType` itself
+  (`'+1/+1'` -> `'counters-plus1plus1'`, `'-1/-1'` -> hypothetically
+  `'counters-minus1minus1'`), not authored separately — reproduces the real,
+  pre-existing slug byte-for-byte, so every filesystem/review-status
+  convention keyed off `entry.slug` (`sink-catalog-status.ts`'s
+  `sourceFileFor`/`computeSinkCatalogFingerprint`/`memberEvidenceFor`, all
+  of which resolve `catalog/${slug}.ts`/`catalog/${slug}.corpus.json`
+  directly) keeps resolving to the real, UNRENAMED
+  `catalog/counters-plus1plus1.ts`/`.corpus.json` files with zero changes
+  needed anywhere else.
+- **`consumerTriggerNames`** — the genuinely ambiguous one. Investigated
+  first whether "this trigger has no `on` field at all" was already a
+  meaningful, reserved discriminator for "reacts to a counter being added"
+  elsewhere in the codebase (`card.ts`'s own `Trigger.on` doc comment,
+  `match-sink.ts`) before assuming it — it is NOT: dozens of real,
+  currently-shipped FDN/FIN triggers are name-only for reasons entirely
+  unrelated to counters (not yet retrofitted onto a closed auto-fire
+  occasion, fired only by a scenario's own `Scenario.trigger` field, or
+  simply belonging to a still-wholly-unbuilt trigger family). Using absence
+  of `on` alone would over-match any manually-named trigger a card happens
+  to carry. The real, established signal instead: a small, explicit,
+  family-owned allowlist of recognized `Trigger.name` spellings
+  (`COUNTER_ADDED_TRIGGER_NAMES`, seeded with `'onCounterAdded'` — the one
+  real, checked-in convention name already in the pool, per this family's
+  own pre-2026-09-19 header comment), with a trigger EXCLUDED if it also
+  carries a real `on` value (a real closed auto-fire occasion already
+  explains it; a coincidental free-text name match on top of that is a
+  collision, not a genuine second signal). Exemplar of Light's own
+  `onCounterAdded` trigger (no `on`, name matches) is the one real hit;
+  `onLifeGain` (real `on: 'lifeGained'`) is correctly excluded.
+
+**Zero behavior regression, live-verified** (dev server, `GET
+/api/sink-catalog` + `GET /api/card/fdn/11`): the real FDN pool's own
+producer/consumer match sets for the `counters` entry are still exactly 19
+source candidates / 1 sink candidate (Exemplar of Light, self-included),
+byte-identical to the pre-2026-09-19 documented numbers; `entry.slug`
+(`'counters-plus1plus1'`), `entry.category` (`'+1/+1'`), and
+`entry.consumerTriggerNames` (`['onCounterAdded']`) all resolve identically
+to before, now derived rather than authored. `counters.test.ts` no longer
+imports the pre-built production singleton OR a `CountersSinkConfig`
+literal — it builds its own inline mock `CardDefinition` shaped like the
+real Exemplar of Light and calls `CountersSink(mockDefinition)` directly,
+per this file's own standing "everything visible in one file, mocks
+inline" convention; 5 new derivation-focused test cases added (slug/
+category/consumerTriggerNames correctness, a differently-typed driving
+definition, the throw-on-no-producer-effect case, and both discrimination
+edge cases for the `on`-field exclusion rule).
+
+`BattlefieldPresenceSink` is UNCHANGED — still takes a hand-authored
+`BattlefieldPresenceSinkConfig` object, deliberately out of scope for this
+pass (same "Counters only, one family at a time" precedent "SinkQuery
+becomes optional" above already established).
+
 ## Open items
 
 - No further authoring gap found while writing this doc — the four
@@ -357,12 +457,18 @@ call to get right in the first place.
   that fix; the family-grouping behavior it serves was read, not edited,
   to write the section above.
 - **`BattlefieldPresenceSink` still hasn't migrated off `SinkQuery`/
-  `matchSink`** (see "SinkQuery becomes optional" above) — a real,
-  deliberately-deferred follow-up, not forgotten. Once it does, `matchSink`/
-  `SinkQuery`/`occurrenceSatisfiesSink` (`match-sink.ts`/`sink-query.ts`)
-  would have zero remaining callers inside `sink-model/catalog/` itself
-  (only `lifegain`/`graveyard-fodder`/`etb`, plain singleton entries,
-  would still use them directly) — worth a real look at whether those
-  three singletons should also migrate to the same direct-inspection
-  shape at that point, or whether `matchSink` stays legitimately in use
-  for them long-term. Not decided here.
+  `matchSink`, NOR off its own hand-authored config object** (see "SinkQuery
+  becomes optional" and "2c" above) — a real, deliberately-deferred
+  follow-up, not forgotten. Once it does, `matchSink`/`SinkQuery`/
+  `occurrenceSatisfiesSink` (`match-sink.ts`/`sink-query.ts`) would have
+  zero remaining callers inside `sink-model/catalog/` itself (only
+  `lifegain`/`graveyard-fodder`/`etb`, plain singleton entries, would still
+  use them directly) — worth a real look at whether those three singletons
+  should also migrate to the same direct-inspection, `Sink(definition)`
+  shape at that point, or whether `matchSink`/a config object stays
+  legitimately in use for them long-term. Not decided here. (As of
+  2026-09-19, the user separately floated discarding the whole existing
+  sink implementation more broadly — "Right now it's complete bullshit" —
+  but confirmed scope for THIS pass stayed Counters-only; whether that
+  widens to the other four families is an open question for a future
+  task, not decided or acted on here.)
