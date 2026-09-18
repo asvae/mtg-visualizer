@@ -1480,6 +1480,55 @@ export interface CounterConditionalGrant {
 }
 
 /**
+ * A real CR 603.4-style "intervening if" board-state gate — FDN authoring-
+ * pool cluster, 2026-09-18 (`.claude/agent-memory/schema/` schema-
+ * completeness pass): Threshold ("...if there are seven or more cards in
+ * your graveyard" — `crypt-feaster`/`billowing-shriekmass`/
+ * `cephalid-inkmage`), Raid ("...if you attacked this turn" —
+ * `midnight-snack`/`gutless-plunderer`), and a self counter-count gate
+ * (`skyknight-squire`'s own "As long as this creature has three or more
+ * +1/+1 counters on it...") all named the SAME missing capability in their
+ * own `missingSchemaFunctionality` entries — neither `Trigger` nor
+ * `ContinuousGrantTargeting` had any way to declare a live board-state
+ * precondition at all before this.
+ *
+ * **Declaratively real, NOT itself engine-enforced yet** (the same "Ward
+ * pattern" `card.ts`'s own `Keyword` union already establishes for a
+ * recognized-but-unenforced construct — see `engine-support-registry.ts`'s
+ * own `board-state-condition-not-enforced` entry): `resolveCard` (below)
+ * has no live `GameState` parameter to evaluate `graveyardCountAtLeast`/
+ * `selfCounterCountAtLeast` against (only `ctx`/`actions` are passed — see
+ * this function's own signature), and `attackedThisTurn` needs real
+ * per-turn combat-history tracking that exists nowhere in this engine today
+ * (checked: `interfaces.ts`'s own `Player` has no such method). A
+ * `graveyardCountAtLeast`-shaped condition CAN today be expressed as REAL,
+ * engine-enforced logic for a one-shot (triggered/cast) effect via a
+ * `kind:'program'` Effect instead — `combinator.ts`'s own `Query.source:
+ * 'graveyard'` (added the same pass) + `branch`/`compare`/`Aggregate`
+ * — but that path only covers a single resolution moment, not a
+ * CONTINUOUS, always-live static ability (`ContinuousGrantTargeting`'s own
+ * use of this same type), which is why this field exists as its own
+ * primitive rather than being folded entirely into the `program` DSL.
+ */
+export type BoardStateCondition =
+  | {
+      /** Real Threshold template ("...as long as/if there are N or more cards in your graveyard"). `owner` mirrors `EffectOwner` — omitted defaults to `'you'` (every real pool card checked so far only ever counts its own controller's graveyard). */
+      kind: 'graveyardCountAtLeast';
+      min: number;
+      owner?: EffectOwner;
+    }
+  | {
+      /** Real Raid template ("...if you attacked this turn"). No parameters — a fixed per-turn player-level fact, always the controller's own attack history. */
+      kind: 'attackedThisTurn';
+    }
+  | {
+      /** A counter-count gate on `ctx.self` itself (`skyknight-squire`'s own "As long as this creature has three or more +1/+1 counters on it...") — contrast `ptFormula.kind:'thresholdBonus'`, which already supports a battlefield-permanent-type-count gate for a P/T delta specifically, never a counter count, and never for a keyword/type grant. */
+      kind: 'selfCounterCountAtLeast';
+      counterType: string;
+      min: number;
+    };
+
+/**
  * One NAMED triggered ability. A permanent commonly has more than one,
  * independent of each other (Namazu Trader's own ETB AND attack trigger) —
  * `CardDefinition.triggers` is a list of these rather than a single
@@ -1667,7 +1716,36 @@ export interface Trigger {
    *    this narrow pass's scope, not the "grant a trigger to another
    *    permanent" problem this `on` value itself already fully solves.
    */
-  on?: 'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks' | 'equippedAttacks';
+  on?: 'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks' | 'equippedAttacks' | 'otherPermanentEnters';
+  /**
+   * Real CR 603.4 "intervening if" gate — this trigger's own `effects` only
+   * actually apply while this condition holds (checked at the moment the
+   * trigger would fire), NEVER a static ability's own always-on continuous
+   * grant (that's `ContinuousGrantTargeting.condition`, below) — see
+   * `BoardStateCondition`'s own doc comment for the full real-card cluster
+   * this closes and why it's declaratively real but not yet engine-
+   * enforced (`resolveCard` has no live `GameState` to check it against).
+   */
+  condition?: BoardStateCondition;
+  /**
+   * Only consulted when `on === 'otherPermanentEnters'` — a board-wide watch
+   * for SOME OTHER qualifying permanent's own entrance, genuinely distinct
+   * from `on: 'enter'` (which only ever fires for THIS permanent's own
+   * entrance — see that value's own doc comment). Real Forge shape: a
+   * `Mode$ ChangesZone | Destination$ Battlefield | ValidCard$ ...` trigger
+   * gated on a card OTHER than the one printing it. Two real FDN cards named
+   * this exact missing capability in their own `missingSchemaFunctionality`
+   * entries: Arahbo, the First Fang's own "Whenever another nontoken Cat you
+   * control enters, create a 1/1 white Cat creature token" (`subtype:
+   * 'Cat', nonToken: true, sameController: true`) and Skyknight Squire's own
+   * "Whenever another creature you control enters, put a +1/+1 counter on
+   * this creature" (`sameController: true`, no `subtype`/`nonToken` filter
+   * — every OTHER creature qualifies). NOT itself dispatched by `engine.ts`
+   * — no board-wide "any permanent just entered" sweep exists yet for ANY
+   * card (Ward pattern; see `engine-support-registry.ts`'s own
+   * `other-permanent-enters-trigger-not-enforced` entry).
+   */
+  otherPermanentEntersMatch?: { subtype?: string; nonToken?: boolean; sameController?: boolean };
   /**
    * Only consulted when `on === 'tapLandForMana'` — mirrors Forge's own
    * real `Produced$` gate on `T:Mode$ TapsForMana` (`TriggerTapsForMana
@@ -1831,7 +1909,59 @@ export type Keyword =
    * this is one more narrow hook at one real mutation chokepoint, not that
    * general mechanism.
    */
-  | 'CantUntap';
+  | 'CantUntap'
+  /**
+   * Real `K:Prowess` (FDN cluster, 2026-09-18: `elementalist-adept`/
+   * `drake-hatcher` both named this exact gap in their own
+   * `missingSchemaFunctionality` entries; FIN's own `queen-brahne` hits the
+   * identical gap via `staticAbilities` text, see that card's own comment)
+   * — recognized-but-inert, same as `'Flying'`/every other purely-
+   * structural keyword this union already carries with no matching
+   * mechanical enforcement: the auto-fire hook it needs ("whenever you cast
+   * a noncreature spell, this creature gets +1/+1 until end of turn") is a
+   * real, ALREADY-TRACKED, genuinely bigger gap — `ENGINE_GAPS.md`'s own
+   * "trigger-doubling ('Panharmonicon effect')" writeup names it directly:
+   * no `Trigger.on: 'castNoncreatureSpell'` auto-fire dispatch (+ mana-
+   * spent-magnitude tracking some sibling cards also need) exists anywhere
+   * in this engine, for ANY card, granted or native — 17+ real FIN cards
+   * share this same unclosed native trigger family. Adding this `Keyword`
+   * member only closes the "is Prowess a recognized structural fact at
+   * all" half; the auto-fire half stays exactly as open as it already was
+   * (see `engine-support-registry.ts`'s own `prowess-not-enforced` entry).
+   */
+  | 'Prowess'
+  /**
+   * Real Forge `K:Kicker` (FDN cluster, 2026-09-18: `divine-resilience`'s
+   * own `keywords: ['Kicker']` was a live but masked `tsc` error before this
+   * — see `card.ts`'s own git history — and `sun-blessed-healer` named the
+   * identical gap in its own `missingSchemaFunctionality` entry). Kicker
+   * itself is just the structural FACT "this spell has a kicker cost" — the
+   * actual non-default cost payload (Divine Resilience's own "{2}{W}",
+   * Sun-Blessed Healer's own "{1}{W}") lives in the new, separate
+   * `CardDefinition.keywordCosts` field below (same split `'Ward'` already
+   * has: `keywords` records the bare fact, `keywordCosts` records the real
+   * printed cost text) — deliberately NOT a payload directly on this union
+   * member, see that field's own doc comment for why. No payment-tracking
+   * or modal-gating-on-payment mechanism exists anywhere in this engine
+   * (Ward pattern; see `engine-support-registry.ts`'s own
+   * `kicker-not-enforced` entry) — a kicked/not-kicked branch still has to
+   * be modeled via the pre-existing `modal`/`ctx.mode` mechanism, same as
+   * before this addition.
+   */
+  | 'Kicker'
+  /**
+   * Real Forge `K:CantBlock` (`Creature.java`'s own real "can't block"
+   * static restriction) — FDN's `vampire-soulcaller` named this exact gap
+   * in its own `missingSchemaFunctionality` entry ("This creature can't
+   * block," unconditional, distinct from `'Unblockable'`'s own "can't BE
+   * blocked" — the two restrict opposite sides of a combat declaration).
+   * Same recognized-but-inert treatment as `'Unblockable'` above: real
+   * enforcement would need `engine.ts`'s own `canBlock`/`declareBlockers`
+   * (509.1) to check this keyword on the PROPOSED BLOCKER, which they don't
+   * yet (Ward pattern; see `engine-support-registry.ts`'s own
+   * `cant-block-not-enforced` entry).
+   */
+  | 'CantBlock';
 
 /**
  * Shared recipient-targeting/timing shape for a continuous, QUERY-TIME
@@ -1854,6 +1984,18 @@ interface ContinuousGrantTargeting {
   onlyDuringYourTurn?: boolean;
   /** Real Equipment-broadcast shape (2026-09-12, Dragoon's Lance's own "During your turn, equipped creature has flying," generalized the same day to the P/T- and type-grant payloads too) — the recipient is whatever real, LIVE creature THIS permanent is currently attached to (`RealCard.attachedToId`, already tracked by `state.equip`/`getEquippedBy`), re-checked fresh on every read same as every other condition here — the grant genuinely moves with the Equipment if it's later re-equipped, and turns off if unattached. Mutually exclusive with `subtype` in every real card checked so far (an Equipment's own broadcast targets its equipped creature, not a controller-wide subtype), but not enforced as exclusive — a future card could plausibly want both. */
   equippedBySelf?: boolean;
+  /**
+   * Real CR 603.4-style "as long as <condition>" continuous gate — this
+   * grant only currently applies while the condition holds, re-checked
+   * fresh on every read same as every other field here (`state.ts`'s own
+   * `qualifiesForContinuousGrant`). See `BoardStateCondition`'s own doc
+   * comment for the full real-card cluster this closes
+   * (`billowing-shriekmass`'s own Threshold P/T bonus, `cephalid-inkmage`'s
+   * own Threshold-gated "can't be blocked," `skyknight-squire`'s own
+   * counter-count-gated flying/Knight grant) and why it's declaratively
+   * real but not yet engine-enforced.
+   */
+  condition?: BoardStateCondition;
 }
 
 /**
@@ -1882,6 +2024,20 @@ export interface TriggerDoublingGrant {
    * data" scope as every other field in this prototype.
    */
   annotation?: FactAnnotationAuthoring;
+}
+
+/**
+ * The real printed cost payload for one keyword — see
+ * `CardDefinition.keywordCosts`'s own doc comment for why this is a
+ * separate, additive array rather than a payload folded directly onto
+ * `Keyword` itself. `cost` is free text (like `activationCost`, for the
+ * identical reason: a real cost's KIND varies — mana ("{2}{W}"), life
+ * ("Pay 7 life"), or any other real cost component — and this field is
+ * documentary, not itself parsed/paid by any interpreter yet).
+ */
+export interface KeywordCost {
+  readonly keyword: Keyword;
+  readonly cost: string;
 }
 
 /**
@@ -2029,6 +2185,41 @@ export interface CardDefinition {
    * undifferentiated `staticAbilities: string[]` blob these used to live in.
    */
   readonly keywords?: Keyword[];
+  /**
+   * The real printed cost payload for a keyword whose default Forge
+   * template isn't enough on its own — Ward's own default is a plain mana
+   * cost baked into the keyword word itself ("Ward {2}"), but a card can
+   * print a NON-mana Ward cost ("Ward—Pay 7 life," Sire of Seven Deaths;
+   * "Ward—Pay 2 life," Zul'Ashur, Lich Lord — both real FDN cards, both
+   * previously stuck declaring this as a `missingSchemaFunctionality` gap:
+   * "`Keyword` needs a cost-payload field... currently a bare string-
+   * literal union with no place to record [it] at all"), and Kicker always
+   * needs ONE (Divine Resilience's own "{2}{W}," Sun-Blessed Healer's own
+   * "{1}{W}" — there is no "default" Kicker cost the way Ward has one).
+   *
+   * Deliberately a SEPARATE, additive sibling field to `keywords` above,
+   * NOT a payload folded directly onto a `Keyword` union member (e.g.
+   * `{name:'Ward', cost:...}` replacing the bare string) — checked first:
+   * `keywords`/`Keyword` are read via a plain `.includes('Ward')`-style
+   * string-literal check at dozens of real call sites across this pool
+   * (`state.ts`, `engine.ts`, `synergy.ts`, `coverage-justification.ts`,
+   * several `recognizers/*-structural.ts` files, FIN's own keyword
+   * scenario fixtures — grepped directly, 2026-09-18) — widening the ARRAY
+   * ELEMENT type to `Keyword | {name: Keyword; cost: string}` would force
+   * every one of those to either add a narrowing branch or silently break
+   * (a `KEYWORD_WORD[k]`-style lookup keyed by a bare string literal,
+   * `recognizers/continuousKeywordGrantsSubtype-structural.ts`, is the
+   * concrete case that WOULD break: it can't index a lookup table by an
+   * object). This field instead costs nothing for any of those — `keywords`
+   * itself is completely unchanged, `['Ward']`/`['Kicker']` stays a bare
+   * fact, and only a NEW, purely-additive lookup (`keywordCosts`) carries
+   * the non-default payload, read by nothing yet (Ward pattern — see
+   * `engine-support-registry.ts`; the base `'Ward'`/`'Kicker'` keyword
+   * presence, not this field specifically, is what each registry entry
+   * actually checks, since neither keyword's real payment mechanic exists
+   * regardless of whether the cost happens to be the default one).
+   */
+  readonly keywordCosts?: KeywordCost[];
   /**
    * A real layer-7a characteristic-defining P/T ability (613.3a) —
    * recalculated LIVE from current board state on every read (see

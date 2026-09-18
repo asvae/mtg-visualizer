@@ -145,7 +145,27 @@ import type { Actions, EffectContext, Keyword } from './card';
  * this query is never actually owner-scoped). */
 export interface Query {
   kind: 'query';
-  source: 'creaturesInPlay' | 'permanentsInPlay' | 'libraryTop' | 'equippedSelf';
+  /**
+   * `'graveyard'` (2026-09-18, FDN schema-completeness pass) — real Forge
+   * `Count$Valid Card.YouOwn/GraveyardOnly`-style graveyard read, the
+   * counting half of a real Threshold clause ("...if there are seven or
+   * more cards in your graveyard" — `crypt-feaster`'s own real oracle
+   * text, among several other real FDN cards' own declared
+   * `missingSchemaFunctionality` gaps). Genuinely engine-ENFORCED, unlike
+   * `card.ts`'s own new `BoardStateCondition` (see that type's own doc
+   * comment): `resolveQuery` below reads `Player.getCardsIn('Graveyard')`,
+   * an already-real, already-live method every OTHER `source` here already
+   * calls the sibling of — no new engine plumbing needed, since a `Player`
+   * is already a real, live object every `kind:'program'` Effect resolves
+   * against. Lets a real Threshold-family clause be expressed as genuine,
+   * executable `branch(compare(...))` logic for a ONE-SHOT (triggered/cast)
+   * effect — it does NOT by itself make a CONTINUOUS static ability
+   * (`card.ts`'s own `ContinuousGrantTargeting.condition`) live-conditional,
+   * since a `program` only runs at one resolution moment, never re-read
+   * continuously the way `state.ts`'s own `effectivePT`/`effectiveKeywords`
+   * are.
+   */
+  source: 'creaturesInPlay' | 'permanentsInPlay' | 'libraryTop' | 'equippedSelf' | 'graveyard';
   /** `'any'` (2026-09-15) — BOTH sides unioned, real motivating case:
    * `aerith-rescue-mission`'s own "Tap up to three target creatures" (no
    * owner restriction printed at all, unlike every prior migrated closure's
@@ -901,6 +921,7 @@ function resolveQuery(input: Query | Filter | BoundSet, ctx: EffectContext, bind
       const amount = input.amount;
       return players.flatMap((p) => p.getCardsIn('Library').slice(0, amount));
     }
+    if (input.source === 'graveyard') return players.flatMap((p) => p.getCardsIn('Graveyard'));
     return input.source === 'permanentsInPlay' ? players.flatMap((p) => p.getCardsIn('Battlefield')) : players.flatMap((p) => p.getCreaturesInPlay());
   }
   const base = resolveQuery(input.input, ctx, bindings);

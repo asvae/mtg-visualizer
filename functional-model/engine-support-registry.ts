@@ -65,7 +65,55 @@ export const ENGINE_SUPPORT_REGISTRY: EngineSupportGapEntry[] = [
       "Ward is recognized/typed (card.ts's own Keyword union includes 'Ward') but nothing in state.ts enforces or triggers it yet — functional-model/keywords/registry.ts's own \"ward\" entry says so directly: \"Recognized only as a Keyword string-union member (card.ts) — same missing targeting-legality/triggered-cost machinery as Hexproof... nothing in the engine enforces or triggers it yet.\"",
     matches: (def) => (def.keywords ?? []).includes('Ward') || (def.backFace?.keywords ?? []).includes('Ward'),
   },
+  {
+    // 2026-09-18, FDN schema-completeness pass (card.ts's own Keyword union
+    // gained 'Kicker'/'Prowess'/'CantBlock', BoardStateCondition, and
+    // Trigger.on:'otherPermanentEnters' the same pass — see each field's own
+    // doc comment for the full real-card cluster).
+    id: 'kicker-not-enforced',
+    description:
+      "Kicker is recognized/typed (card.ts's own Keyword union includes 'Kicker', added 2026-09-18) but no payment-tracking or modal-gating-on-payment mechanism exists anywhere in this engine — a kicked/not-kicked branch still has to be modeled via the pre-existing modal/ctx.mode mechanism with no real enforcement that ctx.mode was only set to the kicked branch because the kicker cost was actually paid.",
+    matches: (def) => (def.keywords ?? []).includes('Kicker') || (def.backFace?.keywords ?? []).includes('Kicker'),
+  },
+  {
+    id: 'prowess-not-enforced',
+    description:
+      "Prowess is recognized/typed (card.ts's own Keyword union includes 'Prowess', added 2026-09-18) but its own auto-fire hook (\"whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn\") needs a real Trigger.on:'castNoncreatureSpell' auto-fire dispatch that exists nowhere in this engine for ANY card, granted or native — ENGINE_GAPS.md's own trigger-doubling writeup already tracks this as a genuinely bigger, still wholly-unbuilt trigger family (17+ real FIN cards share it), not a numbered gap of its own.",
+    matches: (def) => (def.keywords ?? []).includes('Prowess') || (def.backFace?.keywords ?? []).includes('Prowess'),
+  },
+  {
+    id: 'cant-block-not-enforced',
+    description:
+      "CantBlock is recognized/typed (card.ts's own Keyword union includes 'CantBlock', added 2026-09-18) but engine.ts's own canBlock/declareBlockers (509.1) never check it on a proposed blocker — real enforcement would need the same real chokepoint that already checks 'Unblockable' on the ATTACKER side to also check this keyword on the BLOCKER side.",
+    matches: (def) => (def.keywords ?? []).includes('CantBlock') || (def.backFace?.keywords ?? []).includes('CantBlock'),
+  },
+  {
+    id: 'board-state-condition-not-enforced',
+    description:
+      "card.ts's own BoardStateCondition (added 2026-09-18) is declaratively real on Trigger.condition/ContinuousGrantTargeting.condition (the Threshold/Raid/counter-count-gate FDN cluster — crypt-feaster, midnight-snack, gutless-plunderer, billowing-shriekmass, cephalid-inkmage, skyknight-squire) but resolveCard/qualifiesForContinuousGrant never check it — resolveCard has no live GameState parameter to evaluate a graveyard/counter count against, and 'attackedThisTurn' needs real per-turn combat-history tracking this engine doesn't have at all (checked: interfaces.ts's own Player has no such method).",
+    matches: (def) => hasBoardStateCondition(def) || (def.backFace ? hasBoardStateCondition(def.backFace) : false),
+  },
+  {
+    id: 'other-permanent-enters-trigger-not-enforced',
+    description:
+      "Trigger.on:'otherPermanentEnters' (added 2026-09-18 — arahbo-the-first-fang/skyknight-squire's own \"whenever another [qualifying permanent] you control enters\" gap) is declaratively real but engine.ts dispatches no board-wide \"any permanent just entered\" sweep for it — every other real 'on' auto-fire value in this union only ever watches the permanent's OWN entrance/event, never a board-wide watch for OTHER permanents.",
+    matches: (def) => hasOtherPermanentEntersTrigger(def) || (def.backFace ? hasOtherPermanentEntersTrigger(def.backFace) : false),
+  },
 ];
+
+/** Shared by `board-state-condition-not-enforced` — true if any trigger or
+ * continuous grant on this ONE face declares a `BoardStateCondition`. */
+function hasBoardStateCondition(def: CardDefinition): boolean {
+  if ((def.triggers ?? []).some((t) => t.condition)) return true;
+  const grantArrays = [def.continuousKeywordGrants, def.continuousPTGrants, def.continuousTypeGrants];
+  return grantArrays.some((grants) => (grants ?? []).some((g) => g.condition));
+}
+
+/** Shared by `other-permanent-enters-trigger-not-enforced` — true if any
+ * trigger on this ONE face uses the new watch-trigger `on` value. */
+function hasOtherPermanentEntersTrigger(def: CardDefinition): boolean {
+  return (def.triggers ?? []).some((t) => t.on === 'otherPermanentEnters');
+}
 
 /**
  * Pure, deterministic per-card classifier — `'off'` iff at least one real
