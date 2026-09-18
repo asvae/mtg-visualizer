@@ -56,6 +56,10 @@ export interface CardResponse {
     // `null` for a `fin` entry.
     pipelineStatus: PipelineStatusFile | null;
     slug: string | null;
+    // `fdn`-only — see server/api/card/[set]/[number].ts's own
+    // `FunctionalModelData.oracleText` doc comment. Always `null` for a
+    // `fin` entry (FIN already has its own richer `annotatedCard` path).
+    oracleText: string | null;
   } | null;
   interactions: EnrichedInteractionGroup[];
 }

@@ -29,7 +29,7 @@
 // (the full card page, /app/keywords, /app/recognizers, ...) a peek panel
 // would be inert there anyway (CardPeekPanel isn't mounted, nothing reads
 // `?card=`) — so the default action instead navigates straight to that
-// card's own full `/app/engine/cards/[set]/[number]` page, via `navigateTo`
+// card's own full `/app/card/[set]/[number]` page, via `navigateTo`
 // (same helper CardPeekPanel.vue's own "expand" action already uses for this
 // exact destination). This is unchanged for whether the row is currently in Scope
 // or not, in both cases. ADD/REMOVE is a genuinely separate action, a two-step keyboard
@@ -329,7 +329,7 @@ function openRow(card: CardData) {
   if (onGraphRoute.value) {
     store.openCardPanel(card.set, card.collectorNumber);
   } else {
-    navigateTo(`/app/engine/cards/${card.set}/${card.collectorNumber}`);
+    navigateTo(`/app/card/${card.set}/${card.collectorNumber}`);
   }
   dropdownOpen.value = false;
   armed.value = false;

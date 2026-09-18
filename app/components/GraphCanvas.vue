@@ -96,7 +96,7 @@ onMounted(() => {
       // off for now, left in place but unused here — the peek panel is a
       // separate mechanism from that dormant highlight feature.
       if (event.ctrlKey || event.metaKey) {
-        window.open(`/app/engine/cards/${card.set}/${card.collectorNumber}`, '_blank', 'noopener');
+        window.open(`/app/card/${card.set}/${card.collectorNumber}`, '_blank', 'noopener');
         return;
       }
       store.openCardPanel(card.set, card.collectorNumber);

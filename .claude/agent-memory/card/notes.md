@@ -6755,3 +6755,154 @@ same kind of card-thumbnail link).
 - No contract mismatch found — didn't need to read `card-schema.md`/
   `state-event-format.md` for this task at all (pure page-routing/UI
   consolidation, no engine-shape questions).
+
+## 2026-09-18, later same day: FDN cards get real printed oracle text (plain, un-annotated) alongside `definition.ts`
+
+FDN cards' page previously showed ONLY `definition.ts` source (no rules
+text at all). User explicit call: build a NEW, genuinely minimal
+plain-text component for this — do NOT retrofit `FunctionalModelText.vue`
+(FIN's real annotated-oracle-text component, hard-depends on
+`annotatedCard`/`Fact.annotations`, which FDN structurally never has).
+
+- **New served field**: `FunctionalModelData.oracleText: string | null`
+  (`server/api/card/[set]/[number].ts`) — `null` for every `fin` entry
+  (both dev and prod branches), real for `fdn`. `loadFdnFunctionalModel`
+  now takes a second `faces: FaceInput[]` param (the SAME real
+  Scryfall-derived `faces` array the main handler already builds off
+  `lookupCardBySetNumber(set, number)` — no second DB query needed, that
+  lookup already covers the "match by set/number" case the task asked
+  about) and joins each face's own real `oracleText` with a blank line
+  between faces, `null` if every face's text is empty (vanilla creature).
+  Mirrored onto the shared client type `app/lib/cardResponse.ts`'s
+  `CardResponse.functionalModel.oracleText` too (that file is a
+  hand-mirrored copy of the server shape — noticed in passing that
+  `reviewCaveat` is ALSO missing from it, a pre-existing gap unrelated to
+  this task, not fixed here — `npm run typecheck` already fails on that
+  line (964) on `main` before this task's changes, confirmed via
+  `git stash`/typecheck-before/after diff).
+- **New component**: `app/components/PlainOracleText.vue` — one prop
+  (`oracleText: string`), one `<p class="whitespace-pre-wrap ...">`. No
+  spans, no hover, no click-to-inspect, deliberately not meant to grow.
+- **Wired into `CardDetailTabs.vue`**: `v-else-if="isFdn && data.
+  functionalModel.oracleText"` sitting in the exact same slot as the
+  `v-if="data.functionalModel.annotatedCard"` → `FunctionalModelText`
+  block right above it (both are mutually exclusive in practice — `fin`
+  always has `annotatedCard`/never `oracleText`, `fdn` is the reverse) —
+  same "above the tab strip" position FIN's own annotated block already
+  established. FIN's own `FunctionalModelText`/`annotatedCard` path is
+  completely untouched.
+- **Verified live** (dev server was already running, port 3000 — shared
+  with a concurrent session, see note below):
+  - `curl /api/card/fdn/16` → `oracleText: "When this creature enters,
+    draw a card."` (Helpful Hunter); `curl /api/card/fin/8` →
+    `oracleText: null`, `annotatedCard` still populated.
+  - Playwright, `/app/engine/cards/fdn/16`: real oracle text visible in
+    the page AND a `pre`/`code` block count of 3 (source code still
+    shown) — both visible together, confirmed not one replacing the
+    other.
+  - Playwright, `/app/engine/cards/fin/8` (Auron's Inspiration): real
+    annotated oracle text still renders via `FunctionalModelText`
+    (confirmed via its own `whitespace-pre-wrap`/`text-text/90` paragraph
+    class showing up exactly twice, matching its own two oracle-text
+    lines, and a real `decoration-dashed` annotated span present in the
+    raw HTML) — `PlainOracleText` never mounts there (`isFdn` is false).
+  - `npm run typecheck`: pre-existing baseline failures only (confirmed
+    identical error set before/after via `git stash`) — `CardStatusBucket`
+    index-signature errors, the pre-existing `reviewCaveat` gap noted
+    above, and unrelated `functional-model/card-status.ts` /`card.ts`/
+    `mana.ts`/`server/api/tokens/by-key.ts` errors. No NEW errors from
+    this change. Plain `npx vue-tsc --noEmit` (not the nuxt-specific
+    typecheck) reports zero errors either way.
+  - `npm run test`: 1235 passed, 5 pre-existing failures (all
+    `scripts/relations.test.mjs`, missing `tagging/sets/*/`.json files —
+    unrelated to this task, some other in-flight historical-sets/review
+    process's own data, not touched here).
+- **Flag, not mine to touch**: while working, `git status` showed
+  `app/components/RecognizerEntryCard.vue` (modified) and
+  `app/pages/app/card/` (new dir) appear/change mid-task with no action
+  from me — a concurrent peer session/agent editing the same repo live
+  (dev server on :3000 was already running before I started). Did not
+  touch either; flagging per the "concurrent-agent git staging" project
+  convention so the orchestrator scopes its own `git add`/commit
+  carefully rather than assuming my diff is the only one present.
+
+## 2026-09-18, later still: `/app/card/[set]/[number]` restored as a real SEPARATE route from `/app/engine/cards/...`
+
+Partial reversal of the same-day consolidation two sections up, per
+explicit user correction: `/app/engine/*` (internal dev/engine-console)
+and the real app's own user-facing card page are two separate ROUTES going
+forward, even though both currently render identical CONTENT via the same
+shared `CardDetailTabs.vue` — "for now we use the same component, but that
+might diverge at some point in the future." Restored the STANDALONE PAGE
+(page-chrome only), did NOT re-fork `CardDetailTabs.vue` itself.
+
+- **Restored `app/pages/app/card/[set]/[number].vue`** from
+  `git show 46e504f^:'app/pages/app/card/[set]/[number].vue'` (its content
+  immediately before the original deletion) essentially byte-for-byte:
+  standalone `useFetch`, deck/query-filter-aware Previous/Next
+  (`useSetOrder`/`neighborsInSetOrder` + the active-global-filter overlay),
+  the deck-qty badge (`getKnownDeckCards`/`getActiveFilterMode` from
+  `useGraphStore.ts`), pending/error/loading states, mounts the SAME
+  `CardDetailTabs.vue` unchanged. Only real edit: the header comment now
+  documents the delete→restore round-trip and the "separate routes, same
+  component for now" rule so a future pass doesn't re-attempt the merge
+  without checking here first.
+- **The generic-set (`?sf=` live-query) fix did NOT need porting** —
+  confirmed by reading, not assumed: this page's own `useSetOrder`/
+  `neighborsInSetOrder` composable + its server route
+  (`/api/cards/set-order/[set].ts`) were ALREADY generic-over-any-set
+  (live Scryfall `unique=cards` fallback when the set isn't in the local
+  `cards.db`) before the consolidation ever happened — the "genericMode"
+  branch added to `/app/engine/cards/...` during the consolidation was
+  new logic needed ONLY because that other page has a tracked-corpus
+  sidebar concept (`fin`/`fdn` only) this standalone page never had in the
+  first place. Verified live anyway (see below) rather than trusting the
+  read alone.
+- **Updated the 5 real call sites back** to `/app/card/<set>/<number>`:
+  `RecognizerEntryCard.vue:143` (+ its header comment), `SearchBox.vue:332`
+  (+ its header comment), `CardPeekPanel.vue:132` (`expand()`, + two header
+  comments), `GraphCanvas.vue:99` (ctrl/cmd-click new-tab), `CardDetailTabs.
+  vue`'s own matched-card thumbnail link (line ~1985 — confirmed again,
+  same as the original consolidation task found, this is NOT meld/other-
+  face-specific, just the Interactions tab's generic matched-card
+  thumbnails) + that file's own header comment. Also fixed two more
+  comment-only stale references the original consolidation left behind:
+  `app/pages/app/index.vue`'s `CardPeekPanel` doc comment and `app/layouts/
+  graph.vue`'s store-ownership doc comment, both of which named the
+  now-wrong page path.
+- **Left `/app/engine/cards/[set]/[[number]].vue` completely untouched**
+  per explicit instruction — its own header comment still self-describes
+  as "THE ONE real card-detail page" / documents the old standalone page as
+  permanently gone, which is now STALE again now that the standalone page
+  is back. Deliberately not fixed (told to leave that file exactly as-is);
+  flagging here in case a future pass touches that file for an unrelated
+  reason and wants to fix the comment in passing.
+- **Live-verified** (dev server already running on :3000, shared with a
+  concurrent peer session — see that session's own note above; scratch
+  Playwright script under a local `.scratch/` dir, deleted after):
+  `/app/card/fin/8` → real title, Facts tab visible, Previous/Next visible,
+  correct URL; `/app/engine/cards/fin/8` → unaffected, own "Engine | Cards |
+  ..." title, Facts tab visible; graph page SearchBox → row click → peek
+  panel (`?card=fin/104`) → "Open full card page" (`aria-label="Open full
+  card page"`) click → lands on `/app/card/fin/104` (client-side nav is
+  slower than a real `load` event, tripped up `page.waitForURL`'s default
+  wait-for-`load` state at first — not an app bug, just this test's own
+  wait condition; the URL update itself is prompt); a live `?sf=t:goblin`
+  query result card (peek panel opened `?sf=t:goblin&card=tecl/6`, a real
+  Goblin token from set `tecl`, confirmed via `curl /api/card/tecl/6`) →
+  expand → lands on `/app/card/tecl/6`, no "Card not found," real card data
+  rendered. Zero console errors across all of the above.
+- `npx tsc --noEmit` clean (0 errors, re-checked after the concurrent
+  peer session's own edits landed too). `npx vitest run`: same 5
+  pre-existing failures (historical-sets sweep's own in-progress
+  `tagging/` files, unrelated), 1235 passed — unchanged.
+- Files touched: new `app/pages/app/card/[set]/[number].vue` (restored);
+  `app/components/{RecognizerEntryCard,SearchBox,CardPeekPanel,
+  GraphCanvas,CardDetailTabs}.vue` (link + comment updates only);
+  `app/pages/app/index.vue`, `app/layouts/graph.vue` (comment-only). Did
+  NOT touch `app/lib/cardResponse.ts`, `server/api/card/[set]/[number].ts`,
+  or the new `app/components/PlainOracleText.vue` — all concurrent peer
+  work landing in the same window (confirmed via `git status --short`
+  right before finishing: those three show as changes I didn't make).
+- No contract mismatch found — pure page-routing/UI work, no engine-shape
+  questions touched.

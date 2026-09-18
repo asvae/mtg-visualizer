@@ -18,7 +18,7 @@
 // fetched fresh on every mount (component remounts per selection, so no
 // separate watcher is needed); (2) the matched-cards list, this page's own
 // actual point — every real card currently carrying a fact this recognizer
-// produced, each linking to its real `/app/engine/cards/<set>/<number>` page
+// produced, each linking to its real `/app/card/<set>/<number>` page
 // when that route is resolvable (see server/api/recognizers/index.get.ts's
 // own header comment on the ~20 non-FIN reference cards that aren't).
 import { ref, computed, onMounted } from 'vue';
@@ -140,7 +140,7 @@ async function confirmReview() {
           <li v-for="card in visibleMatchedCards" :key="card.slug">
             <NuxtLink
               v-if="card.set && card.collectorNumber"
-              :to="`/app/engine/cards/${card.set}/${card.collectorNumber}`"
+              :to="`/app/card/${card.set}/${card.collectorNumber}`"
               class="rounded border border-border-subtle bg-bg px-2 py-1 text-xs text-text hover:border-border hover:bg-surface"
             >
               {{ card.name }}

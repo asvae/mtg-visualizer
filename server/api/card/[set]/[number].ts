@@ -259,6 +259,24 @@ interface FunctionalModelData {
   // (identity there is `number`, already a real route param) or an `fdn`
   // entry with no folder at all yet (nothing to review).
   slug: string | null;
+  // **`fdn`-only, 2026-09-18** — the card's own REAL, printed Scryfall
+  // `oracle_text`, one per face joined with a blank line between faces
+  // (real `\n`s within a face untouched, same raw convention `FaceInput.
+  // oracleText`/`AnnotatedCard` already use) — plain, unannotated text, no
+  // fact/highlight spans at all (an FDN card has no synergy.json to anchor
+  // any). Always `null` for a `fin` entry: FIN already has its own richer
+  // `annotatedCard` path (real oracle text PLUS fact-linked highlight
+  // spans) — this field exists only because FDN structurally never gets
+  // that (no synergy.json by design, same reason `synergy`/`annotatedCard`
+  // are always null for `fdn`), so `CardDetailTabs.vue` needs a genuinely
+  // separate, un-annotated plain-text display for it (see
+  // `PlainOracleText.vue`, `card`-owned) instead of retrofitting
+  // `FunctionalModelText.vue`, which hard-depends on `annotatedCard`/
+  // `Fact.annotations`. `null` when every face's own real `oracle_text` is
+  // empty (e.g. a vanilla creature with no rules text at all) — same "no
+  // real text to show" empty state a `fin` card's own oracle-text-less
+  // face already degrades to under `FunctionalModelText.vue`.
+  oracleText: string | null;
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -467,10 +485,12 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       reviewSnapshotAt: entry.reviewSnapshotAt ?? null,
       continuousKeywordGrants: front || back ? { front, back } : null,
       annotatedNonFactSpans: entry.annotatedNonFactSpans ?? [],
-      // `fin`-only fields never populate these two `fdn`-only fields — see
-      // `FunctionalModelData.pipelineStatus`/`.slug`'s own doc comments.
+      // `fin`-only fields never populate these three `fdn`-only fields —
+      // see `FunctionalModelData.pipelineStatus`/`.slug`/`.oracleText`'s
+      // own doc comments.
       pipelineStatus: null,
       slug: null,
+      oracleText: null,
       // Precomputed at `npm run sync:fm-bundle` build time (scripts/
       // build-fm-bundle.mjs, same classifyCardStatus/computeTextCoverage
       // recipe as the dev branch below and compute-card-status.mjs) —
@@ -540,9 +560,10 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       // verified-snapshot.json is optional — a card can exist without one
       // (never confirmed, or not yet backfilled)
     }
-    // `fin`-only branch — never populates the two `fdn`-only fields, see
-    // `FunctionalModelData.pipelineStatus`/`.slug`'s own doc comments.
-    data = { source, synergy, traces, annotatedCard, review, reviewCaveat, scenariosReview, interactionsReview, reviewSnapshotAt, continuousKeywordGrants, annotatedNonFactSpans, cardStatus, pipelineStatus: null, slug: null };
+    // `fin`-only branch — never populates the three `fdn`-only fields, see
+    // `FunctionalModelData.pipelineStatus`/`.slug`/`.oracleText`'s own doc
+    // comments.
+    data = { source, synergy, traces, annotatedCard, review, reviewCaveat, scenariosReview, interactionsReview, reviewSnapshotAt, continuousKeywordGrants, annotatedNonFactSpans, cardStatus, pipelineStatus: null, slug: null, oracleText: null };
   } catch {
     data = null;
   }
@@ -575,7 +596,7 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
 // not-yet-started scope). Returns `null` in production, same "degrades to
 // no functional-model section rendered at all" behavior a `fin` card with
 // no functional-model directory already gets.
-async function loadFdnFunctionalModel(name: string): Promise<FunctionalModelData | null> {
+async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise<FunctionalModelData | null> {
   if (process.env.NODE_ENV === 'production') return null;
   const slug = slugify(name);
   const root = process.cwd();
@@ -602,6 +623,16 @@ async function loadFdnFunctionalModel(name: string): Promise<FunctionalModelData
   const raw = readPipelineStatus(slug, root);
   const effective = raw ? effectivePipelineStatus(slug, root) : undefined;
   const pipelineStatus: PipelineStatusFile | null = raw ? { ...raw, status: effective ?? raw.status } : null;
+  // Real, printed Scryfall oracle text — `faces` is already this exact
+  // request's own real card data (see the main handler below: `card` came
+  // from `lookupCardBySetNumber(set, number)`, the same `data/cards.db`/
+  // live-Scryfall lookup `computeFdnCardStatusPage` uses, just resolved by
+  // exact set+number rather than by name), so no second DB query is
+  // needed here — just join each face's own real `oracleText`, skipping any
+  // face with no rules text at all (a vanilla creature). One face's worth
+  // of real `\n`s stays untouched; a blank line separates multiple faces
+  // (see `FunctionalModelData.oracleText`'s own doc comment).
+  const oracleText = faces.map((f) => f.oracleText).filter((t) => t.trim().length > 0).join('\n\n') || null;
   return {
     source,
     synergy: null,
@@ -617,6 +648,7 @@ async function loadFdnFunctionalModel(name: string): Promise<FunctionalModelData
     cardStatus: null,
     pipelineStatus,
     slug,
+    oracleText,
   };
 }
 
@@ -1010,7 +1042,7 @@ export default defineEventHandler(async (event) => {
   // route's `:set` for a reprint looked up via `dbLookupByName`'s DFC
   // fallback, but the route's OWN identity (what folder this request is
   // "about") is always the `:set` it was requested under.
-  const functionalModel = set === 'fdn' ? await loadFdnFunctionalModel(card.name) : await loadFunctionalModel(card.name, card.collector_number || number, faces);
+  const functionalModel = set === 'fdn' ? await loadFdnFunctionalModel(card.name, faces) : await loadFunctionalModel(card.name, card.collector_number || number, faces);
 
   return {
     card: cardData,

@@ -3,7 +3,7 @@
 // `app/pages/app/index.vue` (the graph page) and, since the fact-authoring
 // status dashboard (2026-09-16), `app/pages/app/status/index.vue` too —
 // NOT from the card detail page's own route — which is what actually
-// guarantees a direct visit to `/app/engine/cards/[set]/[number]` never
+// guarantees a direct visit to `/app/card/[set]/[number]` never
 // shows this, regardless of whatever `?card=` happens to be in the URL. Open/closed state and which card is
 // shown both live entirely on `store.panelCardKey` (useGraphStore.ts's own
 // `?card=`-URL-backed computed) — no separate local "is open" ref to drift
@@ -27,9 +27,7 @@
 // sitting underneath it.
 //
 // 2026-09-15: renders `CardDetailTabs.vue` — the SAME shared component the
-// full card page (`app/pages/app/engine/cards/[set]/[[number]].vue`, since
-// 2026-09-18's standalone-page consolidation — was
-// `app/pages/app/card/[set]/[number].vue` before that) mounts for its
+// full card page (`app/pages/app/card/[set]/[number].vue`) mounts for its
 // own content — instead of this panel's own older, separate
 // `CardMedia.vue`/`CardRelations.vue` pairing. That old pairing was what let
 // this panel drift stale in the first place: the full page moved on to a
@@ -129,7 +127,7 @@ function close() {
 }
 function expand() {
   if (!parsedKey.value) return;
-  navigateTo(`/app/engine/cards/${parsedKey.value.set}/${parsedKey.value.number}`);
+  navigateTo(`/app/card/${parsedKey.value.set}/${parsedKey.value.number}`);
 }
 
 // Header title's own set/number chrome (see the template below) doubles as

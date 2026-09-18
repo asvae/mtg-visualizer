@@ -2,10 +2,13 @@
 // The card-detail "content" block — CardMedia + review-status table +
 // annotated oracle text + the Facts/Scenarios/Facts Json/Card Json/Card
 // Definition tab strip + Interactions + the Scryfall link — factored out of
-// `app/pages/app/card/[set]/[number].vue` (2026-09-15; that standalone page
-// itself is gone as of 2026-09-18's consolidation — the SAME content now
-// mounts from `app/pages/app/engine/cards/[set]/[[number]].vue` instead) so the graph page's
-// peek panel (`CardPeekPanel.vue`) can render the EXACT SAME content instead
+// `app/pages/app/card/[set]/[number].vue` (2026-09-15). Briefly consolidated
+// away on 2026-09-18 into `app/pages/app/engine/cards/[set]/[[number]].vue`
+// (the internal engine-console tab) alone, then restored same day per
+// explicit user direction: the user-facing `/app/card/...` route and the
+// internal `/app/engine/cards/...` route are kept as separate routes going
+// forward, both mounting this SAME component for their content (may diverge
+// later, doesn't today) — so the graph page's
 // of its own separate, older `CardMedia` + `CardRelations` pairing (dropped
 // entirely — `CardRelations.vue` itself is unused now; nothing else in the
 // app references it as of this change, left in place rather than deleted
@@ -1638,6 +1641,21 @@ watch(
       />
     </div>
 
+    <!-- FDN's own real, plain (un-annotated) counterpart to the block
+         above — FDN cards have no synergy.json/Fact.annotations at all by
+         design (see `isFdn`'s own doc comment), so `FunctionalModelText.vue`
+         (which hard-depends on `annotatedCard`) doesn't apply here; this is
+         a genuinely separate, deliberately minimal component
+         (`PlainOracleText.vue`) instead of a retrofit. Same "sits above the
+         tabs" position as the annotated block above, for the same reason —
+         it's the card's own real printed text, not one of the tabs below.
+         `null`/empty (e.g. a vanilla creature with no rules text) renders
+         nothing, same "no real text to show" empty state the annotated
+         path already has. -->
+    <div v-else-if="isFdn && data.functionalModel.oracleText" class="mb-2">
+      <PlainOracleText :oracle-text="data.functionalModel.oracleText" />
+    </div>
+
     <!-- Same "strip only, content switched separately" split AppHeader.vue's
          own filter-mode UTabs already uses — nothing here depends on
          UTabs rendering slotted content itself. No draft/review
@@ -1964,7 +1982,7 @@ watch(
             <NuxtLink
               v-for="m in group.matches"
               :key="m.card"
-              :to="m.set && m.collectorNumber ? `/app/engine/cards/${m.set}/${m.collectorNumber}` : undefined"
+              :to="m.set && m.collectorNumber ? `/app/card/${m.set}/${m.collectorNumber}` : undefined"
               class="block shrink-0"
               :class="{ 'pointer-events-none': !(m.set && m.collectorNumber) }"
               :title="m.selfInteraction ? `Self-interaction: ${m.selfInteraction}` : undefined"
