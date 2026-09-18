@@ -107,8 +107,26 @@ export interface SinkCatalogEntry {
    * battlefield-presence consumer signal" from "it has none" — mirrors
    * `consumerTriggerNames`/`consumerTriggerOn`'s own optionality
    * convention.
+   *
+   * **`{ sameNameAsSelf: true }` — a THIRD filter variant (2026-09-18),
+   * `battlefield-presence-hare-apparent.ts`.** Same underlying "cares about
+   * the board-state COUNT of a filtered set of permanents you control"
+   * concept as the `subtype` variant above, just filtered by NAME instead
+   * of subtype/creature-type — checked via
+   * `sink-model/match-sink.ts`'s `matchesBattlefieldPresenceConsumer`
+   * against `createToken.amount`'s own `ValueRef` shape (a
+   * `combinator.ts` `QueryChain.count()` `Aggregate` over a
+   * `FilterPredicate: 'sameNameAsSelf'` chain), not `costReduction
+   * .perControlled`/`pumpAll`/`putCounterAll` at all — Hare Apparent's own
+   * real "for each other creature you control named Hare Apparent" ETB
+   * effect has no cost-reduction or anthem shape whatsoever, only a
+   * dynamically-computed token `amount`. Mutually exclusive with
+   * `subtype` in practice (a real card is checked against ONE or the
+   * other, never both at once) — kept as a plain union rather than a
+   * combined `{subtype?, sameNameAsSelf?}` object so a caller can't
+   * accidentally set both on the same entry.
    */
-  consumerBattlefieldPresence?: { subtype?: string };
+  consumerBattlefieldPresence?: { subtype?: string } | { sameNameAsSelf: true };
   /**
    * Real bug fix (2026-09-18, found live: Helpful Hunter — a genuine,
    * printed Cat, `typeLine: 'Creature — Cat'` — self-displayed a "Cats"

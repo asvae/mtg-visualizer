@@ -12,9 +12,17 @@ import {
 import { SINK_CATALOG } from './sink-model/catalog/index';
 
 describe('computeSinkCatalogStatus — real catalog entries', () => {
-  it('has exactly the real, statically-registered SINK_CATALOG entries — lifegain, graveyard-fodder, etb, battlefield-presence-cats, battlefield-presence-creatures, counters-plus1plus1', () => {
+  it('has exactly the real, statically-registered SINK_CATALOG entries — lifegain, graveyard-fodder, etb, battlefield-presence-cats, battlefield-presence-creatures, battlefield-presence-hare-apparent, counters-plus1plus1', () => {
     const entries = computeSinkCatalogStatus();
-    expect(entries.map((e) => e.slug).sort()).toEqual(['battlefield-presence-cats', 'battlefield-presence-creatures', 'counters-plus1plus1', 'etb', 'graveyard-fodder', 'lifegain']);
+    expect(entries.map((e) => e.slug).sort()).toEqual([
+      'battlefield-presence-cats',
+      'battlefield-presence-creatures',
+      'battlefield-presence-hare-apparent',
+      'counters-plus1plus1',
+      'etb',
+      'graveyard-fodder',
+      'lifegain',
+    ]);
     expect(entries.length).toBe(SINK_CATALOG.length);
   });
 
@@ -34,6 +42,7 @@ describe('computeSinkCatalogStatus — real catalog entries', () => {
     expect(bySlug['etb']!.category).toBe('ETB');
     expect(bySlug['battlefield-presence-cats']!.category).toBe('Cats');
     expect(bySlug['battlefield-presence-creatures']!.category).toBe('Creatures');
+    expect(bySlug['battlefield-presence-hare-apparent']!.category).toBe('Same-name copies');
     expect(bySlug['counters-plus1plus1']!.category).toBe('Counters (+1/+1)');
   });
 

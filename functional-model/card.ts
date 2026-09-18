@@ -86,8 +86,8 @@ import type { Fact, FactAnnotationAuthoring } from './synergy';
 // `applyEffect`'s own `'program'` case below calls) — safe, not a
 // value-level cycle, since `combinator.ts` never imports any VALUE back out
 // of `card.ts`, only types.
-import type { ProgramNode } from './combinator';
-import { runProgram } from './combinator';
+import type { ProgramNode, ValueRef } from './combinator';
+import { resolveValue, runProgram } from './combinator';
 // `Effect.authoredFact`/`CardDefinition.authoredFacts` (tier 3, below) used
 // to embed a full `Fact` — including that fact's own required `annotations`
 // — directly in `definition.ts`. Corrected 2026-09-13, per
@@ -400,6 +400,35 @@ function resolve<T>(value: Computed<T>, ctx: EffectContext): T {
   return typeof value === 'function' ? (value as (ctx: EffectContext) => T)(ctx) : value;
 }
 
+/**
+ * `createToken.amount`'s own resolver (2026-09-18, Hare Apparent, FDN
+ * #15) — that ONE field is typed `Computed<number> | ValueRef` (not just
+ * `Computed<number>`, the way every other `amount`-carrying `Effect` kind
+ * still is) so a genuine board-count magnitude ("for each OTHER creature
+ * you control named Hare Apparent") can be real, walkable `combinator.ts`
+ * data (a `QueryChain.count()` `Aggregate`) instead of an opaque raw `(ctx)
+ * => ...` closure — see `combinator.ts`'s own `FilterPredicate`/
+ * `'sameNameAsSelf'` doc comment and `sink-model/catalog/
+ * battlefield-presence-hare-apparent.ts`'s own header for the full "third
+ * filter variant" writeup this unblocks. Deliberately scoped to this ONE
+ * field, not a widening of the generic `resolve<T>`/`Computed<T>` above —
+ * `ValueRef` only ever resolves to a `number`, so folding it into the
+ * fully-generic helper (used for `Computed<ZoneType>`/`Computed<string>`
+ * colors/etc. elsewhere in this file) would be a type-unsound widening for
+ * every OTHER `Computed<T>` call site for no real benefit; every other
+ * `amount`-carrying `Effect` kind stays plain `Computed<number>` until a
+ * real card forces the same widening there too, same "closed vocabulary,
+ * grow on demand" discipline `combinator.ts` itself follows. A plain
+ * object check (`typeof === 'object'`) is enough to distinguish a
+ * `ValueRef` (always `{kind: ...}`) from a literal `number` or a
+ * `Computed<number>` function — no `'kind' in value` narrowing needed
+ * beyond that, since nothing else `Computed<number>`-shaped is ever an
+ * object.
+ */
+function resolveCreateTokenAmount(amount: Computed<number> | ValueRef, ctx: EffectContext): number {
+  return typeof amount === 'object' && amount !== null ? resolveValue(amount, ctx) : resolve(amount, ctx);
+}
+
 /** Who an effect (loseLife/discard/sacrifice/move) applies to — `'each'` covers Gaius van Baelsar's own "each player" (both sides at once), distinct from `'opponents'` (every opponent, not you) and `'you'` (just you). */
 export type EffectOwner = 'you' | 'opponents' | 'each';
 
@@ -409,7 +438,7 @@ export type EffectOwner = 'you' | 'opponents' | 'each';
  * execute to understand.
  */
 export type Effect =
-  | { kind: 'createToken'; token: TokenInfo; amount: Computed<number>; tapped?: boolean }
+  | { kind: 'createToken'; token: TokenInfo; amount: Computed<number> | ValueRef; tapped?: boolean }
   | { kind: 'gainLife'; amount: Computed<number> }
   | {
       /** `Player.getManaPool().addMana(...)` (see interfaces.ts's own `Player.addMana` doc comment for why this is a deliberately inert observation point, not a real spendable pool). Add for a "{T}: Add X mana" activated ability so it leaves a real, checkable trace line instead of being invisible to scripts/verify-synergy.mjs — same "promote a real ability off the unmodeled-list" reasoning `drawCard` already got (2026-09-05). */
@@ -2487,7 +2516,7 @@ function resolveTargets(pool: Card[], qty: number, ctx: EffectContext, actions: 
 function applyEffect(effect: Effect, ctx: EffectContext, actions: Actions): void {
   switch (effect.kind) {
     case 'createToken':
-      actions.createToken(ctx.you, effect.token, resolve(effect.amount, ctx), { tapped: effect.tapped });
+      actions.createToken(ctx.you, effect.token, resolveCreateTokenAmount(effect.amount, ctx), { tapped: effect.tapped });
       return;
     case 'gainLife':
       ctx.you.gainLife(resolve(effect.amount, ctx));

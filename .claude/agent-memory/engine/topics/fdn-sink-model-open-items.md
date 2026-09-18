@@ -188,6 +188,69 @@ session doesn't have to rediscover it:
   `producerMatches` still renders correctly (8/72 respectively). Card-
   serving-API-side file, `card`/`server`-owned — out of scope for the
   `engine`-scoped task that added the new field.
+- **Sink catalog now has 7 real entries (2026-09-18, later still) —
+  `battlefield-presence-hare-apparent`, a THIRD "Battlefield presence"
+  filter variant (Hare Apparent, FDN #15's "create a Rabbit token for each
+  OTHER creature you control named Hare Apparent").** Design chosen: Option
+  1 from the task brief (a new declarative `combinator.ts` primitive,
+  `FilterPredicate: {field:'sameNameAsSelf'}`, mirrors `'excludeSelf'`'s
+  shape but compares `Card.getName()` and bakes in the self-exclusion) —
+  rejected Option 2 (a narrower additive marker) because Option 1 was NOT
+  disproportionate effort: only one new `FilterPredicate` variant was
+  needed (`Query.source:'creaturesInPlay'` + `Aggregate{op:'count'}` already
+  existed), and it's the same "combinator DSL is default for new
+  vocabulary" convention this whole file already follows. Real changes:
+  `combinator.ts` (`FilterPredicate`, `resolveQuery`, `QueryChain.filter`
+  overload, `describePredicate`, exported `resolveValue`); `card.ts`
+  (`createToken.amount` widened to `Computed<number> | ValueRef`, new
+  `resolveCreateTokenAmount` helper — deliberately NOT a widening of the
+  generic `resolve<T>`, scoped to this one field); `hare-apparent/
+  definition.ts` rewritten onto `you.creaturesInPlay().filter
+  ('sameNameAsSelf').count()`, replacing the raw closure (gate re-run,
+  still `blue`); `sink-model/match-sink.ts` (`matchesBattlefieldPresenceConsumer`'s
+  filter type widened to `{subtype?} | {sameNameAsSelf:true}`, new
+  `effectsCareAboutSameNameCount`/`isSameNameCountValueRef`/
+  `queryChainHasSameNameFilter` walking `createToken.amount`'s own AST, NOT
+  `costReduction`/`pumpAll`/`putCounterAll` at all — a genuinely different
+  consumer-detection shape from the `-cats`/`-creatures` pair);
+  `sink-model/catalog/entry.ts` (`consumerBattlefieldPresence` widened to a
+  union); new `sink-model/catalog/battlefield-presence-hare-apparent.ts`/
+  `.test.ts` (7 cases)/`.corpus.json`, registered in `catalog/index.ts`.
+  `recognizers/program-ast-walker.ts`'s `readPool` and `combinator.ts`'s
+  `describePredicate` both needed one new branch each to stay exhaustive
+  (`readPool` declines `sameNameAsSelf` — no real `kind:'program'` effect
+  chains it, out of scope for that walker).
+  **PRODUCER side is a deliberate divergence from `-cats`/`-creatures`**:
+  "same name as self" is inherently self-referential per card (unlike a
+  shared type/subtype), so there's no honest generic producer query —
+  `query` uses a literal `name:{eq:'Hare Apparent'}` constraint instead,
+  satisfied only by Hare Apparent's own baseline `entersBattlefield`
+  occurrence (zero new producer code, reuses `name` in `Constraints`/
+  `satisfiesConstraints` already). This makes the entry genuinely
+  bespoke/one-card (sanctioned explicitly by `entry.ts`'s own "a bespoke
+  sink is still just a catalog entry with low reuse" doc comment) — a
+  future second same-name-counting card would need its own sibling entry
+  (different slug, different literal `name`), sharing this same
+  `sameNameAsSelf` consumer check and matcher function.
+  **Self-ownership**: `requireConsumerForSelfOwnership: true`, same escape
+  hatch as `-cats`/`-creatures`, reasoned through fresh — Hare Apparent's
+  own baseline producer match against its OWN literal-name query is just as
+  trivial/non-deliberate as "being a Cat" (every card's baseline occurrence
+  always carries its own name), so bare producer identity does NOT grant
+  self-display; the CONSUMER side (its own ETB effect genuinely depends on
+  counting other copies) does.
+  **Verified live** (real dev server, `GET /api/card/fdn/15`):
+  `cardInteractions` now includes `{category:'Same-name copies', count:1,
+  matches:[{card:'Hare Apparent', self:true}]}`. `GET /api/sink-catalog`:
+  new entry `blue` (7/7 corpus), `realMatches.producerMatches:
+  ['Hare Apparent']` only (self, confirming the bespoke-name-query design),
+  `consumerMatches` omitted — same pre-existing, already-flagged
+  `computeRealMatches`/`consumerBattlefieldPresence` gap `-cats`/
+  `-creatures` already have (not fixed here, out of scope, `card`/
+  `server`-owned). Full `functional-model` suite: 120 files, 1276 passed / 5
+  skipped. `npm run typecheck`: identical pre-existing baseline error set
+  (`CardDetailTabs.vue`/`card-status.ts`/`card.ts`'s `endTurn`/`mana.ts`/
+  `server/api/tokens/by-key.ts`), zero new errors.
 - **New script**: `functional-model/scripts/gate-and-write-status.mjs`
   (vite-node, uncommitted as of authoring — orchestrator's to review/
   commit) — the missing "run the gate, write `pipeline-status.json` from

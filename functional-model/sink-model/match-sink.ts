@@ -96,8 +96,8 @@
 // not `target` is set — a deliberate, documented improvement, not an
 // oversight; see the task's own final report for why this is judged a real
 // production bug rather than an intentional simplification.
-import type { CardDefinition, Effect, Trigger } from '../card';
-import type { ProgramNode } from '../combinator';
+import type { CardDefinition, Computed, Effect, Trigger } from '../card';
+import type { Filter, ProgramNode, Query, ValueRef } from '../combinator';
 import { extractOccurrences } from '../recognizers/program-ast-walker';
 import type { Constraints, Side, StaticAttrs, Subject, TypeConstraint } from '../synergy';
 import { satisfiesConstraints, staticAttrsFor } from '../synergy';
@@ -844,14 +844,35 @@ export function matchesConsumerTriggerOn(onValues: Array<Trigger['on']> | undefi
  * subtype filter" — matched only against an equally subtype-less
  * `pumpAll`/`putCounterAll` (exact `===` comparison both ways), never a
  * vacuous "any subtype counts."
+ *
+ * **`{ sameNameAsSelf: true }` — a THIRD filter variant (2026-09-18,
+ * `catalog/battlefield-presence-hare-apparent.ts`)**, genuinely different
+ * in SHAPE from the `subtype` variant above: it doesn't check
+ * `costReduction.perControlled`/`pumpAll`/`putCounterAll` at all, since
+ * Hare Apparent's own real "create a token for each other creature you
+ * control named Hare Apparent" is a `createToken` effect with a
+ * board-COUNTED `amount` — checked via `isSameNameCountValueRef` below,
+ * which walks that `amount` field's own `combinator.ts` AST (a
+ * `QueryChain.count()` `Aggregate` over a chain containing a
+ * `FilterPredicate: 'sameNameAsSelf'`) rather than a flat declarative
+ * field. Same face-plurality/effect-location walk
+ * (`effects`/`triggers[].effects`/`abilities[].effects`/nested `modal`
+ * modes) as the `subtype` variant reuses.
  */
-export function matchesBattlefieldPresenceConsumer(filter: { subtype?: string } | undefined, candidate: CardDefinition): boolean {
+export function matchesBattlefieldPresenceConsumer(filter: { subtype?: string } | { sameNameAsSelf: true } | undefined, candidate: CardDefinition): boolean {
   if (!filter) return false;
-  if (faceCaresAboutBattlefieldPresence(candidate, filter.subtype)) return true;
-  return candidate.backFace ? faceCaresAboutBattlefieldPresence(candidate.backFace, filter.subtype) : false;
+  if (faceCaresAboutBattlefieldPresence(candidate, filter)) return true;
+  return candidate.backFace ? faceCaresAboutBattlefieldPresence(candidate.backFace, filter) : false;
 }
 
-function faceCaresAboutBattlefieldPresence(face: CardDefinition, subtype: string | undefined): boolean {
+function faceCaresAboutBattlefieldPresence(face: CardDefinition, filter: { subtype?: string } | { sameNameAsSelf: true }): boolean {
+  if ('sameNameAsSelf' in filter) {
+    if (effectsCareAboutSameNameCount(face.effects)) return true;
+    for (const trig of face.triggers ?? []) if (effectsCareAboutSameNameCount(trig.effects)) return true;
+    for (const ab of face.abilities ?? []) if (effectsCareAboutSameNameCount(ab.effects)) return true;
+    return false;
+  }
+  const subtype = filter.subtype;
   if (face.costReduction?.perControlled && face.costReduction.perControlled.subtype === subtype) return true;
   if (effectsCareAboutBattlefieldPresence(face.effects, subtype)) return true;
   for (const trig of face.triggers ?? []) if (effectsCareAboutBattlefieldPresence(trig.effects, subtype)) return true;
@@ -869,4 +890,45 @@ function effectsCareAboutBattlefieldPresence(effects: Effect[] | undefined, subt
     }
   }
   return false;
+}
+
+/** Same effect-location walk as `effectsCareAboutBattlefieldPresence` above,
+ * for the `sameNameAsSelf` filter variant — today only `createToken`'s own
+ * `amount` field can carry a `ValueRef` at all (`card.ts`'s
+ * `resolveCreateTokenAmount`; every other `amount`-bearing `Effect` kind is
+ * still plain `Computed<number>`, never an object), so this only ever
+ * inspects that one field. Extend the day a real card needs this shape on a
+ * different effect kind's own `amount`, not speculatively — same "closed
+ * vocabulary, grow on demand" discipline as `effectsCareAboutBattlefieldPresence`
+ * itself. */
+function effectsCareAboutSameNameCount(effects: Effect[] | undefined): boolean {
+  for (const effect of effects ?? []) {
+    if (effect.kind === 'createToken' && isSameNameCountValueRef(effect.amount)) return true;
+    if (effect.kind === 'modal' && effect.modes.some((m) => effectsCareAboutSameNameCount(m.effects))) return true;
+  }
+  return false;
+}
+
+/** Does `amount` (a `createToken` effect's own `Computed<number> |
+ * ValueRef`) structurally count "other creatures you control sharing my own
+ * name" — i.e. is it a `combinator.ts` `Aggregate{op:'count'}` whose own
+ * input chain contains a `FilterPredicate: 'sameNameAsSelf'` anywhere
+ * (walking through any number of composed `Filter`s, same "predicates
+ * compose" allowance `combinator.ts`'s own `Filter.input: Query | Filter`
+ * union already provides for)? A plain `number` or a `(ctx) => number`
+ * function (still legal `Computed<number>` values) are neither an object
+ * nor carry a `kind` field, so they fall through to `false` immediately —
+ * this only ever recognizes the real AST shape, never a raw closure (the
+ * whole point: a raw closure is exactly what stays invisible to this
+ * matcher, per this file's own header). */
+function isSameNameCountValueRef(amount: Computed<number> | ValueRef): boolean {
+  if (typeof amount !== 'object' || amount === null) return false;
+  if (amount.kind !== 'aggregate' || amount.op !== 'count') return false;
+  return queryChainHasSameNameFilter(amount.input);
+}
+
+function queryChainHasSameNameFilter(node: Query | Filter): boolean {
+  if (node.kind !== 'filter') return false;
+  if (node.predicate.field === 'sameNameAsSelf') return true;
+  return queryChainHasSameNameFilter(node.input);
 }

@@ -224,8 +224,32 @@ export type CardTypeWord = 'creature' | 'artifact' | 'land' | 'enchantment';
  * alone doesn't unblock — those would ALSO need a new `Query.source` for
  * that zone (not built here, real future work if a real card needs it).
  * Migrating any of these cards onto this predicate is definition-lane
- * work, not done here. */
-export type FilterPredicate = { field: 'subtype'; value: string } | { field: 'excludeSelf' } | { field: 'cardType'; value: CardTypeWord | CardTypeWord[] };
+ * work, not done here.
+ *
+ * `'sameNameAsSelf'` (2026-09-18, engine-lane escalation — Hare Apparent,
+ * FDN #15's own "create a 1/1 Rabbit token for each OTHER creature you
+ * control named Hare Apparent"). Mirrors `'excludeSelf'`'s own shape
+ * exactly — no `value` parameter, always resolved relative to `ctx.self` —
+ * but compares `Card.getName()` instead of `Card.getId()`, and BAKES IN the
+ * self-exclusion itself (`c.getId() !== ctx.self.getId()`) rather than
+ * requiring a separately-composed `'excludeSelf'` filter: counting "other
+ * copies of this same card" is one single real concept ("this card cares
+ * about the board-state COUNT of a filtered set of permanents you
+ * control," the same family `sink-model/catalog/battlefield-presence-cats
+ * .ts`/`-creatures.ts` already name, just filtered on same-NAME instead of
+ * same-SUBTYPE/-type — see that pair's own header and
+ * `sink-model/catalog/battlefield-presence-hare-apparent.ts`'s own header
+ * for the full "third filter variant" writeup), not two independently
+ * composable predicates that happen to always appear together for this
+ * shape. This was the SPECIFIC gap that used to force Hare Apparent's own
+ * "create a Rabbit token" `createToken.amount` to stay a raw, structurally
+ * opaque `(ctx) => ...` closure (`Computed<number>`'s own function
+ * variant) — every other migrated closure in this file's own history
+ * needed a NEW `Query.source`/`EachAction`/`Condition` primitive; this one
+ * only needed a new `FilterPredicate`, since `Query.source:
+ * 'creaturesInPlay'` + `Aggregate{op:'count'}` (both pre-existing) already
+ * expressed everything else about the shape. */
+export type FilterPredicate = { field: 'subtype'; value: string } | { field: 'excludeSelf' } | { field: 'cardType'; value: CardTypeWord | CardTypeWord[] } | { field: 'sameNameAsSelf' };
 
 /** `matchesCardType(c, 'artifact')` reads `Card.isArtifact()` — one
  * dispatch point for every `CardTypeWord`, shared by both the real
@@ -625,10 +649,17 @@ export class QueryChain {
    * doc comment for what each `field` means). */
   filter(field: 'subtype', value: string): QueryChain;
   filter(field: 'excludeSelf'): QueryChain;
+  filter(field: 'sameNameAsSelf'): QueryChain;
   filter(field: 'cardType', value: CardTypeWord | CardTypeWord[]): QueryChain;
   filter(field: FilterPredicate['field'], value?: string | CardTypeWord | CardTypeWord[]): QueryChain {
     const predicate: FilterPredicate =
-      field === 'subtype' ? { field: 'subtype', value: value as string } : field === 'cardType' ? { field: 'cardType', value: value as CardTypeWord | CardTypeWord[] } : { field: 'excludeSelf' };
+      field === 'subtype'
+        ? { field: 'subtype', value: value as string }
+        : field === 'cardType'
+          ? { field: 'cardType', value: value as CardTypeWord | CardTypeWord[] }
+          : field === 'sameNameAsSelf'
+            ? { field: 'sameNameAsSelf' }
+            : { field: 'excludeSelf' };
     return new QueryChain({ kind: 'filter', input: this.node, predicate });
   }
 
@@ -884,6 +915,8 @@ function resolveQuery(input: Query | Filter | BoundSet, ctx: EffectContext, bind
     }
     case 'excludeSelf':
       return base.filter((c) => c.getId() !== ctx.self.getId());
+    case 'sameNameAsSelf':
+      return base.filter((c) => c.getName() === ctx.self.getName() && c.getId() !== ctx.self.getId());
     case 'cardType': {
       // Same local-narrowing note as `subtype` above.
       const types = predicate.value;
@@ -908,7 +941,18 @@ function resolveAggregate(agg: Aggregate, ctx: EffectContext): number {
   return items.reduce((total, c) => total + (field === 'power' ? c.getNetPower() : field === 'toughness' ? c.getNetToughness() : c.getCMC()), 0);
 }
 
-function resolveValue(ref: ValueRef, ctx: EffectContext): number {
+/**
+ * Exported (2026-09-18, for Hare Apparent's own `createToken.amount` — see
+ * `card.ts`'s own `resolveCreateTokenAmount` and this file's own
+ * `FilterPredicate`/`'sameNameAsSelf'` doc comment) so a plain declarative
+ * `Effect` field typed `Computed<number> | ValueRef` (today only
+ * `createToken.amount`) can resolve a bare `ValueRef` — a QueryChain's own
+ * `.count()`/`.sum()` `Aggregate`, e.g. — WITHOUT being wrapped in a
+ * `kind:'program'` Effect at all. Every other real consumer of `ValueRef`
+ * resolution stays internal to `runProgram` (`resolveEachActionValues`/
+ * `evalCondition`'s own `resolveValue` calls, unchanged).
+ */
+export function resolveValue(ref: ValueRef, ctx: EffectContext): number {
   switch (ref.kind) {
     case 'literal':
       return ref.value;
@@ -1175,6 +1219,8 @@ function describePredicate(p: FilterPredicate): string {
       return 'excludeSelf';
     case 'cardType':
       return `cardType=${Array.isArray(p.value) ? p.value.join('|') : p.value}`;
+    case 'sameNameAsSelf':
+      return 'sameNameAsSelf';
     default: {
       const _exhaustive: never = p;
       throw new Error(`unhandled filter predicate: ${JSON.stringify(_exhaustive)}`);

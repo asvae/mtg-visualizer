@@ -1,0 +1,48 @@
+{
+  "total": 7,
+  "passing": 7,
+  "cases": [
+    {
+      "case": "PRODUCER: normal permanent literally named Hare Apparent",
+      "mirrors": "the real Hare Apparent (FDN #15) card itself — its own baseline entersBattlefield occurrence",
+      "expectedVerdict": "matches",
+      "note": "Mocked Creature — Rabbit Noble named 'Hare Apparent', no effects. Verified via matchSink."
+    },
+    {
+      "case": "PRODUCER: differently-named creature, otherwise identical",
+      "mirrors": "any real card that is NOT Hare Apparent, even one with an identical type line",
+      "expectedVerdict": "no-match",
+      "note": "Mocked Creature — Rabbit Noble named 'Mock Rabbit Creature'. Verified via matchSink — proves this entry discriminates on literal name, not type/subtype."
+    },
+    {
+      "case": "CONSUMER: real Hare Apparent shape (createToken.amount counts same-named copies)",
+      "mirrors": "the real Hare Apparent (FDN #15) 'create a 1/1 Rabbit token for each other creature you control named Hare Apparent' ETB effect",
+      "expectedVerdict": "matches",
+      "note": "Mocked onEnter createToken effect whose amount is you.creaturesInPlay().filter('sameNameAsSelf').count() (combinator.ts). Verified via matchesBattlefieldPresenceConsumer."
+    },
+    {
+      "case": "CONSUMER: createToken with a plain literal amount",
+      "mirrors": "any real token-maker with a fixed, non-board-counted amount",
+      "expectedVerdict": "no-match",
+      "note": "Mocked onEnter createToken effect with amount:1. Verified via matchesBattlefieldPresenceConsumer."
+    },
+    {
+      "case": "CONSUMER: createToken with a raw (ctx) => number closure",
+      "mirrors": "Hare Apparent's own PRE-migration definition.ts shape — the exact opaque closure this task migrated off of",
+      "expectedVerdict": "no-match",
+      "note": "Mocked onEnter createToken effect whose amount is a raw function counting same-named creatures. Verified via matchesBattlefieldPresenceConsumer — proves a raw closure stays structurally invisible even when it computes the identical real value, confirming the migration onto combinator.ts data was necessary."
+    },
+    {
+      "case": "CONSUMER: board-count amount filtered on subtype, not same-name",
+      "mirrors": "the sibling battlefield-presence-cats/-creatures entries' own real shape",
+      "expectedVerdict": "no-match",
+      "note": "Mocked onEnter createToken effect whose amount is you.creaturesInPlay().filter('subtype','Cat').count(). Verified via matchesBattlefieldPresenceConsumer — proves this entry does not vacuously accept any board-counted amount."
+    },
+    {
+      "case": "CONSUMER: matches via the BACK face of a transforming DFC",
+      "mirrors": "the same face-plurality convention matchesConsumerTriggerNames/matchesConsumerTriggerOn/battlefield-presence-cats already honor",
+      "expectedVerdict": "matches",
+      "note": "Mocked front/back face pair; the same-name-count createToken effect lives only on backFace. Verified via matchesBattlefieldPresenceConsumer."
+    }
+  ]
+}

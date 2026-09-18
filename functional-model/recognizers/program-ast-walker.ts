@@ -192,6 +192,21 @@ export function readPool(node: Query | Filter): PoolDescriptor | undefined {
       cur = cur.input;
       continue;
     }
+    if (cur.predicate.field === 'sameNameAsSelf') {
+      // 2026-09-18, Hare Apparent (FDN #15) — a real `FilterPredicate`
+      // variant, but ONLY ever authored today on a bare `createToken.amount`
+      // `ValueRef` (`card.ts`'s own `resolveCreateTokenAmount`, resolved
+      // directly, never through a `kind:'program'` Effect at all — see
+      // `sink-model/match-sink.ts`'s own `isSameNameCountValueRef`, a
+      // dedicated, narrower walker for exactly that shape). No real
+      // `kind:'program'` effect in this pool chains this predicate, so this
+      // walker (built for `extractOccurrences`'s own program-AST-broadcast
+      // pool descriptors) declines rather than guessing at a
+      // `PoolDescriptor` shape nothing here has ever confirmed — same
+      // "closed vocabulary, no real card to confirm against" discipline
+      // every other branch in this function already follows.
+      return undefined;
+    }
     if (cur.predicate.field === 'subtype') {
       if (subtypeWord !== undefined) return undefined; // two subtype filters chained — no real card to confirm against
       subtypeWord = cur.predicate.value;
