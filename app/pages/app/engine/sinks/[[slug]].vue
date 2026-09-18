@@ -54,6 +54,29 @@ const STATUS_OPTIONS: StatusFilterOption<StatusColor>[] = [
   },
 ];
 
+// Real FDN name->number lookup for the "Real FDN pool matches" section
+// below (2026-09-18) — `producerMatches`/`consumerMatches` are plain card
+// NAMES (see `server/api/sink-catalog/index.get.ts`'s own
+// `SinkCatalogRealMatches` doc comment), no set/number of their own, so a
+// clickable chip needs its own lookup to route to
+// `/app/engine/cards/fdn/<number>`. Fetched ONCE for the whole page (same
+// `/api/card-status/fdn` the sibling Cards tab already fetches per visit,
+// not a per-match-row fetch) — `immediate: isDev` skips it entirely in
+// production, where `realMatches` itself is always `undefined` anyway (see
+// that same doc comment) so this lookup would never be used.
+interface FdnCardLookupFile {
+  cards: { name: string; number: string }[];
+}
+const { data: fdnCardLookup } = useFetch<FdnCardLookupFile>('/api/card-status/fdn', {
+  key: 'sink-catalog-fdn-card-lookup',
+  immediate: isDev,
+});
+const fdnNameToNumber = computed(() => {
+  const map = new Map<string, string>();
+  for (const c of fdnCardLookup.value?.cards ?? []) map.set(c.name, c.number);
+  return map;
+});
+
 const items = computed(() => data.value ?? []);
 const list = useStatusFilterList<SinkCatalogPageEntry, StatusColor>({
   items,
@@ -298,12 +321,8 @@ async function submitReject() {
                 </span>
               </summary>
               <ul v-if="selectedEntry.realMatches.producerMatches.length" class="mt-1.5 flex flex-wrap gap-1.5">
-                <li
-                  v-for="name in selectedEntry.realMatches.producerMatches"
-                  :key="name"
-                  class="rounded bg-bg px-1.5 py-0.5 font-mono text-[10px] text-text"
-                >
-                  {{ name }}
+                <li v-for="name in selectedEntry.realMatches.producerMatches" :key="name">
+                  <EngineConsoleCardMatchChip :name="name" :number="fdnNameToNumber.get(name)" />
                 </li>
               </ul>
               <p v-else class="mt-1.5 text-muted italic">No real FDN pool card matches this query today.</p>
@@ -321,12 +340,8 @@ async function submitReject() {
                 </span>
               </summary>
               <ul v-if="selectedEntry.realMatches.consumerMatches.length" class="mt-1.5 flex flex-wrap gap-1.5">
-                <li
-                  v-for="name in selectedEntry.realMatches.consumerMatches"
-                  :key="name"
-                  class="rounded bg-bg px-1.5 py-0.5 font-mono text-[10px] text-text"
-                >
-                  {{ name }}
+                <li v-for="name in selectedEntry.realMatches.consumerMatches" :key="name">
+                  <EngineConsoleCardMatchChip :name="name" :number="fdnNameToNumber.get(name)" />
                 </li>
               </ul>
               <p v-else class="mt-1.5 text-muted italic">No real FDN pool card carries this entry's consumer-side signal today.</p>
