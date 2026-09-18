@@ -117,6 +117,15 @@ export interface CardStatusPageEntry extends Omit<CardStatusEntry, 'status'> {
    * re-derive the slugify convention client-side. `undefined` for a `fin`
    * entry (identity there is `number`, already a real, direct route param). */
   slug?: string;
+  /** Straight passthrough of this fdn card's own `pipeline-status.json`
+   * `engineSupport` (`functional-model/pipeline-status.ts`) — only ever
+   * present when that file itself has the field, i.e. only for a `purple`/
+   * `blue` (gated) fdn entry; `undefined` for a `gray` fdn entry (nothing
+   * evaluated yet) AND always `undefined` for a `fin` entry (no such axis
+   * exists there at all). Added so the Cards tab's own page-local
+   * engine-support filter can narrow the SIDEBAR list without a per-card
+   * fetch for every row — see that page's own header. */
+  engineSupport?: 'on' | 'off';
 }
 
 interface CardStatusPageFile {
@@ -260,6 +269,7 @@ function computeFdnCardStatusPage(root: string): CardStatusPageFile {
       baseline: pipelineStatusBaseline(status),
       color: status,
       slug,
+      engineSupport: pipeline?.engineSupport,
     };
   });
 

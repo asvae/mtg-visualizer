@@ -315,6 +315,54 @@ const list = useStatusFilterList<CardStatusPageEntry, CardStatusPageEntry['color
   storageKey: `engine-console-filters-cards-${SET}`,
 });
 
+// --- FDN-only, page-local engine-support tri-state filter (2026-09-18) ---
+// Deliberately NOT folded into `useStatusFilterList`/`STATUS_OPTIONS` above
+// — that composable/`EngineConsoleStatusFilterControls.vue` stay single-axis
+// on purpose (Keywords/Predicates/Sinks share them and have no such field at
+// all). This is its own local ref + a further `.filter()` layered on top of
+// `list.visible` (the search+color-filtered result), so it AND-combines with
+// the existing color filter rather than replacing it. `CardStatusPageEntry
+// .engineSupport` (`server/api/card-status/[set].get.ts`'s own fdn branch)
+// is `undefined` for every `fin` entry and every `gray` fdn entry — 'all'
+// (the default "–" state) intentionally includes those, matching this
+// field's own real absent-vs-on/off semantics (see `pipeline-status.ts`'s
+// own `PipelineStatusFile.engineSupport` doc comment).
+type EngineSupportFilterValue = 'all' | 'on' | 'off';
+const ENGINE_SUPPORT_FILTER_OPTIONS: { value: EngineSupportFilterValue; label: string; color: string; description: string }[] = [
+  { value: 'all', label: '–', color: '#6b7280', description: 'Show every card regardless of the engine-support signal (includes cards with no signal at all — not yet gated, or fin).' },
+  { value: 'on', label: 'On', color: '#22c55e', description: 'Only cards where nothing on the small known-engine-unsupported vocabulary list was touched (e.g. no Ward). Not a claim of full engine verification — just "nothing known-bad detected."' },
+  { value: 'off', label: 'Off', color: '#ef4444', description: 'Only cards that touch something on the small, deliberately-honest known-engine-unsupported vocabulary list (today: Ward — recognized/typed but not enforced by the real engine yet).' },
+];
+const engineSupportFilter = ref<EngineSupportFilterValue>('all');
+const engineSupportFilteredEntries = computed<CardStatusPageEntry[]>(() =>
+  engineSupportFilter.value === 'all'
+    ? list.visible.value
+    : list.visible.value.filter((e) => e.engineSupport === engineSupportFilter.value),
+);
+// Local prev/next/position-label derived off the further-narrowed list above
+// (mirrors `useStatusFilterList`'s own `selectedIndex`/`canPrev`/`canNext`/
+// `positionLabel` shape, but against `engineSupportFilteredEntries` instead
+// of that composable's own internal `visible`) — for `fin`, or when the
+// filter sits at 'all', `engineSupportFilteredEntries` is the SAME array
+// reference as `list.visible.value`, so this is a no-op there, not a second
+// divergent behavior.
+const engineFilteredIndex = computed(() => engineSupportFilteredEntries.value.findIndex((e) => e.number === list.selectedKey.value));
+const engineFilteredCanPrev = computed(() => engineFilteredIndex.value > 0);
+const engineFilteredCanNext = computed(() => engineFilteredIndex.value >= 0 && engineFilteredIndex.value < engineSupportFilteredEntries.value.length - 1);
+const engineFilteredPositionLabel = computed(() =>
+  engineFilteredIndex.value >= 0 ? `${engineFilteredIndex.value + 1} of ${engineSupportFilteredEntries.value.length}` : '',
+);
+// Same "reselect the first visible entry when the current selection falls
+// out of view" behavior `useStatusFilterList`'s own internal watch already
+// gives `list.visible` — mirrored here for this further-narrowed list, since
+// that internal watch has no knowledge of this page-local filter.
+watch(engineSupportFilteredEntries, (entries) => {
+  if (!entries.length) return;
+  if (!entries.some((e) => e.number === list.selectedKey.value)) {
+    list.selectedKey.value = entries[0]!.number;
+  }
+});
+
 const selectedEntry = computed(() => list.selected.value);
 function statusMeta(color: CardStatusPageEntry['color']) {
   return STATUS_OPTIONS.find((o) => o.value === color)!;
@@ -344,12 +392,12 @@ function pickEntry(entry: CardStatusPageEntry) {
   navigateTo(`/app/engine/cards/${SET}/${encodeURIComponent(entry.number)}`);
 }
 function goPrev() {
-  const idx = list.selectedIndex.value;
-  if (idx > 0) pickEntry(list.visible.value[idx - 1]!);
+  const idx = engineFilteredIndex.value;
+  if (idx > 0) pickEntry(engineSupportFilteredEntries.value[idx - 1]!);
 }
 function goNext() {
-  const idx = list.selectedIndex.value;
-  if (idx >= 0 && idx < list.visible.value.length - 1) pickEntry(list.visible.value[idx + 1]!);
+  const idx = engineFilteredIndex.value;
+  if (idx >= 0 && idx < engineSupportFilteredEntries.value.length - 1) pickEntry(engineSupportFilteredEntries.value[idx + 1]!);
 }
 
 // --- `genericMode` only: Previous/Next via this set's own real per-set
@@ -456,20 +504,43 @@ const pipelineHeaderBadge = computed(() => {
   const status = cardData.value.functionalModel?.pipelineStatus?.status ?? 'gray';
   return PIPELINE_STATUS_META[status];
 });
+
+// Second, page-local header badge — the selected card's own real
+// `pipeline-status.json` `engineSupport` (`PipelineStatusFile.engineSupport`,
+// see `functional-model/pipeline-status.ts`'s own doc comment), only ever
+// present at all on a gated (`purple`/`blue`) fdn entry — `null` here for a
+// `gray` card (nothing evaluated yet, no field to show) same as for `fin`/
+// `genericMode`, mirroring `pipelineHeaderBadge`'s own guard shape.
+const engineSupportHeaderBadge = computed(() => {
+  if (!IS_FDN || !cardData.value) return null;
+  const engineSupport = cardData.value.functionalModel?.pipelineStatus?.engineSupport;
+  if (!engineSupport) return null;
+  return engineSupport === 'on'
+    ? { label: 'Engine OK', color: '#22c55e', title: 'Nothing on the known-engine-unsupported vocabulary list was touched by this card (not a claim of full engine verification).' }
+    : { label: 'Engine gap', color: '#ef4444', title: 'This card touches something on the small, known-engine-unsupported vocabulary list (e.g. Ward — recognized/typed but not enforced by the real engine yet).' };
+});
 </script>
 
 <template>
   <EngineConsoleShell
     :pending="genericMode ? cardLoading && !cardData : statusPending && !statusFile"
     :error="genericMode ? null : statusError"
-    :can-prev="genericMode ? !!genericNeighbors.prev : list.canPrev.value"
-    :can-next="genericMode ? !!genericNeighbors.next : list.canNext.value"
-    :position-label="genericMode ? (activeNumber ? `#${activeNumber}` : '') : list.positionLabel.value"
+    :can-prev="genericMode ? !!genericNeighbors.prev : engineFilteredCanPrev"
+    :can-next="genericMode ? !!genericNeighbors.next : engineFilteredCanNext"
+    :position-label="genericMode ? (activeNumber ? `#${activeNumber}` : '') : engineFilteredPositionLabel"
     @prev="genericMode ? goGenericPrev() : goPrev()"
     @next="genericMode ? goGenericNext() : goNext()"
   >
     <template v-if="pipelineHeaderBadge" #header-extra>
-      <UBadge :style="statusBadgeStyle(pipelineHeaderBadge.color)" size="sm" variant="solid">{{ pipelineHeaderBadge.label }}</UBadge>
+      <UBadge class="shrink-0" :style="statusBadgeStyle(pipelineHeaderBadge.color)" size="sm" variant="solid">{{ pipelineHeaderBadge.label }}</UBadge>
+      <UBadge
+        v-if="engineSupportHeaderBadge"
+        class="min-w-0 shrink-0"
+        :style="statusBadgeStyle(engineSupportHeaderBadge.color)"
+        :title="engineSupportHeaderBadge.title"
+        size="sm"
+        variant="solid"
+      >{{ engineSupportHeaderBadge.label }}</UBadge>
     </template>
 
     <template #nav>
@@ -523,7 +594,7 @@ const pipelineHeaderBadge = computed(() => {
           :status-options="STATUS_OPTIONS"
           :active-filters="list.activeFilters.value"
           :counts="list.countsByStatus.value"
-          :visible-count="list.visible.value.length"
+          :visible-count="engineSupportFilteredEntries.length"
           :total-count="rawCards.length"
           @update:search-query="(v: string) => (list.searchQuery.value = v)"
           @toggle="list.toggleFilter"
@@ -533,8 +604,31 @@ const pipelineHeaderBadge = computed(() => {
           </template>
         </EngineConsoleStatusFilterControls>
 
+        <!-- Page-local, FDN-only engine-support tri-state filter — see this
+             file's own `engineSupportFilter`/`engineSupportFilteredEntries`
+             doc comments. Same compact chip-row visual language as
+             `EngineConsoleStatusFilterControls.vue` above (reused directly,
+             not imported from it — that component stays single-axis). -->
+        <div v-if="IS_FDN" class="mb-3 flex flex-col gap-0.5">
+          <div class="mb-1 px-1.5 text-[11px] font-semibold tracking-wide text-muted uppercase">Engine support</div>
+          <div class="flex items-center gap-1 px-1.5">
+            <button
+              v-for="opt in ENGINE_SUPPORT_FILTER_OPTIONS"
+              :key="opt.value"
+              type="button"
+              class="flex items-center gap-1.5 rounded-md px-1.5 py-1 text-left"
+              :class="engineSupportFilter === opt.value ? 'text-text' : 'text-muted opacity-40'"
+              :title="opt.description"
+              @click="engineSupportFilter = opt.value"
+            >
+              <span class="h-2.5 w-2.5 shrink-0 rounded-sm" :style="{ background: opt.color }"></span>
+              <span class="truncate text-[11px]">{{ opt.label }}</span>
+            </button>
+          </div>
+        </div>
+
         <EngineConsoleEntryListPanel
-          :entries="list.visible.value"
+          :entries="engineSupportFilteredEntries"
           :key-of="(e: CardStatusPageEntry) => e.number"
           :selected-key="list.selectedKey.value"
           empty-message="No cards match the current search/filters."
