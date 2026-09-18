@@ -39,7 +39,12 @@
 // non-alnum chars each collapse to their own single `-`). No FDN card is
 // authored yet, so there is no established name<->slug table to consult —
 // this keeps the FDN scratch folder's own name consistent with whatever
-// name the eventual `functional-model/cards/<fdn-slug>/` folder will use.
+// name the eventual `functional-model/fdn-cards/<fdn-slug>/` folder will
+// use (2026-09-18, later same day: FDN's own authored-card folder moved
+// out of `functional-model/cards/` into this new sibling directory — see
+// `functional-model/cards/README.md` — since FDN's own on-disk shape has
+// almost nothing in common with FIN's; siblings step below now searches
+// BOTH directories, see its own updated comment).
 //
 // Scratch folder contents (files omitted, never faked, when a source is
 // genuinely absent — this script hard-fails instead when the FAILURE is
@@ -105,7 +110,16 @@ const ROOT = join(__dirname, '..', '..');
 const DB_PATH = join(ROOT, 'data', 'cards.db');
 const CARD_TS = join(ROOT, 'functional-model', 'card.ts');
 const COMBINATOR_TS = join(ROOT, 'functional-model', 'combinator.ts');
+// Both are searched for siblings (2026-09-18, later same day): FIN's own
+// pool (`cards/`, reference-only now — see `functional-model/cards/
+// README.md` — same-name reprints still count as real few-shot examples,
+// per this session's own explicit ruling: "if we already have a
+// definition for a card reprint, we want to use it even if it's not from
+// the same set") AND FDN's own dedicated authoring directory
+// (`fdn-cards/`, so future FDN cards get real FDN-set siblings too, once
+// more than these first 10 exist).
 const CARDS_DIR = join(ROOT, 'functional-model', 'cards');
+const FDN_CARDS_DIR = join(ROOT, 'functional-model', 'fdn-cards');
 const SCRATCH_ROOT = join(ROOT, 'functional-model', '.fdn-scratch');
 
 function slugify(word) {
@@ -155,20 +169,34 @@ function forgeAndXmageText(name) {
 // ---------------------------------------------------------------------------
 // Step 3: 0-2 sibling definition.ts files already authored for OTHER cards
 // whose name also appears in the fdn set (genuine same-target-set few-shot
-// examples — none exist yet, handled gracefully, not an error).
+// examples). Searches BOTH `functional-model/cards/` (FIN's own
+// reference-only pool — a same-name reprint there still counts, per this
+// session's own explicit ruling) AND `functional-model/fdn-cards/` (FDN's
+// own dedicated authoring directory, 2026-09-18 — none existed at all when
+// this step was first written, so this dir is what actually starts
+// producing real matches now that 10 real cards live there).
+
+async function siblingCandidateDirs() {
+  const out = [];
+  for (const dir of [CARDS_DIR, FDN_CARDS_DIR]) {
+    let entries;
+    try {
+      entries = readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory());
+    } catch {
+      continue;
+    }
+    for (const entry of entries) out.push({ dir, name: entry.name });
+  }
+  return out;
+}
 
 async function findFdnSiblings(db, excludeName, max = 2) {
-  let entries;
-  try {
-    entries = readdirSync(CARDS_DIR, { withFileTypes: true }).filter((e) => e.isDirectory());
-  } catch {
-    return [];
-  }
+  const candidates = await siblingCandidateDirs();
   const fdnNameCheck = db.prepare("SELECT 1 FROM cards WHERE set_code = 'fdn' AND name = ? LIMIT 1");
   const siblings = [];
-  for (const entry of entries) {
+  for (const { dir, name: entryName } of candidates) {
     if (siblings.length >= max) break;
-    const defPath = join(CARDS_DIR, entry.name, 'definition.ts');
+    const defPath = join(dir, entryName, 'definition.ts');
     let mod;
     try {
       mod = await import(new URL(`file://${defPath}`).href);
@@ -178,7 +206,7 @@ async function findFdnSiblings(db, excludeName, max = 2) {
     const def = Object.values(mod)[0];
     if (!def?.name || def.name === excludeName) continue;
     if (!fdnNameCheck.get(def.name)) continue; // only "also in fdn" siblings count
-    siblings.push({ slug: entry.name, name: def.name, source: readFileSync(defPath, 'utf8') });
+    siblings.push({ slug: entryName, name: def.name, source: readFileSync(defPath, 'utf8') });
   }
   return siblings;
 }

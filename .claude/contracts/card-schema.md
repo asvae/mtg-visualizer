@@ -1160,14 +1160,15 @@ has gone stale).
 per-card fact-authoring answer (still what `app/lib/cardStatus.ts`'s
 Facts-tab strip and `CardDetailTabs.vue` read via the per-card
 `GET /api/card/:set/:number` route's own `cardStatus` field). Separately,
-`GET /api/card-status/:set` (the batch route feeding `/app/engine/sets`
+`GET /api/card-status/:set` (the batch route feeding `/app/engine/cards`
+(route renamed from `/app/engine/sets`, 2026-09-18, later same day)
 only) now ALSO serves a `baseline: 'gray'|'purple'|'blue'` and
 `color: 'gray'|'purple'|'blue'|'yellow'|'green'|'re-review'` field per entry
 (the `'re-review'` value added 2026-09-18, see the bullet immediately above
 this one) — `functional-model/card-status.ts`'s own `cardStatusBaseline`/
 `cardStatusColor` functions, a pure translation layer over the 8 buckets
 (see that pair's own doc comment for the full bucket-by-bucket fold). This
-puts `/app/engine/sets` on the SAME shared 6-state axis
+puts `/app/engine/cards` on the SAME shared 6-state axis
 `/app/engine/predicates` (`GET /api/sink-derivations`) and
 `/app/engine/features` (`GET /api/engine-status`) already use, replacing
 that tab's previous bespoke 8-color scheme — this is now the ONE shared
@@ -1619,3 +1620,76 @@ separate, intentional axis, kept distinct from the shared `card-status.ts`
 axis per explicit user ruling — not folded into it. The one naming overlap
 (`purple`) is deliberate value-vocabulary reuse, described above, not a
 type/logic merge.
+
+## FDN wired into `/app/engine/cards` (route renamed from `/app/engine/sets`) — real, not just scaffolding, 2026-09-18, later same day
+
+The scaffolding-only status the section above described is now WIRED to a
+real UI: `fdn` is selectable alongside `fin` on this tab, showing whatever
+real cards live under `functional-model/fdn-cards/<slug>/` (10 as of this
+writing, moved out of `functional-model/cards/` — see that directory's own
+new `README.md` — into this dedicated sibling directory; `functional-model/
+pipeline-status.ts`'s `readPipelineStatus` and `functional-model/scripts/
+validate-card-definition-cli.mjs` both updated to match).
+
+- **`GET /api/card-status/sets`**: now also reports `fdn` — real, dev-only
+  availability check (`data/cards.db` has ≥1 row with `set_code='fdn'`,
+  same `node:sqlite` `DatabaseSync` pattern `prep-card-context.mjs` uses).
+  `fin`'s own discovery rule (a checked-in `data/<set>/<set>_scryfall.json`)
+  is completely unchanged — two explicit, separate branches, not one
+  generalized rule (see that route's own header for the full "why").
+- **`GET /api/card-status/:set`**: gained a real, explicit `fdn` branch,
+  checked BEFORE the pre-existing `fin`-only dev/production split. Queries
+  `data/cards.db` for every real `set_code='fdn'` row (canonical row per
+  name: `is_normal DESC, released_at DESC`, same tiebreak `scripts/
+  sync-card-db.mjs`'s own `idx_cards_name_pick` documents), then per card
+  resolves its slug and calls `readPipelineStatus(slug)` — no folder/file
+  at all is the real, common, NOT-an-error "not started" case (most of the
+  771 real fdn rows are in this state; only the 10 authored ones aren't).
+  `CardStatusPageEntry.status` is now `CardStatusBucket | PipelineStatus` —
+  for an `fdn` entry it's populated DIRECTLY from the pipeline axis
+  (`gray`/`purple`/`blue`/`yellow`/`green`, already display-color-shaped,
+  no 8-bucket fold needed) and `reasons` comes from the pipeline status's
+  own `reasons` array — a `card` consumer must treat this field as opaque
+  per-set display data, never assume it's always one of FIN's 8 buckets. A
+  new optional `CardStatusPageEntry.slug?: string` is set ONLY on `fdn`
+  entries (its `functional-model/fdn-cards/<slug>/` folder name), so a
+  caller doesn't have to re-derive the slugify convention client-side.
+  `fdn` is dev-only end to end (`data/cards.db` is gitignored, never
+  shipped to production) — no production branch was added for it.
+- **`/app/engine/cards/[set]/[[number]].vue`** (route restructured to a
+  real two-segment `[set]/[[number]]` at the same time, see below): renders
+  two genuinely different `STATUS_OPTIONS` vocabularies keyed on `SET`
+  (FIN's fact-authoring wording vs. FDN's pipeline-stage wording) rather
+  than one generalized copy — same "two real branches, not a fake
+  generalization" call the API route already made. Clicking an FDN card
+  does NOT mount `CardDetailTabs.vue` (that component assumes a full
+  FIN-style card — Facts/synergy/scenarios — and would error on a real FDN
+  card, which has none of that by design; making it FDN-aware is flagged,
+  explicitly deferred, real Workstream 5 UI scope) — instead a minimal
+  detail view: the card's real `definition.ts` source (via the SAME
+  already-existing, generically-scoped `GET /api/engine-status/source`
+  route Features/Predicates use for their own source citations — no new
+  route needed) plus its pipeline `reasons`.
+- **Route itself renamed `/app/engine/sets` -> `/app/engine/cards`**, and
+  restructured from a single optional `[[slug]]` segment (just a collector
+  number, with `SET` tracked as a client-side ref) to a real two-segment
+  `[set]/[[number]]` dynamic route (`app/pages/app/engine/cards/[set]/
+  [[number]].vue` + a bare `index.vue` redirecting to the last-viewed set) —
+  a bare collector number became ambiguous once more than one set could be
+  selected (FIN and FDN each have their own independent numbering). The
+  whole page component is keyed (`definePageMeta({ key: ... })`) on `:set`
+  specifically, so a set switch is a full remount while switching cards
+  within the same set reuses the instance (matching every other
+  `/app/engine/*` tab's own `[[slug]]` deep-linking convention).
+- **`EngineConsoleTabs.vue`**: primary row reordered to Cards | Predicates
+  | Features; Keywords dropped from the primary row (still reachable via a
+  trailing "…" `UPopover` menu, its own route completely unchanged).
+- **Dynamic browser tab titles** (`useHead({ title: computed(...) })`,
+  `Engine | <Tab> | <selected entry's name>`, falling back to `Engine |
+  <Tab>` with nothing selected) added to Cards/Predicates/Features (NOT
+  Keywords, explicitly out of scope).
+
+None of this touches FIN's own live production graph/matching
+(`app/lib/buildGraph.ts`/`server/api/graph-links.ts`/`functional-model/
+synergy.ts`) or the per-card `GET /api/card/:set/:number` route's `fin`
+behavior at all.

@@ -29,7 +29,6 @@ import { statusBadgeStyle } from '../../../../lib/badgeColor';
 import { renderMarkdownInline } from '../../../../lib/markdown';
 
 definePageMeta({ layout: 'graph' });
-useHead({ title: 'Engine capability status' });
 
 const { data, pending, error } = useFetch<EngineStatusPageEntry[]>('/api/engine-status');
 const toast = useToast();
@@ -72,6 +71,13 @@ const selectedEntry = computed(() => list.selected.value);
 function statusMeta(color: StatusColor) {
   return STATUS_OPTIONS.find((o) => o.value === color)!;
 }
+
+// Dynamic tab title (2026-09-18, later same day) — same `Engine | <Tab> |
+// <selected entry>` format Cards/Predicates also adopted; falls back to a
+// bare `Engine | Features` with nothing selected. A `computed()` (not a
+// plain string) so it stays live as the user clicks/keyboard-navigates
+// between entries, not just on initial load.
+useHead({ title: computed(() => (selectedEntry.value ? `Engine | Features | ${selectedEntry.value.title}` : 'Engine | Features')) });
 
 // --- URL deep-linking (route <-> selection sync) — see this file's own
 // header for the convention/slug-source note.

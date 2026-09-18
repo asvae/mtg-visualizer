@@ -1,5 +1,15 @@
 // Per-card FDN authoring-PIPELINE-STAGE status — `functional-model/
-// cards/<slug>/pipeline-status.json` (see the approved plan, Workstream 4,
+// fdn-cards/<slug>/pipeline-status.json` (2026-09-18, later same day:
+// moved out of `functional-model/cards/<slug>/` — that directory is FIN's
+// own reference-only pool now, see `functional-model/cards/README.md` —
+// into this dedicated sibling directory, since an FDN card's on-disk shape
+// has almost nothing in common with a FIN one: no Facts/synergy.json/
+// progress.json, and several existing scripts that blindly scan every
+// entry under `functional-model/cards/` with no set filter
+// (`card-status-batch.mjs`, `scripts/build-fm-bundle.mjs`,
+// `functional-model/scripts/sync-combos.mjs`) would otherwise ambiently
+// pick up FDN folders they were never designed to handle) — see the
+// approved plan, Workstream 4,
 // and `.claude/contracts/card-schema.md`'s own "FDN authoring-pipeline
 // status" section for the served/consumer-facing contract). A genuinely
 // DIFFERENT question from `progress.json`'s `enrichment`/`review`/
@@ -248,7 +258,7 @@ export function assertPipelineStatusInvariants(entry: PipelineStatusFile): void 
 }
 
 /**
- * Reads `functional-model/cards/<slug>/pipeline-status.json` off disk —
+ * Reads `functional-model/fdn-cards/<slug>/pipeline-status.json` off disk —
  * `undefined` for the real "(no folder at all)" transparent case (the card
  * dir doesn't exist, or exists but has no such file yet) AND for a
  * genuinely unparseable file. The latter is deliberate, not a shortcut:
@@ -259,7 +269,7 @@ export function assertPipelineStatusInvariants(entry: PipelineStatusFile): void 
  * at `gray` or anything higher. Never throws.
  */
 export function readPipelineStatus(slug: string, root: string = process.cwd()): PipelineStatusFile | undefined {
-  const path = join(root, 'functional-model', 'cards', slug, 'pipeline-status.json');
+  const path = join(root, 'functional-model', 'fdn-cards', slug, 'pipeline-status.json');
   if (!existsSync(path)) return undefined;
   try {
     const parsed = JSON.parse(readFileSync(path, 'utf8'));

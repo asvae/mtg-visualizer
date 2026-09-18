@@ -1,28 +1,37 @@
 <script setup lang="ts">
-// Top-of-sidebar tab bar for the `/app/engine/*` console — four tabs,
-// each its own real route (not client-side-only tab state), so a direct
+// Top-of-sidebar tab bar for the `/app/engine/*` console. Each primary tab
+// is its own real route (not client-side-only tab state), so a direct
 // link/reload lands on the right tab per this task's own requirement.
-// Deliberately only 4 entries: `/app/recognizers` was in scope for one
-// task iteration then explicitly pulled back OUT (per an explicit
+// Deliberately only 3 primary entries: `/app/recognizers` was in scope for
+// one task iteration then explicitly pulled back OUT (per an explicit
 // mid-task correction — leave that page completely untouched, not linked
-// here) — don't re-add a 5th "Recognizers" tab without a fresh explicit
-// ask. `/app/keywords` (the older standalone route this tab's content
-// duplicates) is ALSO deliberately left in place/linked from AppHeader.vue
-// alongside this "keywords" tab, not replaced by it — the user was still
-// undecided (as of this same task) on whether the keywords tab belongs in
-// this console at all, so nothing about the standalone page was removed.
+// here) — don't re-add a "Recognizers" tab without a fresh explicit ask.
+//
+// 2026-09-18, later same day, two structural changes together:
+//   - "Sets" renamed "Cards" (an earlier commit) AND its real route moved
+//     `/app/engine/sets` -> `/app/engine/cards` (this same pass) — see
+//     `app/pages/app/engine/cards/`.
+//   - Keywords dropped from the primary row entirely (explicit user
+//     ask — "doesn't want to see Keywords in the main row day-to-day but
+//     still wants it reachable"), moved into a trailing "…" overflow
+//     trigger instead. `/app/engine/keywords` (the route) is completely
+//     unchanged — same page, same content, just no longer a primary tab
+//     link here. `/app/keywords` (the older standalone route this tab's
+//     content duplicates) is ALSO still left in place/linked from
+//     AppHeader.vue, untouched by this reshuffle either.
+// New primary order: Cards | Predicates | Features.
 import { computed } from 'vue';
 
 const route = useRoute();
 
 const TABS = [
-  { label: 'Keywords', to: '/app/engine/keywords', match: '/app/engine/keywords' },
+  { label: 'Cards', to: '/app/engine/cards', match: '/app/engine/cards' },
   { label: 'Predicates', to: '/app/engine/predicates', match: '/app/engine/predicates' },
-  { label: 'Cards', to: '/app/engine/sets', match: '/app/engine/sets' },
   { label: 'Features', to: '/app/engine/features', match: '/app/engine/features' },
 ];
 
 const activeTo = computed(() => TABS.find((t) => route.path.startsWith(t.match))?.to);
+const onKeywords = computed(() => route.path.startsWith('/app/engine/keywords'));
 </script>
 
 <template>
@@ -36,5 +45,26 @@ const activeTo = computed(() => TABS.find((t) => route.path.startsWith(t.match))
     >
       {{ tab.label }}
     </NuxtLink>
+    <UPopover :content="{ side: 'bottom', align: 'end' }">
+      <button
+        type="button"
+        class="shrink-0 rounded px-2 py-1 text-center text-[11px] font-medium"
+        :class="onKeywords ? 'bg-surface text-text' : 'text-muted hover:text-text'"
+        aria-label="More engine console tabs"
+      >
+        …
+      </button>
+      <template #content>
+        <div class="p-1">
+          <NuxtLink
+            to="/app/engine/keywords"
+            class="block rounded px-2 py-1 text-[11px] font-medium whitespace-nowrap"
+            :class="onKeywords ? 'bg-surface text-text' : 'text-muted hover:bg-surface hover:text-text'"
+          >
+            Keywords
+          </NuxtLink>
+        </div>
+      </template>
+    </UPopover>
   </nav>
 </template>

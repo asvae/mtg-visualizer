@@ -29696,3 +29696,122 @@ authoring agent invocation, no card-status file changes.
     example) — both still produce the correct verdict.
   - **Open Forge-verification needed: none** — pure naming/doc change, no
     behavior touched.
+
+## FDN wired into `/app/engine/cards` for real (Workstream 4 UI), route restructure, tab reorder + dynamic titles — 2026-09-18, later same day
+
+Follow-up to the `pipeline-status.json` scaffolding entry above — actually
+wired it into a real, selectable-in-the-UI FDN axis, plus several
+orchestrator-requested structural changes bundled into the same pass
+(course-corrected/expanded mid-task via several follow-up messages, not a
+single clean spec upfront — noting so a future reader isn't confused by
+how much changed together).
+
+- **`functional-model/fdn-cards/` is now the real home for FDN-authored
+  cards**, moved out of `functional-model/cards/` (FIN's own pool, now
+  explicitly reference-only for NEW authoring — see its new `README.md`).
+  Reasoning: several existing scripts (`card-status-batch.mjs`,
+  `scripts/build-fm-bundle.mjs`, `functional-model/scripts/sync-combos.mjs`)
+  blindly scan every `functional-model/cards/` entry with no set filter —
+  the move itself is what closes that ambient-discovery risk, no code
+  change needed in any of those three scripts. Updated to match:
+  `pipeline-status.ts`'s `readPipelineStatus` (now reads `fdn-cards/`),
+  `validate-card-definition-cli.mjs` (same), `prep-card-context.mjs`'s
+  sibling search (now walks BOTH `cards/` and `fdn-cards/` — FIN reprints
+  still count as real few-shot examples per an earlier session ruling).
+  `pipeline-status.test.ts`'s 4 fixture tests updated to the new path
+  (`readPipelineStatus` itself changed, so the OLD path in those fixtures
+  would have silently stopped matching — caught and fixed, not left red).
+- **`server/api/card-status/sets.get.ts`**: `fdn` now reported as available
+  whenever `data/cards.db` has ≥1 real `set_code='fdn'` row (`node:sqlite`
+  `DatabaseSync`, `{readOnly:true}`, same pattern `server/api/cards/
+  by-names.ts`/`server/api/card/[set]/[number].ts` already use for that
+  exact DB). `fin`'s own snapshot-file discovery completely untouched —
+  two explicit branches, documented as genuinely different rules, not one
+  fake-generalized one.
+- **`server/api/card-status/[set].get.ts`**: real `fdn` branch, checked
+  BEFORE the pre-existing `fin` dev/production split (`fdn` has no
+  production path at all — `data/cards.db` is gitignored/local-only, dev
+  only by construction, same class of route `engine-status/source.get.ts`
+  already is). Canonical row per name off `cards.db` (`is_normal DESC,
+  released_at DESC`), `readPipelineStatus(slug)` per card, no
+  folder-at-all -> real "not started" `gray`, never an error (507 of 517
+  real fdn names are in this state as of this writing — only 10 have
+  actually entered the pipeline). `CardStatusPageEntry.status` widened to
+  `CardStatusBucket | PipelineStatus` — for `fdn` it's the pipeline-axis
+  value DIRECTLY (already display-color-shaped, no fold needed), for `fin`
+  unchanged. New optional `CardStatusPageEntry.slug?: string`, set only on
+  `fdn` entries, so the client doesn't need to re-derive slugify.
+- **Route restructure + rename**: `/app/engine/sets` -> `/app/engine/cards`,
+  AND (mid-task follow-up) from a single optional `[[slug]]` segment (just
+  a collector number) to a real two-segment `[set]/[[number]]` dynamic
+  route (`app/pages/app/engine/cards/[set]/[[number]].vue` + a bare
+  `index.vue` that redirects to the last-viewed set from `localStorage`) —
+  a bare number became ambiguous once 2 sets are selectable (each has its
+  own independent numbering). The whole page is keyed
+  (`definePageMeta({ key: (r) => r.params.set })`) on `:set` only, so a set
+  switch is a full remount (fresh filter/list state, fresh
+  `STATUS_OPTIONS`) while a card-within-the-same-set click reuses the
+  instance via a plain `:number` route-param watcher (same convention
+  every other `/app/engine/*` `[[slug]]` tab already uses). Old
+  `/app/engine/sets` correctly 404s now (no redirect added, by explicit
+  instruction — internal dev-only tool, nobody has it bookmarked).
+- **Two distinct `STATUS_OPTIONS` vocabularies on that page**, keyed on
+  `SET`, not one generalized copy — FIN's fact-authoring wording is
+  actively misleading for FDN's pipeline-stage meaning, and there wasn't
+  enough real shared meaning beyond bare color names to write one honest
+  description for both.
+- **FDN detail-pane decision, made explicitly (option (a) from the task,
+  not (b))**: clicking an FDN card does NOT mount `CardDetailTabs.vue`
+  (assumes a full FIN-style card with Facts/synergy/scenarios — would
+  error on a real FDN card, which has none of that by design) — chose a
+  minimal but REAL detail view instead of disabling the click outright:
+  the card's real `definition.ts` source (reusing the ALREADY-GENERIC
+  `GET /api/engine-status/source` route — `readFunctionalModelFile` is
+  scoped to all of `functional-model/`, not an allowlist of paths
+  Features/Predicates happen to cite, so zero new server route was
+  needed) plus its pipeline `reasons`. Chose this over disabling the click
+  because the real content was one `EngineConsoleCodeSection` + a reasons
+  list away — less total work than a well-built disabled-state AND
+  actually useful today. Full FDN Facts/synergy tabs remain explicitly
+  out of scope (real Workstream 5 UI decision, flagged not solved).
+- **`EngineConsoleTabs.vue` reordered + Keywords demoted** (mid-task
+  follow-up): primary row is now Cards | Predicates | Features; Keywords
+  moved into a trailing "…" `UPopover` menu (reused this app's own existing
+  popover pattern from `AppHeader.vue` — no `UDropdownMenu` was already in
+  use anywhere in this app, so this stayed consistent with real precedent
+  rather than introducing an unused component). `/app/engine/keywords`
+  itself completely unchanged, still directly linkable/reachable.
+- **Dynamic browser tab titles** (mid-task follow-up), `Engine | <Tab> |
+  <selected entry>` / bare `Engine | <Tab>` with nothing selected, added to
+  Cards/Predicates/Features via `useHead({ title: computed(...) })` (NOT
+  Keywords — explicitly out of scope). Predicates uses `entry.label`,
+  Features uses `entry.title`, Cards uses `entry.name`.
+- **Verified live** (Playwright, headless Chromium, real dev server, not
+  JSON-only): `/app/engine/cards` -> redirects to last set (`fin` by
+  default); `/app/engine/cards/fdn` lists 517 real distinct fdn names, 507
+  gray / 3 purple / 7 blue (matches the pipeline-status.json gate's own
+  7-blue/3-purple result); clicking Aetherize/Serra Angel navigates to
+  `/app/engine/cards/fdn/<number>`, shows real reasons + real
+  `definition.ts` source (`export const serraAngel: CardDefinition = {...`
+  confirmed present in rendered text, defaultOpen worked correctly — an
+  earlier confusing debug detour turned out to be MY OWN test script's
+  extra click re-closing an already-open-by-default section, not a real
+  bug); `/app/engine/cards/fin/1` -> title "Engine | Cards | Summon:
+  Bahamut", unaffected FIN behavior (306 cards, `verified`/`green`
+  unchanged); old `/app/engine/sets` -> real Nuxt 404, as intended; "…"
+  overflow menu opens and Keywords link navigates correctly;
+  Predicates/Features dynamic titles confirmed
+  (`Engine | Predicates | Crew cost activation path`, `Engine | Features |
+  Combat: blockers, damage, first/double strike, trample`).
+  `npx vitest run functional-model` 1139/1144 (5 pre-existing skips, 0
+  new failures) and `npm run typecheck` both re-run clean at the very end
+  (same pre-existing 4-error `.nuxt/tsconfig.server.json` baseline +
+  1 pre-existing unrelated `CardDetailTabs.vue`/`by-key.ts` set, 0 new
+  errors anywhere in the files this pass touched).
+- **Not done, flagged, not silently decided**: whether `.claude/agents/*.md`
+  or `CLAUDE.md` need a line about `functional-model/fdn-cards/` — left for
+  the orchestrator per its own explicit instruction not to touch either
+  file directly.
+- **Open Forge-verification needed: none** — this whole pass is
+  UI/dashboard/dev-tooling plumbing (routes, server API shaping, directory
+  layout), no engine rules/behavior touched at all.

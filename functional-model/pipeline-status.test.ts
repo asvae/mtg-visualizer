@@ -151,7 +151,7 @@ describe('readPipelineStatus — "(no folder)" and unreadable cases fall back to
   it('card folder exists but has no pipeline-status.json yet -> undefined', () => {
     const root = makeRoot();
     try {
-      mkdirSync(join(root, 'functional-model', 'cards', 'some-fdn-card'), { recursive: true });
+      mkdirSync(join(root, 'functional-model', 'fdn-cards', 'some-fdn-card'), { recursive: true });
       expect(readPipelineStatus('some-fdn-card', root)).toBeUndefined();
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -161,7 +161,7 @@ describe('readPipelineStatus — "(no folder)" and unreadable cases fall back to
   it('a real, well-formed file round-trips', () => {
     const root = makeRoot();
     try {
-      const dir = join(root, 'functional-model', 'cards', 'some-fdn-card');
+      const dir = join(root, 'functional-model', 'fdn-cards', 'some-fdn-card');
       mkdirSync(dir, { recursive: true });
       const entry: PipelineStatusFile = { status: 'blue', reasons: [], computedAt: '2026-09-18T00:00:00.000Z' };
       writeFileSync(join(dir, 'pipeline-status.json'), JSON.stringify(entry));
@@ -174,7 +174,7 @@ describe('readPipelineStatus — "(no folder)" and unreadable cases fall back to
   it('malformed JSON -> undefined, never throws (an unreadable file conveys no reliable color, never guessed)', () => {
     const root = makeRoot();
     try {
-      const dir = join(root, 'functional-model', 'cards', 'some-fdn-card');
+      const dir = join(root, 'functional-model', 'fdn-cards', 'some-fdn-card');
       mkdirSync(dir, { recursive: true });
       writeFileSync(join(dir, 'pipeline-status.json'), '{ not valid json');
       expect(readPipelineStatus('some-fdn-card', root)).toBeUndefined();
@@ -186,7 +186,7 @@ describe('readPipelineStatus — "(no folder)" and unreadable cases fall back to
   it('valid JSON but not a real PipelineStatusFile shape (no `status` field) -> undefined', () => {
     const root = makeRoot();
     try {
-      const dir = join(root, 'functional-model', 'cards', 'some-fdn-card');
+      const dir = join(root, 'functional-model', 'fdn-cards', 'some-fdn-card');
       mkdirSync(dir, { recursive: true });
       writeFileSync(join(dir, 'pipeline-status.json'), JSON.stringify({ reasons: [] }));
       expect(readPipelineStatus('some-fdn-card', root)).toBeUndefined();

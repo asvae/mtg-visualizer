@@ -464,7 +464,8 @@ export function classifyCardStatus(input: ClassifyCardStatusInput): CardStatusEn
 // `green` vocabulary `engine-status.ts` (`EngineStatusBaseline`/
 // `EngineStatusColor`) and `sink-derivation-status.ts`
 // (`SinkDerivationBaseline`/`SinkDerivationColor`) already established for
-// their own axes — added so `/app/engine/sets` (`GET /api/card-status/:set`,
+// their own axes — added so `/app/engine/cards` (route renamed from
+// `/app/engine/sets`, 2026-09-18, later same day) (`GET /api/card-status/:set`,
 // see that route's own doc comment for where this gets applied) renders
 // under the exact SAME axis `/app/engine/predicates` and
 // `/app/engine/features` already do, replacing that page's previous bespoke

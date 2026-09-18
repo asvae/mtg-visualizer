@@ -37,7 +37,6 @@ import type { SinkDerivationPageEntry } from '../../../../../server/api/sink-der
 import { statusBadgeStyle } from '../../../../lib/badgeColor';
 
 definePageMeta({ layout: 'graph' });
-useHead({ title: 'Sink-derivation predicate status' });
 
 const { data, pending, error } = useFetch<SinkDerivationPageEntry[]>('/api/sink-derivations');
 const toast = useToast();
@@ -97,6 +96,13 @@ const selectedEntry = computed(() => list.selected.value);
 function statusMeta(color: StatusColor) {
   return STATUS_OPTIONS.find((o) => o.value === color)!;
 }
+
+// Dynamic tab title (2026-09-18, later same day) — same `Engine | <Tab> |
+// <selected entry>` format Cards/Features also adopted; falls back to a
+// bare `Engine | Predicates` with nothing selected. A `computed()` (not a
+// plain string) so it stays live as the user clicks/keyboard-navigates
+// between entries, not just on initial load.
+useHead({ title: computed(() => (selectedEntry.value ? `Engine | Predicates | ${selectedEntry.value.label}` : 'Engine | Predicates')) });
 
 // --- URL deep-linking (route <-> selection sync), same convention
 // `app/pages/app/engine/keywords/[[slug]].vue` established first — see that

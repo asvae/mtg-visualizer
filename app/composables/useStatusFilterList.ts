@@ -50,7 +50,8 @@ export interface UseStatusFilterListOptions<T, C extends string> {
    * `localStorage` under this exact key and is restored on next visit —
    * per-page/per-tab (each of the four `/app/engine/*` callers uses its own
    * distinct key), same "per-viewer convenience, not shared/critical state"
-   * convention `/app/engine/sets`' own last-picked-set persistence already
+   * convention `/app/engine/cards`' (route renamed from `/app/engine/sets`,
+   * 2026-09-18, later same day) own last-picked-set persistence already
    * establishes (see that page's own header). Deliberately does NOT cover
    * `searchQuery` — search always starts empty on load; only which
    * status-color toggles are on/off persists. Read synchronously at setup

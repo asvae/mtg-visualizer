@@ -22,7 +22,11 @@ if (!slug) {
   process.exit(1);
 }
 
-const definitionPath = join(ROOT, 'functional-model', 'cards', slug, 'definition.ts');
+// 2026-09-18, later same day: FDN candidates live under
+// `functional-model/fdn-cards/<slug>/`, not `functional-model/cards/`
+// (FIN's own now reference-only pool, see `functional-model/cards/
+// README.md`) — this CLI is FDN-pipeline-only, so it resolves here.
+const definitionPath = join(ROOT, 'functional-model', 'fdn-cards', slug, 'definition.ts');
 const result = await validateCardDefinition(definitionPath, ROOT);
 console.log(JSON.stringify(result, null, 2));
 process.exit(result.ok ? 0 : 1);
