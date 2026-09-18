@@ -1639,12 +1639,20 @@ validate-card-definition-cli.mjs` both updated to match).
   generalized rule (see that route's own header for the full "why").
 - **`GET /api/card-status/:set`**: gained a real, explicit `fdn` branch,
   checked BEFORE the pre-existing `fin`-only dev/production split. Queries
-  `data/cards.db` for every real `set_code='fdn'` row (canonical row per
-  name: `is_normal DESC, released_at DESC`, same tiebreak `scripts/
-  sync-card-db.mjs`'s own `idx_cards_name_pick` documents), then per card
-  resolves its slug and calls `readPipelineStatus(slug)` — no folder/file
-  at all is the real, common, NOT-an-error "not started" case (most of the
-  771 real fdn rows are in this state; only the 10 authored ones aren't).
+  `data/cards.db` for `set_code='fdn'` rows, filtered to the real 291-card
+  main Foundations set (Scryfall's own `booster:true` field — the raw
+  `set_code='fdn'` table has 771 rows total, since every later showcase/
+  manafoil/starter-collection/beginner-box/set-extension reprint shares the
+  same set code; `booster:true` is the one field that actually isolates
+  the real draftable set, confirmed empirically against Scryfall's own
+  "Foundations · 291 cards" listing), Basic Lands excluded too (same
+  convention FIN's own `inScope` filter already uses) — ~271 real in-scope
+  cards. Canonical row per name: `is_normal DESC, released_at DESC`, same
+  tiebreak `scripts/sync-card-db.mjs`'s own `idx_cards_name_pick`
+  documents), then per card resolves its slug and calls
+  `readPipelineStatus(slug)` — no folder/file at all is the real, common,
+  NOT-an-error "not started" case (most of the ~271 in-scope fdn cards are
+  in this state; only the 10 authored ones aren't).
   `CardStatusPageEntry.status` is now `CardStatusBucket | PipelineStatus` —
   for an `fdn` entry it's populated DIRECTLY from the pipeline axis
   (`gray`/`purple`/`blue`/`yellow`/`green`, already display-color-shaped,

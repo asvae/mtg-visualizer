@@ -171,6 +171,7 @@ interface FdnCardRow {
   collector_number: string;
   is_normal: number;
   released_at: string;
+  raw_json: string;
 }
 
 /** `PipelineStatus` is already display-color-shaped (`gray`/`purple`/
@@ -194,11 +195,27 @@ function computeFdnCardStatusPage(root: string): CardStatusPageFile {
   let rows: FdnCardRow[];
   try {
     rows = db
-      .prepare("SELECT name, collector_number, is_normal, released_at FROM cards WHERE set_code = 'fdn' ORDER BY name, is_normal DESC, released_at DESC")
+      .prepare("SELECT name, collector_number, is_normal, released_at, raw_json FROM cards WHERE set_code = 'fdn' ORDER BY name, is_normal DESC, released_at DESC")
       .all() as unknown as FdnCardRow[];
   } finally {
     db.close();
   }
+
+  // In-scope filter: Scryfall's real `set_code='fdn'` rows (771 of them)
+  // cover far more than the actual 291-card Foundations draft set — every
+  // later showcase/manafoil/starter-collection/beginner-box/set-extension
+  // reprint (collector numbers 292-771) shares the same set code. Scryfall's
+  // own `booster` field (true only for the real main-set printing) is the
+  // real signal, same role FIN's own `inScope` filter in
+  // `card-status-batch.mjs` plays for THAT set (excluding Basic/digital) —
+  // confirmed empirically: exactly 291 rows have `booster:true`, matching
+  // Scryfall's own "Foundations · 291 cards" listing. Basic Lands excluded
+  // too, same convention FIN's own inScope filter already uses (a land's
+  // "status" here is meaningless noise, same reasoning either set).
+  const inScopeRows = rows.filter((row) => {
+    const raw = JSON.parse(row.raw_json) as { booster?: boolean; type_line?: string };
+    return raw.booster === true && !(raw.type_line ?? '').includes('Basic');
+  });
 
   // Canonical row per name — first row per name group is already the
   // correct pick given the ORDER BY above (is_normal DESC, released_at
@@ -207,7 +224,7 @@ function computeFdnCardStatusPage(root: string): CardStatusPageFile {
   // `resolveCard` already applies.
   const seen = new Set<string>();
   const canonicalRows: FdnCardRow[] = [];
-  for (const row of rows) {
+  for (const row of inScopeRows) {
     if (seen.has(row.name)) continue;
     seen.add(row.name);
     canonicalRows.push(row);
@@ -218,8 +235,8 @@ function computeFdnCardStatusPage(root: string): CardStatusPageFile {
     const pipeline = readPipelineStatus(slug, root);
     // No folder/file at all -> the real "not started" baseline+color, same
     // visual meaning as FIN's own `gray` bucket ("nothing done yet") — NOT
-    // an error; almost every real fdn row is in this state today (10 of
-    // 771 have actually entered the pipeline as of this writing).
+    // an error; almost every real in-scope fdn card is in this state today
+    // (10 of ~271 have actually entered the pipeline as of this writing).
     const status: PipelineStatus = pipeline?.status ?? 'gray';
     const reasons = pipeline?.reasons?.length
       ? pipeline.reasons
