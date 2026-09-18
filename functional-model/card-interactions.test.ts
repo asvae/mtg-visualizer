@@ -40,6 +40,8 @@ import { felidarSavior } from './fdn-cards/felidar-savior/definition';
 import { healersHawk } from './fdn-cards/healer-s-hawk/definition';
 import { bigfinBouncer } from './fdn-cards/bigfin-bouncer/definition';
 import { clawsOut } from './fdn-cards/claws-out/definition';
+import { dazzlingAngel } from './fdn-cards/dazzling-angel/definition';
+import { exemplarOfLight } from './fdn-cards/exemplar-of-light/definition';
 
 const lifegainMock: CardDefinition = {
   name: 'Test Lifegain Producer',
@@ -56,13 +58,15 @@ const blankLandMock: CardDefinition = {
 };
 
 describe('computeCardInteractions', () => {
-  it("Ajani's Pridemate gets a 'Lifegain' category (owns it via consumerTriggerNames — its real onLifeGained trigger name), but is NEVER itself among the matches: it has no gainLife effect of its own, it's purely a consumer ('whenever you gain life') — only the real producer (the mock) is a match; catalog-only means its baseline 'enters the battlefield'/'counters' raw categories no longer appear at all. It does NOT self-display 'Cats' (2026-09-18, Battlefield presence, `requireConsumerForSelfOwnership`) even though it structurally IS a Cat creature — merely BEING a Cat is passive membership, not a deliberate ability (see the real Helpful Hunter bug fix below)", () => {
+  it("Ajani's Pridemate gets a 'Lifegain' category (owns it via consumerTriggerNames — its real onLifeGained trigger name), but is NEVER itself among the Lifegain matches: it has no gainLife effect of its own, it's purely a consumer ('whenever you gain life') — only the real producer (the mock) is a match; catalog-only means its baseline 'enters the battlefield'/'counters' raw categories no longer appear at all. It does NOT self-display 'Cats' (2026-09-18, Battlefield presence, `requireConsumerForSelfOwnership`) even though it structurally IS a Cat creature — merely BEING a Cat is passive membership, not a deliberate ability (see the real Helpful Hunter bug fix below). It DOES self-display AND self-match 'Counters (+1/+1)' (2026-09-18, new catalog entry) — its own real 'put a +1/+1 counter on this creature' effect is a genuine direct producer match, same class of authored ability as Day of Judgment's own destroy-all program, not bare type membership", () => {
     const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate, lifegainMock]);
     const categories = result.map((r) => r.category).sort();
-    expect(categories).toEqual(['Lifegain']);
+    expect(categories).toEqual(['Counters (+1/+1)', 'Lifegain']);
     expect(categories).not.toContain('life gain');
     const lifegain = result.find((r) => r.category === 'Lifegain');
     expect(lifegain!.matchingCardNames).toEqual(['Test Lifegain Producer']);
+    const counters = result.find((r) => r.category === 'Counters (+1/+1)');
+    expect(counters!.matchingCardNames).toEqual(["Ajani's Pridemate"]);
     expect(lifegain!.matchingCardNames).not.toContain("Ajani's Pridemate");
   });
 
@@ -143,9 +147,12 @@ describe('computeCardInteractions', () => {
     expect(computeCardInteractions(healersHawk, [healersHawk])).toEqual([]);
   });
 
-  it("real bug fix, 2026-09-18: Felidar Savior does NOT self-display 'Lifegain' (same predicate-only reasoning as Healer's Hawk) — it DOES still self-display 'ETB' (a genuine, directly-authored on:'enter' trigger owns the category as a consumer, per the ETB redesign above) but with zero matches when alone in the pool: it has no bounce/blink effect of its own to be a producer. It does NOT self-display 'Cats'/'Creatures' (typeLine 'Creature — Cat Beast', 2026-09-18 Battlefield presence, `requireConsumerForSelfOwnership`) — bare Cat/Creature-type membership, no Affinity/anthem effect of its own", () => {
+  it("real bug fix, 2026-09-18: Felidar Savior does NOT self-display 'Lifegain' (same predicate-only reasoning as Healer's Hawk) — it DOES still self-display 'ETB' (a genuine, directly-authored on:'enter' trigger owns the category as a consumer, per the ETB redesign above) but with zero matches when alone in the pool: it has no bounce/blink effect of its own to be a producer. It does NOT self-display 'Cats'/'Creatures' (typeLine 'Creature — Cat Beast', 2026-09-18 Battlefield presence, `requireConsumerForSelfOwnership`) — bare Cat/Creature-type membership, no Affinity/anthem effect of its own. It DOES self-display AND self-match 'Counters (+1/+1)' (2026-09-18, new catalog entry) — its own real \"put a +1/+1 counter on each of up to two other target creatures you control\" effect genuinely produces +1/+1 counters (the query has no self-targeting constraint, same broad-by-design matching every other counterType-agnostic-target query already uses), a direct, non-predicate-derived producer match", () => {
     const result = computeCardInteractions(felidarSavior, [felidarSavior]);
-    expect(result).toEqual([{ category: 'ETB', count: 0, matchingCardNames: [] }]);
+    expect(result).toEqual([
+      { category: 'Counters (+1/+1)', count: 1, matchingCardNames: ['Felidar Savior'] },
+      { category: 'ETB', count: 0, matchingCardNames: [] },
+    ]);
   });
 
   it("real bug fix, 2026-09-18 — the REVERSE direction is unchanged: Ajani's Pridemate (a genuine consumer, owns 'Lifegain' via consumerTriggerNames) still sees BOTH Healer's Hawk AND Felidar Savior as real Lifegain producers in its own matchingCardNames — a predicate-derived match is still a real match for someone else's want, only SELF-ownership is affected by the fix above", () => {
@@ -194,6 +201,37 @@ describe('computeCardInteractions', () => {
     expect(result.find((r) => r.category === 'Cats')).toBeUndefined();
     expect(result.find((r) => r.category === 'Creatures')).toBeUndefined();
     expect(result).toEqual([]);
+  });
+
+  it('real bug fix, 2026-09-18 (etb.ts consumerTriggerNames widened): Dazzling Angel (FDN #9) self-displays BOTH "Lifegain" (a genuine direct producer — its own onOtherCreatureEnter trigger\'s gainLife effect is walked regardless of the trigger\'s own name/on-value) AND "ETB" (owned via the new consumerTriggerNames:[\'onOtherCreatureEnter\'] signal — it is genuinely ETB-reactive even though `on:\'enter\'` alone can never fire for ANOTHER permanent) — alone in the pool, "ETB" has zero matches since it has no bounce/blink effect of its own', () => {
+    const result = computeCardInteractions(dazzlingAngel, [dazzlingAngel]);
+    const categories = result.map((r) => r.category).sort();
+    expect(categories).toEqual(['ETB', 'Lifegain']);
+    const lifegain = result.find((r) => r.category === 'Lifegain')!;
+    expect(lifegain.matchingCardNames).toEqual(['Dazzling Angel']);
+    const etb = result.find((r) => r.category === 'ETB')!;
+    expect(etb.matchingCardNames).toEqual([]);
+  });
+
+  it('Dazzling Angel\'s own "ETB" row correctly picks up Bigfin Bouncer as a real PRODUCER once it\'s in the pool (Dazzling Angel itself never counts as its own ETB match, since it has no bounce effect of its own)', () => {
+    const result = computeCardInteractions(dazzlingAngel, [dazzlingAngel, bigfinBouncer]);
+    const etb = result.find((r) => r.category === 'ETB')!;
+    expect(etb.matchingCardNames).toEqual(['Bigfin Bouncer']);
+  });
+
+  it('real gap found+fixed live verifying Task 2 (lifegain.ts consumerTriggerNames widened): Exemplar of Light (FDN #11) self-displays "Lifegain" via its own real "onLifeGain" trigger name (a genuine spelling variant of Ajani\'s Pridemate\'s "onLifeGained", not the same string) — alone in the pool it owns the category with zero matches (no gainLife producer in scope), and correctly sees Felidar Savior as a real producer once in the pool', () => {
+    const alone = computeCardInteractions(exemplarOfLight, [exemplarOfLight]);
+    const lifegainAlone = alone.find((r) => r.category === 'Lifegain')!;
+    expect(lifegainAlone).toBeDefined();
+    expect(lifegainAlone.matchingCardNames).toEqual([]);
+    const withProducer = computeCardInteractions(exemplarOfLight, [exemplarOfLight, felidarSavior]);
+    const lifegain = withProducer.find((r) => r.category === 'Lifegain')!;
+    expect(lifegain.matchingCardNames).toEqual(['Felidar Savior']);
+  });
+
+  it('new "Counters (+1/+1)" sink (2026-09-18): Exemplar of Light (FDN #11) is a genuine self-referential producer/consumer loop — its own real "putCounter" effect (from its "whenever you gain life, put a +1/+1 counter on this creature" trigger) is a direct, non-predicate-derived match, so it correctly self-owns AND self-matches "Counters (+1/+1)" (unlike Battlefield presence, no requireConsumerForSelfOwnership escape hatch applies here — putting a counter is a genuine authored effect, not bare type membership)', () => {
+    const result = computeCardInteractions(exemplarOfLight, [exemplarOfLight]);
+    expect(result.find((r) => r.category === 'Counters (+1/+1)')).toEqual({ category: 'Counters (+1/+1)', count: 1, matchingCardNames: ['Exemplar of Light'] });
   });
 
   it('results are sorted by descending count, then alphabetically by category, and every entry has a non-negative integer count matching matchingCardNames.length', () => {

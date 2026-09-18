@@ -94,6 +94,18 @@ describe('lifegain sink catalog entry — corpus (mocked CardDefinition fixtures
     expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(false);
   });
 
+  it('CONSUMER mode: matches a card whose own named trigger is "onLifeGain" (the real Exemplar of Light, FDN #11, shape — a real spelling variant of the same convention, not a typo to collapse into one canonical name)', () => {
+    const card: CardDefinition = {
+      name: 'Mock Lifegain Reactor 2',
+      manaCost: '{2}{W}{W}',
+      typeLine: 'Creature — Angel',
+      pt: [3, 3],
+      triggers: [{ name: 'onLifeGain', effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] }],
+    };
+    expect(matchSink(query, card).matched).toBe(false);
+    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(true);
+  });
+
   it('CONSUMER mode: matches via the BACK face of a transforming DFC (the same face-plurality convention deriveOccurrences itself already honors)', () => {
     const card: CardDefinition = {
       name: 'Mock Front Face',

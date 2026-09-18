@@ -35,10 +35,96 @@ session doesn't have to rediscover it:
   matching is PRODUCER-shaped (`matchSink(lifegainQuery, ajanisPridemate)`
   is still `false`, unchanged) — the consumer signal is a genuinely separate
   second check, not a change to the producer one.
-- **Sink catalog still has only 2 real entries** (`lifegain`,
-  `graveyard-fodder`, both `blue`) — `lifegain` now has BOTH a producer
-  `query` and a consumer `consumerTriggerNames`; `graveyard-fodder` still
-  producer-only. Growing the catalog for real FDN authoring is future work.
+- **Sink catalog now has 6 real entries (2026-09-18, later still)**:
+  `lifegain`, `graveyard-fodder`, `etb`, `battlefield-presence-cats`,
+  `battlefield-presence-creatures`, `counters-plus1plus1`, all `blue`.
+  `counters-plus1plus1` (Exemplar of Light, FDN #11) is the first member of
+  a general "puts a counter of type X" FAMILY — needed zero new matching
+  code on either side (producer reuses the pre-existing generic `putCounter`
+  occurrence + its `counterType` equality check; consumer reuses
+  `consumerTriggerNames`), and does NOT set
+  `requireConsumerForSelfOwnership` (unlike Battlefield presence) — putting
+  a counter via a real effect is a genuine authored ability, not bare type
+  membership. A future `counters-minus1minus1`/`counters-loyalty` sibling
+  would be the identical shape, just a different `counterType`/`category`.
+  `etb.ts` also gained a `consumerTriggerNames: ['onOtherCreatureEnter']`
+  sibling to its pre-existing `consumerTriggerOn` (Dazzling Angel, FDN #9 —
+  "whenever ANOTHER creature enters" has no real `Trigger.on` member,
+  same engine gap as counter-added).
+  **Real, general lesson, found live doing this pass — worth checking
+  next time a `consumerTriggerNames` list looks stale**: `Trigger.name` is
+  free text with NO canonical spelling — Exemplar of Light's own real
+  "gain life" reactor trigger is named `'onLifeGain'` (missing the `d`),
+  genuinely different from Ajani's Pridemate's `'onLifeGained'` despite
+  meaning the same real precondition; `lifegain.ts`'s list was missing it
+  entirely until this pass (silently returned `[]`/no-Lifegain-row for
+  Exemplar of Light, contrary to an initial assumption it already worked).
+  Don't assume one canonical name per real precondition — grep for
+  near-miss spellings too, not just the one already in a catalog entry's
+  list.
+- **Sink catalog, 5-entry state (superseded by the 6-entry state
+  immediately above — kept only as the prior real checkpoint)**: `lifegain`,
+  `graveyard-fodder`, `etb`, `battlefield-presence-cats`,
+  `battlefield-presence-creatures`, all `blue` — `lifegain` has a producer `query` +
+  `consumerTriggerNames`; `graveyard-fodder` is producer-only; `etb` is
+  ALSO now a real two-role entry (producer `query` + `consumerTriggerOn`,
+  see below) — its original "single-role, has-an-`on:'enter'`-trigger"
+  design was found wrong and replaced the same day. The
+  `battlefield-presence-*` pair (Claws Out, FDN #6) shares one matcher
+  (`consumerBattlefieldPresence`/`matchesBattlefieldPresenceConsumer`,
+  reads `CostReduction.perControlled`/`pumpAll`/`putCounterAll` directly —
+  genuinely different in kind from the trigger-keyed consumer signals) and
+  introduced a new, general `SinkCatalogEntry
+  .requireConsumerForSelfOwnership?: boolean` escape hatch — real bug
+  fix, a card that merely IS a Cat/Creature (bare type/subtype membership)
+  must NOT self-display the category, only a genuine consumer effect
+  does; the reverse direction (producer matches for someone ELSE's want)
+  is unaffected. Full writeup: `card-schema.md` section 9. Growing the
+  catalog further for real FDN authoring is future work.
+- **Real bug fix, 2026-09-18 (self-ownership vs. reverse-direction, the
+  Healer's Hawk/Felidar Savior "Lifegain" bug)**: `ProducerOccurrence`
+  (`match-sink.ts`) gained `predicateDerived?: boolean`, set ONLY by
+  `deriveOccurrences` at its 3 predicate call sites (never by a predicate
+  module itself) — `SinkMatchResult` surfaces it too. `card-interactions
+  .ts`'s self-ownership gate now requires a match to be BOTH `matched` AND
+  NOT `predicateDerived` (`selfDirectProducerMatch`) before a card
+  self-displays a category; the reverse pool-matching loop (another card
+  seeing THIS card as a producer) and `consumerTriggerNames` ownership are
+  both unaffected. Fixes: `healer-s-hawk`/`felidar-savior`/`sun-blessed-
+  healer`/`guarded-heir`/`sire-of-seven-deaths` (all real Lifelink-only
+  FDN cards, no `gainLife` effect) no longer self-show "Lifegain"; Ajani's
+  Pridemate still sees all of them as real producers. No Saga/Crew card
+  exists in the FDN pool yet to cross-check the same fix for those 2
+  predicates — flag for whenever one is authored. Full writeup:
+  `card-schema.md` section 7.
+- **Real bug fix, 2026-09-18, same day — `etb` redesigned as a genuine
+  two-role "blink/bounce value" archetype (the Felidar-Savior-"ETB:20"
+  bug)**: the original "no split needed, has-an-`on:'enter'`-trigger-alone"
+  design over-matched (confirmed live: `count:20` against the real
+  100-card pool). Now mirrors `lifegain`'s own shape: **producer** =
+  `query: {category:'ETB', event:'bounce', controller:'you'}`, matched via
+  a NEW `event:'bounce'` `ProducerOccurrence` in `match-sink.ts`'s
+  `walkEffects`'s `case 'move'` (fires when `from` includes `'Battlefield'`
+  AND `to === 'Hand'` — a card is only a "permanent," CR 110.1, while on
+  the battlefield, so this can't be confused with graveyard-recursion
+  `move` effects); real motivating producer: Bigfin Bouncer (FDN). **Consumer**
+  = `SinkCatalogEntry.consumerTriggerOn?: Array<Trigger['on']>`
+  (`catalog/entry.ts`), checked via `match-sink.ts`'s NEW
+  `matchesConsumerTriggerOn` — a sibling to `consumerTriggerNames`, but
+  checking the engine's own real CLOSED `Trigger.on` enum instead of the
+  free-text `Trigger.name` field (genuinely safer, zero name-collision
+  risk) — `etb` declares `consumerTriggerOn: ['enter']`, the one part of
+  the original design that was already right. The old, now-dead
+  `event:'etb'` occurrence (`collectForFace`'s `hasOnEnterTrigger` push)
+  was deleted outright, not left unused. Verified live: `felidar-savior`
+  full-pool `ETB` count dropped from the real, confirmed 20 to 1 (Bigfin
+  Bouncer only, correctly excluding itself — no bounce effect of its own);
+  Bigfin Bouncer self-matches (producer AND consumer). A peer
+  server/card-agent route (`server/api/sink-catalog/index.get.ts`) was
+  ALREADY coded against this exact `consumerTriggerOn`/
+  `matchesConsumerTriggerOn` naming before this fix landed (same dispatch,
+  parallel work) — confirmed type-compatible, zero new typecheck errors.
+  Full writeup: `card-schema.md` section 8.
 - **No route serves `computeSinkCatalogStatus` yet** — no `GET`/review
   `POST`, same "scaffolding only" starting point `pipeline-status.ts`/
   `sink-derivation-status.ts` both had before their own review routes
@@ -79,3 +165,38 @@ session doesn't have to rediscover it:
   under `functional-model/cards/` with no filter — the `fdn-cards/` split
   is itself what keeps FDN cards out of that ambient scan, not a
   filter added to those scripts.
+- **Scale-up to 100 cards (2026-09-18, later same day): mechanical setup
+  done for 89 more slugs, cheap-tier authoring itself NOT done here** —
+  the real in-scope FDN pool is 271 distinct names (`set_code='fdn' AND
+  booster:true`, Basic Lands excluded, verified 0 name collisions,
+  `layout:'normal'` for literally all 271 — no DFC/split/adventure shapes
+  exist in-pool at all, so no authoring-shape gap to flag there). Target
+  list (collector-number order, the 11 already-authored names excluded)
+  starts `sire-of-seven-deaths` (cn 1) through `kellan-planar-trailblazer`
+  (cn 91, with cn 12/16 skipped as the two already-done). Every one of the
+  89 got a real `functional-model/.fdn-scratch/<slug>/` folder via
+  `prep-card-context.mjs`, and EVERY one found real Forge source AND real
+  XMage source (89/89 both — zero "not found" cases to flag this round,
+  unusually clean).
+- **Known, narrow gap, flagged not fixed**: `server/api/sink-catalog/
+  index.get.ts`'s own `computeRealMatches` (`hasConsumerSignal`) only
+  checks `entry.consumerTriggerNames`/`entry.consumerTriggerOn` — doesn't
+  yet know about the newer `entry.consumerBattlefieldPresence`, so the
+  `/app/engine/sinks` review-tool page's own `consumerMatches` list stays
+  `undefined` (not a crash, just omitted) for `battlefield-presence-cats`/
+  `-creatures` even though both have a real consumer signal;
+  `producerMatches` still renders correctly (8/72 respectively). Card-
+  serving-API-side file, `card`/`server`-owned — out of scope for the
+  `engine`-scoped task that added the new field.
+- **New script**: `functional-model/scripts/gate-and-write-status.mjs`
+  (vite-node, uncommitted as of authoring — orchestrator's to review/
+  commit) — the missing "run the gate, write `pipeline-status.json` from
+  the real result" wrapper around `validateCardDefinition` +
+  `pipelineStatusFromGateResult`, batchable: `npx vite-node
+  functional-model/scripts/gate-and-write-status.mjs <slug> [<slug> ...]`
+  or `--all` (discovers every `fdn-cards/<slug>/` that already has a
+  `definition.ts`). Live-verified against all 11 real cards (byte-
+  identical output modulo `computedAt`) plus a missing-slug case; writes
+  nothing to disk for a `failureKind:'other'` result (reported loudly in
+  the summary instead, per `pipelineStatusFromGateResult`'s own deliberate
+  throw) or a missing-`definition.ts` slug.

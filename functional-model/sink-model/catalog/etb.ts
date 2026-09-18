@@ -59,9 +59,30 @@
 // Bouncer) is a match. A card that's both (a creature with an ETB trigger
 // that ALSO bounces something) would count as its own match via the
 // producer path, same as any other category.
+//
+// **`consumerTriggerNames` widened (2026-09-18, later still)** — real gap
+// found live: Dazzling Angel (FDN #9), "Whenever another creature you
+// control enters, you gain 1 life," is modeled as a NAME-ONLY trigger
+// (`name: 'onOtherCreatureEnter'`, no `on` value at all — CR 603.6b's
+// "another permanent enters" shape genuinely has no `Trigger.on` member
+// today, same documented engine gap `consumerTriggerOn` above can never
+// close for this convention, since it firing on ANOTHER permanent, not
+// itself, is exactly what `on:'enter'` can't express). `consumerTriggerOn`
+// alone can never recognize this real ETB-reactive card (its own trigger's
+// `on` is `undefined`, never `'enter'`) — added a sibling
+// `consumerTriggerNames` list, same mechanism `lifegain.ts` already
+// established, checking `Trigger.name` instead. `'onOtherCreatureEnter'` is
+// the one real, checked-in convention name for this shape as of this
+// writing (grepped every real FDN `definition.ts` — Dazzling Angel is the
+// only card using it; Skyknight Squire's own "whenever another creature you
+// control enters" is modeled differently, via `on:'enter'`/`name:'onEnter'`,
+// a separate, already-`consumerTriggerOn`-covered case, even though that
+// modeling choice is itself questionable per its own GAP comment). Either
+// consumer signal is sufficient — a card can declare one, the other, or
+// both.
 import type { SinkQuery } from '../sink-query';
 import type { SinkCatalogEntry } from './entry';
 
 export const query: SinkQuery = { category: 'ETB', event: 'bounce', controller: 'you' };
 
-export const entry: SinkCatalogEntry = { slug: 'etb', query, consumerTriggerOn: ['enter'] };
+export const entry: SinkCatalogEntry = { slug: 'etb', query, consumerTriggerOn: ['enter'], consumerTriggerNames: ['onOtherCreatureEnter'] };

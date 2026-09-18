@@ -1,6 +1,6 @@
 {
-  "total": 8,
-  "passing": 8,
+  "total": 11,
+  "passing": 11,
   "cases": [
     {
       "case": "PRODUCER: real bounce-to-hand effect (from Battlefield, to Hand, validType creature)",
@@ -49,6 +49,24 @@
       "mirrors": "a transforming DFC whose back face carries the ETB ability",
       "expectedVerdict": "matches",
       "note": "Mocked front/back face pair; the onEnter trigger lives only on backFace.triggers. Verified in etb.test.ts via matchesConsumerTriggerOn."
+    },
+    {
+      "case": "CONSUMER (consumerTriggerNames): trigger named 'onOtherCreatureEnter'",
+      "mirrors": "Dazzling Angel (FDN #9) — real 'whenever another creature you control enters' shape, no `on` value at all",
+      "expectedVerdict": "matches (consumerTriggerNames only — consumerTriggerOn declines it, no `on` field set)",
+      "note": "Mocked Creature with triggers:[{name:'onOtherCreatureEnter', effects:[{kind:'gainLife'}]}]. Verified in etb.test.ts via matchesConsumerTriggerNames; matchesConsumerTriggerOn asserted false explicitly."
+    },
+    {
+      "case": "CONSUMER (consumerTriggerNames): differently-named trigger ('onLifeGain')",
+      "mirrors": "any real card whose name-only trigger reacts to something else entirely",
+      "expectedVerdict": "no-match",
+      "note": "Mocked creature with a trigger named 'onLifeGain'. Verified in etb.test.ts via matchesConsumerTriggerNames."
+    },
+    {
+      "case": "CONSUMER (consumerTriggerNames): 'onOtherCreatureEnter' on the BACK face of a transforming DFC",
+      "mirrors": "a transforming DFC whose back face carries the reactive trigger",
+      "expectedVerdict": "matches",
+      "note": "Mocked front/back face pair; the 'onOtherCreatureEnter' trigger lives only on backFace.triggers. Verified in etb.test.ts via matchesConsumerTriggerNames."
     }
   ]
 }

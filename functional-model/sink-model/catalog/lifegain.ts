@@ -22,9 +22,21 @@
 // this precondition (see `entry.ts`'s own doc comment on
 // `consumerTriggerNames` for why this is a safe, lower-stakes use of
 // `Trigger.name` — a pure field comparison, never oracle/printed text).
+//
+// **`'onLifeGain'` added (2026-09-18, later still)** — real gap found live
+// verifying Exemplar of Light (FDN #11)'s own "Whenever you gain life, put a
+// +1/+1 counter on this creature" trigger: it's named `'onLifeGain'` (NOT
+// `'onLifeGained'` — a real, checked-in spelling variant of the same
+// convention, not a typo this catalog gets to silently "fix" by picking one
+// canonical spelling), so the pre-existing single-name list declined it
+// (confirmed: Exemplar of Light self-showed NO "Lifegain" row before this
+// fix, contrary to the initial assumption it already did). Grepped every
+// real FDN `definition.ts` for both spellings — Ajani's Pridemate is the
+// only real `'onLifeGained'` case, Exemplar of Light the only real
+// `'onLifeGain'` case, zero collision between the two lists.
 import type { SinkQuery } from '../sink-query';
 import type { SinkCatalogEntry } from './entry';
 
 export const query: SinkQuery = { category: 'Lifegain', event: 'lifegain', controller: 'you' };
 
-export const entry: SinkCatalogEntry = { slug: 'lifegain', query, consumerTriggerNames: ['onLifeGained'] };
+export const entry: SinkCatalogEntry = { slug: 'lifegain', query, consumerTriggerNames: ['onLifeGained', 'onLifeGain'] };

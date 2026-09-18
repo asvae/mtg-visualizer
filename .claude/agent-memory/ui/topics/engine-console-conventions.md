@@ -82,3 +82,24 @@ established convention for it here, not `color`/`variant` theme tokens).
   risk CLAUDE.md's "Multiple orchestrators" section names — worth a
   `git status` check near the end of any multi-file-touching task if
   other sessions are known to be active concurrently.
+- Sinks tab (2026-09-18, later) grew a "Real FDN pool matches" collapsible
+  section (two `<details>`, producer vs. consumer role, "N cards"
+  `<summary>` — same convention `CardDetailTabs.vue`'s own Interactions/
+  Sinks panels use) — `GET /api/sink-catalog`'s own `SinkCatalogPageEntry`
+  now carries `realMatches?: { producerMatches: string[]; consumerMatches?:
+  string[] }`, computed unconditionally (not review-color-gated) against a
+  new shared `server/utils/fdnDefinitionPool.ts` (the FDN-pool-loading
+  convention, extracted out of `server/api/card/[set]/[number].ts`'s own
+  private copy — that route's copy was left as-is, `card`-owned file, don't
+  touch it for an unrelated change). `SinkCatalogEntry` may declare a
+  consumer-side signal via EITHER `consumerTriggerNames` (free-text
+  `Trigger.name`) OR `consumerTriggerOn` (closed `Trigger.on` enum, added
+  same day for `etb`'s producer/consumer split) — both get merged (union)
+  into the one `consumerMatches` list, never split further; check
+  `sink-model/catalog/entry.ts`'s CURRENT shape before assuming which
+  exist, this axis is still growing organically. No thumbnails wired here
+  (plain names only) — the enrichment convention
+  (`resolveFunctionalModelCardMeta`) lives unexported inside `card/
+  [set]/[number].ts`; duplicating its whole fin/db/live-Scryfall fallback
+  cascade for a dev-only review tool was judged real scope creep, a
+  deliberate skip.

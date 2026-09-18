@@ -1,6 +1,6 @@
 {
-  "total": 8,
-  "passing": 8,
+  "total": 9,
+  "passing": 9,
   "cases": [
     {
       "case": "plain effect-level gainLife",
@@ -31,6 +31,12 @@
       "mirrors": "the real Ajani's Pridemate (FDN) shape",
       "expectedVerdict": "matches (consumer mode only — producer query alone declines it)",
       "note": "Mocked creature whose only trigger is named 'onLifeGained'. Verified in lifegain.test.ts via matchesConsumerTriggerNames (matchSink itself still returns false, asserted explicitly)."
+    },
+    {
+      "case": "CONSUMER mode: named trigger 'onLifeGain' (a real spelling variant, not the same string as 'onLifeGained')",
+      "mirrors": "the real Exemplar of Light (FDN #11) shape",
+      "expectedVerdict": "matches (consumer mode only — producer query alone declines it)",
+      "note": "Mocked creature whose only trigger is named 'onLifeGain'. Verified in lifegain.test.ts via matchesConsumerTriggerNames (matchSink itself still returns false, asserted explicitly)."
     },
     {
       "case": "CONSUMER mode: differently-named trigger",

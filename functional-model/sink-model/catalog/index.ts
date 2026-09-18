@@ -21,7 +21,8 @@ import { entry as lifegain } from './lifegain';
 import { entry as etb } from './etb';
 import { entry as battlefieldPresenceCats } from './battlefield-presence-cats';
 import { entry as battlefieldPresenceCreatures } from './battlefield-presence-creatures';
+import { entry as countersPlus1Plus1 } from './counters-plus1plus1';
 
 export type { SinkCatalogEntry } from './entry';
 
-export const SINK_CATALOG = [lifegain, graveyardFodder, etb, battlefieldPresenceCats, battlefieldPresenceCreatures];
+export const SINK_CATALOG = [lifegain, graveyardFodder, etb, battlefieldPresenceCats, battlefieldPresenceCreatures, countersPlus1Plus1];
