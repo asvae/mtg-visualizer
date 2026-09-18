@@ -1,0 +1,48 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 4, "text": "Ward" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Ward" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array — the base \"this permanent has Ward\" fact is tracked (recognized-but-inert: no counterspell-trigger machinery exists anywhere in this engine to actually enforce any Ward cost, default or otherwise), same established convention sire-of-seven-deaths's own identical clause already documents. The SPECIFIC non-default cost (\"Pay 2 life\") is a separate, distinct capacity gap — see the next entry."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 5, "to": 15, "text": "Pay 2 life" }],
+    "definitionKeys": [{ "kind": "missingSchemaFunctionality", "index": 0 }],
+    "reasoning": "The SPECIFIC non-default cost half of Ward (as opposed to the base Ward keyword fact, covered above) has no schema field to live in at all — `Keyword` is a bare string-literal union with no cost-payload field — declared as a real, structured demand rather than silently dropped."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 17,
+        "to": 147,
+        "text": "(Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 2 life.)"
+      }
+    ],
+    "reasoning": "Reminder text for Ward directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 148, "to": 151, "text": "{T}" }],
+    "definitionKeys": [{ "kind": "ability", "name": "castFromGraveyard" }],
+    "reasoning": "This card's own `abilities` entry named `castFromGraveyard` carries `cost: '{T}'`, the exact printed activation cost for this ability."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 153,
+        "to": 223,
+        "text": "You may cast target Zombie creature card from your graveyard this turn"
+      }
+    ],
+    "definitionKeys": [{ "kind": "ability", "name": "castFromGraveyard" }],
+    "reasoning": "Structurally represented by this same `castFromGraveyard` ability's `kind:'custom'` effect (a documented no-op placeholder, per its own `describe` text) — the base \"this ability exists, with this cost\" fact is tracked, same recognized-but-inert convention as Ward's own base keyword fact above. The effect body itself is inert because no standing-permission/MayPlay mechanic exists anywhere in this engine (a real, separate ENGINE_GAPS.md-class capacity gap, not a schema-representability gap — this clause has a real place to live in `CardDefinition`, unlike the Ward-cost gap above, which has none)."
+  }
+]

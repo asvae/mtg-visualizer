@@ -176,6 +176,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFunctionalModelFile } from './source-files';
+import type { CardDefinition } from './card';
+import { computeEngineSupport } from './engine-support-registry';
 
 // `validate-card-definition.mjs`'s own real return shape, duplicated here
 // as a type only (that script is plain `.mjs` — no exported TS types to
@@ -193,6 +195,16 @@ export interface CardDefinitionValidationResult {
   failureKind?: 'capacity-gap' | 'other' | 'incomplete-authoring';
   reasons: string[];
   engineGapsContext?: { gray: string[]; purple: string[] };
+  /** The real, resolved `CardDefinition` object `validate-card-
+   * definition.mjs` already loaded to run its own vocabulary walk/manifest
+   * check — carried through ONLY on an `ok:true` or `failureKind:
+   * 'capacity-gap'` result (never `'incomplete-authoring'`/`'other'`, and
+   * never itself written to `pipeline-status.json` — this is an in-memory
+   * pass-through the caller uses to compute `engineSupport` below, gone the
+   * instant `pipelineStatusFromGateResult` returns). Optional so existing
+   * callers/tests that construct a bare `{ok, reasons}` fixture still
+   * compile unchanged. */
+  definition?: CardDefinition;
 }
 
 // `re-review` (2026-09-18, later same day) is a SEVENTH-in-name-but-really-
@@ -266,6 +278,28 @@ export interface PipelineStatusFile {
   /** ISO timestamp this entry was last computed/written — informational
    * only, never consulted by any classification/transition logic here. */
   computedAt: string;
+  /** A small, honest, deterministic crossref against `functional-model/
+   * engine-support-registry.ts`'s own sparse, organically-growing gap
+   * catalog — genuinely DIFFERENT from this axis's own `status` (which
+   * answers "does the schema fully REPRESENT this card's printed text").
+   * A card can be `blue` (zero `missingSchemaFunctionality` gaps) while
+   * still using a keyword/trigger/effect the schema recognizes but the
+   * real engine doesn't actually enforce at runtime (Ward is the
+   * registry's first real entry) — `engineSupport: 'off'` is how that
+   * surfaces here, independent of `status`/`reasons`/`failureKind` above.
+   * **Set ONLY on a `'blue'` or `'purple'` entry** (computed via
+   * `computeEngineSupport(result.definition)` in
+   * `pipelineStatusFromGateResult` below, off the real `CardDefinition`
+   * that gate run already resolved) — absent entirely on `'gray'` (no
+   * manifest yet, never really gated) and on `'yellow'`/`'green'` (
+   * `applyPipelineReview` doesn't carry it forward, same as every other
+   * gate-specific field it already drops on a review transition). That
+   * absence is deliberate and load-bearing: a future UI filter's "-"
+   * (not-yet-evaluated) state should read as "no `engineSupport` field at
+   * all," never confused with `'on'` ("nothing tracked yet," an honest but
+   * NOT "confirmed clean" verdict — see `engine-support-registry.ts`'s own
+   * header for why `'on'` is never a guarantee). */
+  engineSupport?: 'on' | 'off';
 }
 
 /**
@@ -277,9 +311,23 @@ export interface PipelineStatusFile {
  * documentation a future caller could accidentally skip.
  */
 export function pipelineStatusFromGateResult(result: CardDefinitionValidationResult, now: string = new Date().toISOString()): PipelineStatusFile {
-  if (result.ok) return { status: 'blue', reasons: [], computedAt: now };
+  // `engineSupport` — see `PipelineStatusFile.engineSupport`'s own doc
+  // comment: set ONLY here, on `'blue'`/`'purple'`, off the real
+  // `CardDefinition` the gate already resolved (`result.definition` —
+  // absent for a synthetic/test-constructed `result`, in which case this
+  // is simply skipped, same "optional, backward-compatible" posture every
+  // other `result`-derived field on this function already has).
+  const engineSupport = result.definition ? computeEngineSupport(result.definition) : undefined;
+  if (result.ok) return { status: 'blue', reasons: [], computedAt: now, ...(engineSupport ? { engineSupport } : {}) };
   if (result.failureKind === 'capacity-gap') {
-    return { status: 'purple', reasons: result.reasons, failureKind: 'capacity-gap', engineGapsContext: result.engineGapsContext, computedAt: now };
+    return {
+      status: 'purple',
+      reasons: result.reasons,
+      failureKind: 'capacity-gap',
+      engineGapsContext: result.engineGapsContext,
+      computedAt: now,
+      ...(engineSupport ? { engineSupport } : {}),
+    };
   }
   // `'incomplete-authoring'` (2026-09-18, later same day again) — the card
   // is otherwise schema-valid but has no real, well-formed coverage-
@@ -460,6 +508,18 @@ export function assertPipelineStatusInvariants(entry: PipelineStatusFile): void 
   // `re-review` rather than being treated as a malformed file).
   if (entry.status !== 'green' && entry.reviewedFingerprint !== undefined) {
     throw new Error(`reviewedFingerprint must only be set on a 'green' entry, found it on '${entry.status}'.`);
+  }
+  // `engineSupport` (see its own doc comment on `PipelineStatusFile`) is
+  // only ever meaningful alongside `blue`/`purple` — a `gray` card was
+  // never really gated (no manifest, or blocked before reaching the
+  // engine-support check at all) and `yellow`/`green` are review overlays
+  // `applyPipelineReview` produces fresh, never carrying this field
+  // forward. Absence elsewhere is the real, load-bearing "not yet
+  // evaluated" signal (see `engine-support-registry.ts`'s own header) —
+  // never optional-but-tolerated the way `reviewedFingerprint` is on an
+  // old `green` entry.
+  if (entry.status !== 'blue' && entry.status !== 'purple' && entry.engineSupport !== undefined) {
+    throw new Error(`engineSupport must only be set on a 'blue' or 'purple' entry, found it on '${entry.status}'.`);
   }
 }
 

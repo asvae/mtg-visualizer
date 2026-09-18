@@ -28,5 +28,6 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T14:51:23.747Z"
+  "computedAt": "2026-09-18T15:48:54.870Z",
+  "engineSupport": "on"
 }

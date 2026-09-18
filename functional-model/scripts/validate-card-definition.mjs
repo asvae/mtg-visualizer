@@ -622,6 +622,14 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
         gray: engineStatus.filter((e) => e.baseline === 'gray').map((e) => e.title),
         purple: engineStatus.filter((e) => e.baseline === 'purple').map((e) => e.title),
       },
+      // Carried through so `pipeline-status.ts`'s own
+      // `pipelineStatusFromGateResult` can compute `engineSupport` (via
+      // `engine-support-registry.ts`'s `computeEngineSupport`) off the SAME
+      // real, already-resolved `CardDefinition` this gate just walked —
+      // never re-imported/re-resolved a second time by a caller. Never
+      // itself written to `pipeline-status.json` (see
+      // `CardDefinitionValidationResult.definition`'s own doc comment).
+      definition,
     };
   }
 
@@ -632,7 +640,7 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
     return { ok: false, failureKind: 'other', reasons: diagnostics };
   }
 
-  return { ok: true, reasons: [] };
+  return { ok: true, reasons: [], definition };
 }
 
 // No CLI entry point in this file — see this file's own header, "Reusable,
