@@ -42,7 +42,7 @@ describe('computeEngineSupport', () => {
     expect(computeEngineSupport(definition)).toBe('on');
   });
 
-  it('the registry is seeded with exactly the real, confirmed entries (Ward + the 2026-09-18 schema-completeness cluster)', () => {
+  it('the registry is seeded with exactly the real, confirmed entries (Ward + the 2026-09-18 schema-completeness cluster + the same-day trigger-dispatch-cluster pass)', () => {
     expect(ENGINE_SUPPORT_REGISTRY.map((e) => e.id)).toEqual([
       'ward-not-enforced',
       'kicker-not-enforced',
@@ -50,6 +50,8 @@ describe('computeEngineSupport', () => {
       'cant-block-not-enforced',
       'board-state-condition-not-enforced',
       'other-permanent-enters-trigger-not-enforced',
+      'fdn-trigger-cluster-not-enforced',
+      'spell-cost-reduction-card-type-gate-not-enforced',
     ]);
   });
 
@@ -109,5 +111,39 @@ describe('computeEngineSupport', () => {
   it("returns 'on' for a trigger using the pre-existing on:'enter' (not the new watch-trigger value)", () => {
     const definition = mockDefinition({ triggers: [{ name: 'onEnter', on: 'enter', effects: [] }] });
     expect(computeEngineSupport(definition)).toBe('on');
+  });
+
+  it.each(['lifeGained', 'dies', 'otherCreatureDies', 'attackersDeclared', 'drawNthCardThisTurn', 'castNoncreatureSpell', 'castInstantOrSorcery', 'dealsCombatDamageToPlayer', 'creatureYouControlDealsCombatDamageToPlayer', 'opponentLifeLost'] as const)(
+    "returns 'off' for a trigger using on:'%s' (2026-09-18 trigger-dispatch-cluster pass)",
+    (on) => {
+      const definition = mockDefinition({ triggers: [{ name: 'onX', on, effects: [] }] });
+      expect(computeEngineSupport(definition)).toBe('off');
+    },
+  );
+
+  it("returns 'off' when only the backFace carries a trigger using on:'dies'", () => {
+    const definition = mockDefinition({
+      keywords: ['FirstStrike'],
+      backFace: mockDefinition({ name: 'Mock Card // Back', triggers: [{ name: 'onDeath', on: 'dies', effects: [] }] }),
+    });
+    expect(computeEngineSupport(definition)).toBe('off');
+  });
+
+  it("returns 'off' for a spellCostReductionGrants entry carrying a non-empty cardTypes", () => {
+    const definition = mockDefinition({ spellCostReductionGrants: [{ amount: 1, colors: [], cardTypes: ['Instant', 'Sorcery'] }] });
+    expect(computeEngineSupport(definition)).toBe('off');
+  });
+
+  it("returns 'on' for a spellCostReductionGrants entry with no cardTypes (colors-only, pre-existing shape)", () => {
+    const definition = mockDefinition({ spellCostReductionGrants: [{ amount: 1, colors: ['W'] }] });
+    expect(computeEngineSupport(definition)).toBe('on');
+  });
+
+  it("returns 'off' when only the backFace carries a cardTypes-gated spellCostReductionGrants entry", () => {
+    const definition = mockDefinition({
+      keywords: ['FirstStrike'],
+      backFace: mockDefinition({ name: 'Mock Card // Back', spellCostReductionGrants: [{ amount: 1, colors: [], cardTypes: ['Instant'] }] }),
+    });
+    expect(computeEngineSupport(definition)).toBe('off');
   });
 });

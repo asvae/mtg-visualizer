@@ -99,6 +99,25 @@ export const ENGINE_SUPPORT_REGISTRY: EngineSupportGapEntry[] = [
       "Trigger.on:'otherPermanentEnters' (added 2026-09-18 — arahbo-the-first-fang/skyknight-squire's own \"whenever another [qualifying permanent] you control enters\" gap) is declaratively real but engine.ts dispatches no board-wide \"any permanent just entered\" sweep for it — every other real 'on' auto-fire value in this union only ever watches the permanent's OWN entrance/event, never a board-wide watch for OTHER permanents.",
     matches: (def) => hasOtherPermanentEntersTrigger(def) || (def.backFace ? hasOtherPermanentEntersTrigger(def.backFace) : false),
   },
+  {
+    // 2026-09-18, later still — FDN trigger-dispatch-cluster pass. Ten new
+    // real, closed, Forge-cited Trigger.on values (see card.ts's own doc
+    // comment on the `on` field for the full per-value citation trail) —
+    // bundled as ONE registry entry (rather than ten near-identical ones)
+    // since every one shares the exact same underlying reasoning: no
+    // engine.ts call site dispatches ANY of them yet, same Ward pattern as
+    // 'otherPermanentEnters' above.
+    id: 'fdn-trigger-cluster-not-enforced',
+    description:
+      "Trigger.on values 'lifeGained'/'dies'/'otherCreatureDies'/'attackersDeclared'/'drawNthCardThisTurn'/'castNoncreatureSpell'/'castInstantOrSorcery'/'dealsCombatDamageToPlayer'/'creatureYouControlDealsCombatDamageToPlayer'/'opponentLifeLost' (all added 2026-09-18, later still) are each declaratively real (see card.ts's own doc comment on Trigger.on for the full real-card/Forge-citation trail per value) but engine.ts dispatches none of them yet — no LifeGained/ChangesZone-to-Graveyard/AttackersDeclared/Drawn/SpellCast/DamageDone/LifeLost auto-fire sweep exists anywhere in this engine today, for any card.",
+    matches: (def) => hasFdnTriggerClusterOnValue(def) || (def.backFace ? hasFdnTriggerClusterOnValue(def.backFace) : false),
+  },
+  {
+    id: 'spell-cost-reduction-card-type-gate-not-enforced',
+    description:
+      "SpellCostReductionGrant.cardTypes (added 2026-09-18, later still — archmage-of-runes's own card-type-gated \"Instant and sorcery spells you cast cost {1} less\") is declaratively real but state.ts's own activeSpellCostDiscount only ever checks grant.colors.some(...) — a cardTypes-only grant (colors: []) currently contributes ZERO real discount, a stronger \"always a no-op today\" case than the usual Ward pattern.",
+    matches: (def) => hasSpellCostReductionCardTypeGate(def) || (def.backFace ? hasSpellCostReductionCardTypeGate(def.backFace) : false),
+  },
 ];
 
 /** Shared by `board-state-condition-not-enforced` — true if any trigger or
@@ -113,6 +132,32 @@ function hasBoardStateCondition(def: CardDefinition): boolean {
  * trigger on this ONE face uses the new watch-trigger `on` value. */
 function hasOtherPermanentEntersTrigger(def: CardDefinition): boolean {
   return (def.triggers ?? []).some((t) => t.on === 'otherPermanentEnters');
+}
+
+/** Shared by `fdn-trigger-cluster-not-enforced` — true if any trigger on
+ * this ONE face uses one of the ten new (2026-09-18, later still) `on`
+ * values, none of which `engine.ts` dispatches yet. */
+const FDN_TRIGGER_CLUSTER_ON_VALUES = new Set<string>([
+  'lifeGained',
+  'dies',
+  'otherCreatureDies',
+  'attackersDeclared',
+  'drawNthCardThisTurn',
+  'castNoncreatureSpell',
+  'castInstantOrSorcery',
+  'dealsCombatDamageToPlayer',
+  'creatureYouControlDealsCombatDamageToPlayer',
+  'opponentLifeLost',
+]);
+function hasFdnTriggerClusterOnValue(def: CardDefinition): boolean {
+  return (def.triggers ?? []).some((t) => typeof t.on === 'string' && FDN_TRIGGER_CLUSTER_ON_VALUES.has(t.on));
+}
+
+/** Shared by `spell-cost-reduction-card-type-gate-not-enforced` — true if
+ * any `spellCostReductionGrants` entry on this ONE face declares a
+ * non-empty `cardTypes`. */
+function hasSpellCostReductionCardTypeGate(def: CardDefinition): boolean {
+  return (def.spellCostReductionGrants ?? []).some((g) => (g.cardTypes ?? []).length > 0);
 }
 
 /**

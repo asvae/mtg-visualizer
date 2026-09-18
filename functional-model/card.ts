@@ -1226,6 +1226,25 @@ export interface SpellCostReductionGrant {
   amount: number;
   /** Real WUBRG color letters (e.g. `['W']`) — a spell qualifies if ANY of its own colored mana-cost pips matches ANY color named here (mirrors Forge's own `ValidCard$ Card.White`-style color check). */
   colors: string[];
+  /**
+   * Real card-TYPE gate (2026-09-18, later still) — additive sibling to
+   * `colors`, NOT a compound filter with it: a spell qualifies if EITHER
+   * `colors` intersects its own color pips OR `cardTypes` intersects its own
+   * printed types (mirrors real Forge's own independent `ValidCard$`
+   * criteria — each grant clause names its OWN gate, never an implicit AND
+   * across unrelated dimensions). Archmage of Runes's own real "Instant and
+   * sorcery spells you cast cost {1} less to cast" (`res/cardsfolder/a/
+   * archmage_of_runes.txt`, real `S:Mode$ ReduceCost | ValidCard$
+   * Instant,Sorcery | Type$ Spell | Activator$ You | Amount$ 1`) needs
+   * `cardTypes: ['Instant', 'Sorcery']`, `colors: []`. **NOT yet consulted
+   * by `state.ts`'s own `activeSpellCostDiscount`** (that function only
+   * ever checks `grant.colors.some(...)` — an empty `colors: []` array
+   * currently means this grant contributes ZERO real discount despite being
+   * declared, a stronger "currently always a no-op" case than the usual
+   * Ward pattern; see `engine-support-registry.ts`'s own
+   * `spell-cost-reduction-card-type-gate-not-enforced` entry).
+   */
+  cardTypes?: string[];
 }
 
 /**
@@ -1526,6 +1545,21 @@ export type BoardStateCondition =
       kind: 'selfCounterCountAtLeast';
       counterType: string;
       min: number;
+    }
+  | {
+      /**
+       * A live-board POWER threshold on the controller's OWN creatures (2026-09-18, later still) — real Forge `IsPresent$ Creature.YouCtrl+powerGEn` intervening-if gate, `courageous-goblin`'s own "Whenever this creature attacks while you control a creature with power 4 or greater..." (`res/cardsfolder/c/courageous_goblin.txt`). `owner` mirrors `graveyardCountAtLeast`'s own field — omitted defaults to `'you'`.
+       */
+      kind: 'controlsCreaturePowerAtLeast';
+      min: number;
+      owner?: EffectOwner;
+    }
+  | {
+      /**
+       * A self TYPE-membership gate — checks `ctx.self`'s OWN current types, the mirror of `selfCounterCountAtLeast` for type instead of counter count (2026-09-18, later still). Real Forge `ValidCard$ Card.Self+nonX` — `infernal-vessel`'s own "When this creature dies, if it wasn't a Demon, ..." (`res/cardsfolder/i/infernal_vessel.txt`, real `Card.Self+nonDemon`) needs `{kind:'selfLacksType', type:'Demon'}`. Only the "lacks" polarity is modeled — no real FDN card needs a "self HAS type X" variant yet.
+       */
+      kind: 'selfLacksType';
+      type: string;
     };
 
 /**
@@ -1715,8 +1749,137 @@ export interface Trigger {
    *    engine doesn't have either, see ENGINE_GAPS.md) — genuinely out of
    *    this narrow pass's scope, not the "grant a trigger to another
    *    permanent" problem this `on` value itself already fully solves.
+   *
+   * 2026-09-18, later still — FDN trigger-dispatch-cluster pass (schema
+   * agent). Ten more real, closed, Forge-cited auto-fire occasions, found by
+   * clustering the FDN pool's own recurring "name-only trigger" gate
+   * failures rather than guessing. Same "declared, honestly NOT yet
+   * dispatched by `engine.ts`" Ward pattern as `'otherPermanentEnters'`
+   * above — see `engine-support-registry.ts`'s own
+   * `fdn-trigger-cluster-not-enforced` entry, which covers all ten at once:
+   *  - `'lifeGained'` — real Forge `TriggerLifeGained`/`Mode$ LifeGained |
+   *    ValidPlayer$ You`: "whenever you gain life." 3 real FDN cards print
+   *    the plain, unrestricted shape (Ajani's Pridemate, Exemplar of Light,
+   *    Fiendish Panda — `res/cardsfolder/{a/ajanis_pridemate,e/
+   *    exemplar_of_light,f/fiendish_panda}.txt`); Cat Collector's own
+   *    "...for the first time during each of your turns" variant
+   *    (`res/cardsfolder/c/cat_collector.txt`, real `FirstTime$ True |
+   *    PlayerTurn$ True`) is the SAME underlying trigger reused with the
+   *    pre-existing `activationLimit: 1` field (already real, per-turn-reset
+   *    Forge `ActivationLimit$ N` semantics — functionally identical outcome
+   *    to Forge's own `FirstTime$ True` here), not a second `on` value.
+   *  - `'dies'` — real Forge `TriggerChangesZone`/`Mode$ ChangesZone |
+   *    Origin$ Battlefield | Destination$ Graveyard | ValidCard$ Card.Self`:
+   *    "when this creature dies" — the exact self-only zone-change mirror of
+   *    `'enter'` above, just Battlefield->Graveyard instead of
+   *    Any->Battlefield. 4 real FDN cards (Infestation Sage, Nine-Lives
+   *    Familiar, Infernal Vessel, Fiendish Panda —
+   *    `res/cardsfolder/{i/infestation_sage,n/nine_lives_familiar,
+   *    i/infernal_vessel,f/fiendish_panda}.txt`).
+   *  - `'otherCreatureDies'` — SAME real Forge `Mode$ ChangesZone |
+   *    Destination$ Graveyard` trigger, but board-wide (genuinely distinct
+   *    from `'dies'` above the same way `'otherPermanentEnters'` is distinct
+   *    from `'enter'`) — see `otherCreatureDiesMatch` below. High-Society
+   *    Hunter's own "Whenever another nontoken creature dies, draw a card"
+   *    (`res/cardsfolder/h/high_society_hunter.txt`, real `ValidCard$
+   *    Creature.!token+Other` — no `YouCtrl` clause at all, genuinely ANY
+   *    player's creature, not just the controller's own) is the one real FDN
+   *    card; checked directly against `infestation-sage`/`nine-lives-
+   *    familiar`/`infernal-vessel` above before adding this as a SEPARATE
+   *    value — those three are all `ValidCard$ Card.Self`, a materially
+   *    different real trigger, not a looser version of this one.
+   *  - `'attackersDeclared'` — real Forge `TriggerAttackersDeclared`/`Mode$
+   *    AttackersDeclared | AttackingPlayer$ You`: "whenever you attack [with
+   *    N or more creatures]" — see `attackersDeclaredMinCount` below.
+   *    Armasaur Guide's own real "Whenever you attack with three or more
+   *    creatures..." (`res/cardsfolder/a/armasaur_guide.txt`, real
+   *    `ValidAttackersAmount$ GE3`) and Battlesong Berserker's own real
+   *    "Whenever you attack, ..." (`res/cardsfolder/b/
+   *    battlesong_berserker.txt`, no `ValidAttackersAmount` param at all —
+   *    Forge's own `TriggerAttackersDeclared.performTest` defaults an absent
+   *    `ValidAttackersAmount` to `GE1`, i.e. "you attack with at least one
+   *    creature," genuinely the SAME real trigger family as Armasaur Guide's
+   *    threshold variant, not a different one) both use this value.
+   *    Genuinely distinct from `'attacks'` above (`TriggerAttacks`/`Mode$
+   *    Attacks | ValidCard$ Card.Self` — THIS creature's own individual
+   *    attack) — `AttackersDeclared` fires once per combat off the
+   *    CONTROLLER'S total declared-attacker count, never per-creature.
+   *  - `'drawNthCardThisTurn'` — real Forge `TriggerDrawn`/`Mode$ Drawn |
+   *    ValidCard$ Card.YouCtrl` — the exact name this schema's own
+   *    `'equippedAttacks'` doc comment above already anticipated (17+ real
+   *    FIN cards share the underlying trigger family). See
+   *    `drawNthCardThisTurnNumber` below for the real `Number$` gate; Forge
+   *    citations: Erudite Wizard/Mischievous Mystic/Homunculus Horde (all
+   *    `Number$ 2`, `res/cardsfolder/{e/erudite_wizard,m/
+   *    mischievous_mystic,h/homunculus_horde}.txt`) and Clinquant Skymage
+   *    (no `Number$` param at all — fires on EVERY draw, confirmed directly
+   *    against `TriggerDrawn.performTest`: `Number$` absent means the
+   *    `hasParam("Number")` branch is skipped entirely, `res/cardsfolder/c/
+   *    clinquant_skymage.txt`).
+   *  - `'castNoncreatureSpell'` — real Forge `TriggerSpellAbilityCastOrCopy`/
+   *    `Mode$ SpellCast | ValidCard$ Card.nonCreature | ValidActivatingPlayer$
+   *    You` — Crackling Cyclops's own real "Whenever you cast a noncreature
+   *    spell..." (`res/cardsfolder/c/crackling_cyclops.txt`). The other half
+   *    of the SAME `'castNoncreatureSpell'`/`'drawNthCardThisTurn'` pair
+   *    `'equippedAttacks'`'s own doc comment above named as unbuilt
+   *    (`astrologian-s-planisphere`/`black-mage-s-rod`, FIN pool,
+   *    `engine`-owned) — this pass only adds the VOCABULARY (schema lane),
+   *    real `engine.ts` dispatch for either value is still unbuilt (see
+   *    `engine-support-registry.ts`).
+   *  - `'castInstantOrSorcery'` — SAME real Forge `Mode$ SpellCast` trigger
+   *    mode, narrower `ValidCard$ Instant,Sorcery` filter — genuinely
+   *    distinct from `'castNoncreatureSpell'` (a card can want "instant or
+   *    sorcery only," not just "any noncreature spell," and Forge expresses
+   *    each as a different literal `ValidCard$` value, not a parameterized
+   *    one) — Archmage of Runes's own real "Whenever you cast an instant or
+   *    sorcery spell, draw a card" (`res/cardsfolder/a/archmage_of_runes.txt`).
+   *  - `'dealsCombatDamageToPlayer'` — real Forge `TriggerDamageDone`/`Mode$
+   *    DamageDone | ValidSource$ Card.Self | ValidTarget$ Player |
+   *    CombatDamage$ True` — THIS permanent's own combat damage to a player,
+   *    the `DamageDone`-family mirror of `'attacks'`'s own self-only scope.
+   *    Eager Trufflesnout's own real "Whenever this creature deals combat
+   *    damage to a player..." (`res/cardsfolder/e/eager_trufflesnout.txt`).
+   *  - `'creatureYouControlDealsCombatDamageToPlayer'` — SAME real Forge
+   *    `Mode$ DamageDone | ValidTarget$ Player | CombatDamage$ True` trigger
+   *    mode, but `ValidSource$ Creature.YouCtrl` instead of `Card.Self` — a
+   *    board-wide watch (the `DamageDone`-family mirror of
+   *    `'otherPermanentEnters'`'s own board-wide scope), genuinely distinct
+   *    from the self-only value above. Kaito, Cunning Infiltrator's own real
+   *    "Whenever a creature you control deals combat damage to a player, put
+   *    a loyalty counter on Kaito" (`res/cardsfolder/k/
+   *    kaito_cunning_infiltrator.txt`) — Kaito is itself a Planeswalker, so
+   *    this never self-matches, only watches its controller's creatures.
+   *  - `'opponentLifeLost'` — real Forge `TriggerLifeLost`/`Mode$ LifeLost |
+   *    ValidPlayer$ Opponent` — "whenever an opponent loses life" (damage
+   *    causes loss of life, CR 119.3/120.3 — a strictly broader real trigger
+   *    than "whenever an opponent LOSES LIFE FROM DAMAGE," matching Forge's
+   *    own `TriggerLifeLost` class exactly, not a narrower damage-only
+   *    variant). Bloodthirsty Conqueror's own real "Whenever an opponent
+   *    loses life, you gain that much life" (`res/cardsfolder/b/
+   *    bloodthirsty_conqueror.txt`) — a real, general "drain"/vampiric
+   *    archetype, not a one-off shape.
+   * None of these ten are dispatched by `engine.ts` yet — same Ward
+   * pattern as `'otherPermanentEnters'`; see `engine-support-registry.ts`'s
+   * own `fdn-trigger-cluster-not-enforced` entry.
    */
-  on?: 'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks' | 'equippedAttacks' | 'otherPermanentEnters';
+  on?:
+    | 'enter'
+    | 'upkeep'
+    | 'endStep'
+    | 'tapLandForMana'
+    | 'attacks'
+    | 'equippedAttacks'
+    | 'otherPermanentEnters'
+    | 'lifeGained'
+    | 'dies'
+    | 'otherCreatureDies'
+    | 'attackersDeclared'
+    | 'drawNthCardThisTurn'
+    | 'castNoncreatureSpell'
+    | 'castInstantOrSorcery'
+    | 'dealsCombatDamageToPlayer'
+    | 'creatureYouControlDealsCombatDamageToPlayer'
+    | 'opponentLifeLost';
   /**
    * Real CR 603.4 "intervening if" gate — this trigger's own `effects` only
    * actually apply while this condition holds (checked at the moment the
@@ -1744,8 +1907,55 @@ export interface Trigger {
    * — no board-wide "any permanent just entered" sweep exists yet for ANY
    * card (Ward pattern; see `engine-support-registry.ts`'s own
    * `other-permanent-enters-trigger-not-enforced` entry).
+   *
+   * `isLand` (2026-09-18, later still) — real Landfall support: checked
+   * directly against real Forge card scripts first, Landfall is NOT its own
+   * `TriggerType` at all — it's this SAME `Mode$ ChangesZone | Destination$
+   * Battlefield | ValidCard$ Land.YouCtrl` shape (`TriggerChangesZone`),
+   * just filtered to the Land card type instead of a creature subtype. Same
+   * `isLand?: boolean` field NAME/semantics `TriggerDoublingGrant.entersMatch`
+   * already established for the identical real distinction (a card TYPE
+   * filter, as opposed to `subtype`'s creature-subtype filter). Beast-Kin
+   * Ranger/Dazzling Angel (both `sameController: true`, no type filter —
+   * "another creature you control," matching Skyknight Squire's own already-
+   * accepted `{sameController: true}` looseness above) and Elfsworn Giant/
+   * Grappling Kraken/Mossborn Hydra (`isLand: true, sameController: true` —
+   * real Landfall, `res/cardsfolder/{e/elfsworn_giant,g/grappling_kraken,
+   * m/mossborn_hydra}.txt`, all three literally `ValidCard$ Land.YouCtrl`)
+   * are the real FDN cards using this.
    */
-  otherPermanentEntersMatch?: { subtype?: string; nonToken?: boolean; sameController?: boolean };
+  otherPermanentEntersMatch?: { subtype?: string; nonToken?: boolean; sameController?: boolean; isLand?: boolean };
+  /**
+   * Only consulted when `on === 'otherCreatureDies'` — mirrors
+   * `otherPermanentEntersMatch` above (same `nonToken`/`sameController`
+   * fields, no `subtype`/`isLand` — no real FDN card needs either yet) for
+   * the DIES-side board-wide watch. High-Society Hunter's own real
+   * `ValidCard$ Creature.!token+Other` (no `YouCtrl` clause) needs
+   * `{nonToken: true}` only — `sameController` genuinely omitted/false,
+   * since ANY player's nontoken creature dying qualifies, not just the
+   * controller's own.
+   */
+  otherCreatureDiesMatch?: { nonToken?: boolean; sameController?: boolean };
+  /**
+   * Only consulted when `on === 'attackersDeclared'` — real Forge
+   * `ValidAttackersAmount$ GEn` (`TriggerAttackersDeclared.performTest`,
+   * defaults to `GE1` when the param is absent). Omitted means "at least
+   * one" (Battlesong Berserker's own plain "whenever you attack"); `3`
+   * means Armasaur Guide's own real "whenever you attack with three or more
+   * creatures." Only an "at least N" threshold is modeled — no real FDN
+   * card needs an exact-count or upper-bound gate.
+   */
+  attackersDeclaredMinCount?: number;
+  /**
+   * Only consulted when `on === 'drawNthCardThisTurn'` — real Forge
+   * `Number$ N` (`TriggerDrawn.performTest`: absent means every draw
+   * qualifies, `hasParam("Number")` is false; present means ONLY the Nth
+   * draw this turn qualifies). Omitted: Clinquant Skymage's own plain
+   * "whenever you draw a card." `2`: Erudite Wizard/Mischievous Mystic/
+   * Homunculus Horde's own real "whenever you draw your second card each
+   * turn."
+   */
+  drawNthCardThisTurnNumber?: number;
   /**
    * Only consulted when `on === 'tapLandForMana'` — mirrors Forge's own
    * real `Produced$` gate on `T:Mode$ TapsForMana` (`TriggerTapsForMana
