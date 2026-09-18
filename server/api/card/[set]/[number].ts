@@ -14,12 +14,11 @@
 // whole functional-model corpus. GET (no body) still works identically to
 // before, unscoped, same as a plain page reload with no filter active.
 
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { DatabaseSync } from 'node:sqlite';
 import { cardArtCrop, cardFaceKeywords, cardImages, cardTokens, creatureSubtypes, slugify, BADGE_KEYWORDS } from '../../../../app/lib/buildGraph';
 import type { ScryfallCard, RelationsEntry, TokensById } from '../../../../app/lib/buildGraph';
 import type { CardData, EdgeData, Role, ThemeData } from '../../../../app/types';
@@ -30,7 +29,8 @@ import type { Scenario, TraceResult } from '../../../../functional-model/harness
 import type { CardDefinition } from '../../../../functional-model/card';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
 import { fmBundle } from '../../../utils/fmBundle';
-import { isStandardPrint } from '../../../utils/isStandardPrint';
+import { cardsDb, resolveFunctionalModelCardMeta } from '../../../utils/cardMeta';
+import { scryfallFetch } from '../../../utils/scryfallFetch';
 import type { CardStatusEntry } from '../../../../functional-model/card-status';
 import { readPipelineStatus, effectivePipelineStatus } from '../../../../functional-model/pipeline-status';
 import type { PipelineStatusFile } from '../../../../functional-model/pipeline-status';
@@ -778,152 +778,27 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
   };
 }
 
-// data/fin/fin_scryfall.json — real, current Scryfall data for every FIN
-// card (also the exact file the main graph visualizer's default browsing
-// mode fetches client-side, public/fin -> data/fin symlink — this is NOT a
-// stale snapshot, just the free/local fast path for the FIN cards that make
-// up most of the functional-model corpus). Resolves a functional-model
-// card's own real set/collectorNumber/image for a match thumbnail. A DFC
-// (Jecht, Reluctant Guardian // Braska's Final Aeon) has no
-// top-level `name` match against its own FRONT face's name (Scryfall's own
-// top-level `name` is the full "A // B" string) — falls back to checking
-// each `card_faces[].name` for exactly this reason.
-interface FinScryfallCard {
-  name: string;
-  set: string;
-  collector_number: string;
-  image_uris?: { normal?: string };
-  card_faces?: { name: string; image_uris?: { normal?: string } }[];
-  // Only present on a live Scryfall response (never on fin_scryfall.json's
-  // own stripped-down shape) — read by isStandardPrint() in
-  // resolveLiveCardMeta below, so optional rather than a separate type.
-  full_art?: boolean;
-  promo?: boolean;
-  border_color?: string;
-  finishes?: string[];
-  frame_effects?: string[];
-  set_name?: string;
-}
-function resolveFinCardMeta(name: string): { set: string; collectorNumber: string; image: string | null } | null {
-  const entries = loadJsonFresh('data/fin/fin_scryfall.json', [] as FinScryfallCard[]);
-  for (const c of entries) {
-    if (c.name === name) return { set: c.set, collectorNumber: c.collector_number, image: c.image_uris?.normal ?? c.card_faces?.[0]?.image_uris?.normal ?? null };
-    const face = c.card_faces?.find((f) => f.name === name);
-    // A true DFC's own faces each carry their own image; an Adventure-layout
-    // card's faces (e.g. "Midgar, City of Mako // Reactor Raid") don't —
-    // Scryfall renders those as one single card image, at the top level
-    // only — so fall back to the card's own `image_uris` rather than null.
-    if (face) return { set: c.set, collectorNumber: c.collector_number, image: face.image_uris?.normal ?? c.image_uris?.normal ?? null };
-  }
-  return null;
-}
-
 // data/cards.db — bulk-synced from Scryfall's own bulk-data dump (see
 // scripts/sync-card-db.mjs), the same local DB server/api/cards/by-names.ts
 // already reads. Covers every card the historical-sets tagging project has
 // grown functional-model's own corpus into (317 cards and counting) without
-// a single network round-trip. It's gitignored (600MB+, regenerated
-// locally, never committed) so it does NOT exist on a deployed instance
-// (Netlify Functions ship only what's in the repo) — `cardsDb` is therefore
-// null in prod, and every lookup below falls back to a live, paced Scryfall
-// call (see scryfallFetch/fetchBySetNumber) instead of throwing. Local dev
-// gets the fast no-network path; prod gets the slower but working one.
-const CARDS_DB_PATH = join(process.cwd(), 'data', 'cards.db');
-const cardsDb = existsSync(CARDS_DB_PATH) ? new DatabaseSync(CARDS_DB_PATH, { readOnly: true }) : null;
+// a single network round-trip. Opened once by `server/utils/cardMeta.ts`
+// (also read there for `resolveFunctionalModelCardMeta`'s own by-name
+// lookup leg) and reused here for this route's own, unrelated
+// set/number and scryfall-id lookups, rather than opening a second handle
+// onto the same file — `null` in prod (gitignored, 600MB+, regenerated
+// locally, never committed — Netlify Functions ship only what's in the
+// repo), where every lookup below falls back to a live, paced Scryfall call
+// (see scryfallFetch/fetchBySetNumber) instead of throwing.
 const dbBySetNumberStmt = cardsDb?.prepare('SELECT raw_json FROM cards WHERE set_code = ? AND collector_number = ?') ?? null;
 const dbByIdStmt = cardsDb?.prepare('SELECT raw_json FROM cards WHERE scryfall_id = ?') ?? null;
-const dbExactNameStmt = cardsDb?.prepare('SELECT raw_json FROM cards WHERE name = ? ORDER BY is_normal DESC, released_at DESC LIMIT 1') ?? null;
-// A DFC's own top-level `name` is "Front // Back" — a functional-model card
-// almost always names just the front face (same fallback
-// server/api/cards/by-names.ts's own lookupByName uses, for the same
-// reason). ESCAPE so a name containing a literal `%`/`_` isn't misread as a
-// wildcard.
-const escapeLike = (s: string) => s.replace(/[\\%_]/g, (m) => `\\${m}`);
-const dbDfcNameStmt = cardsDb?.prepare("SELECT raw_json FROM cards WHERE name LIKE ? ESCAPE '\\' ORDER BY is_normal DESC, released_at DESC LIMIT 1") ?? null;
-function dbLookupByName(name: string): FinScryfallCard | null {
-  if (!dbExactNameStmt || !dbDfcNameStmt) return null;
-  const exact = dbExactNameStmt.get(name) as { raw_json: string } | undefined;
-  if (exact) return JSON.parse(exact.raw_json);
-  const dfc = dbDfcNameStmt.get(`${escapeLike(name)} // %`) as { raw_json: string } | undefined;
-  if (dfc) return JSON.parse(dfc.raw_json);
-  return null;
-}
 
-// Live fallback for whatever the local DB doesn't have (prod, where the DB
-// never exists at all — see cardsDb above), paced through the same
-// scryfallFetch every other live call in this route uses. `exact` (not
-// fuzzy) — a functional-model card's own `name` is already Scryfall's real
-// name, no typo-tolerance needed.
-async function resolveLiveCardMeta(name: string): Promise<{ set: string; collectorNumber: string; image: string | null } | null> {
-  try {
-    const res = await scryfallFetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`);
-    if (!res.ok) return null;
-    let c: FinScryfallCard = await res.json();
-    // Scryfall's own "default printing" pick for a bare name isn't
-    // guaranteed to be is_normal-worthy (showcase/extended-art/promo can win
-    // — the same gap the local DB's is_normal column exists to close, see
-    // scripts/sync-card-db.mjs). Re-resolve via search when it isn't; only
-    // hit for a flagged card, so this stays rare.
-    if (!isStandardPrint(c)) {
-      const standard = await fetchStandardPrintForName(name);
-      if (standard) c = standard;
-    }
-    return { set: c.set, collectorNumber: c.collector_number, image: c.image_uris?.normal ?? c.card_faces?.[0]?.image_uris?.normal ?? null };
-  } catch {
-    return null;
-  }
-}
-
-async function fetchStandardPrintForName(name: string): Promise<FinScryfallCard | null> {
-  try {
-    const q = `!"${name}" -is:extendedart -is:showcase -is:borderless -is:colorshifted -is:full -is:promo`;
-    const res = await scryfallFetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=cards&order=released&dir=desc`);
-    if (!res.ok) return null;
-    const data: { data: FinScryfallCard[] } = await res.json();
-    return data.data[0] ?? null;
-  } catch {
-    return null;
-  }
-}
-
-// Real set/collectorNumber/image for a functional-model card's own name —
-// tries FIN's real Scryfall data first (free, already-parsed, current), then
-// the local bulk DB (see dbLookupByName above) when it exists, then a live
-// Scryfall lookup for whatever neither covers (always the case in prod).
-// Interaction-match thumbnail resolution is the actual cost center on this
-// route — a popular card (e.g. a staple mana dork) can have 100+ matches,
-// each going through resolveFinCardMeta/dbLookupByName/resolveLiveCardMeta
-// below; measured at ~6-7ms apiece (mostly node:sqlite's per-call overhead
-// on its own admittedly-experimental sync API — see the ExperimentalWarning
-// this process logs), which adds up to most of this route's response time
-// on a heavily-interacting card. A name's real set/collectorNumber/image
-// barely ever changes minute-to-minute (only a data/cards.db re-sync or a
-// fin_scryfall.json edit would change it, neither of which happens while
-// this server process is running), so this is cached forever per process
-// rather than folder-mtime-invalidated like loadFunctionalModel above — the
-// same "open once per process, no live invalidation" contract this route's
-// own cardsDb/DECK_ACTIVE_KEY-adjacent DB connections already have. Restart
-// the dev server after a re-sync to see fresh data, same as those.
-const cardMetaCache = new Map<string, { set: string; collectorNumber: string; image: string | null } | null>();
-async function resolveFunctionalModelCardMeta(name: string): Promise<{ set: string; collectorNumber: string; image: string | null } | null> {
-  const cached = cardMetaCache.get(name);
-  if (cached !== undefined) return cached;
-
-  const fin = resolveFinCardMeta(name);
-  if (fin) {
-    cardMetaCache.set(name, fin);
-    return fin;
-  }
-  const c = dbLookupByName(name);
-  if (c) {
-    const resolved = { set: c.set, collectorNumber: c.collector_number, image: c.image_uris?.normal ?? c.card_faces?.[0]?.image_uris?.normal ?? null };
-    cardMetaCache.set(name, resolved);
-    return resolved;
-  }
-  const live = await resolveLiveCardMeta(name);
-  cardMetaCache.set(name, live);
-  return live;
-}
+// `resolveFunctionalModelCardMeta` — a functional-model card's own real
+// set/collectorNumber/image for a match thumbnail — now lives in
+// `server/utils/cardMeta.ts` (extracted 2026-09-18 so
+// `server/api/sink-catalog/index.get.ts`'s own "real FDN pool matches"
+// enrichment reuses the exact same resolution/cache/429-avoidance
+// machinery instead of a second, driftable copy). Imported above.
 
 // `computeCardInteractions` (`functional-model/card-interactions.ts`) is a
 // pure function over `CardDefinition[]` — its own `CardInteractionCategory.
@@ -1045,22 +920,14 @@ async function loadInteractionGroups(cardName: string, filterNames?: Set<string>
 const curatedThemes = themesData as ThemeData[];
 const curatedThemeIds = new Set(curatedThemes.map((t) => t.id));
 
-// Scryfall's own guideline: stay under 10 requests/second or risk a network
-// block (confirmed the hard way mid-session — a burst of interaction-match
-// image lookups across a 274-card pool tripped a real 429 with a 60s
-// lockout). Only actually exercised in prod, where cardsDb is null — local
-// dev's DB path never calls this. Paces request STARTS at least 110ms apart
-// (~9/s) regardless of how many are queued.
-let lastScryfallStart = 0;
-const SCRYFALL_MIN_INTERVAL_MS = 110;
-async function scryfallFetch(url: string): Promise<Response> {
-  const now = Date.now();
-  const scheduled = Math.max(now, lastScryfallStart + SCRYFALL_MIN_INTERVAL_MS);
-  lastScryfallStart = scheduled;
-  const wait = scheduled - now;
-  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
-  return fetch(url, { headers: { 'User-Agent': 'mtg-visualizer/0.1', Accept: 'application/json' } });
-}
+// `scryfallFetch` (Scryfall's own guideline: stay under 10 requests/second
+// or risk a network block — confirmed the hard way, a burst of
+// interaction-match image lookups across a 274-card pool once tripped a
+// real 429 with a 60s lockout) now lives in `server/utils/scryfallFetch.ts`
+// (extracted 2026-09-18), shared with `server/utils/cardMeta.ts`'s own live
+// lookup leg so both draw down the SAME per-process pacer. Only actually
+// exercised in prod, where cardsDb is null — local dev's DB path never
+// calls this.
 
 type FullCard = ScryfallCard & { all_parts?: { id: string; component: string }[]; set?: string; collector_number?: string };
 

@@ -26,6 +26,7 @@ import type { SinkQuery } from '../../../functional-model/sink-model/sink-query'
 import { readFunctionalModelFile, type SourceFileResult } from '../../../functional-model/source-files';
 import { matchSink, matchesConsumerTriggerNames, matchesConsumerTriggerOn } from '../../../functional-model/sink-model/match-sink';
 import { loadFdnDefinitionPool } from '../../utils/fdnDefinitionPool';
+import { resolveFunctionalModelCardMeta } from '../../utils/cardMeta';
 import type { CardDefinition } from '../../../functional-model/card';
 
 const REVIEWS_PATH = join(process.cwd(), 'functional-model', 'sink-catalog-reviews.json');
@@ -163,10 +164,32 @@ function loadReviews(): Record<string, SinkCatalogReview> {
  * vs-consumer role confusion this task exists to make visible (e.g.
  * Felidar Savior: producer of Lifegain; Ajani's Pridemate: consumer of it,
  * never a producer).
+ *
+ * Each match is enriched with real set/collectorNumber/image (2026-09-18,
+ * via `server/utils/cardMeta.ts`'s own `resolveFunctionalModelCardMeta` —
+ * the SAME resolver/cache/429-avoidance machinery
+ * `server/api/card/[set]/[number].ts`'s own `EnrichedCardInteractionMatch`
+ * already uses) rather than served as bare names — a bare-name chip had no
+ * route to link to and no way to render a real thumbnail without the client
+ * firing its OWN live per-card Scryfall image request (the actual bug that
+ * motivated this: a 111-card producer-match list meant 111 simultaneous
+ * client-side live fetches, exactly the kind of burst
+ * `server/utils/scryfallFetch.ts`'s own doc comment already had to solve
+ * once). `self` mirrors `EnrichedCardInteractionMatch.self` structurally
+ * (so the client can share one rendering component with the card page's own
+ * Sinks section) but is never set true here — this page has no single "self"
+ * card the way a card detail page does.
  */
+export interface SinkCatalogRealMatch {
+  card: string;
+  self?: boolean;
+  set?: string;
+  collectorNumber?: string;
+  image: string | null;
+}
 export interface SinkCatalogRealMatches {
-  producerMatches: string[];
-  consumerMatches?: string[];
+  producerMatches: SinkCatalogRealMatch[];
+  consumerMatches?: SinkCatalogRealMatch[];
 }
 
 export interface SinkCatalogPageEntry {
@@ -264,18 +287,32 @@ function instanceConsumerMatched(instance: (typeof SINK_CATALOG)[number], candid
  * Cat-token-making Creature satisfying both `battlefield-presence-cats` and
  * `battlefield-presence-creatures` — counts once, not twice).
  */
-function computeRealMatches(members: (typeof SINK_CATALOG)[number][], pool: CardDefinition[], root: string): SinkCatalogRealMatches {
+/** Real set/collectorNumber/image for every name in a sorted match-name
+ * list, via the shared `resolveFunctionalModelCardMeta` (forever-per-process
+ * cached — see that module's own doc comment) — the enrichment step
+ * `computeRealMatches` below applies to both `producerMatches` and
+ * `consumerMatches`. */
+async function enrichMatchNames(names: string[]): Promise<SinkCatalogRealMatch[]> {
+  return Promise.all(
+    names.map(async (name): Promise<SinkCatalogRealMatch> => {
+      const ref = await resolveFunctionalModelCardMeta(name);
+      return { card: name, set: ref?.set, collectorNumber: ref?.collectorNumber, image: ref?.image ?? null };
+    }),
+  );
+}
+
+async function computeRealMatches(members: (typeof SINK_CATALOG)[number][], pool: CardDefinition[], root: string): Promise<SinkCatalogRealMatches> {
   const producerNames = new Set<string>();
   for (const candidate of pool) {
     if (members.some((m) => instanceProducerMatched(m, candidate, root))) producerNames.add(candidate.name);
   }
-  const result: SinkCatalogRealMatches = { producerMatches: [...producerNames].sort() };
+  const result: SinkCatalogRealMatches = { producerMatches: await enrichMatchNames([...producerNames].sort()) };
   if (members.some(instanceHasConsumerSignal)) {
     const consumerNames = new Set<string>();
     for (const candidate of pool) {
       if (members.some((m) => instanceConsumerMatched(m, candidate, root))) consumerNames.add(candidate.name);
     }
-    result.consumerMatches = [...consumerNames].sort();
+    result.consumerMatches = await enrichMatchNames([...consumerNames].sort());
   }
   return result;
 }
@@ -289,7 +326,7 @@ export default defineEventHandler(async (): Promise<SinkCatalogPageEntry[]> => {
   // once per entry — the whole point of the shared, process-cached loader.
   const pool = process.env.NODE_ENV === 'production' ? [] : await loadFdnDefinitionPool(root);
 
-  return baselineEntries.map((entry): SinkCatalogPageEntry => {
+  return Promise.all(baselineEntries.map(async (entry): Promise<SinkCatalogPageEntry> => {
     // Real member instances this group aggregates — `entry.evidence
     // .members[].slug` (`sink-catalog-status.ts`) is always the real,
     // per-instance slug list, length 1 for a singleton and N for a real
@@ -326,7 +363,7 @@ export default defineEventHandler(async (): Promise<SinkCatalogPageEntry[]> => {
       sourceFiles: loadSourceFiles(entry.slug, entry.evidence),
       color,
       review,
-      realMatches: members.length > 0 && process.env.NODE_ENV !== 'production' ? computeRealMatches(members, pool, root) : undefined,
+      realMatches: members.length > 0 && process.env.NODE_ENV !== 'production' ? await computeRealMatches(members, pool, root) : undefined,
     };
-  });
+  }));
 });

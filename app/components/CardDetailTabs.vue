@@ -2071,7 +2071,12 @@ watch(
        FIN panel above now also uses, for a consistent visual language
        across both panels even though the two `self` signals come from
        genuinely different plumbing (`selfInteraction`'s own fact-pair
-       provenance vs. this mechanism's plain name-equality check). -->
+       provenance vs. this mechanism's plain name-equality check). Gallery
+       markup itself lives in the shared `CardMatchGallery.vue` (extracted
+       2026-09-18) — `app/pages/app/engine/sinks/[[slug]].vue`'s own
+       "Matches" section imports the SAME component, per the explicit
+       "don't spawn a second, worse-looking component" fix that motivated
+       the extraction. -->
   <div v-if="isFdn && fdnInteractions.length" class="mt-4 w-full max-w-full">
     <div class="mb-1 flex items-center gap-2">
       <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Sinks</span>
@@ -2084,20 +2089,8 @@ watch(
               >{{ cat.count }} card{{ cat.count === 1 ? '' : 's' }}</span
             >
           </summary>
-          <div class="mt-1.5 flex flex-wrap gap-1.5">
-            <NuxtLink
-              v-for="m in cat.matches"
-              :key="m.card"
-              :to="m.set && m.collectorNumber ? `/app/card/${m.set}/${m.collectorNumber}` : undefined"
-              class="block shrink-0 rounded-md"
-              :class="[{ 'pointer-events-none': !(m.set && m.collectorNumber) }, m.self ? 'ring-2 ring-primary' : '']"
-              :title="m.self ? 'This card' : undefined"
-            >
-              <img v-if="m.image" :src="m.image" :alt="m.card" class="block w-[220px] min-w-0 rounded-md" />
-              <span v-else class="flex h-[307px] w-[220px] items-center justify-center rounded-md bg-bg text-center text-xs text-muted">{{
-                m.card
-              }}</span>
-            </NuxtLink>
+          <div class="mt-1.5">
+            <CardMatchGallery :matches="cat.matches" />
           </div>
         </details>
       </li>
