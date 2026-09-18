@@ -1,0 +1,8 @@
+- [Where the real design record lives](topics/design-docs-map.md) — SYNERGY_DESIGN.md/ENGINE_GAPS.md/PRD_AUTOMATED_AUTHORING.md/card-schema.md already document almost everything; read those, don't re-derive.
+- [Script CLI + typecheck gotchas](topics/script-cli-and-typecheck-gotchas.md) — inconsistent --slug=/positional args, `tsc -p .` is a silent no-op, vite-node doesn't preserve argv.
+- [Concurrent-session hazards](topics/concurrent-session-hazards.md) — shared scripts get rewritten mid-task; isolate diffs by file-swap, not git stash.
+- [Recognizer wiring checklist](topics/recognizer-wiring-checklist.md) — RECOGNIZER_IDS allowlist + coreKey field-completeness, both repeatedly forgotten.
+- [Sink-predicate corpus mocking policy](topics/sink-predicate-corpus-mocking-policy.md) — saga/crew predicate tests use mocked CardDefinitions, not real cards (scenarios/Cards stay real-only).
+- [Engine-status `blue` caveat](topics/engine-status-blue-caveat.md) — Features-tab blue means "cites a test file", not necessarily real scenario-verified.
+- [FDN/sink-model open items](topics/fdn-sink-model-open-items.md) — sink catalog has 2 entries, no attachment-completeness gate on FDN review yet, third predicate mechanism still gray.
+- [combinator.ts open follow-ups](topics/combinator-dsl-open-followups.md) — no Bind/Choose/ContextEquals yet; saga recognizer can't see through program-kind custom-alikes.

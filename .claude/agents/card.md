@@ -16,7 +16,7 @@ card's facts, scenarios, and replay trace get presented.
   `ScenarioReplayTrace.vue`, `FunctionalModelScript.vue`,
   `FunctionalModelText.vue`, `CardMedia.vue`, `ChecklistSection.vue`.
   (`ForgeCardScript.vue` was removed 2026-09-11 — dead GPL-3.0-exposure
-  code, see `.claude/agent-memory/card/notes.md`.)
+  code, see `.claude/agent-memory/card/topics/forge-model-deletion.md`.)
 - `server/api/card/*`, `server/api/cards.ts`, `server/api/cards/by-names.ts`,
   `server/api/tokens/by-key.ts`, `server/api/_cardShaping.ts`.
 - Reading (not authoring the engine side of) `functional-model/cards/<slug>/synergy.json`,

@@ -31,9 +31,35 @@ through the orchestrator.
   domain's shape instead of reading its source. If a task needs another
   specialist's domain, say **"out of scope, needs `<agent>`"** and stop —
   don't guess at it, don't call the other specialist yourself.
-- **Memory discipline.** On start, read your own
-  `.claude/agent-memory/<you>/notes.md` (decisions, open questions,
-  current state). Before finishing, update it.
+- **Memory discipline.** Your memory lives in
+  `.claude/agent-memory/<you>/`, structured as a hub, not one growing
+  file:
+  - `current.md` — a LEAN INDEX ONLY, mirroring the orchestrator's own
+    `MEMORY.md` convention: one line per topic, `- [Title](topics/slug.md)
+    — one-line hook`, nothing else. The only file read on every spawn —
+    keep it short enough that it always is. Never let an entry grow past
+    one line here; if it needs more, that's a sign it belongs in its own
+    topic file instead.
+  - `topics/<slug>.md` — the real content: one file per durable
+    decision/gotcha/open-question/standing fact that isn't derivable
+    from the code or git log. Read only the topic files your current
+    task actually needs, not all of them reflexively.
+  - `log/<date>.md` — plain, append-only, chronological, one entry per
+    finished task (create today's file if it doesn't exist yet). Where
+    "what happened and when" lives — grep-only, NEVER read on spawn.
+    Session narration belongs here, not in `current.md`/`topics/`.
+
+  **On start**: read `current.md` in full; follow links into `topics/`
+  only for what this task needs.
+
+  **Before finishing (the closing flow)**:
+  1. For anything that changed and is still load-bearing going forward,
+     create or update the relevant `topics/<slug>.md` file, and
+     add/update/remove its one-line pointer in `current.md` to match.
+     Remove pointers to anything now stale, resolved, or superseded —
+     don't just accumulate.
+  2. Append one short entry to today's `log/<date>.md` — what you did
+     this task, for the record.
 - **Keep your own context clean.** For noisy exploration inside a task
   (grepping many files, running a full test suite, reading a dozen files
   for one fact) prefer spawning a fresh/fork sub-agent for that step and

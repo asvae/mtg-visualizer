@@ -1,0 +1,23 @@
+# card agent — memory index
+
+- [Dev-environment gotchas](topics/dev-environment-gotchas.md) — vue-tsc no-op, single dev-server lock, stale HMR, Playwright scratch-script placement.
+- [Nitro `.mjs` import gotcha](topics/nitro-mjs-import-gotcha.md) — a dynamically-imported `.mjs` sibling breaks Nitro's dev bundler at runtime even though `tsc` passes; spawn via vite-node instead.
+- [Prod functional-model bundle](topics/prod-functional-model-bundle.md) — Netlify Functions can't touch raw `functional-model/`; prod reads a committed `fm-bundle.json` with a manual regen+commit cadence.
+- [Card page route architecture](topics/card-page-route-architecture.md) — `CardDetailTabs.vue` is the shared content hub across 3 page hosts; standalone `/app/card` and `/app/engine/cards` are deliberately separate routes (a merge was tried and reverted).
+- [FDN vs FIN card model](topics/fdn-vs-fin-card-model.md) — FDN cards have no Facts/synergy data; separate pipeline-status + sink-attachment + plain-oracle-text treatment.
+- [Card-status bucket system](topics/card-status-bucket-system.md) — FIN fact-authoring dashboard buckets, duplicated-by-convention union across 3 files, computed live per-request.
+- [`cardResponse.ts` hand-mirror gotcha](topics/cardresponse-hand-mirror-gotcha.md) — client `CardResponse` type is a hand-kept duplicate of the server route's type, not imported; new server fields get missed here.
+- [DFC / multi-face gotchas](topics/dfc-and-multiface-gotchas.md) — Scryfall never serves per-face keywords; DFC `PoolCard.name` is front-face-only; FIN's bonus/variant collector numbers.
+- [Fact-provenance icon history](topics/fact-provenance-icon-history.md) — meaning has flipped repeatedly; verify current template before assuming which icon means what.
+- [`factConditions.ts` design principle](topics/fact-conditions-design-principle.md) — exclusion-list not allow-list; over-showing is the safe direction to be wrong.
+- [Card-lookup duplication precedent](topics/card-lookup-duplication-precedent.md) — several routes deliberately hand-roll their own card lookup; revisit only at a 4th consumer.
+- [Forge-model deletion](topics/forge-model-deletion.md) — `forge-model/`/`ForgeCardScript.vue` deleted 2026-09-11 for GPL-3.0 exposure; why it's gone from this agent's domain list.
+- [Facts-tab display ordering invariants](topics/facts-display-ordering-invariants.md) — toggles must filter, never re-sort; multi-fact-per-segment hover must highlight all of them.
+
+## Known open item (not yet fixed, flagged to orchestrator each time)
+
+- `.claude/contracts/state-event-format.md`'s `TraceResult.scenario` shape
+  omits the real, already-shipped `scenario.raw` field (documented in
+  `harness.ts`'s own `TraceResult` interface comment, just never copied
+  into the contract's abbreviated version). Harmless (additive field,
+  "render generically off `fn`" already covers `log`), just a doc gap.
