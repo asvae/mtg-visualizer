@@ -18,7 +18,7 @@ const route = useRoute();
 const TABS = [
   { label: 'Keywords', to: '/app/engine/keywords', match: '/app/engine/keywords' },
   { label: 'Predicates', to: '/app/engine/predicates', match: '/app/engine/predicates' },
-  { label: 'Sets', to: '/app/engine/sets', match: '/app/engine/sets' },
+  { label: 'Cards', to: '/app/engine/sets', match: '/app/engine/sets' },
   { label: 'Features', to: '/app/engine/features', match: '/app/engine/features' },
 ];
 
