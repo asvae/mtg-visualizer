@@ -224,13 +224,19 @@ function groupCatalogByFamily(): CatalogGroup[] {
   });
 }
 
-/** The real source file a group's own logic/config lives in — `${key}.ts`
- * for a real multi-instance family group (every real family's own shared
- * factory file is named identically to its family key, by convention —
- * `battlefield-presence.ts`/`counters.ts`), or `${slug}.ts` for a singleton
- * (the pre-existing, unchanged one-file-per-slug convention). */
+/** The real source file a group's own SHARED matching logic lives in —
+ * `families/${key}.ts` for a real multi-instance family group (every real
+ * family's own shared factory file is named identically to its family key,
+ * by convention — `families/battlefield-presence.ts`/`families/counters
+ * .ts`, 2026-09-18 split out of what used to be one combined `${key}.ts`
+ * per family), or `${slug}.ts` for a singleton (the pre-existing, unchanged
+ * one-file-per-slug convention, where factory and config were never split
+ * since there's only ever one instance). See `computeSinkCatalogFingerprint`
+ * below for where each real member's own PER-INSTANCE config file
+ * (`${member.slug}.ts`) is separately hashed alongside this shared file for
+ * a real family group — this function alone only names the shared half. */
 function sourceFileFor(group: CatalogGroup): string {
-  return group.isFamily ? `${group.key}.ts` : `${group.members[0]!.slug}.ts`;
+  return group.isFamily ? join('families', `${group.key}.ts`) : `${group.members[0]!.slug}.ts`;
 }
 
 function loadCorpusManifest(path: string): SinkCatalogCorpusManifest {
@@ -324,13 +330,17 @@ function resolveGroupKey(key: string): string {
 }
 
 /**
- * sha256 of a group's own real, current source (see `sourceFileFor`) + every
- * real member instance's own `<slug>.corpus.json` content — the same real,
- * checkable inputs `computeSinkCatalogStatus` itself reads to decide
- * gray/purple/blue for the group (mirrors `computeSinkDerivationFingerprint`'s
- * own identical two-input-class hash, generalized from 1 corpus file to N).
- * `key` may be a real instance slug or the group's own key — see
- * `resolveGroupKey`.
+ * sha256 of a group's own real, current SHARED source (see `sourceFileFor`)
+ * + every real member instance's own PER-INSTANCE config file content (a
+ * real family group only — a singleton's own file IS `sourceFileFor`'s
+ * result already, so it isn't double-hashed here) + every real member
+ * instance's own `<slug>.corpus.json` content — the same real, checkable
+ * inputs `computeSinkCatalogStatus` itself reads to decide gray/purple/blue
+ * for the group (mirrors `computeSinkDerivationFingerprint`'s own identical
+ * two-input-class hash, generalized from 1 corpus file to N, plus this
+ * file's own 2026-09-18 family/instance file split adding a third input
+ * class for a real family group). `key` may be a real instance slug or the
+ * group's own key — see `resolveGroupKey`.
  */
 export function computeSinkCatalogFingerprint(key: string, root: string = process.cwd()): string | null {
   const groupKey = resolveGroupKey(key);
@@ -342,6 +352,10 @@ export function computeSinkCatalogFingerprint(key: string, root: string = proces
   const hash = createHash('sha256');
   hash.update(`entry:${entryResult.exists ? (entryResult.content ?? '') : '<missing>'}`);
   for (const entry of [...group.members].sort((a, b) => a.slug.localeCompare(b.slug))) {
+    if (group.isFamily) {
+      const instanceResult = readFunctionalModelFile(root, join(CATALOG_DIR, `${entry.slug}.ts`));
+      hash.update(`instance:${entry.slug}:${instanceResult.exists ? (instanceResult.content ?? '') : '<missing>'}`);
+    }
     const corpusResult = readFunctionalModelFile(root, join(CATALOG_DIR, `${entry.slug}.corpus.json`));
     hash.update(`corpus:${entry.slug}:${corpusResult.exists ? (corpusResult.content ?? '') : '<missing>'}`);
   }

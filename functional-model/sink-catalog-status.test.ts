@@ -189,8 +189,9 @@ describe('computeSinkCatalogColor / isSinkCatalogEntryUsable — the real-matchi
     const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-catalog-color-test-'));
     try {
       const catalogDir = join(fakeRoot, 'functional-model', 'sink-model', 'catalog');
-      mkdirSync(catalogDir, { recursive: true });
-      writeFileSync(join(catalogDir, 'counters.ts'), '// stub family source v1\n');
+      const familiesDir = join(catalogDir, 'families');
+      mkdirSync(familiesDir, { recursive: true });
+      writeFileSync(join(familiesDir, 'counters.ts'), '// stub family source v1\n');
       writeFileSync(join(catalogDir, 'counters-plus1plus1.corpus.json'), JSON.stringify({ total: 4, passing: 4 }));
 
       const fingerprintAtConfirm = computeSinkCatalogFingerprint('counters', fakeRoot)!;
@@ -205,7 +206,7 @@ describe('computeSinkCatalogColor / isSinkCatalogEntryUsable — the real-matchi
       expect(computeSinkCatalogColor('counters-plus1plus1', fakeRoot)).toBe('green');
       expect(isSinkCatalogEntryUsable('counters-plus1plus1', fakeRoot)).toBe(true);
 
-      writeFileSync(join(catalogDir, 'counters.ts'), '// stub family source v2 — real content changed\n');
+      writeFileSync(join(familiesDir, 'counters.ts'), '// stub family source v2 — real content changed\n');
       resetSinkCatalogColorCacheForTests();
       expect(computeSinkCatalogColor('counters', fakeRoot)).toBe('re-review');
       expect(computeSinkCatalogColor('counters-plus1plus1', fakeRoot)).toBe('re-review');
@@ -219,6 +220,33 @@ describe('computeSinkCatalogColor / isSinkCatalogEntryUsable — the real-matchi
       resetSinkCatalogColorCacheForTests();
       expect(computeSinkCatalogColor('counters', fakeRoot)).toBe('green');
       expect(isSinkCatalogEntryUsable('counters-plus1plus1', fakeRoot)).toBe(true);
+    } finally {
+      rmSync(fakeRoot, { recursive: true, force: true });
+      resetSinkCatalogColorCacheForTests();
+    }
+  });
+
+  it('a stale confirm on a blue FAMILY group whose PER-INSTANCE config (not the shared factory) has since changed also reads back as re-review — instance files are real fingerprint inputs too, not just the shared family file', () => {
+    const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-catalog-color-test-'));
+    try {
+      const catalogDir = join(fakeRoot, 'functional-model', 'sink-model', 'catalog');
+      const familiesDir = join(catalogDir, 'families');
+      mkdirSync(familiesDir, { recursive: true });
+      writeFileSync(join(familiesDir, 'counters.ts'), '// stub family source\n');
+      writeFileSync(join(catalogDir, 'counters-plus1plus1.ts'), '// stub instance config v1\n');
+      writeFileSync(join(catalogDir, 'counters-plus1plus1.corpus.json'), JSON.stringify({ total: 4, passing: 4 }));
+
+      const fingerprintAtConfirm = computeSinkCatalogFingerprint('counters', fakeRoot)!;
+      writeFileSync(
+        join(fakeRoot, 'functional-model', 'sink-catalog-reviews.json'),
+        JSON.stringify({ counters: { verdict: 'confirm', reviewedAt: '2026-09-18', fingerprint: fingerprintAtConfirm } }),
+      );
+      resetSinkCatalogColorCacheForTests();
+      expect(computeSinkCatalogColor('counters', fakeRoot)).toBe('green');
+
+      writeFileSync(join(catalogDir, 'counters-plus1plus1.ts'), '// stub instance config v2 — real content changed\n');
+      resetSinkCatalogColorCacheForTests();
+      expect(computeSinkCatalogColor('counters', fakeRoot)).toBe('re-review');
     } finally {
       rmSync(fakeRoot, { recursive: true, force: true });
       resetSinkCatalogColorCacheForTests();

@@ -58,14 +58,14 @@ const blankLandMock: CardDefinition = {
 };
 
 describe('computeCardInteractions', () => {
-  it("Ajani's Pridemate gets a 'Lifegain' category (owns it via consumerTriggerNames — its real onLifeGained trigger name), but is NEVER itself among the Lifegain matches: it has no gainLife effect of its own, it's purely a consumer ('whenever you gain life') — only the real producer (the mock) is a match; catalog-only means its baseline 'enters the battlefield'/'counters' raw categories no longer appear at all. It does NOT self-display 'Cats' (2026-09-18, Battlefield presence, `requireConsumerForSelfOwnership`) even though it structurally IS a Cat creature — merely BEING a Cat is passive membership, not a deliberate ability (see the real Helpful Hunter bug fix below). It DOES self-display AND self-match 'Counters (+1/+1)' (2026-09-18, new catalog entry) — its own real 'put a +1/+1 counter on this creature' effect is a genuine direct producer match, same class of authored ability as Day of Judgment's own destroy-all program, not bare type membership", () => {
+  it("Ajani's Pridemate gets a 'Lifegain' category (owns it via consumerTriggerNames — its real onLifeGained trigger name), but is NEVER itself among the Lifegain matches: it has no gainLife effect of its own, it's purely a consumer ('whenever you gain life') — only the real producer (the mock) is a match; catalog-only means its baseline 'enters the battlefield'/'counters' raw categories no longer appear at all. It does NOT self-display 'Cats' (2026-09-18, Battlefield presence, `requireConsumerForSelfOwnership`) even though it structurally IS a Cat creature — merely BEING a Cat is passive membership, not a deliberate ability (see the real Helpful Hunter bug fix below). It DOES self-display AND self-match '+1/+1' (2026-09-18, new catalog entry) — its own real 'put a +1/+1 counter on this creature' effect is a genuine direct producer match, same class of authored ability as Day of Judgment's own destroy-all program, not bare type membership", () => {
     const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate, lifegainMock]);
     const categories = result.map((r) => r.category).sort();
-    expect(categories).toEqual(['Counters (+1/+1)', 'Lifegain']);
+    expect(categories).toEqual(['+1/+1', 'Lifegain']);
     expect(categories).not.toContain('life gain');
     const lifegain = result.find((r) => r.category === 'Lifegain');
     expect(lifegain!.matchingCardNames).toEqual(['Test Lifegain Producer']);
-    const counters = result.find((r) => r.category === 'Counters (+1/+1)');
+    const counters = result.find((r) => r.category === '+1/+1');
     expect(counters!.matchingCardNames).toEqual(["Ajani's Pridemate"]);
     expect(lifegain!.matchingCardNames).not.toContain("Ajani's Pridemate");
   });
@@ -147,10 +147,10 @@ describe('computeCardInteractions', () => {
     expect(computeCardInteractions(healersHawk, [healersHawk])).toEqual([]);
   });
 
-  it("real bug fix, 2026-09-18: Felidar Savior does NOT self-display 'Lifegain' (same predicate-only reasoning as Healer's Hawk) — it DOES still self-display 'ETB' (a genuine, directly-authored on:'enter' trigger owns the category as a consumer, per the ETB redesign above) but with zero matches when alone in the pool: it has no bounce/blink effect of its own to be a producer. It does NOT self-display 'Cats'/'Creatures' (typeLine 'Creature — Cat Beast', 2026-09-18 Battlefield presence, `requireConsumerForSelfOwnership`) — bare Cat/Creature-type membership, no Affinity/anthem effect of its own. It DOES self-display AND self-match 'Counters (+1/+1)' (2026-09-18, new catalog entry) — its own real \"put a +1/+1 counter on each of up to two other target creatures you control\" effect genuinely produces +1/+1 counters (the query has no self-targeting constraint, same broad-by-design matching every other counterType-agnostic-target query already uses), a direct, non-predicate-derived producer match", () => {
+  it("real bug fix, 2026-09-18: Felidar Savior does NOT self-display 'Lifegain' (same predicate-only reasoning as Healer's Hawk) — it DOES still self-display 'ETB' (a genuine, directly-authored on:'enter' trigger owns the category as a consumer, per the ETB redesign above) but with zero matches when alone in the pool: it has no bounce/blink effect of its own to be a producer. It does NOT self-display 'Cats'/'Creatures' (typeLine 'Creature — Cat Beast', 2026-09-18 Battlefield presence, `requireConsumerForSelfOwnership`) — bare Cat/Creature-type membership, no Affinity/anthem effect of its own. It DOES self-display AND self-match '+1/+1' (2026-09-18, new catalog entry) — its own real \"put a +1/+1 counter on each of up to two other target creatures you control\" effect genuinely produces +1/+1 counters (the query has no self-targeting constraint, same broad-by-design matching every other counterType-agnostic-target query already uses), a direct, non-predicate-derived producer match", () => {
     const result = computeCardInteractions(felidarSavior, [felidarSavior]);
     expect(result).toEqual([
-      { category: 'Counters (+1/+1)', count: 1, matchingCardNames: ['Felidar Savior'] },
+      { category: '+1/+1', count: 1, matchingCardNames: ['Felidar Savior'] },
       { category: 'ETB', count: 0, matchingCardNames: [] },
     ]);
   });
@@ -229,9 +229,9 @@ describe('computeCardInteractions', () => {
     expect(lifegain.matchingCardNames).toEqual(['Felidar Savior']);
   });
 
-  it('new "Counters (+1/+1)" sink (2026-09-18): Exemplar of Light (FDN #11) is a genuine self-referential producer/consumer loop — its own real "putCounter" effect (from its "whenever you gain life, put a +1/+1 counter on this creature" trigger) is a direct, non-predicate-derived match, so it correctly self-owns AND self-matches "Counters (+1/+1)" (unlike Battlefield presence, no requireConsumerForSelfOwnership escape hatch applies here — putting a counter is a genuine authored effect, not bare type membership)', () => {
+  it('new "+1/+1" sink (2026-09-18): Exemplar of Light (FDN #11) is a genuine self-referential producer/consumer loop — its own real "putCounter" effect (from its "whenever you gain life, put a +1/+1 counter on this creature" trigger) is a direct, non-predicate-derived match, so it correctly self-owns AND self-matches "+1/+1" (unlike Battlefield presence, no requireConsumerForSelfOwnership escape hatch applies here — putting a counter is a genuine authored effect, not bare type membership)', () => {
     const result = computeCardInteractions(exemplarOfLight, [exemplarOfLight]);
-    expect(result.find((r) => r.category === 'Counters (+1/+1)')).toEqual({ category: 'Counters (+1/+1)', count: 1, matchingCardNames: ['Exemplar of Light'] });
+    expect(result.find((r) => r.category === '+1/+1')).toEqual({ category: '+1/+1', count: 1, matchingCardNames: ['Exemplar of Light'] });
   });
 
   it('results are sorted by descending count, then alphabetically by category, and every entry has a non-negative integer count matching matchingCardNames.length', () => {

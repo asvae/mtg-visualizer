@@ -4,10 +4,12 @@
 // this SAME `counterType: string` field) rather than a bare, type-blind
 // "counters" bucket the way `synergy.ts`'s own legacy `describeFact`
 // vocabulary collapses every counter type into. Today only `+1/+1` is a
-// real, currently-existing configuration — see this file's own header
-// history (`counters-plus1plus1.ts`, now folded in here) for the real
-// motivating card, Exemplar of Light (FDN #11): a genuine self-referential
-// producer/consumer LOOP —
+// real, currently-existing configuration — see `../counters-plus1plus1.ts`
+// (2026-09-18, split out of this file so the reusable factory and the
+// curated per-instance configuration don't share a module — same
+// family-vs-instance separation `battlefield-presence.ts`'s own split
+// establishes) for the real motivating card, Exemplar of Light (FDN #11): a
+// genuine self-referential producer/consumer LOOP —
 //   - "Whenever you gain life, put a +1/+1 counter on this creature" —
 //     Lifegain CONSUMER (`lifegain.ts`'s own `consumerTriggerNames`) +
 //     Counters PRODUCER (a real `kind:'putCounter', counterType:'+1/+1'`
@@ -53,13 +55,13 @@
 // vacuously satisfying this query. The default `selfDirectProducerMatch ||
 // selfConsumerMatch` rule (`card-interactions.ts`) is correct here
 // unmodified.
-import type { CardDefinition } from '../../card';
-import { matchesConsumerTriggerNames, matchSink } from '../match-sink';
-import type { SinkQuery } from '../sink-query';
-import type { SinkCatalogEntry, SinkFamily, SinkInstance, SinkMatchDetail } from './entry';
+import type { CardDefinition } from '../../../card';
+import { matchesConsumerTriggerNames, matchSink } from '../../match-sink';
+import type { SinkQuery } from '../../sink-query';
+import type { SinkCatalogEntry, SinkFamily, SinkInstance, SinkMatchDetail } from '../entry';
 
-/** Stable SINK FAMILY key shared by every real configured instance below —
- * see `SinkCatalogEntry.family`'s own doc comment (`entry.ts`) for why this
+/** Stable SINK FAMILY key shared by every real configured instance — see
+ * `SinkCatalogEntry.family`'s own doc comment (`entry.ts`) for why this
  * drives real review-status grouping, not just display. Today only 1 real
  * instance (`+1/+1`) shares it — the family grouping still applies (it
  * simply coincides with a single-member group until a real `-1/-1`/loyalty
@@ -71,15 +73,28 @@ export interface CountersSinkConfig {
    * still a real review-status key and URL path. */
   slug: string;
   /** Real `Effect.counterType` this configuration cares about — e.g.
-   * `'+1/+1'`. */
+   * `'+1/+1'`. Also THE real display category verbatim (2026-09-18: no
+   * separate `category` field — see `getName` below — the counter-type
+   * string already IS the exact display label wanted, so a parallel
+   * `category: '+1/+1'` field would be pure duplication with a real risk of
+   * drifting out of sync with `counterType`). */
   counterType: string;
-  /** The real display category — e.g. `'Counters (+1/+1)'`. */
-  category: string;
   /** Real, structural CONSUMER-side `Trigger.name` list — see this file's
    * own header for why this is deliberately NOT counter-type-aware.
    * Omitted for a hypothetical future configuration with no real
    * consumer-naming convention in the pool yet. */
   consumerTriggerNames?: string[];
+}
+
+/** The real display category, derived from `config`'s own structural
+ * fields rather than authored as a separate, independently-typeable field
+ * (2026-09-18) — see `CountersSinkConfig.counterType`'s own doc comment.
+ * Trivial for this family: the counter-type string already is the exact
+ * label wanted (`'+1/+1'`, a hypothetical future `'-1/-1'`/`'loyalty'`, ...).
+ * See `BattlefieldPresenceSink`'s own `getName` (`battlefield-presence.ts`)
+ * for the sibling family's less-trivial version of this same derivation. */
+function getName(config: CountersSinkConfig): string {
+  return config.counterType;
 }
 
 /**
@@ -91,7 +106,8 @@ export interface CountersSinkConfig {
  * shape — this factory follows it exactly. A real `SinkFamily<...>` value.
  */
 export const CountersSink: SinkFamily<CountersSinkConfig> = (config) => {
-  const { slug, counterType, category, consumerTriggerNames } = config;
+  const { slug, counterType, consumerTriggerNames } = config;
+  const category = getName(config);
   const query: SinkQuery = { category, event: 'putCounter', counterType, controller: 'you' };
 
   const sink = ((candidate: CardDefinition, root: string = process.cwd()): SinkMatchDetail | null => {
@@ -113,14 +129,3 @@ export const CountersSink: SinkFamily<CountersSinkConfig> = (config) => {
   Object.assign(sink, data);
   return sink;
 };
-
-// ---------------------------------------------------------------------------
-// The 1 real, currently-existing configuration. A future `-1/-1`/loyalty
-// sibling would be exactly one more `CountersSink({...})` call here.
-
-export const countersPlus1Plus1: SinkInstance = CountersSink({
-  slug: 'counters-plus1plus1',
-  counterType: '+1/+1',
-  category: 'Counters (+1/+1)',
-  consumerTriggerNames: ['onCounterAdded'],
-});

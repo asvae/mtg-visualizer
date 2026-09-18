@@ -8,7 +8,11 @@
 // field with zero behavior attached, explicitly rejected: "We don't need
 // variants") for the wrong shape this supersedes; this file is the real
 // architecture change instead — one shared matcher/factory, N configured
-// instances, no duplicated logic.
+// instances, no duplicated logic. The 3 real, curated instances themselves
+// (2026-09-18, split out of this file so the reusable factory and each
+// curated, specific configuration don't share a module) live in their own
+// sibling files — `../battlefield-presence-cats.ts`/`-creatures.ts`/
+// `-hare-apparent.ts`.
 //
 // **The archetype, in full** (worked example: Claws Out, FDN #6):
 //   costReduction: { perControlled: { amountPerMatch: 1, subtype: 'Cat' } }
@@ -35,9 +39,9 @@
 // matches). The CATS/CREATURES configurations reuse a plain `types` filter
 // (`{has:['Cat']}`/`{has:['Creature']}`); Hare Apparent's own producer query
 // is a literal `name` constraint instead — see that configuration's own
-// inline comment below for why no honest generic "produces a copy of
-// whichever card is asking" query exists (a `SinkQuery` deliberately carries
-// no reference back to its own owning card).
+// inline comment for why no honest generic "produces a copy of whichever
+// card is asking" query exists (a `SinkQuery` deliberately carries no
+// reference back to its own owning card).
 //
 // **Consumer** (`consumerBattlefieldPresence`, per configuration): does a
 // candidate itself CARE about the board-state COUNT of a filtered set of
@@ -51,13 +55,13 @@
 // grants self-ownership for this whole family. See `SinkCatalogEntry
 // .requireConsumerForSelfOwnership`'s own doc comment (`entry.ts`) for the
 // full reasoning; unchanged by this refactor.
-import type { CardDefinition } from '../../card';
-import { matchesBattlefieldPresenceConsumer, matchSink } from '../match-sink';
-import type { SinkQuery } from '../sink-query';
-import type { SinkCatalogEntry, SinkFamily, SinkInstance, SinkMatchDetail } from './entry';
+import type { CardDefinition } from '../../../card';
+import { matchesBattlefieldPresenceConsumer, matchSink } from '../../match-sink';
+import type { SinkQuery } from '../../sink-query';
+import type { SinkCatalogEntry, SinkFamily, SinkInstance, SinkMatchDetail } from '../entry';
 
-/** Stable SINK FAMILY key shared by every real configured instance below —
- * see `SinkCatalogEntry.family`'s own doc comment (`entry.ts`) for why this
+/** Stable SINK FAMILY key shared by every real configured instance — see
+ * `SinkCatalogEntry.family`'s own doc comment (`entry.ts`) for why this
  * drives real review-status grouping, not just display. */
 const FAMILY = 'battlefield-presence';
 
@@ -69,17 +73,38 @@ export interface BattlefieldPresenceSinkConfig {
    * URL paths (`/app/engine/sinks/<slug>`) — never renamed by this
    * refactor. */
   slug: string;
-  /** The real curated PRODUCER query for this configuration. Deliberately
-   * explicit per configuration rather than derived from `filter` alone —
-   * the CATS/CREATURES pair's own `types` filter genuinely differs in kind
-   * from Hare Apparent's own literal `name` constraint (see this file's own
-   * header), so there is no single honest derivation rule covering all
-   * three; each real configuration below states its own query plainly. */
-  query: SinkQuery;
+  /** The real curated PRODUCER query for this configuration, MINUS its own
+   * `category` (2026-09-18: no separate authored `category` field at all —
+   * see `getName` below; the factory computes it from `filter` and splices
+   * it in). Deliberately explicit per configuration rather than derived
+   * from `filter` alone otherwise — the CATS/CREATURES pair's own `types`
+   * filter genuinely differs in kind from Hare Apparent's own literal
+   * `name` constraint (see this file's own header), so there is no single
+   * honest derivation rule covering the rest of `query`; each real
+   * configuration states the rest of its own query plainly. */
+  query: Omit<SinkQuery, 'category'>;
   /** The real curated CONSUMER filter — see `SinkCatalogEntry
    * .consumerBattlefieldPresence`'s own doc comment (`entry.ts`) for the
-   * `{subtype}` vs `{sameNameAsSelf:true}` shapes. */
+   * `{subtype}` vs `{sameNameAsSelf:true}` shapes. Also the sole real input
+   * `getName` derives this configuration's own display category from. */
   filter: BattlefieldPresenceFilter;
+}
+
+/** The real display category, derived from `config.filter` rather than
+ * authored as a separate, independently-typeable field (2026-09-18) — see
+ * `BattlefieldPresenceSinkConfig.query`'s own doc comment for why a parallel
+ * `category` field risked drifting out of sync with the rest of the
+ * configuration. `{sameNameAsSelf: true}` has no clean structural
+ * derivation — it's inherently a named special case, so that one branch's
+ * label is simply hardcoded here. A `{subtype}` config pluralizes to its
+ * own display name (`'Cat'` -> `'Cats'`); an OMITTED `subtype` (the
+ * CREATURES configuration's own real, deliberately unfiltered case — see
+ * this file's own header) is today's one real generic-battlefield-presence
+ * case, so it maps to the fixed `'Creatures'` label rather than pluralizing
+ * `undefined`. */
+function getName(filter: BattlefieldPresenceFilter): string {
+  if ('sameNameAsSelf' in filter) return 'Same-name copies';
+  return filter.subtype ? `${filter.subtype}s` : 'Creatures';
 }
 
 /**
@@ -95,7 +120,8 @@ export interface BattlefieldPresenceSinkConfig {
  * "additive, not a replacement" reasoning. A real `SinkFamily<...>` value.
  */
 export const BattlefieldPresenceSink: SinkFamily<BattlefieldPresenceSinkConfig> = (config) => {
-  const { slug, query, filter } = config;
+  const { slug, query: queryWithoutCategory, filter } = config;
+  const query: SinkQuery = { ...queryWithoutCategory, category: getName(filter) };
 
   const sink = ((candidate: CardDefinition, root: string = process.cwd()): SinkMatchDetail | null => {
     const producer = matchSink(query, candidate, root);
@@ -119,49 +145,3 @@ export const BattlefieldPresenceSink: SinkFamily<BattlefieldPresenceSinkConfig> 
   Object.assign(sink, data);
   return sink;
 };
-
-// ---------------------------------------------------------------------------
-// The 3 real, currently-existing configurations. A future counters-shaped
-// sibling (a 4th filter dimension no real card needs yet) would be exactly
-// one more `BattlefieldPresenceSink({...})` call here — zero new matcher
-// code, per this file's own header.
-
-/** Cats — Claws Out's own "Affinity for Cats" cost reduction is the real
- * motivating consumer; a real Cat creature (Ajani's Pridemate, Nine-Lives
- * Familiar) or a Cat-token-making effect (Prideful Parent/Arahbo/Cat
- * Collector) is the real producer side. */
-export const battlefieldPresenceCats: SinkInstance = BattlefieldPresenceSink({
-  slug: 'battlefield-presence-cats',
-  query: { category: 'Cats', to: 'Battlefield', controller: 'you', types: { has: ['Cat'] } },
-  filter: { subtype: 'Cat' },
-});
-
-/** Creatures — Claws Out's own bare "Creatures you control get +2/+2"
- * (no subtype filter) is the real motivating consumer; deliberately broad
- * BY DESIGN — a generic, pool-wide count of any real creature or
- * creature-token-making effect, not a narrow archetype the way Cats is. */
-export const battlefieldPresenceCreatures: SinkInstance = BattlefieldPresenceSink({
-  slug: 'battlefield-presence-creatures',
-  query: { category: 'Creatures', to: 'Battlefield', controller: 'you', types: { has: ['Creature'] } },
-  filter: {},
-});
-
-/** Same-name copies (Hare Apparent, FDN #15) — a real, bespoke, low-reuse
- * configuration (per `entry.ts`'s own "a bespoke sink with only one real
- * card wanting it is still just a catalog entry" doc comment): the
- * PRODUCER query is a literal `name` constraint (there is no honest general
- * "produces a copy of whichever card is asking" query a shared, curated
- * `SinkQuery` can express — it deliberately carries no reference back to
- * its own owning card), and the CONSUMER filter is `{sameNameAsSelf: true}`
- * rather than a `subtype` — a genuinely different check
- * (`matchesBattlefieldPresenceConsumer` walks `createToken.amount`'s own
- * `ValueRef` shape for this filter, not `costReduction.perControlled`/
- * `pumpAll`/`putCounterAll`). A hypothetical future card with the identical
- * "counts its own other copies" idiom would need its own sibling
- * configuration (a different slug, a different literal `name`), sharing
- * this same factory and matcher. */
-export const battlefieldPresenceHareApparent: SinkInstance = BattlefieldPresenceSink({
-  slug: 'battlefield-presence-hare-apparent',
-  query: { category: 'Same-name copies', to: 'Battlefield', controller: 'you', name: { eq: 'Hare Apparent' } },
-  filter: { sameNameAsSelf: true },
-});

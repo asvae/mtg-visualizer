@@ -143,16 +143,28 @@ passive membership from over-claiming it.
 `SinkFamily<Config> = (config: Config) => SinkInstance` (`catalog/
 entry.ts`) is exactly this narrowing operation, landed as a real,
 generic factory shape (`BattlefieldPresenceSink(config)`/
-`CountersSink(config)`, `catalog/battlefield-presence.ts`/`catalog/
-counters.ts`). A family encodes one shared underlying MECHANIC ("cares
-about the board-state count of a filtered set of permanents you
-control"; "puts counters of some type"), genericized over the one axis
-that varies (a `subtype`/`sameNameAsSelf` filter; a `counterType`
-string). Calling the factory with one concrete configuration — Cats,
-Creatures, Same-name copies, `+1/+1` — IS the act of narrowing the
-family down to one specific, fully-configured `SinkInstance`. Nothing
-about the shared matcher logic (`matchesBattlefieldPresenceConsumer`,
-`matchSink`) changes per instance; only the configuration does.
+`CountersSink(config)`, `catalog/families/battlefield-presence.ts`/
+`catalog/families/counters.ts` — each family's shared factory lives in
+its own `families/` module, separate from each concrete instance's own
+small `catalog/<slug>.ts` config file, e.g. `catalog/counters-
+plus1plus1.ts`/`catalog/battlefield-presence-cats.ts`). A family
+encodes one shared underlying MECHANIC ("cares about the board-state
+count of a filtered set of permanents you control"; "puts counters of
+some type"), genericized over the one axis that varies (a
+`subtype`/`sameNameAsSelf` filter; a `counterType` string). Calling the
+factory with one concrete configuration — Cats, Creatures, Same-name
+copies, `+1/+1` — IS the act of narrowing the family down to one
+specific, fully-configured `SinkInstance`. Nothing about the shared
+matcher logic (`matchesBattlefieldPresenceConsumer`, `matchSink`)
+changes per instance; only the configuration does. Each family's own
+`getName(config)` internal function (2026-09-18) derives the display
+`category` from the config's own other structural fields rather than
+accepting it as a separately-authored field — `CountersSinkConfig`'s
+`counterType` string IS the category verbatim; `BattlefieldPresenceSink`'s
+`getName` maps its `filter` (`{subtype}` pluralizes; `{sameNameAsSelf:
+true}` is a hardcoded special case) to the category instead, so there's
+no parallel `category` field that could drift out of sync with the rest
+of a configuration.
 
 ### 3. "The instance sink is applicable to Candidate" — the callable contract
 
@@ -178,7 +190,7 @@ applicable to this candidate" as a single, first-class operation.
 Interactions/Sinks list) — verified directly against the running code,
 not assumed.** `SinkCatalogEntry.query.category` is the real, per-INSTANCE
 display label, authored once per configuration: `'Cats'`, `'Creatures'`,
-`'Same-name copies'`, `'Counters (+1/+1)'` — never the generic family
+`'Same-name copies'`, `'+1/+1'` — never the generic family
 name `'battlefield-presence'`/`'counters'`. `card-interactions.ts`'s
 `computeCardInteractions` groups its output by `entry.query.category`
 (line: `const category = entry.query.category;`), so a card matching the

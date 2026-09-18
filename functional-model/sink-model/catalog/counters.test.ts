@@ -1,16 +1,17 @@
 // Real corpus verification for the `counters-plus1plus1` sink catalog
 // instance (the ONE real configuration of the shared `CountersSink` family
-// factory, `counters.ts`, as of the 2026-09-18 factory refactor) — see
+// factory, `families/counters.ts`, as of the 2026-09-18 factory refactor —
+// this instance's own config lives in `counters-plus1plus1.ts`) — see
 // `lifegain.test.ts`'s own header for the "mocked fixtures, not real cards"
 // convention this mirrors (the structural gate cares about the STRUCTURAL
 // SHAPE `matchSink`/`matchesConsumerTriggerNames` recognize, not which real
-// card happens to have it). See `counters.ts`'s own header for the full
-// "one shared matcher, parametrized per counter type" design writeup — the
-// real motivating card is Exemplar of Light (FDN #11).
+// card happens to have it). See `families/counters.ts`'s own header for the
+// full "one shared matcher, parametrized per counter type" design writeup —
+// the real motivating card is Exemplar of Light (FDN #11).
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, Effect } from '../../card';
 import { matchesConsumerTriggerNames, matchSink } from '../match-sink';
-import { countersPlus1Plus1 } from './counters';
+import { countersPlus1Plus1 } from './counters-plus1plus1';
 
 describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
   const entry = countersPlus1Plus1;

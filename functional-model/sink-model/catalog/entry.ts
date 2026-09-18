@@ -160,27 +160,33 @@ export interface SinkCatalogEntry {
   requireConsumerForSelfOwnership?: boolean;
   /**
    * Stable SINK FAMILY key (2026-09-18, added for the `BattlefieldPresenceSink`/
-   * `CountersSink` factory refactor — see `catalog/battlefield-presence.ts`/
-   * `catalog/counters.ts`) — e.g. `'battlefield-presence'`/`'counters'`.
-   * Shared verbatim across every real SINK INSTANCE the same factory
-   * produced (all 3 `BattlefieldPresenceSink({...})` calls set
-   * `family: 'battlefield-presence'`; the 1 `CountersSink({...})` call sets
-   * `family: 'counters'`). Omitted for a plain, non-factory-built instance
-   * with no real sibling family (`lifegain`/`graveyard-fodder`/`etb`) — for
-   * those, `sink-catalog-status.ts` treats the instance's own `slug` as its
-   * own trivial family (family and instance coincide 1:1, same as before
-   * this field existed).
+   * `CountersSink` factory refactor — see `catalog/families/battlefield-
+   * presence.ts`/`catalog/families/counters.ts`) — e.g.
+   * `'battlefield-presence'`/`'counters'`. Shared verbatim across every real
+   * SINK INSTANCE the same factory produced (all 3
+   * `BattlefieldPresenceSink({...})` calls set `family: 'battlefield-
+   * presence'`; the 1 `CountersSink({...})` call sets `family: 'counters'`).
+   * Omitted for a plain, non-factory-built instance with no real sibling
+   * family (`lifegain`/`graveyard-fodder`/`etb`) — for those,
+   * `sink-catalog-status.ts` treats the instance's own `slug` as its own
+   * trivial family (family and instance coincide 1:1, same as before this
+   * field existed).
    *
    * **NOT a repeat of the reverted `family: {slug,label,variant}` display
    * metadata field** (`116afa14`, reverted same-day as `d3e92571` — "we
    * don't need variants," zero behavior attached to it, purely cosmetic).
    * THIS field is genuinely load-bearing on two real, mechanical things:
-   * 1. `sink-catalog-status.ts` derives each instance's real source file
-   *    from it (`${family}.ts`, falling back to `${slug}.ts` when omitted)
-   *    for `computeSinkCatalogFingerprint`'s own drift-detection hash — the
-   *    real file this instance's logic/config actually lives in, since
-   *    `battlefield-presence-cats`/`-creatures`/`-hare-apparent` no longer
-   *    each have their own `catalog/<slug>.ts` file to point at.
+   * 1. `sink-catalog-status.ts` derives each instance's real source files
+   *    from it (2026-09-18, split further: the shared factory at
+   *    `families/${family}.ts` PLUS each real member's own
+   *    `${slug}.ts` instance-config file, falling back to just `${slug}.ts`
+   *    when `family` is omitted) for `computeSinkCatalogFingerprint`'s own
+   *    drift-detection hash — the real files this instance's logic/config
+   *    actually lives in, since `battlefield-presence-cats`/`-creatures`/
+   *    `-hare-apparent` each have their own small `catalog/<slug>.ts`
+   *    instance file (config only) plus a shared `catalog/families/
+   *    battlefield-presence.ts` factory file, rather than one combined
+   *    per-slug module the way a singleton like `lifegain` still does.
    * 2. **Review status is computed ONE LEVEL UP, per FAMILY, not per
    *    instance** (2026-09-18, real scope change, not cosmetic) —
    *    `computeSinkCatalogStatus`/`computeSinkCatalogColor` group every real
@@ -230,8 +236,8 @@ export interface SinkMatchDetail {
 
 /**
  * A `SinkCatalogEntry` that is ALSO directly callable — the real return type
- * of `BattlefieldPresenceSink`/`CountersSink` (`catalog/battlefield-
- * presence.ts`/`catalog/counters.ts`, 2026-09-18). A plain function value
+ * of `BattlefieldPresenceSink`/`CountersSink` (`catalog/families/battlefield-
+ * presence.ts`/`catalog/families/counters.ts`, 2026-09-18). A plain function value
  * with the entry's own data fields (`slug`/`query`/`consumerTriggerNames`/
  * ...) assigned onto it (both factories build it this way) satisfies this
  * type structurally — TypeScript doesn't distinguish "a function with these
@@ -287,8 +293,8 @@ export type SinkInstance = SinkCatalogEntry & ((candidate: CardDefinition, root?
 
 /**
  * The shape of a SINK FAMILY constructor — `BattlefieldPresenceSink`/
- * `CountersSink` (`catalog/battlefield-presence.ts`/`catalog/counters.ts`)
- * are both real `SinkFamily<...>` values: a function taking one real
+ * `CountersSink` (`catalog/families/battlefield-presence.ts`/`catalog/
+ * families/counters.ts`) are both real `SinkFamily<...>` values: a function taking one real
  * configuration (`BattlefieldPresenceSinkConfig`/`CountersSinkConfig`) and
  * returning ONE real, fully-configured `SinkInstance` for it (the Cats
  * instance, the +1/+1 instance, ...). Purely a naming/typing convenience —

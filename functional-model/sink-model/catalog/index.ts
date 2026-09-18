@@ -19,12 +19,15 @@
 //
 // **2026-09-18, `BattlefieldPresenceSink`/`CountersSink` factory refactor**
 // — a real multi-instance entry no longer has its own standalone
-// `catalog/<slug>.ts` module; `battlefield-presence-cats`/`-creatures`/
-// `-hare-apparent` are 3 real, independently-configured instances built by
-// ONE shared `BattlefieldPresenceSink` factory living in
-// `catalog/battlefield-presence.ts` (`counters-plus1plus1` likewise from
-// `CountersSink`, `catalog/counters.ts`) — see either file's own header for
-// the full factory writeup, and `entry.ts`'s `SinkCatalogEntry.family`/
+// `catalog/<slug>.ts` module carrying both matching logic AND config;
+// `battlefield-presence-cats`/`-creatures`/`-hare-apparent` are 3 real,
+// independently-configured instances (their own `catalog/battlefield-
+// presence-<slug>.ts` files), each built by ONE shared
+// `BattlefieldPresenceSink` factory living in `catalog/families/battlefield-
+// presence.ts` (`counters-plus1plus1` likewise from `CountersSink`,
+// `catalog/families/counters.ts`, its own instance config living in
+// `catalog/counters-plus1plus1.ts`) — see either family file's own header
+// for the full factory writeup, and `entry.ts`'s `SinkCatalogEntry.family`/
 // `SinkInstance`/`SinkFamily` doc comments for the real vocabulary
 // (`SINK_CATALOG` itself is still a flat array of individual sink
 // INSTANCES, review status is what's now grouped by family —
@@ -32,8 +35,10 @@
 import { entry as graveyardFodder } from './graveyard-fodder';
 import { entry as lifegain } from './lifegain';
 import { entry as etb } from './etb';
-import { battlefieldPresenceCats, battlefieldPresenceCreatures, battlefieldPresenceHareApparent } from './battlefield-presence';
-import { countersPlus1Plus1 } from './counters';
+import { battlefieldPresenceCats } from './battlefield-presence-cats';
+import { battlefieldPresenceCreatures } from './battlefield-presence-creatures';
+import { battlefieldPresenceHareApparent } from './battlefield-presence-hare-apparent';
+import { countersPlus1Plus1 } from './counters-plus1plus1';
 
 export type { SinkCatalogEntry } from './entry';
 

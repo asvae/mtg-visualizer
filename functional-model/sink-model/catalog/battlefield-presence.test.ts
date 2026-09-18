@@ -1,19 +1,22 @@
 // Real corpus verification for the `battlefield-presence-{cats,creatures,
 // hare-apparent}` sink catalog entries — 3 configurations of ONE shared
-// factory (`BattlefieldPresenceSink`, `battlefield-presence.ts`) as of the
-// 2026-09-18 factory refactor (see that file's own header for the full
-// archetype writeup). Consolidated from 3 formerly-separate per-slug test
-// files into this one family file (same real coverage, migrated verbatim —
-// no case dropped or weakened) — each configuration's own `<slug>.corpus
-// .json` manifest stays separate/unchanged (review-status is still computed
-// per real slug, not per family). See `lifegain.test.ts`'s own header for
-// the "mocked fixtures, not real cards" convention every `describe` block
-// below mirrors.
+// factory (`BattlefieldPresenceSink`, `families/battlefield-presence.ts`) as
+// of the 2026-09-18 factory refactor (see that file's own header for the
+// full archetype writeup; each instance's own config lives in its own
+// sibling `battlefield-presence-<slug>.ts`). Consolidated from 3 formerly-
+// separate per-slug test files into this one family file (same real
+// coverage, migrated verbatim — no case dropped or weakened) — each
+// configuration's own `<slug>.corpus.json` manifest stays separate/
+// unchanged (review-status is still computed per real slug, not per
+// family). See `lifegain.test.ts`'s own header for the "mocked fixtures,
+// not real cards" convention every `describe` block below mirrors.
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, Effect } from '../../card';
 import { you } from '../../combinator';
 import { matchesBattlefieldPresenceConsumer, matchSink } from '../match-sink';
-import { battlefieldPresenceCats, battlefieldPresenceCreatures, battlefieldPresenceHareApparent } from './battlefield-presence';
+import { battlefieldPresenceCats } from './battlefield-presence-cats';
+import { battlefieldPresenceCreatures } from './battlefield-presence-creatures';
+import { battlefieldPresenceHareApparent } from './battlefield-presence-hare-apparent';
 
 describe('battlefield-presence-cats sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
   const entry = battlefieldPresenceCats;
