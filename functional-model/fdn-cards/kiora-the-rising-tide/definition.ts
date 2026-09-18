@@ -17,6 +17,7 @@ export const kioraTheRisingTide: CardDefinition = {
     {
       name: 'onAttack',
       on: 'attacks',
+      condition: { kind: 'graveyardCountAtLeast', min: 7 },
       effects: [
         {
           kind: 'createToken',

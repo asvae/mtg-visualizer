@@ -1,0 +1,74 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 38,
+        "text": "Joust Through deals 3 damage to target"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "dealDamageTarget"
+      }
+    ],
+    "reasoning": "This card's own dealDamageTarget effect (amount:3) is the exact real damage this clause describes \u2014 dealDamageTarget's own pool is always getCreaturesInPlay() (card.ts's own case 'dealDamageTarget'), so the 'creature' half of the target restriction is already implicit in the effect kind itself, independent of the attacking-or-blocking gap declared next."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 39,
+        "to": 60,
+        "text": "attacking or blocking"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 no targeted Effect has a combat-role filter (only owner/tapped restrict the candidate pool today), so the spell as modeled can legally target ANY creature, not only one currently attacking or blocking."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 61,
+        "to": 69,
+        "text": "creature"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "dealDamageTarget"
+      }
+    ],
+    "reasoning": "Completes the 'target ... creature' phrase begun in the first entry \u2014 dealDamageTarget's own candidate pool is always creatures."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 71,
+        "to": 86,
+        "text": "You gain 1 life"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "gainLife"
+      }
+    ],
+    "reasoning": "This card's own gainLife effect (amount:1) is the exact real life gain this sentence describes."
+  }
+]

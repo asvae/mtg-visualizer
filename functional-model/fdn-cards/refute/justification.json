@@ -1,0 +1,42 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 21,
+        "text": "Counter target spell."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "counter"
+      }
+    ],
+    "reasoning": "This card's own counter effect ({describe:'Counter target spell'}) is the exact real counterspell this sentence describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 22,
+        "to": 55,
+        "text": "Draw a card, then discard a card."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "drawCard"
+      },
+      {
+        "kind": "effect",
+        "effectKind": "discard"
+      }
+    ],
+    "reasoning": "This card's own drawCard(1) then discard(1) effects are the exact real loot this sentence describes."
+  }
+]

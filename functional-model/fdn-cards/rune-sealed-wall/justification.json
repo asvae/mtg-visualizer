@@ -1,0 +1,68 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 8,
+        "text": "Defender"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Defender"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 9,
+        "to": 13,
+        "text": "{T}:"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "activationCost"
+      }
+    ],
+    "reasoning": "This card's own activationCost ('{T}') is the exact printed activation cost this clause names."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 14,
+        "to": 24,
+        "text": "Surveil 1."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "surveil"
+      }
+    ],
+    "reasoning": "This card's own surveil effect (qty:1) is the exact real Surveil this sentence describes."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 25,
+        "to": 100,
+        "text": "(Look at the top card of your library. You may put it into your graveyard.)"
+      }
+    ],
+    "reasoning": "Reminder text for Surveil directly above \u2014 a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  }
+]

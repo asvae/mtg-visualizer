@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 52,
+        "text": "Incinerating Blast deals 6 damage to target creature"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "dealDamageTarget"
+      }
+    ],
+    "reasoning": "This card's own dealDamageTarget effect (amount:6) is the exact real damage this sentence describes."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 54,
+        "to": 101,
+        "text": "You may discard a card. If you do, draw a card."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 an optional discard whose OUTCOME conditionally gates a second draw effect; no player-decision engine exists anywhere in this model to offer/track the choice or its result."
+  }
+]

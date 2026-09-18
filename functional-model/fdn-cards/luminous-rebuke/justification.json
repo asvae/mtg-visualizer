@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 66,
+        "text": "This spell costs {3} less to cast if it targets a tapped creature."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "costReduction"
+      }
+    ],
+    "reasoning": "This card's own costReduction ({amount:3, condition:'tappedCreatureTarget'}) is the exact real conditional cost reduction this sentence describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 67,
+        "to": 91,
+        "text": "Destroy target creature."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "destroy"
+      }
+    ],
+    "reasoning": "This card's own destroy effect ({validType:'creature', qty:1}) is the exact real destroy this sentence describes."
+  }
+]

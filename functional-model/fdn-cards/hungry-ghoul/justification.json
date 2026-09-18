@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 31,
+        "text": "{1}, Sacrifice another creature"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "activationCost"
+      }
+    ],
+    "reasoning": "This card's own activationCost ('{1}, sacrifice another creature') is the exact printed activation cost this clause names."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 33,
+        "to": 69,
+        "text": "Put a +1/+1 counter on this creature"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "putCounter"
+      }
+    ],
+    "reasoning": "This card's own putCounter effect ({target:'self', counterType:'+1/+1', amount:1}) is the exact, real self-only +1/+1 counter this clause describes."
+  }
+]

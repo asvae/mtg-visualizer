@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 33,
+        "text": "Creatures you control get +10/+10"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "pumpAll"
+      }
+    ],
+    "reasoning": "This card's own pumpAll effect ({predicate:'creatures-you-control', power:10, toughness:10, untilEndOfTurn:true}) is the exact real broadcast pump this clause describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 34,
+        "to": 71,
+        "text": "and gain vigilance until end of turn."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "grantKeywordAll"
+      }
+    ],
+    "reasoning": "This card's own grantKeywordAll effect ({predicate:'creatures-you-control', keyword:'Vigilance', untilEndOfTurn:true}) is the exact real broadcast Vigilance grant this clause describes \u2014 same 'until end of turn' duration the pumpAll effect above also carries."
+  }
+]

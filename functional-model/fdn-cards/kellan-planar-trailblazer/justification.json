@@ -1,0 +1,74 @@
+[
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 7,
+        "text": "{1}{R}:"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "The printed activation cost for this ability \u2014 genuinely uncovered along with the rest of the ability's own text since nothing in this card's CardDefinition represents this ability at all (no activationCost/abilities entry exists)."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 8,
+        "to": 196,
+        "text": "If Kellan is a Scout, it becomes a Human Faerie Detective and gains \"Whenever Kellan deals combat damage to a player, exile the top card of your library. You may play that card this turn.\""
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 a subtype-conditional type-change plus dynamic installation of a brand-new triggered ability; no Effect/Trigger primitive in this schema can express either half."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 197,
+        "to": 204,
+        "text": "{2}{R}:"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 1
+      }
+    ],
+    "reasoning": "The printed activation cost for this second ability \u2014 genuinely uncovered along with the rest of the ability's own text since nothing in this card's CardDefinition represents this ability at all."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 205,
+        "to": 291,
+        "text": "If Kellan is a Detective, it becomes a 3/2 Human Faerie Rogue and gains double strike."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 1
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 same subtype-conditional type-change gap as the first ability, plus a type-dependent P/T override; neither ptFormula nor pt can branch on the permanent's own current type membership."
+  }
+]

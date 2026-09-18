@@ -1,0 +1,92 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 31,
+        "text": "{1}, {T}, Sacrifice a creature:"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "drawAndSoul"
+      }
+    ],
+    "reasoning": "This card's own named ability 'drawAndSoul' carries cost:'{1}, {T}, Sacrifice a creature' \u2014 the exact printed activation cost this clause names (the real sacrifice-a-creature cost component is kept as plain descriptive text, same established convention hungry-ghoul's own '{1}, sacrifice another creature' already uses \u2014 no cost-payment engine parses/enforces this string either way)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 32,
+        "to": 84,
+        "text": "Draw a card and put a soul counter on this artifact."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "drawAndSoul"
+      }
+    ],
+    "reasoning": "This same ability's drawCard(1) then putCounter({target:'self', counterType:'SOUL', amount:1}) effects are the exact real draw-and-counter sequence this sentence describes."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 85,
+        "to": 112,
+        "text": "Activate only as a sorcery."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 no timing/speed-restriction field exists on a named abilities[] entry."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 113,
+        "to": 147,
+        "text": "{4}, {T}, Sacrifice this artifact:"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "sacForLife"
+      }
+    ],
+    "reasoning": "This card's own named ability 'sacForLife' carries cost:'{4}, {T}, Sacrifice this artifact' \u2014 the exact printed activation cost this clause names, same plain-descriptive-text convention as the first ability's own sacrifice cost."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 148,
+        "to": 227,
+        "text": "Each opponent loses life equal to the number of soul counters on this artifact."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "sacForLife"
+      }
+    ],
+    "reasoning": "This same ability's loseLife effect ({owner:'opponents', amount: ctx => ctx.self.getCounters('SOUL')}) is the exact real per-opponent life loss, scaled to the real soul-counter count, this sentence describes."
+  }
+]

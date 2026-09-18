@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 9,
+        "text": "Vigilance"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Vigilance"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 10,
+        "to": 57,
+        "text": "(Attacking doesn't cause this creature to tap.)"
+      }
+    ],
+    "reasoning": "Reminder text for Vigilance directly above \u2014 a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 58,
+        "to": 123,
+        "text": "When this creature enters, create a 1/1 white Cat creature token."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own onEnter trigger (on:'enter', a real self-only ETB auto-fire) runs a createToken effect building the exact 1/1 Cat token this clause describes (the token's own 'white' color is real but unrepresentable \u2014 TokenInfo has no colors field anywhere in this schema, same accepted pool-wide limitation as every other colored-token clause, e.g. arahbo-the-first-fang's own blue justification.json)."
+  }
+]

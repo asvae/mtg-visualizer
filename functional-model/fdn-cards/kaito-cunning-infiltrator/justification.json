@@ -1,0 +1,146 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 96,
+        "text": "Whenever a creature you control deals combat damage to a player, put a loyalty counter on Kaito."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onCombatDamageToPlayer"
+      }
+    ],
+    "reasoning": "This card's own onCombatDamageToPlayer trigger is named for, and structurally represents, this exact combat-damage-to-player occasion \u2014 no on value exists for it in this schema's Trigger.on union, so it's a real but not-yet-auto-firing (name-only) trigger; its putCounter effect ({target:'self', counterType:'loyalty', amount:1}) is a real, mechanically tracked counter (state.ts's own persistent per-card counter map), not a placeholder."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 97,
+        "to": 100,
+        "text": "+1:"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "+1"
+      }
+    ],
+    "reasoning": "This card's own named ability '+1' carries cost:'Loyalty: +1' \u2014 the real printed loyalty cost, kept as descriptive text only (no loyalty-cost parsing exists anywhere in this engine, same convention gogo-master-of-mimicry's own activated-ability cost already establishes)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 101,
+        "to": 165,
+        "text": "Up to one target creature you control can't be blocked this turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "+1"
+      }
+    ],
+    "reasoning": "This same +1 ability's grantKeywordTarget effect ({keyword:'Unblockable', validType:'creature', owner:'you', untilEndOfTurn:true}) is the exact real 'up to one target creature you control can't be blocked this turn' grant this clause describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 167,
+        "to": 199,
+        "text": "Draw a card, then discard a card"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "+1"
+      }
+    ],
+    "reasoning": "This same +1 ability's drawCard(1) then discard(1) effects are the exact real loot this clause describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 201,
+        "to": 204,
+        "text": "\u22122:"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "-2"
+      }
+    ],
+    "reasoning": "This card's own named ability '-2' carries cost:'Loyalty: -2' \u2014 the real printed loyalty cost, same descriptive-text-only convention as the +1 ability above."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 205,
+        "to": 243,
+        "text": "Create a 2/1 blue Ninja creature token"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "-2"
+      }
+    ],
+    "reasoning": "This same -2 ability's createToken effect builds the exact 2/1 Ninja token this clause describes (the token's own 'blue' color is real but unrepresentable \u2014 TokenInfo has no colors field anywhere in this schema, same accepted pool-wide limitation as every other colored-token clause)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 245,
+        "to": 248,
+        "text": "\u22129:"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "ability",
+        "name": "-9"
+      }
+    ],
+    "reasoning": "This card's own named ability '-9' carries cost:'Loyalty: -9' \u2014 the real printed loyalty cost, same descriptive-text-only convention as the other two abilities above."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 249,
+        "to": 350,
+        "text": "You get an emblem with \"Whenever a player casts a spell, you create a 2/1 blue Ninja creature token.\""
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 no emblem mechanic (CR 701.42) exists anywhere in this engine; this -9 ability's own kind:'custom' effect is a documented no-op placeholder, not real executable logic."
+  }
+]

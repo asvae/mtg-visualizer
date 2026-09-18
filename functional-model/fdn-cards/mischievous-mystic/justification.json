@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 7,
+        "to": 105,
+        "text": "Whenever you draw your second card each turn, create a 1/1 blue Faerie creature token with flying."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onSecondDraw"
+      }
+    ],
+    "reasoning": "This card's own onSecondDraw trigger is named for, and structurally represents, this exact 'drew your second card this turn' occasion \u2014 no on value exists for it in this schema's Trigger.on union, so it's a real but not-yet-auto-firing (name-only) trigger, same convention every other not-yet-auto-fired trigger in this pool already uses; its createToken effect builds the exact 1/1 Faerie token with keywords:['Flying'] this clause describes (the token's own 'blue' color is real but unrepresentable \u2014 TokenInfo has no colors field anywhere in this schema, same accepted pool-wide limitation as every other colored-token clause)."
+  }
+]

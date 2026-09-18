@@ -1,0 +1,50 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 86,
+        "text": "Create a tapped 1/1 black Rat creature token for each creature card in your graveyard."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "createToken"
+      }
+    ],
+    "reasoning": "This card's own createToken effect ({token:{Rat, 1/1}, amount: ctx => ctx.you.getCardsIn('Graveyard').filter(c => c.isCreature()).length, tapped:true}) is the exact real per-graveyard-creature-card token count this sentence describes (the token's own 'black' color is real but unrepresentable \u2014 TokenInfo has no colors field anywhere in this schema, same accepted pool-wide limitation as every other colored-token clause)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 87,
+        "to": 106,
+        "text": "Flashback {2}{B}{B}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "alternateCosts"
+      }
+    ],
+    "reasoning": "This card's own alternateCosts entry (flashback('{2}{B}{B}'), {name:'Flashback', cost:'{2}{B}{B}', from:'graveyard', thenExile:true}) is the exact real Flashback cost this line prints."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 107,
+        "to": 190,
+        "text": "(You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+      }
+    ],
+    "reasoning": "Reminder text for Flashback directly above \u2014 a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  }
+]

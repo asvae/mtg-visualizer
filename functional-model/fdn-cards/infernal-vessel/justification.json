@@ -1,0 +1,74 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 23,
+        "text": "When this creature dies"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onDeath"
+      }
+    ],
+    "reasoning": "This card's own onDeath trigger is named for, and structurally represents, this exact dies occasion \u2014 no on value exists for a dies event in this schema's Trigger.on union, so it's a real but not-yet-auto-firing (name-only) trigger, same convention every other not-yet-auto-fired trigger in this pool already uses."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 25,
+        "to": 45,
+        "text": "if it wasn't a Demon"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 no BoardStateCondition variant (or any other field) checks the triggering permanent's own current type membership; the rest of this trigger's real, executable custom effect runs unconditionally instead."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 47,
+        "to": 131,
+        "text": "return it to the battlefield under its owner's control with two +1/+1 counters on it"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onDeath"
+      }
+    ],
+    "reasoning": "This same onDeath trigger's custom effect runs actions.moveTo(ctx.self, 'Battlefield') then actions.putCounter(ctx.self, '+1/+1', 2) \u2014 the exact real return-with-two-counters sequence this clause describes; moveTo moves the SAME object (already the graveyard card by the time this trigger fires), returning it under its owner's control per the normal 208.3 rule."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 133,
+        "to": 177,
+        "text": "It's a Demon in addition to its other types."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onDeath"
+      }
+    ],
+    "reasoning": "This same trigger's custom effect finishes with actions.animate(ctx.self, ['Demon']) \u2014 a real, additive type grant (interfaces.ts's own animate primitive), the exact 'in addition to its other types' semantics this sentence prints."
+  }
+]

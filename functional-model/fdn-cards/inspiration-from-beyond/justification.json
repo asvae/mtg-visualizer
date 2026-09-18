@@ -1,0 +1,68 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 16,
+        "text": "Mill three cards"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "mill"
+      }
+    ],
+    "reasoning": "This card's own mill effect ({owner:'you', amount:3}) is the exact real mill this clause describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 18,
+        "to": 89,
+        "text": "then return an instant or sorcery card from your graveyard to your hand"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "move"
+      }
+    ],
+    "reasoning": "This card's own move effect ({from:'Graveyard', to:'Hand', qty:1, owner:'you', subtype:['Instant','Sorcery'], target:true}) is the exact real graveyard-to-hand return this clause describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 91,
+        "to": 110,
+        "text": "Flashback {5}{U}{U}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "alternateCosts"
+      }
+    ],
+    "reasoning": "This card's own alternateCosts entry ({name:'Flashback', cost:'{5}{U}{U}', from:'graveyard', thenExile:true}) is the exact real Flashback cost this line prints."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 111,
+        "to": 194,
+        "text": "(You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+      }
+    ],
+    "reasoning": "Reminder text for Flashback directly above \u2014 a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  }
+]

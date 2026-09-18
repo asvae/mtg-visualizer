@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 7,
+        "to": 66,
+        "text": "When this creature enters, draw a card, then discard a card"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own onEnter trigger (on:'enter', a real self-only ETB auto-fire) runs the exact drawCard(1) then discard(1) sequence this sentence describes."
+  }
+]

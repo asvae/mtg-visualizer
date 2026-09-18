@@ -1,0 +1,80 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 46,
+        "text": "During your turn, equipped creature gets +2/+0"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "continuousPTGrants"
+      }
+    ],
+    "reasoning": "This card's own continuousPTGrants entry ({power:2, toughness:0, includeSelf:false, equippedBySelf:true, onlyDuringYourTurn:true}) is the exact turn-conditional equipped-creature P/T grant this clause describes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 47,
+        "to": 68,
+        "text": "and has first strike."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "continuousKeywordGrants"
+      }
+    ],
+    "reasoning": "This card's own continuousKeywordGrants entry ({keywords:['FirstStrike'], includeSelf:false, equippedBySelf:true, onlyDuringYourTurn:true}) is the exact turn-conditional equipped-creature First Strike grant this clause describes."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 69,
+        "to": 132,
+        "text": "(It deals combat damage before creatures without first strike.)"
+      }
+    ],
+    "reasoning": "Reminder text for First Strike directly above \u2014 a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 133,
+        "to": 142,
+        "text": "Equip {2}"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "activationCost"
+      }
+    ],
+    "reasoning": "This card's own activationCost ('{2}') is the exact printed Equip cost this clause names."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 143,
+        "to": 213,
+        "text": "({2}: Attach to target creature you control. Equip only as a sorcery.)"
+      }
+    ],
+    "reasoning": "Standard printed reminder text for the Equip keyword template (CR 702.6) \u2014 its real substance (the attach cost/target and the sorcery-speed restriction) is the same as this card's own real, executable custom effect (chooseTarget + equip, paired with the {2} activationCost above), not independent rules content beyond what the keyword template itself already establishes."
+  }
+]

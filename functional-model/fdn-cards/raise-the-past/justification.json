@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 91,
+        "text": "Return all creature cards with mana value 2 or less from your graveyard to the battlefield."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "move"
+      }
+    ],
+    "reasoning": "This card's own move effect ({owner:'you', from:'Graveyard', to:'Battlefield', validType:'creature', maxCmc:2, qty:100}) is the exact real mass reanimation this sentence describes \u2014 qty:100 exploits pool-exhaustion semantics (same convention destroy's own qty doc comment establishes for 'up to N') to represent 'ALL' matching cards, since no real board ever has anywhere near 100 qualifying graveyard cards."
+  }
+]

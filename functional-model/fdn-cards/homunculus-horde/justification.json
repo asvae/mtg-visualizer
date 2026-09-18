@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 44,
+        "text": "Whenever you draw your second card each turn"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onSecondDraw"
+      }
+    ],
+    "reasoning": "This card's own onSecondDraw trigger is named for, and structurally represents, this exact \"drew your second card this turn\" occasion \u2014 no on value exists for it (no drawNthCardThisTurn event anywhere in this schema's Trigger.on union), so it's a real but not-yet-auto-firing (name-only) trigger, same convention every other not-yet-auto-fired trigger in this pool already uses."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 46,
+        "to": 91,
+        "text": "create a token that's a copy of this creature"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 no copy-a-permanent mechanic exists anywhere in this engine (CR 707); createToken only ever builds a fixed, hand-authored TokenInfo payload, never a live copy of the source card's own characteristics, so this is declared as a real capacity gap rather than silently approximated."
+  }
+]

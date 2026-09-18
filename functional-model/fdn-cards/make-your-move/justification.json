@@ -1,0 +1,20 @@
+[
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 74,
+        "text": "Destroy target artifact, enchantment, or creature with power 4 or greater."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 a disjunctive (OR-of-three) target-type restriction where only the creature branch is further gated by a numeric power threshold; destroy's own validType is a single closed-enum pick and its minPower field would apply pool-wide, wrongly restricting the artifact/enchantment branches too, so this card's own kind:'custom' effect is a documented no-op placeholder, not real executable logic."
+  }
+]

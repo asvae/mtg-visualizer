@@ -1,0 +1,20 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 79,
+        "text": "Draw a card for each different mana value among nonland permanents you control."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "drawCard"
+      }
+    ],
+    "reasoning": "This card's own drawCard effect's amount is a narrowly-scoped Computed closure that filters ctx.you's own Battlefield cards to nonland, then counts the distinct getCMC() values among them \u2014 the exact real 'a card for each different mana value among nonland permanents you control' count this sentence describes."
+  }
+]

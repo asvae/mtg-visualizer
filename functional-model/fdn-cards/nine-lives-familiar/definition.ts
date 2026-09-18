@@ -6,6 +6,13 @@ export const nineLivesFamiliar: CardDefinition = {
   typeLine: 'Creature — Cat',
   pt: [1, 1],
 
+  missingSchemaFunctionality: [
+    {
+      clause: 'if you cast it',
+      demand: 'No field anywhere gates an "enters with N counters" effect on HOW the permanent reached the battlefield (cast vs. put onto the battlefield some other way, CR 601-vs-707) — `putCounter`/`onEnter` fire identically regardless of the entering permanent\'s own cast-vs-other-arrival history.',
+    },
+  ],
+
   triggers: [
     {
       name: 'onEnter',

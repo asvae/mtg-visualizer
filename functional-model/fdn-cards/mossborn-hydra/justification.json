@@ -1,0 +1,86 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 7,
+        "text": "Trample"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Trample"
+      }
+    ],
+    "reasoning": "Printed keyword, present in this card's own keywords array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 8,
+        "to": 99,
+        "text": "(This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+      }
+    ],
+    "reasoning": "Reminder text for Trample directly above \u2014 a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 100,
+        "to": 148,
+        "text": "This creature enters with a +1/+1 counter on it."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "Real Forge K:etbCounter:P1P1:1 modeled as a real onEnter trigger putting a +1/+1 counter (printed base pt stays [0,0] \u2014 the counter is what actually brings it to 1/1), same convention goblin-boarders already establishes."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 149,
+        "to": 159,
+        "text": "Landfall \u2014"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onLandfallDouble"
+      }
+    ],
+    "reasoning": "This ability's own template label, structurally represented by this same named trigger."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 160,
+        "to": 249,
+        "text": "Whenever a land you control enters, double the number of +1/+1 counters on this creature."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onLandfallDouble"
+      }
+    ],
+    "reasoning": "This card's own onLandfallDouble trigger is named for, and structurally represents, this exact Landfall occasion \u2014 no on value exists for a board-wide 'a LAND enters' watch (on:'otherPermanentEnters' only supports a subtype filter, and 'Land' isn't a creature subtype, so it doesn't fit), so it's a real but not-yet-auto-firing (name-only) trigger; its putCounter effect ({target:'self', counterType:'+1/+1', amount: ctx => ctx.self.getCounters('+1/+1')}) adds a number equal to the current count, which IS doubling it \u2014 a narrowly-scoped Computed closure, not a magic string."
+  }
+]

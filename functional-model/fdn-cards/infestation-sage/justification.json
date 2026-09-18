@@ -1,0 +1,38 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 23,
+        "text": "When this creature dies"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onDeath"
+      }
+    ],
+    "reasoning": "This card's own onDeath trigger is named for, and structurally represents, this exact dies occasion \u2014 no on value exists for a dies event in this schema's Trigger.on union, so it's a real but not-yet-auto-firing (name-only) trigger, same convention every other not-yet-auto-fired trigger in this pool already uses."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 25,
+        "to": 87,
+        "text": "create a 1/1 black and green Insect creature token with flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onDeath"
+      }
+    ],
+    "reasoning": "This same onDeath trigger's createToken effect builds the exact 1/1 Insect token with keywords:['Flying'] this clause describes; TokenInfo has no colors field anywhere in this schema (see tokens.ts's own b_5_5_demon entry for the same, already-documented limitation), so the black-and-green color identity is real but unrepresentable \u2014 only the subtype/P&T/keyword survive, same accepted pool-wide convention every other colored-token clause in this pool already follows (e.g. arahbo-the-first-fang's own blue justification.json)."
+  }
+]

@@ -1,0 +1,24 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "type_line",
+    "spans": [
+      {
+        "from": 0,
+        "to": 19,
+        "text": "Creature \u2014 Dinosaur"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "field",
+        "field": "typeLine"
+      },
+      {
+        "kind": "field",
+        "field": "pt"
+      }
+    ],
+    "reasoning": "Vanilla creature \u2014 real Forge Oracle: line is empty, so this card's only printed textual content is its name/mana cost/type line/power-toughness, all real baseline CardDefinition fields (typeLine, pt:[12,8]). This entry exists to satisfy the manifest's own non-empty-entries requirement even though there is no real oracle_text to cover at all (an empty oracle_text has zero real characters, so the full-coverage tiling check passes trivially with zero oracle_text entries)."
+  }
+]

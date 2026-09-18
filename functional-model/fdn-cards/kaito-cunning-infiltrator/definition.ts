@@ -5,6 +5,13 @@ export const kaitoCunningInfiltrator: CardDefinition = {
   manaCost: '{1}{U}{U}',
   typeLine: 'Legendary Planeswalker — Kaito',
 
+  missingSchemaFunctionality: [
+    {
+      clause: 'You get an emblem with "Whenever a player casts a spell, you create a 2/1 blue Ninja creature token."',
+      demand: 'No emblem mechanic (CR 701.42 — a persistent, ownerless game object carrying its own triggered ability) exists anywhere in this engine.',
+    },
+  ],
+
   triggers: [
     {
       name: 'onCombatDamageToPlayer',

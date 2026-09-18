@@ -5,6 +5,13 @@ export const ravenousAmulet: CardDefinition = {
   manaCost: '{2}',
   typeLine: 'Artifact',
 
+  missingSchemaFunctionality: [
+    {
+      clause: 'Activate only as a sorcery.',
+      demand: 'No timing/speed-restriction field exists on a named `abilities[]` entry (only `ManaAbility` has an analogous `restriction`/`activationCondition` pair) — no priority/stack-timing model exists anywhere in this engine for a plain (non-mana) activated ability either way.',
+    },
+  ],
+
   abilities: [
     {
       name: 'drawAndSoul',

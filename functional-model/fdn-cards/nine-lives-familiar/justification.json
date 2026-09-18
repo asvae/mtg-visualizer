@@ -1,0 +1,92 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 54,
+        "text": "This creature enters with eight revival counters on it"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onEnter"
+      }
+    ],
+    "reasoning": "This card's own onEnter trigger (on:'enter', a real self-only ETB auto-fire) puts 8 real 'revival' counters (state.ts's own persistent per-card counter map) \u2014 the exact real counter count this clause describes."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 55,
+        "to": 69,
+        "text": "if you cast it"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "missingSchemaFunctionality",
+        "index": 0
+      }
+    ],
+    "reasoning": "Genuinely uncovered \u2014 no field anywhere gates an 'enters with N counters' effect on how the permanent reached the battlefield; the onEnter trigger above fires (and puts counters) unconditionally regardless of cast-vs-other-arrival history."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 71,
+        "to": 95,
+        "text": "When this creature dies,"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onDeath"
+      }
+    ],
+    "reasoning": "This card's own onDeath trigger is named for, and structurally represents, this exact dies occasion \u2014 no on value exists for a dies event in this schema's Trigger.on union, so it's a real but not-yet-auto-firing (name-only) trigger, same convention every other not-yet-auto-fired trigger in this pool already uses."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 96,
+        "to": 130,
+        "text": "if it had a revival counter on it,"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onDeath"
+      }
+    ],
+    "reasoning": "This same trigger's custom effect real-checks `if (ctx.self.getCounters('revival') <= 0) return;` before doing anything else \u2014 the exact real 'if it had a revival counter on it' gate this clause describes, reading the real persistent counter the onEnter trigger above wrote."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 131,
+        "to": 235,
+        "text": "return it to the battlefield with one fewer revival counter on it at the beginning of the next end step."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onDeath"
+      }
+    ],
+    "reasoning": "This same trigger's custom effect calls actions.delayUntil('EndOfTurn', ...) \u2014 real, executable machinery (the same real primitive elrond-moon-reader's own 'return at the beginning of the next end step' custom effect already uses) \u2014 moving the same object back to the battlefield and putting one fewer revival counter on it; the exact real delayed return this sentence describes."
+  }
+]
