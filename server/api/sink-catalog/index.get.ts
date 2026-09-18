@@ -21,6 +21,7 @@ import { join } from 'node:path';
 import { computeSinkCatalogStatus, computeSinkCatalogColor } from '../../../functional-model/sink-catalog-status';
 import type { SinkCatalogBaseline, SinkCatalogColor, SinkCatalogEvidence } from '../../../functional-model/sink-catalog-status';
 import { SINK_CATALOG } from '../../../functional-model/sink-model/catalog/index';
+import type { SinkInstance } from '../../../functional-model/sink-model/catalog/entry';
 import type { SinkQuery } from '../../../functional-model/sink-model/sink-query';
 import { readFunctionalModelFile, type SourceFileResult } from '../../../functional-model/source-files';
 import { matchSink, matchesConsumerTriggerNames, matchesConsumerTriggerOn } from '../../../functional-model/sink-model/match-sink';
@@ -43,11 +44,63 @@ export interface SinkCatalogSourceFiles {
   corpusTest: SourceFileResult;
 }
 
+/** Best-effort JSON parse of a real corpus manifest's own raw content — a
+ * malformed file (shouldn't happen, these are hand-authored/checked-in)
+ * comes back as a `{parseError, raw}` marker rather than throwing, same
+ * "never crash a review dashboard over one bad file" posture the rest of
+ * this route follows. */
+function safeParseJson(content: string | null): unknown {
+  if (content === null) return null;
+  try {
+    return JSON.parse(content);
+  } catch {
+    return { parseError: true, raw: content };
+  }
+}
+
+/**
+ * The `corpusManifest` half of `loadSourceFiles` — real, per-request fix
+ * (2026-09-18) for the "only the FIRST member's own corpus content" gap
+ * `sink-catalog-status.ts`'s own `SinkCatalogEvidence.corpusManifestPath`
+ * doc comment already flagged. A singleton group (`evidence.members.length
+ * <= 1`, true for every non-family entry AND degenerates identically for a
+ * would-be 1-member family) is served exactly as before — that single
+ * member's own raw file content, unchanged shape. A real multi-instance
+ * family group instead combines EVERY real member's own `<slug>.corpus
+ * .json` into one valid JSON object (`{total, passing, members: {<slug>:
+ * <parsed content>}}`, `total`/`passing` mirroring `evidence`'s own already-
+ * summed fields) so a reviewer reading the "Corpus manifest" panel sees the
+ * real combined evidence, not one arbitrary instance's own slice of it.
+ * `exists`/`truncated` are OR'd across every member (true iff any member's
+ * own file is present/was truncated) — `path` becomes a comma-joined list
+ * of every real member path (display-only; nothing reads this field as a
+ * literal filesystem path downstream, `EngineConsoleCodeSection.vue` never
+ * renders `result.path` at all).
+ */
+function loadCorpusManifestSourceFile(root: string, evidence: SinkCatalogEvidence): SourceFileResult {
+  if (evidence.members.length <= 1) {
+    const path = evidence.members[0]?.corpusManifestPath ?? evidence.corpusManifestPath;
+    return readFunctionalModelFile(root, path);
+  }
+  const memberFiles = evidence.members.map((m) => ({ slug: m.slug, file: readFunctionalModelFile(root, m.corpusManifestPath) }));
+  const combined = {
+    total: evidence.corpusTotal,
+    passing: evidence.corpusPassing,
+    members: Object.fromEntries(memberFiles.map(({ slug, file }) => [slug, file.exists ? safeParseJson(file.content) : { missing: true }])),
+  };
+  return {
+    path: memberFiles.map(({ file }) => file.path).join(', '),
+    exists: memberFiles.some(({ file }) => file.exists),
+    content: JSON.stringify(combined, null, 2),
+    truncated: memberFiles.some(({ file }) => file.truncated),
+  };
+}
+
 function loadSourceFiles(slug: string, evidence: SinkCatalogEvidence): SinkCatalogSourceFiles {
   const root = process.cwd();
   return {
     entry: readFunctionalModelFile(root, join(CATALOG_DIR, `${slug}.ts`)),
-    corpusManifest: readFunctionalModelFile(root, evidence.corpusManifestPath),
+    corpusManifest: loadCorpusManifestSourceFile(root, evidence),
     corpusTest: readFunctionalModelFile(root, join(CATALOG_DIR, `${slug}.test.ts`)),
   };
 }
@@ -149,16 +202,79 @@ export interface SinkCatalogPageEntry {
   realMatches?: SinkCatalogRealMatches;
 }
 
-function computeRealMatches(entry: (typeof SINK_CATALOG)[number], pool: CardDefinition[], root: string): SinkCatalogRealMatches {
-  const producerMatches = pool.filter((c) => matchSink(entry.query, c, root).matched).map((c) => c.name).sort();
-  const result: SinkCatalogRealMatches = { producerMatches };
-  const hasConsumerSignal = (entry.consumerTriggerNames && entry.consumerTriggerNames.length > 0) || (entry.consumerTriggerOn && entry.consumerTriggerOn.length > 0);
-  if (hasConsumerSignal) {
-    const consumerNames = new Set(
-      pool
-        .filter((c) => matchesConsumerTriggerNames(entry.consumerTriggerNames, c) || matchesConsumerTriggerOn(entry.consumerTriggerOn, c))
-        .map((c) => c.name),
-    );
+/** True iff `candidate` structurally PRODUCES this ONE real `SINK_CATALOG`
+ * instance's own event — a real `SinkInstance` (every current
+ * `battlefield-presence-*`/`counters-*` member, built by the
+ * `BattlefieldPresenceSink`/`CountersSink` factories, `sink-model/catalog/
+ * entry.ts`) is directly CALLABLE and answers this (plus every declared
+ * consumer signal, uniformly, whatever kind it is) in one real match-detail
+ * call; a plain, non-callable singleton entry (`lifegain`/`graveyard-
+ * fodder`/`etb`) falls back to the bare `matchSink(instance.query, ...)`
+ * check every pre-family-refactor call site already used. */
+function instanceProducerMatched(instance: (typeof SINK_CATALOG)[number], candidate: CardDefinition, root: string): boolean {
+  // `SINK_CATALOG`'s own inferred element type collapses to the plain,
+  // non-callable `SinkCatalogEntry` shape (every real `SinkInstance` IS
+  // structurally a `SinkCatalogEntry` too, so array-literal inference keeps
+  // only their common supertype) — the runtime `typeof instance ===
+  // 'function'` check is still correct (`battlefield-presence-*`/
+  // `counters-*` members really are callable, see `catalog/entry.ts`'s own
+  // `SinkInstance` doc comment), it's only the STATIC type that needs an
+  // explicit `unknown`-mediated cast to recover the call signature.
+  if (typeof instance === 'function') return !!(instance as unknown as SinkInstance)(candidate, root)?.producer;
+  return matchSink(instance.query, candidate, root).matched;
+}
+
+/** True iff this ONE real instance declares ANY consumer-side recognition
+ * mode at all (`consumerTriggerNames`/`consumerTriggerOn`/
+ * `consumerBattlefieldPresence`) — governs whether a group's aggregated
+ * `consumerMatches` key is served at all (omitted, not `[]`, when NO member
+ * declares one — same "no empty consumer section" rule the pre-family
+ * single-instance check already followed). */
+function instanceHasConsumerSignal(instance: (typeof SINK_CATALOG)[number]): boolean {
+  return (
+    (!!instance.consumerTriggerNames && instance.consumerTriggerNames.length > 0) ||
+    (!!instance.consumerTriggerOn && instance.consumerTriggerOn.length > 0) ||
+    !!instance.consumerBattlefieldPresence
+  );
+}
+
+/** True iff `candidate` structurally satisfies this ONE real instance's own
+ * consumer-side signal, whichever kind it declares — a callable `SinkInstance`
+ * answers this uniformly (including `consumerBattlefieldPresence`, which the
+ * bare `matchesConsumerTriggerNames`/`matchesConsumerTriggerOn` pair below
+ * has no knowledge of at all — this is also the real fix for
+ * `.claude/contracts/card-schema.md`'s own previously-flagged
+ * "`computeRealMatches` doesn't yet know about `consumerBattlefieldPresence`"
+ * gap, for every family member, for free); a plain singleton entry falls
+ * back to the same trigger-name/trigger-on checks as before. */
+function instanceConsumerMatched(instance: (typeof SINK_CATALOG)[number], candidate: CardDefinition, root: string): boolean {
+  // Same `unknown`-mediated cast as `instanceProducerMatched` above — see
+  // its own comment.
+  if (typeof instance === 'function') return !!(instance as unknown as SinkInstance)(candidate, root)?.consumer;
+  return matchesConsumerTriggerNames(instance.consumerTriggerNames, candidate) || matchesConsumerTriggerOn(instance.consumerTriggerOn, candidate);
+}
+
+/**
+ * Real FDN pool matches for a whole GROUP (a family's combined real member
+ * instances, or a singleton instance standing alone — `members.length === 1`
+ * degenerates to exactly the pre-family-refactor per-instance behavior, no
+ * separate code path needed). `producerMatches`/`consumerMatches` are each
+ * the UNION across every real member's own match, deduped by card name (a
+ * candidate satisfying more than one member in the same family — e.g. a
+ * Cat-token-making Creature satisfying both `battlefield-presence-cats` and
+ * `battlefield-presence-creatures` — counts once, not twice).
+ */
+function computeRealMatches(members: (typeof SINK_CATALOG)[number][], pool: CardDefinition[], root: string): SinkCatalogRealMatches {
+  const producerNames = new Set<string>();
+  for (const candidate of pool) {
+    if (members.some((m) => instanceProducerMatched(m, candidate, root))) producerNames.add(candidate.name);
+  }
+  const result: SinkCatalogRealMatches = { producerMatches: [...producerNames].sort() };
+  if (members.some(instanceHasConsumerSignal)) {
+    const consumerNames = new Set<string>();
+    for (const candidate of pool) {
+      if (members.some((m) => instanceConsumerMatched(m, candidate, root))) consumerNames.add(candidate.name);
+    }
     result.consumerMatches = [...consumerNames].sort();
   }
   return result;
@@ -174,7 +290,17 @@ export default defineEventHandler(async (): Promise<SinkCatalogPageEntry[]> => {
   const pool = process.env.NODE_ENV === 'production' ? [] : await loadFdnDefinitionPool(root);
 
   return baselineEntries.map((entry): SinkCatalogPageEntry => {
-    const catalogEntry = SINK_CATALOG.find((e) => e.slug === entry.slug);
+    // Real member instances this group aggregates — `entry.evidence
+    // .members[].slug` (`sink-catalog-status.ts`) is always the real,
+    // per-instance slug list, length 1 for a singleton and N for a real
+    // multi-instance family (`entry.slug` itself is the GROUP key, which,
+    // post-family-refactor, is no longer a `SINK_CATALOG` slug at all for
+    // `battlefield-presence`/`counters` — looking IT up directly, the
+    // pre-fix bug, always came back `undefined` for both, silently killing
+    // `realMatches` for the whole group).
+    const members = entry.evidence.members
+      .map((m) => SINK_CATALOG.find((e) => e.slug === m.slug))
+      .filter((e): e is (typeof SINK_CATALOG)[number] => e !== undefined);
     const review = reviews[entry.slug];
     // Color computation (baseline-gating a review overlay to `blue`-only,
     // plus the `re-review` fingerprint-drift check) lives in
@@ -186,18 +312,21 @@ export default defineEventHandler(async (): Promise<SinkCatalogPageEntry[]> => {
     return {
       slug: entry.slug,
       category: entry.category,
-      // Every real `SINK_CATALOG` slug (this list is built directly off
-      // that same array — `entry.slug` above) always has a matching
-      // module by construction; the `?? { category }` fallback only
-      // guards a same-request race with a hot-reloaded catalog, never a
-      // real steady-state path.
-      query: catalogEntry?.query ?? ({ category: entry.category } as SinkQuery),
+      // The group's own representative query — the FIRST real member's
+      // own `query` (mirrors `SinkCatalogEvidence.corpusManifestPath`'s own
+      // "first member, representative" convention) for a real multi-
+      // instance family, since there is no single honest "the" query for a
+      // whole family (each member curates its own). The `?? { category }`
+      // fallback only guards a same-request race with a hot-reloaded
+      // catalog (every real member should always be found by construction),
+      // never a real steady-state path.
+      query: members[0]?.query ?? ({ category: entry.category } as SinkQuery),
       baseline: entry.baseline,
       evidence: entry.evidence,
       sourceFiles: loadSourceFiles(entry.slug, entry.evidence),
       color,
       review,
-      realMatches: catalogEntry && process.env.NODE_ENV !== 'production' ? computeRealMatches(catalogEntry, pool, root) : undefined,
+      realMatches: members.length > 0 && process.env.NODE_ENV !== 'production' ? computeRealMatches(members, pool, root) : undefined,
     };
   });
 });

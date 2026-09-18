@@ -76,25 +76,32 @@
 // is grouped/reported, never how a candidate is matched against any one
 // instance's own `query`/consumer signals.
 //
-// **`server/api/sink-catalog/index.get.ts`/`./review.post.ts` do NOT yet
-// read/key off `entry.family`** (both routes are out of scope for this
-// refactor, per the task's own explicit instruction not to touch them) —
-// both still assume `computeSinkCatalogStatus()` returns one row per real
-// `SINK_CATALOG` slug, which is no longer true for the 2 real families
-// (5 real instances now collapse into 2 grouped rows, `slug` values
-// `'battlefield-presence'`/`'counters'` that don't match ANY single
-// `SINK_CATALOG` entry's own `.slug`). Concretely, once a follow-up picks
-// this up: `index.get.ts`'s `SINK_CATALOG.find((e) => e.slug === entry.slug)`
-// needs to become "find every member instance in this group" (via
-// `instanceSlugs`) rather than a single exact match; `loadSourceFiles`
-// needs to read the group's own real source file(s) (derivable as
-// `${entry.slug}.ts` for a real family group, since `entry.slug` IS the
-// family key and this file's own convention already names the shared
-// source file identically to the family key — see
-// `computeSinkCatalogFingerprint` below) instead of `${slug}.ts` per
-// instance; `review.post.ts`'s own `key` validation needs to accept a
-// family key, not just an instance slug. Flagged, not silently worked
-// around.
+// **`server/api/sink-catalog/index.get.ts` FIXED, 2026-09-18, later still —
+// was left not reading/keying off `entry.family` by this refactor's own
+// explicit "don't touch either route" instruction, and broke worse than
+// this note originally anticipated**: `index.get.ts`'s own
+// `SINK_CATALOG.find((e) => e.slug === entry.slug)` came back `undefined`
+// for BOTH real family rows (`'battlefield-presence'`/`'counters'` match NO
+// single `SINK_CATALOG` entry's own `.slug`), silently killing that route's
+// entire `realMatches` section for both, not just a cosmetic display gap.
+// Fixed by looking up every real member via `entry.evidence.members[]
+// .slug` (this file's own real per-instance evidence, length 1 for a
+// singleton, already exactly the right list — no need for a SEPARATE
+// `instanceSlugs`-driven lookup, `members` already carries it) instead of
+// `entry.slug` itself; `loadSourceFiles`'s own `corpusManifest` (the OTHER
+// half of this same gap — `SinkCatalogEvidence.corpusManifestPath`'s own
+// "first member, representative, not fully general" doc comment below) is
+// fixed the same way, aggregating every real member's own corpus content
+// instead of just the first. See `.claude/contracts/card-schema.md`'s
+// "Family/instance slug regression fix" section for the full writeup +
+// live-verified numbers. **`./review.post.ts` needed NO fix at all** —
+// it was never broken: it validates a posted `slug` against
+// `computeSinkCatalogStatus()`'s own returned `.slug` field directly (never
+// a separate `SINK_CATALOG.find` lookup the way `index.get.ts`'s bug
+// involved), which already IS the family key for a grouped row — a
+// `'battlefield-presence'`/`'counters'` review POST already worked
+// correctly before this fix, this note's own earlier claim that it needed
+// one was simply wrong.
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
