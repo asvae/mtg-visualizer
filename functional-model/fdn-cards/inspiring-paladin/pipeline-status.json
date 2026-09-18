@@ -1,8 +1,7 @@
 {
   "status": "purple",
   "reasons": [
-    "non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart): \"During your turn, this creature has first strike.\"",
-    "non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart): \"During your turn, creatures you control with +1/+1 counters on them have first strike.\""
+    "declared missingSchemaFunctionality entry: clause: \"During your turn, creatures you control with +1/+1 counters on them have first strike.\" — demand: \"A COUNTER-PRESENCE-conditional variant of `continuousKeywordGrants` — the field's recipient filter today only supports subtype/self/Equipment-attachment, never \"has a counter of type X on it\" as the qualifying condition.\""
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -29,5 +28,5 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T13:44:25.325Z"
+  "computedAt": "2026-09-18T14:05:21.097Z"
 }

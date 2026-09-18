@@ -8,8 +8,13 @@ export const cryptFeaster: CardDefinition = {
 
   keywords: ['Menace'],
 
-  staticAbilities: [
-    'Threshold — Whenever this creature attacks, if there are seven or more cards in your graveyard, this creature gets +2/+0 until end of turn.',
+  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
+  // (2026-09-18, FDN schema-tightness redesign).
+  missingSchemaFunctionality: [
+    {
+      clause: 'Threshold — Whenever this creature attacks, if there are seven or more cards in your graveyard, this creature gets +2/+0 until end of turn.',
+      demand: 'A conditional-trigger gating mechanism on `Trigger` — no field lets a trigger\'s own resolution be gated on a live board-state condition (here, own graveyard count >= 7) before its effects apply; today `on:\'attacks\'` always fires unconditionally once declared, which is why the `onAttack` trigger below applies the pump every attack instead of only past the Threshold.',
+    },
   ],
 
   // Real Forge: `Mode$ Attacks | ValidCard$ Card.Self` — a real self-attack

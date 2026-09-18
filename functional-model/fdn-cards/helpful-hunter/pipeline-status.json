@@ -1,5 +1,7 @@
 {
-  "status": "blue",
-  "reasons": [],
-  "computedAt": "2026-09-18T13:44:22.928Z"
+  "status": "gray",
+  "reasons": [
+    "missing/empty coverageJustification manifest — every FDN card needs real, written, per-clause coverage reasoning (see card.ts's own CoverageJustificationEntry doc comment)"
+  ],
+  "computedAt": "2026-09-18T14:05:21.066Z"
 }

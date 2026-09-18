@@ -13,7 +13,14 @@ export const drakeHatcher: CardDefinition = {
   // fire hook exists anywhere in this engine for ANY card), so it stays
   // real printed text instead of a fabricated union member.
   keywords: ['Vigilance'],
-  staticAbilities: ['Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)'],
+  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
+  // (2026-09-18, FDN schema-tightness redesign).
+  missingSchemaFunctionality: [
+    {
+      clause: 'Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)',
+      demand: "A real `Prowess` `Keyword` union member PLUS the matching auto-fire hook — no \"whenever you cast a noncreature spell\" trigger precondition exists anywhere in this engine for ANY card (same real gap Elementalist Adept's own identical Prowess line also names).",
+    },
+  ],
 
   // Real Forge: `Mode$ DamageDone | ValidSource$ Card.Self |
   // ValidTarget$ Player | CombatDamage$ True` — "Whenever this creature

@@ -34,6 +34,21 @@ describe('pipelineStatusFromGateResult', () => {
     expect(entry.engineGapsContext).toBe(engineGapsContext);
   });
 
+  // 2026-09-18, later same day again: `failureKind:'incomplete-authoring'`
+  // (no real coverage-justification manifest yet) maps to `gray`, a
+  // genuinely distinct bucket from `purple`/`other` — see this function's
+  // own header for the full reasoning.
+  it("failureKind:'incomplete-authoring' -> gray, carrying the gate's own reasons straight through, no failureKind/engineGapsContext", () => {
+    const entry = pipelineStatusFromGateResult(
+      { ok: false, failureKind: 'incomplete-authoring', reasons: ['missing/empty coverageJustification manifest'] },
+      '2026-09-18T00:00:00.000Z',
+    );
+    expect(entry.status).toBe('gray');
+    expect(entry.reasons).toEqual(['missing/empty coverageJustification manifest']);
+    expect(entry.failureKind).toBeUndefined();
+    expect(entry.engineGapsContext).toBeUndefined();
+  });
+
   // The task's own explicit, load-bearing rule: 'other' must NEVER become
   // a status value (never silently 'purple', never anything else) —
   // it must hard-fail loudly, enforced here as a real throw, not

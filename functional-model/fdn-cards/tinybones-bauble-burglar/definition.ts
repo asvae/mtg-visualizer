@@ -22,8 +22,13 @@ export const tinybonesBaubleBurglar: CardDefinition = {
     },
   ],
 
-  staticAbilities: [
-    'During your turn, you may play cards you don\'t own with stash counters on them from exile, and mana of any type can be spent to cast those spells.',
+  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
+  // (2026-09-18, FDN schema-tightness redesign).
+  missingSchemaFunctionality: [
+    {
+      clause: "During your turn, you may play cards you don't own with stash counters on them from exile, and mana of any type can be spent to cast those spells.",
+      demand: 'Same MayPlay/standing-permission-grant primitive already named as unmodeled in this card\'s own `custom` no-op effect above (exiling with a stash counter) — plus a "cast using ANY mana type" cost-payment override; neither the MayPlay grant nor a mana-type-substitution rule for casting exists anywhere in this engine.',
+    },
   ],
 
   activatedAbilities: [

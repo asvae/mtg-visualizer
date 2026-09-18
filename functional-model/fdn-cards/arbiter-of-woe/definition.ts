@@ -8,8 +8,13 @@ export const arbiterOfWoe: CardDefinition = {
 
   keywords: ['Flying'],
 
-  staticAbilities: [
-    'As an additional cost to cast this spell, sacrifice a creature.',
+  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
+  // (2026-09-18, FDN schema-tightness redesign).
+  missingSchemaFunctionality: [
+    {
+      clause: 'As an additional cost to cast this spell, sacrifice a creature.',
+      demand: 'An additional-cost vocabulary for a SPELL\'s own normal cast cost — nothing on `CardDefinition` lets a spell require sacrificing a permanent (or any other non-mana/non-alternate cost component) as part of casting it; `activationCost` covers only an ACTIVATED ability\'s cost, and `AlternateCost` is a REPLACEMENT cost, not an ADDITIONAL one paid alongside the normal mana cost.',
+    },
   ],
 
   triggers: [

@@ -7,7 +7,14 @@ export const vampireSoulcaller: CardDefinition = {
   pt: [3, 2],
 
   keywords: ['Flying'],
-  staticAbilities: ["This creature can't block."],
+  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
+  // (2026-09-18, FDN schema-tightness redesign).
+  missingSchemaFunctionality: [
+    {
+      clause: "This creature can't block.",
+      demand: "A can't-block static restriction on a permanent — no vocabulary anywhere in `card.ts` expresses this (a distinct gap from Crystal Barricade's own hexproof/noncombat-damage-prevention gaps, and from Cephalid Inkmage's conditional can't-BE-blocked gap — this one is an unconditional restriction on the permanent's own ability to declare AS a blocker).",
+    },
+  ],
 
   triggers: [
     {

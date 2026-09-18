@@ -27,9 +27,18 @@
 //     even begun" state with no file to read at all).
 //   `gray`  — ready for agent work (a real folder exists, `definition.ts`
 //     doesn't compile/pass the gate YET, or simply hasn't been attempted).
-//     Never computed BY this file — a future authoring-pipeline script
-//     writes this the moment it creates the card's own folder, before
-//     attempting the cheap-model transcription step at all.
+//     Originally "never computed BY this file" (a future authoring-
+//     pipeline script would write this the moment it creates the card's
+//     own folder) — REVISED 2026-09-18, later same day again (the
+//     `missingSchemaFunctionality`/`coverageJustification` schema-
+//     tightness redesign): `pipelineStatusFromGateResult` below now DOES
+//     also produce `gray`, for `failureKind: 'incomplete-authoring'` (a
+//     card that's otherwise schema-valid but has no real, well-formed
+//     coverage-justification manifest yet — see `validate-card-
+//     definition.mjs`'s own header for the full reasoning). This is a
+//     genuinely correct fit, not a stretch: "no manifest written yet" IS
+//     "hasn't been attempted [far enough]," the exact same meaning this
+//     status already carried for the pre-gate case.
 //   `purple` (renamed from `red`, 2026-09-18, later same day, per an
 //     explicit user ruling — see below) — blocked: needs additional info
 //     from the engine or some other system before authoring can proceed.
@@ -176,7 +185,12 @@ import { readFunctionalModelFile } from './source-files';
 // by hand if that script's own return shape ever changes.
 export interface CardDefinitionValidationResult {
   ok: boolean;
-  failureKind?: 'capacity-gap' | 'other';
+  /** `'incomplete-authoring'` added 2026-09-18, later same day again — see
+   * `validate-card-definition.mjs`'s own header, "Coverage-justification
+   * manifest": a card that's otherwise schema-valid but has no real,
+   * well-formed `coverageJustification` manifest yet. Maps to `gray`
+   * below, never `purple`/`other`. */
+  failureKind?: 'capacity-gap' | 'other' | 'incomplete-authoring';
   reasons: string[];
   engineGapsContext?: { gray: string[]; purple: string[] };
 }
@@ -207,8 +221,13 @@ export type PipelineStatus = 'gray' | 'purple' | 'blue' | 'yellow' | 'green' | '
 export interface PipelineStatusFile {
   status: PipelineStatus;
   /** Real, human-readable reasons — always populated for `purple` (the
-   * gate's own capacity-gap reasons) and empty for `gray`/`blue`;
-   * irrelevant for `yellow`/`green` (see `reviewNote` instead). */
+   * gate's own capacity-gap reasons); empty for a `blue` gate pass.
+   * `gray` (2026-09-18, later same day again): now ALSO populated when
+   * this entry came from a real `failureKind: 'incomplete-authoring'` gate
+   * result (the missing/malformed coverage-manifest reasons) — empty only
+   * for the pre-gate "hasn't been attempted at all" case a future
+   * authoring-pipeline script writes directly. Irrelevant for
+   * `yellow`/`green` (see `reviewNote` instead). */
   reasons: string[];
   /** Set iff `status === 'purple'` — always `'capacity-gap'` today
    * (the only real value `pipelineStatusFromGateResult` ever writes here;
@@ -262,9 +281,23 @@ export function pipelineStatusFromGateResult(result: CardDefinitionValidationRes
   if (result.failureKind === 'capacity-gap') {
     return { status: 'purple', reasons: result.reasons, failureKind: 'capacity-gap', engineGapsContext: result.engineGapsContext, computedAt: now };
   }
+  // `'incomplete-authoring'` (2026-09-18, later same day again) — the card
+  // is otherwise schema-valid but has no real, well-formed coverage-
+  // justification manifest yet (see `validate-card-definition.mjs`'s own
+  // header). This is a real, DISTINCT bucket from both `purple` (which
+  // now requires the manifest as part of its own bar) and `other` (this
+  // isn't a bug — nothing is malformed/won't-compile, the authoring step
+  // simply hasn't reached the reasoning step yet) — maps to `gray`, this
+  // axis's own "ready for agent work, not there yet" state (see this
+  // file's own header for the full reasoning on why `gray` is the honest
+  // fit here, not a 6th status).
+  if (result.failureKind === 'incomplete-authoring') {
+    return { status: 'gray', reasons: result.reasons, computedAt: now };
+  }
   // failureKind === 'other' — a real, distinct blocked-other case (doesn't
   // compile, malformed shape, missing required field, a module that fails
-  // to import, ...) — see this file's own header for why this is kept a
+  // to import, an FDN card still using the disallowed `staticAbilities`
+  // field, ...) — see this file's own header for why this is kept a
   // hard throw rather than folded into the now-broader `purple`: it's
   // "the authoring step failed," not "blocked, needs more information."
   // MUST hard-fail loudly here — a caller wanting to persist ANYTHING for

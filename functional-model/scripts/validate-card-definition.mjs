@@ -2,31 +2,141 @@
 // experiment's two-tier authoring pipeline (see the approved plan,
 // Workstream 4, and `functional-model/ENGINE_DESIGN.md`/`SYNERGY_DESIGN.md`
 // for the wider context) — given a candidate `definition.ts`, answers
-// exactly one of three things, NEVER an LLM judgment call:
+// exactly one of FOUR things, NEVER an LLM judgment call:
 //   - `ok: true`                          — safe to mark `blue`.
 //   - `ok: false, failureKind: 'capacity-gap'` — a genuine, detected
 //     engine-capacity/vocabulary gap (references an Effect/combinator
 //     `kind` this engine has never heard of, uses the pool's own
-//     established "documented no-op placeholder" convention for one, OR
-//     — see part 0 below, 2026-09-18, later same day again — carries ANY
-//     non-empty `staticAbilities` entry at all) — the caller may mark the
-//     pipeline-status `purple` (renamed from an earlier `red`, 2026-09-18,
-//     later same day, per a two-step explicit user ruling — see
+//     established "documented no-op placeholder" convention for one, a
+//     name-only `Trigger` with no real `on` value (FDN-only — see part 3
+//     below), OR — see the "`missingSchemaFunctionality` presence"
+//     section below, 2026-09-18, later same day again — carries ANY
+//     non-empty `missingSchemaFunctionality` entry at all) — the caller
+//     may mark the pipeline-status `purple` (renamed from an earlier
+//     `red`, 2026-09-18, per a two-step explicit user ruling — see
 //     `functional-model/pipeline-status.ts`'s own header for the full
-//     rename/broadened-meaning writeup, including why `purple` — the
-//     shared axis's own "schema support only, unverified" color — won
-//     over an intermediate `incomplete` choice; this `failureKind` string
-//     itself deliberately stays `'capacity-gap'`, a lower-level diagnostic
+//     rename/broadened-meaning writeup; this `failureKind` string itself
+//     deliberately stays `'capacity-gap'`, a lower-level diagnostic
 //     distinct from the higher-level status name it backs).
-//   - `ok: false, failureKind: 'other'`   — anything else (a real bug: a
+//   - `ok: false, failureKind: 'incomplete-authoring'` — the card is
+//     otherwise schema-valid but carries no real, well-formed
+//     coverage-justification manifest (see the "Coverage-justification
+//     manifest" section below, 2026-09-18, later same day again) — maps to
+//     `gray` (still "ready for agent work," not a capacity gap and not a
+//     bug), never `purple`/`blue`.
+//   - `ok: false, failureKind: 'other'`   — anything else: a real bug (a
 //     module that doesn't import, a shape that doesn't compile, a missing
-//     required `CardDefinition` field, ...) — the caller must hard-fail
-//     LOUDLY (throw / write to a distinct blocked-other marker), never fold
-//     this into `'capacity-gap'`/`purple` — that carries a specific,
-//     verified "capacity gap" meaning that must never be assumed.
+//     required `CardDefinition` field, ...), OR (2026-09-18, later same day
+//     again) an FDN card using the now-disallowed `staticAbilities` field
+//     at all (see "`staticAbilities` is now a hard FDN policy violation"
+//     below) — the caller must hard-fail LOUDLY (throw / write to a
+//     distinct blocked-other marker), never fold this into
+//     `'capacity-gap'`/`purple` or `'incomplete-authoring'`/`gray` — those
+//     carry specific, verified meanings that must never be assumed.
 //
-// ## `staticAbilities` presence is ALSO an automatic capacity-gap
-// (2026-09-18, later same day again — real bug found: Inspiring Paladin
+// ## Foundational redesign, 2026-09-18, later same day again — schema
+// tightness + explicit gap declaration (supersedes the `staticAbilities`-
+// presence rule below in substance, not by deleting it — see each section)
+//
+// Per explicit user ruling: "No random strings anywhere, no `any` -
+// everything should be strictly tight... Purple - means schema is valid.
+// Definition fully covers card function (author should provide written
+// reasoning like 'this text' is covered by this code in definition). Blue
+// - no schema gaps (missingSchemaFunctionality is not there)." Two new
+// structured `CardDefinition` fields (`card.ts`, both purely additive) are
+// the direct implementation:
+//   - `missingSchemaFunctionality: { clause, demand }[]` — the ONE
+//     sanctioned place to declare a real, printed clause this schema
+//     can't express, replacing the informal `staticAbilities`-as-gap-
+//     marker convention below. See `findMissingSchemaFunctionalityGapReasons`.
+//   - `coverageJustification: { clause, coveredBy, reasoning }[]` — the
+//     author's own per-clause, written "this text is covered by this
+//     code" reasoning, REQUIRED (real, non-empty, internally consistent)
+//     to reach EITHER `purple` or `blue` now. See
+//     `validateCoverageJustification`.
+//
+// ## `staticAbilities` is now a hard FDN policy violation, not a capacity
+// gap (2026-09-18, later same day again)
+//
+// The original rule below ("any non-empty `staticAbilities` is an
+// automatic capacity-gap") is RETIRED for the FDN pool specifically —
+// `staticAbilities` itself stays untouched/unremoved in `card.ts` (98 real,
+// legitimate FIN uses, completely out of scope here), but an FDN card using
+// it AT ALL is now a HARDER failure than a capacity gap: `failureKind:
+// 'other'`, never `purple`. Checked directly against the real FDN pool
+// (2026-09-18): every one of the 22 real existing `staticAbilities` entries
+// across 20 cards is a genuine capacity-gap marker in disguise (a real,
+// printed, mechanically-unbacked clause) — ZERO genuinely rules-irrelevant
+// FLAVOR-text uses were found. Since the whole point of this redesign is
+// that a capacity gap must be DECLARED via the new structured
+// `missingSchemaFunctionality` field (with a real, specific `demand`), not
+// left as unstructured prose, leaving `staticAbilities` usable as an
+// alternate "same meaning, different field" gap-marker for FDN would
+// immediately reopen the exact "two ways to say the same thing" looseness
+// this whole task exists to close — `staticAbilities` strings are
+// literally the "random strings" the user's own ruling objected to.
+// `findStaticAbilitiesPolicyViolationReasons` below is the deterministic
+// implementation (same dual-face-walk shape as the retired rule it
+// replaces) — checked FIRST, before any other part of this gate, since a
+// card using the deprecated field hasn't even attempted the new schema yet.
+//
+// ## `missingSchemaFunctionality` presence is a capacity-gap, exactly like
+// the retired `staticAbilities` rule was (2026-09-18, later same day again)
+//
+// `findMissingSchemaFunctionalityGapReasons` below is the direct structural
+// successor to `findStaticAbilityGapReasons` (same dual-face walk, one
+// reason per real entry, folded into the SAME `capacity-gap` bucket the
+// vocabulary walk and the name-only-trigger rule already produce) — the
+// only change is reading the new, structured `{clause, demand}` field
+// instead of a bare string.
+//
+// ## Coverage-justification manifest (2026-09-18, later same day again)
+//
+// A fully general "does every real oracle-text clause have a matching
+// functional counterpart" check is still NOT feasible here (that's
+// NLP-complete oracle-text-vs-effects matching, not a deterministic
+// structural gate — the `engine` agent's own prior investigation already
+// established this, see `.claude/agent-memory/engine/topics/
+// fdn-static-abilities-gate-rule.md`). `validateCoverageJustification`
+// below does NOT attempt it — it mechanically checks only what doesn't
+// require judgment: the manifest is real/present/non-empty, every entry
+// carries real non-empty `clause`/`reasoning` text, and every `coveredBy`
+// pointer actually resolves to something real on this SAME
+// `CardDefinition` (a named trigger/ability that exists, a
+// `missingSchemaFunctionality` index in range, a real `Effect.kind`
+// actually used somewhere on the card, ...) — plus one directional
+// completeness check: every real `missingSchemaFunctionality` entry must
+// be referenced by at least one manifest entry, so a declared gap can
+// never go unreasoned-about. This is NOT semantic verification (whether
+// the reasoning is actually TRUE is never checked, by design) — its real
+// value is forcing the reasoning to be written down at authoring time and
+// making it inspectable later, per the user's own explicit framing.
+// Deliberately did NOT build a "manifest entry count roughly matches real
+// oracle-text clause count" heuristic (floated as a maybe in the task
+// brief) — declined, not merely skipped: `CardDefinition` carries no
+// `oracleText` field at all for an FDN card (confirmed directly, `card.ts`),
+// and the only place real oracle text exists on disk for some (not all)
+// FDN cards is an ad hoc per-card scratch cache
+// (`functional-model/.fdn-scratch/<slug>/scryfall.json`, opportunistically
+// populated during earlier gap sweeps, not a guaranteed/complete input this
+// gate could honestly depend on for every card) — building a heuristic
+// against a data source that doesn't reliably exist for the whole pool
+// would be exactly the "fragile heuristic" the task brief asked NOT to
+// force.
+// A card failing this check gets `failureKind: 'incomplete-authoring'`
+// (maps to `gray`, see `pipeline-status.ts`) — NOT `purple` (no manifest at
+// all is a strictly LOWER bar than "schema valid, capacity gap declared and
+// reasoned about") and NOT `other` (this isn't a bug, it's un-started/
+// incomplete authoring work, same "ambiguous case falls back to the last
+// known LOWER status" policy this whole project already follows
+// elsewhere). Checked independent of, and BEFORE, the capacity-gap
+// classification below — a card can't reach `purple` OR `blue` without a
+// real manifest, regardless of whether it also has capacity gaps.
+//
+// ## Original `staticAbilities`-presence rule (RETIRED for FDN, kept here
+// as the historical record of the reasoning this redesign supersedes)
+//
+// (2026-09-18, earlier same day — real bug found: Inspiring Paladin
 // carried a whole second real ability with NO functional counterpart at
 // all — expressed only as free-text `staticAbilities` prose plus a code
 // comment admitting the gap — and this gate still returned `ok:true`
@@ -36,27 +146,10 @@
 // `continuousKeywordGrants` entry; `card-status.ts`'s own
 // `isUnsupportedNoOp` doc comment already named this exact case as "a
 // known, accepted blind spot of this check, not silently claimed as
-// covered.").
-//
-// A fully general "does every real oracle-text clause have a matching
-// functional counterpart" check is NOT feasible here (that's NLP-complete
-// oracle-text-vs-effects matching, not a deterministic structural gate) —
-// but the user's own explicit, simpler ruling replaces the fuzzier
-// per-entry heuristic this file first explored: `CardDefinition
-// .staticAbilities` (`card.ts`'s own doc comment: real free text, "does
-// nothing" mechanically) is BY DEFINITION inert. Its mere presence — even
-// a single entry, even one that duplicates a clause modeled correctly
-// elsewhere on the same card, as Inspiring Paladin's own first ability
-// does — means the engine cannot prove every real printed ability is
-// backed by executable logic, which is a genuine capacity gap on its own
-// terms, full stop; no case-by-case judgment call needed or attempted.
-// `findStaticAbilityGapReasons` below is the one, deterministic
-// implementation: any non-empty `staticAbilities` array on EITHER face
-// produces one reason per entry, folded into the exact same
-// `failureKind: 'capacity-gap'` result the vocabulary walk already
-// produces (never `'other'` — this is a real, expected, non-buggy state
-// for a still-in-progress card, same bucket as an unknown-kind
-// placeholder).
+// covered."). The blunt "any non-empty `staticAbilities` is an automatic
+// capacity-gap" rule this section used to describe is GONE — see
+// "`staticAbilities` is now a hard FDN policy violation" above for what
+// replaced it.
 //
 // ## A name-only `Trigger` (no real `on` value) is ALSO an automatic
 // capacity-gap, FDN-only (2026-09-18, later same day again)
@@ -249,26 +342,149 @@ function findVocabularyGaps(definition) {
 }
 
 /**
- * The blunt, deterministic `staticAbilities`-presence rule — see this
- * file's own header for the full "why" (real bug: Inspiring Paladin).
- * Walks both faces (same dual-face convention `findUnsupportedConstructs`/
- * `collectEffects` already use) — one reason per real, non-empty entry,
- * `[]` when the card has none on either face. Exported (not just a local
- * helper) so it can be unit-tested directly against a mocked
- * `CardDefinition`, mirroring `check-verified-regressions.mjs`'s own
- * "export the pure primitive for direct testing" precedent — this
- * function needs no fs/tsc/vite-node dependency to exercise.
+ * FDN-only hard policy-violation rule (2026-09-18, later same day again —
+ * see this file's own header, "`staticAbilities` is now a hard FDN policy
+ * violation"). Any non-empty `staticAbilities` array on EITHER face is now
+ * a reason to hard-block (`failureKind: 'other'`), not a capacity gap — an
+ * FDN card must declare a real capacity gap via the new, structured
+ * `missingSchemaFunctionality` field instead (see
+ * `findMissingSchemaFunctionalityGapReasons` below). Same dual-face-walk
+ * shape as this rule's own retired predecessor (`findStaticAbilityGapReasons`,
+ * historical name, see the git history on this file) — walks both faces,
+ * one reason per real, non-empty entry, `[]` when the card has none on
+ * either face. Exported (not just a local helper) for direct unit testing,
+ * same "pure primitive, no fs/tsc dependency" precedent this file's other
+ * exported checkers already follow.
  */
-export function findStaticAbilityGapReasons(definition) {
+export function findStaticAbilitiesPolicyViolationReasons(definition) {
   const reasons = [];
   const walk = (def, faceLabel) => {
     for (const text of def.staticAbilities ?? []) {
-      reasons.push(`non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart)${faceLabel}: "${text}"`);
+      reasons.push(
+        `staticAbilities is disallowed for an FDN card (migrate to missingSchemaFunctionality: {clause, demand})${faceLabel}: "${text}"`,
+      );
     }
     if (def.backFace) walk(def.backFace, ' [back face]');
   };
   walk(definition, '');
   return reasons;
+}
+
+/**
+ * The direct structural successor to the retired `staticAbilities`-
+ * presence rule (2026-09-18, later same day again — see this file's own
+ * header, "`missingSchemaFunctionality` presence is a capacity-gap") — same
+ * dual-face-walk shape, same "one reason per real entry, folded into the
+ * SAME `capacity-gap` bucket" behavior, just reading the new, structured
+ * `{clause, demand}` field instead of a bare string.
+ */
+export function findMissingSchemaFunctionalityGapReasons(definition) {
+  const reasons = [];
+  const walk = (def, faceLabel) => {
+    for (const entry of def.missingSchemaFunctionality ?? []) {
+      reasons.push(`declared missingSchemaFunctionality entry${faceLabel}: clause: "${entry.clause}" — demand: "${entry.demand}"`);
+    }
+    if (def.backFace) walk(def.backFace, ' [back face]');
+  };
+  walk(definition, '');
+  return reasons;
+}
+
+/**
+ * The real closed set of `CoverageReference.kind` values this checker
+ * knows how to resolve — mirrors `card.ts`'s own `CoverageReference` union
+ * (duplicated here as a plain runtime list for the same "small, documented
+ * duplication across the JS/TS boundary" reason `pipeline-status.ts`'s own
+ * header already accepts for `CardDefinitionValidationResult`). Grows only
+ * in lockstep with that real type.
+ */
+const COVERAGE_REFERENCE_KINDS = new Set(['keyword', 'trigger', 'ability', 'effect', 'field', 'missingSchemaFunctionality', 'staticAbilities']);
+
+/**
+ * Mechanically checks a `CoverageJustificationEntry.coveredBy` pointer
+ * actually resolves to something real on `definition` — see this file's
+ * own header, "Coverage-justification manifest," for the full "what this
+ * does and doesn't verify" reasoning. Returns `undefined` when the pointer
+ * resolves, otherwise a real, specific reason string.
+ */
+function unresolvedCoverageReferenceReason(coveredBy, definition) {
+  if (!coveredBy || typeof coveredBy !== 'object' || !COVERAGE_REFERENCE_KINDS.has(coveredBy.kind)) {
+    return `coveredBy has no real, recognized \`kind\` (got ${JSON.stringify(coveredBy)})`;
+  }
+  switch (coveredBy.kind) {
+    case 'keyword':
+      return (definition.keywords ?? []).includes(coveredBy.keyword) ? undefined : `coveredBy.kind:'keyword' names "${coveredBy.keyword}", not present in this card's own \`keywords\``;
+    case 'trigger':
+      return (definition.triggers ?? []).some((t) => t.name === coveredBy.name)
+        ? undefined
+        : `coveredBy.kind:'trigger' names "${coveredBy.name}", not a real trigger name on this card's own \`triggers\``;
+    case 'ability':
+      return (definition.abilities ?? []).some((a) => a.name === coveredBy.name)
+        ? undefined
+        : `coveredBy.kind:'ability' names "${coveredBy.name}", not a real ability name on this card's own \`abilities\``;
+    case 'effect':
+      return collectEffects(definition).some((e) => e.kind === coveredBy.effectKind)
+        ? undefined
+        : `coveredBy.kind:'effect' names Effect kind "${coveredBy.effectKind}", not actually used anywhere on this card`;
+    case 'field':
+      return definition[coveredBy.field] !== undefined && !(Array.isArray(definition[coveredBy.field]) && definition[coveredBy.field].length === 0)
+        ? undefined
+        : `coveredBy.kind:'field' names "${coveredBy.field}", not actually present (or empty) on this card`;
+    case 'missingSchemaFunctionality':
+      return typeof coveredBy.index === 'number' && coveredBy.index >= 0 && coveredBy.index < (definition.missingSchemaFunctionality ?? []).length
+        ? undefined
+        : `coveredBy.kind:'missingSchemaFunctionality' index ${coveredBy.index} is out of range (this card has ${(definition.missingSchemaFunctionality ?? []).length} real entries)`;
+    case 'staticAbilities':
+      return typeof coveredBy.index === 'number' && coveredBy.index >= 0 && coveredBy.index < (definition.staticAbilities ?? []).length
+        ? undefined
+        : `coveredBy.kind:'staticAbilities' index ${coveredBy.index} is out of range (this card has ${(definition.staticAbilities ?? []).length} real entries)`;
+    default:
+      return `coveredBy has no real, recognized \`kind\` (got ${JSON.stringify(coveredBy)})`;
+  }
+}
+
+/**
+ * The real, mechanical coverage-justification-manifest check (2026-09-18,
+ * later same day again — see this file's own header, "Coverage-
+ * justification manifest," for the full "what this does and doesn't
+ * verify" reasoning). Walks both faces (same convention as every other
+ * checker in this file); a face with no real content of its own (no
+ * `backFace` at all) is simply skipped, never required to carry its own
+ * manifest. Returns `{ok: true}` or `{ok: false, reasons: string[]}` —
+ * never throws (every input here is already a real, already-imported plain
+ * object by the time this runs).
+ */
+export function validateCoverageJustification(definition) {
+  const reasons = [];
+  const walk = (def, faceLabel) => {
+    const manifest = def.coverageJustification;
+    if (!Array.isArray(manifest) || manifest.length === 0) {
+      reasons.push(`missing/empty coverageJustification manifest${faceLabel} — every FDN card needs real, written, per-clause coverage reasoning (see card.ts's own CoverageJustificationEntry doc comment)`);
+      return;
+    }
+    manifest.forEach((entry, i) => {
+      const label = `${faceLabel} entry [${i}]`;
+      if (typeof entry?.clause !== 'string' || entry.clause.trim().length === 0) {
+        reasons.push(`coverageJustification${label} has no real, non-empty \`clause\` text`);
+      }
+      if (typeof entry?.reasoning !== 'string' || entry.reasoning.trim().length === 0) {
+        reasons.push(`coverageJustification${label} has no real, non-empty \`reasoning\` text`);
+      }
+      const unresolved = unresolvedCoverageReferenceReason(entry?.coveredBy, def);
+      if (unresolved) reasons.push(`coverageJustification${label}'s coveredBy does not resolve: ${unresolved}`);
+    });
+    // Directional completeness: every declared gap must be referenced by
+    // at least one manifest entry — a `missingSchemaFunctionality` entry
+    // with no coverageJustification entry pointing at it is an orphaned
+    // gap, never reasoned about at all.
+    (def.missingSchemaFunctionality ?? []).forEach((_, i) => {
+      const referenced = manifest.some((entry) => entry?.coveredBy?.kind === 'missingSchemaFunctionality' && entry.coveredBy.index === i);
+      if (!referenced) reasons.push(`missingSchemaFunctionality${faceLabel} index ${i} has no coverageJustification entry referencing it (coveredBy: {kind:'missingSchemaFunctionality', index:${i}})`);
+    });
+    if (def.backFace) walk(def.backFace, ' [back face]');
+  };
+  walk(definition, '');
+  return reasons.length > 0 ? { ok: false, reasons } : { ok: true, reasons: [] };
 }
 
 /**
@@ -432,6 +648,16 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
     return { ok: false, failureKind: 'other', reasons: [`no CardDefinition-shaped export found in ${absPath} (need at least a real \`name\` field)`] };
   }
 
+  // Part 0 — the `staticAbilities`-in-FDN hard policy check, run FIRST
+  // (see this file's own header, "`staticAbilities` is now a hard FDN
+  // policy violation") — a card using the deprecated field hasn't even
+  // attempted the new schema yet, so this short-circuits before spending
+  // effort on the vocabulary walk/manifest/type-check below.
+  const staticAbilitiesViolations = findStaticAbilitiesPolicyViolationReasons(definition);
+  if (staticAbilitiesViolations.length > 0) {
+    return { ok: false, failureKind: 'other', reasons: staticAbilitiesViolations };
+  }
+
   // Part 1 — the vocabulary walk. See this file's own header for why this
   // runs BEFORE the type-check.
   let vocabGapReasons;
@@ -444,12 +670,25 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
       reasons: [`unexpected error while walking effects/program tree (not a recognized 'unhandled ...' vocabulary signal): ${err instanceof Error ? err.message : String(err)}`],
     };
   }
-  // The blunt `staticAbilities`-presence rule (see this file's own
-  // header) — combined with any real vocabulary-walk reasons above into
-  // ONE capacity-gap result, never a separate/competing classification.
-  const staticAbilityReasons = findStaticAbilityGapReasons(definition);
+  // Name-only triggers (FDN-only, see this file's own header) and declared
+  // `missingSchemaFunctionality` entries (the structured successor to the
+  // retired `staticAbilities`-presence rule) — combined with any real
+  // vocabulary-walk reasons above into ONE capacity-gap result, never a
+  // separate/competing classification.
   const nameOnlyTriggerReasons = findNameOnlyTriggerGapReasons(definition);
-  const combinedGapReasons = [...(vocabGapReasons ?? []), ...staticAbilityReasons, ...nameOnlyTriggerReasons];
+  const missingSchemaReasons = findMissingSchemaFunctionalityGapReasons(definition);
+  const combinedGapReasons = [...(vocabGapReasons ?? []), ...nameOnlyTriggerReasons, ...missingSchemaReasons];
+
+  // Part 1.5 — the coverage-justification manifest (see this file's own
+  // header, "Coverage-justification manifest") — checked independent of,
+  // and BEFORE, the capacity-gap classification below: a card can't reach
+  // `purple` OR `blue` without a real, well-formed manifest, regardless of
+  // whether it also has declared capacity gaps.
+  const manifestResult = validateCoverageJustification(definition);
+  if (!manifestResult.ok) {
+    return { ok: false, failureKind: 'incomplete-authoring', reasons: manifestResult.reasons };
+  }
+
   if (combinedGapReasons.length > 0) {
     const engineStatus = computeEngineStatus(root);
     return {
@@ -464,7 +703,7 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
   }
 
   // Part 2 — the scoped type-check. Only reached once every `kind` used is
-  // confirmed real/known.
+  // confirmed real/known AND the coverage manifest is real/well-formed.
   const diagnostics = scopedTypeCheckDiagnostics(absPath, root);
   if (diagnostics.length > 0) {
     return { ok: false, failureKind: 'other', reasons: diagnostics };

@@ -20,11 +20,13 @@
 //
 // What it does, per slug, in order:
 //   1. `validateCardDefinition(...)` — the real, deterministic gate.
-//   2. `ok:true` or `failureKind:'capacity-gap'` -> `pipelineStatusFromGateResult`
-//      produces a real `blue`/`purple` entry, written to
-//      `functional-model/fdn-cards/<slug>/pipeline-status.json` (formatted
-//      the same 2-space-indent + trailing-newline shape every other
-//      generated-data JSON file in this pool already uses).
+//   2. `ok:true`, `failureKind:'capacity-gap'`, or (2026-09-18, later same
+//      day again) `failureKind:'incomplete-authoring'` ->
+//      `pipelineStatusFromGateResult` produces a real `blue`/`purple`/`gray`
+//      entry, written to `functional-model/fdn-cards/<slug>/
+//      pipeline-status.json` (formatted the same 2-space-indent +
+//      trailing-newline shape every other generated-data JSON file in this
+//      pool already uses).
 //   3. `failureKind:'other'` -> `pipelineStatusFromGateResult` itself
 //      THROWS (a deliberate, documented behavior of that function, not a
 //      bug here) — this script catches that throw at the per-slug level
@@ -42,10 +44,10 @@
 // is simply overwritten with the fresh real result, same as every other
 // generated-status file in this pool).
 //
-// Exit code: 0 iff every slug produced a real `blue`/`purple` write with no
-// `'other'`/missing-file failures; 1 otherwise (see the printed summary for
-// which slugs and why) — a CI/batch-caller-friendly signal, never silently
-// swallowed.
+// Exit code: 0 iff every slug produced a real `blue`/`purple`/`gray` write
+// with no `'other'`/missing-file failures; 1 otherwise (see the printed
+// summary for which slugs and why) — a CI/batch-caller-friendly signal,
+// never silently swallowed.
 //
 // Usage (single or batch — same script, argv is just a list of slugs):
 //   npx vite-node functional-model/scripts/gate-and-write-status.mjs <slug> [<slug> ...]
@@ -126,15 +128,28 @@ async function main() {
     results.push(await gateOne(slug));
   }
 
-  const byOutcome = { blue: [], purple: [], other: [], 'missing-file': [] };
+  // 2026-09-18, later same day again: `pipelineStatusFromGateResult` can
+  // now also produce `status: 'gray'` for a real `failureKind:
+  // 'incomplete-authoring'` result (no coverage-justification manifest
+  // yet — see `pipeline-status.ts`'s own header) — a real, WRITTEN outcome
+  // (unlike `other`/`missing-file`, this one still gets a
+  // `pipeline-status.json` write, same as `blue`/`purple`), so it gets its
+  // own bucket rather than silently falling into neither `byOutcome[r
+  // .outcome]?.push` branch.
+  const byOutcome = { blue: [], purple: [], gray: [], other: [], 'missing-file': [] };
   for (const r of results) byOutcome[r.outcome]?.push(r) ?? (byOutcome[r.outcome] = [r]);
 
   console.log(`\nGated ${results.length} card(s):`);
-  console.log(`  blue (gate passed):        ${byOutcome.blue.length}`);
-  console.log(`  purple (capacity-gap):     ${byOutcome.purple.length}`);
-  console.log(`  other (BLOCKED, no write): ${byOutcome.other.length}`);
-  console.log(`  missing-file (no write):   ${byOutcome['missing-file'].length}`);
+  console.log(`  blue (gate passed):                 ${byOutcome.blue.length}`);
+  console.log(`  purple (capacity-gap):              ${byOutcome.purple.length}`);
+  console.log(`  gray (no coverage manifest yet):    ${byOutcome.gray.length}`);
+  console.log(`  other (BLOCKED, no write):          ${byOutcome.other.length}`);
+  console.log(`  missing-file (no write):            ${byOutcome['missing-file'].length}`);
 
+  if (byOutcome.gray.length) {
+    console.log('\ngray (incomplete-authoring, no coverage manifest yet) detail:');
+    for (const r of byOutcome.gray) console.log(`  - ${r.slug}: ${r.detail}`);
+  }
   if (byOutcome.purple.length) {
     console.log('\npurple (capacity-gap) detail:');
     for (const r of byOutcome.purple) console.log(`  - ${r.slug}: ${r.detail}`);

@@ -1,7 +1,7 @@
 {
   "status": "purple",
   "reasons": [
-    "non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart): \"Ward—Pay 7 life. (the \"pay 7 life\" cost specifically — not the base Ward keyword fact, already tracked above)\""
+    "declared missingSchemaFunctionality entry: clause: \"Ward—Pay 7 life. (the \"pay 7 life\" cost specifically — not the base Ward keyword fact, already tracked above)\" — demand: \"`Keyword` needs a cost-payload field for a non-default Ward cost — currently a bare string-literal union with no place to record \"Pay 7 life\" (or any other non-mana-cost Ward template) at all.\""
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -28,5 +28,5 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T13:44:31.440Z"
+  "computedAt": "2026-09-18T14:05:21.149Z"
 }

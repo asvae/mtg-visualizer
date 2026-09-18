@@ -13,5 +13,12 @@ export const elementalistAdept: CardDefinition = {
   // hook exists anywhere in this engine), so it stays real printed text
   // instead of a fabricated union member.
   keywords: ['Flash'],
-  staticAbilities: ['Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)'],
+  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
+  // (2026-09-18, FDN schema-tightness redesign).
+  missingSchemaFunctionality: [
+    {
+      clause: 'Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)',
+      demand: "A real `Prowess` `Keyword` union member PLUS the matching auto-fire hook — no \"whenever you cast a noncreature spell\" trigger precondition exists anywhere in this engine for ANY card (same real gap Drake Hatcher's own identical Prowess line also names).",
+    },
+  ],
 };

@@ -1885,6 +1885,132 @@ export interface TriggerDoublingGrant {
 }
 
 /**
+ * FDN authoring-pipeline-only (2026-09-18) — see `.claude/contracts/
+ * card-schema.md`'s "FDN `missingSchemaFunctionality` +
+ * `coverageJustification`" section for the full authoring rationale and
+ * `functional-model/scripts/validate-card-definition.mjs` for the gate that
+ * consumes this. Purely additive/optional — FIN never populates this field
+ * (its own ~98 real `staticAbilities` uses are untouched and unaffected by
+ * this addition).
+ *
+ * The ONE sanctioned, structured replacement for what this pipeline's own
+ * recent fixes had been doing informally with bare `staticAbilities` free
+ * text as a capacity-gap marker (real cards this closed: Inspiring
+ * Paladin's second ability, Arahbo's under-scoped ETB trigger, Sire of
+ * Seven Deaths'/Zul'Ashur's non-default Ward cost, ...) — an author
+ * declares a real, printed clause the schema/engine genuinely can't
+ * express via two required, separately-meaningful halves instead of one
+ * unstructured string: WHAT the gap is, and WHAT is being asked for to
+ * close it. `validate-card-definition.mjs`'s own FDN gate now treats any
+ * non-empty array here (still passing every other structural check) as
+ * `purple` ("blocked, needs more info from the engine") — never `blue`.
+ */
+export interface MissingSchemaFunctionality {
+  /** The exact real oracle-text clause (or the specific sub-clause/cost
+   * parameter) this schema cannot express — quoted verbatim off the real
+   * printed card, same discipline every migrated gap-marker string in this
+   * pool already followed as free text. */
+  readonly clause: string;
+  /** The specific capability/schema addition being requested to close this
+   * gap, concrete enough for the `engine` agent to act on directly — e.g.
+   * "`Keyword` needs a cost-payload field for a non-default Ward cost,"
+   * never a bare restatement of `clause` like "make Ward work." */
+  readonly demand: string;
+}
+
+/**
+ * FDN authoring-pipeline-only (2026-09-18) — the per-card, per-clause
+ * coverage-justification manifest the redefined `purple`/`blue` gate bar
+ * now requires (see `.claude/contracts/card-schema.md`'s new section, and
+ * `functional-model/pipeline-status.ts`'s own header for the redefined
+ * status semantics). One entry per real, distinct printed clause — a
+ * clause with two genuinely independent parts (Ward's own keyword half and
+ * its own non-default cost half, e.g.) gets two entries, not one merged
+ * blob, so a manifest's own entry COUNT stays a meaningful, if informal,
+ * proxy for "did the author actually walk the whole card" rather than one
+ * paragraph covering everything at once.
+ *
+ * Deliberately NOT automatically verified for semantic correctness — the
+ * `engine` agent's own prior investigation (see `.claude/agent-memory/
+ * engine/topics/fdn-static-abilities-gate-rule.md`) already established
+ * that a fully general oracle-text-vs-definition match isn't gate-feasible.
+ * This manifest's real value is forcing the reasoning to be WRITTEN DOWN at
+ * authoring time and making it inspectable by a human or a smart-tier model
+ * later — never a computed correctness guarantee. The gate DOES mechanically
+ * check the parts that don't require judgment: the manifest is real/
+ * non-empty, every entry has real non-empty `clause`/`reasoning` text, and
+ * every `coveredBy` pointer actually resolves to something real on this
+ * SAME `CardDefinition` (a named trigger that exists, a
+ * `missingSchemaFunctionality` index in range, ...) — see
+ * `validateCoverageJustification` in `validate-card-definition.mjs`.
+ */
+export interface CoverageJustificationEntry {
+  /** The exact real oracle-text clause (or sentence/modal-bullet) this
+   * entry accounts for — quoted verbatim, same discipline as
+   * `MissingSchemaFunctionality.clause`. */
+  readonly clause: string;
+  /** What in THIS `CardDefinition` covers `clause` — see `CoverageReference`. */
+  readonly coveredBy: CoverageReference;
+  /** The author's own written reasoning connecting `clause` to `coveredBy`
+   * — the user's own phrasing, "this text is covered by this code in
+   * definition." Real prose required: never a bare restatement of `clause`
+   * or a copy of `coveredBy`. */
+  readonly reasoning: string;
+}
+
+/**
+ * Closed vocabulary for what a `CoverageJustificationEntry` can point
+ * at — grows on demand, same "closed union, extend only when a real card
+ * needs it" discipline `Keyword`/`Trigger.on` already follow elsewhere in
+ * this file. `name`/`field`/`index` are bare STRUCTURAL identifiers (a
+ * lookup key into this same `CardDefinition`'s own real arrays/fields),
+ * never free-form judgment text — the one thing this union deliberately
+ * does NOT allow is a bare descriptive string standing in for "trust me,
+ * it's covered," which is exactly the looseness this whole mechanism
+ * exists to close off.
+ */
+export type CoverageReference =
+  | { readonly kind: 'keyword'; readonly keyword: Keyword }
+  | { readonly kind: 'trigger'; readonly name: string }
+  | { readonly kind: 'ability'; readonly name: string }
+  | { readonly kind: 'effect'; readonly effectKind: Effect['kind'] }
+  | { readonly kind: 'field'; readonly field: CoverageFieldName }
+  | { readonly kind: 'missingSchemaFunctionality'; readonly index: number }
+  /** Legitimate only for a FIN card, in principle — the FDN gate hard-fails
+   * on ANY `staticAbilities` usage at all (see that field's own doc comment
+   * below), so this pointer kind can never actually resolve for a real FDN
+   * card as things stand; kept in the union for schema generality only. */
+  | { readonly kind: 'staticAbilities'; readonly index: number };
+
+/**
+ * Any other structured `CardDefinition` field a clause can be covered by,
+ * beyond the dedicated `keyword`/`trigger`/`ability`/`effect` pointer kinds
+ * above (which each already carry their own real lookup key) — a field
+ * like `ptFormula`/`continuousPTGrants`/`costReduction` conveys its own
+ * coverage by mere PRESENCE on the card, with no finer sub-key needed.
+ * Grows on demand, same discipline as `CoverageReference` itself.
+ */
+export type CoverageFieldName =
+  | 'pt'
+  | 'cmc'
+  | 'alternateCosts'
+  | 'costReduction'
+  | 'spellCostReductionGrants'
+  | 'millModifierGrants'
+  | 'activationCost'
+  | 'crewCost'
+  | 'manaAbilities'
+  | 'ptFormula'
+  | 'continuousKeywordGrants'
+  | 'continuousPTGrants'
+  | 'continuousTypeGrants'
+  | 'activatedAbilityLock'
+  | 'triggerDoubling'
+  | 'typeLine'
+  | 'manaCost'
+  | 'name';
+
+/**
  * Every card definition is a plain object of this shape — a data RECORD,
  * not an instance of a per-card class (see this file's own header for why:
  * Forge itself has exactly one `Card` class for every printed card, never a
@@ -2399,6 +2525,10 @@ export interface CardDefinition {
    * `"authoredFacts[<i>]"` in `cards/<slug>/definition-annotations.json`.
    */
   readonly authoredFacts?: AuthoredFact[];
+  /** FDN authoring-pipeline-only (2026-09-18) — see `MissingSchemaFunctionality`'s own doc comment above. Purely additive/optional; FIN never populates this. */
+  readonly missingSchemaFunctionality?: MissingSchemaFunctionality[];
+  /** FDN authoring-pipeline-only (2026-09-18) — see `CoverageJustificationEntry`'s own doc comment above. Purely additive/optional; FIN never populates this. */
+  readonly coverageJustification?: CoverageJustificationEntry[];
 }
 
 /**

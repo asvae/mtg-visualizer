@@ -2014,3 +2014,212 @@ Real motivating card: Hare Apparent (FDN #15) — "When this creature enters, cr
 Two incidental typecheck fixes, needed for exhaustiveness after widening `FilterPredicate`, in files this pass otherwise didn't touch: `combinator.ts`'s own `describePredicate` (debug-string helper) gained a `'sameNameAsSelf'` case; `recognizers/program-ast-walker.ts`'s `readPool` (the `kind:'program'`-AST pool-descriptor walker) gained an explicit decline for `'sameNameAsSelf'` — no real `kind:'program'` effect in this pool chains it (it's authored directly on a bare `createToken.amount`, never inside a `program` effect), so this walker correctly returns `undefined` rather than guessing at a `PoolDescriptor` shape nothing confirms.
 
 Tests: `sink-model/catalog/battlefield-presence-hare-apparent.ts`/`.test.ts` (7 cases)/`.corpus.json` — new entry, third of the shared pair-turned-trio. `sink-model/catalog/index.ts` registers it (7 real entries total, was 6 after `counters-plus1plus1`). `sink-catalog-status.test.ts` updated for the 7-entry registry. Full `functional-model` suite: 120 files, 1276 passed / 5 skipped (was 120 files/1269 before the 2 incidental exhaustiveness fixes added a few more parametrized cases elsewhere). `npm run typecheck`: identical pre-existing baseline error set, zero new errors from any file this pass touched.
+
+## FDN foundational schema-tightness redesign: `missingSchemaFunctionality` + `coverageJustification`, redefined `purple`/`blue` bar (2026-09-18, later still)
+
+Per explicit user ruling ("No random strings anywhere, no `any`... Purple -
+means schema is valid. Definition fully covers card function (author should
+provide written reasoning like 'this text' is covered by this code in
+definition). Blue - no schema gaps") — supersedes the `staticAbilities`-
+presence gate rule (`.claude/agent-memory/engine/topics/
+fdn-static-abilities-gate-rule.md`) in SUBSTANCE, not by deleting it: that
+file's own investigation already concluded a fully general oracle-text-vs-
+definition coverage check isn't gate-feasible; this redesign is the user's
+direct response — instead of the gate trying to infer coverage
+automatically, the AUTHOR now explicitly writes it down, structurally.
+**FDN-pipeline-scoped only**, same isolation every prior rule here has used
+— `functional-model/cards/` (FIN) is completely untouched; `staticAbilities`
+itself stays in `card.ts`, unremoved, for FIN's own 98 real legitimate uses.
+
+### Two new, purely additive `CardDefinition` fields (`card.ts`)
+
+- **`missingSchemaFunctionality?: MissingSchemaFunctionality[]`** —
+  `{clause: string; demand: string}[]`. The ONE sanctioned, structured
+  replacement for how `staticAbilities` had been (ab)used as an informal
+  capacity-gap marker across the FDN pool (see the superseded rule's own
+  topic file) — `clause` is the exact real oracle-text clause the schema
+  can't express, `demand` is the specific capability/schema addition being
+  requested to close it (concrete enough for the `engine` agent to act on,
+  never a bare restatement of `clause`).
+- **`coverageJustification?: CoverageJustificationEntry[]`** —
+  `{clause: string; coveredBy: CoverageReference; reasoning: string}[]`.
+  One entry per real, distinct printed clause (a clause with two
+  independent parts — Ward's own keyword half and its own non-default cost
+  half, e.g. — gets two entries). `CoverageReference` is a CLOSED
+  discriminated union (`{kind:'keyword', keyword: Keyword}` /
+  `{kind:'trigger', name: string}` / `{kind:'ability', name: string}` /
+  `{kind:'effect', effectKind: Effect['kind']}` /
+  `{kind:'field', field: CoverageFieldName}` /
+  `{kind:'missingSchemaFunctionality', index: number}` /
+  `{kind:'staticAbilities', index: number}`) — deliberately no bare
+  free-string "what covers this" field; `name`/`field`/`index` are
+  structural lookup keys into the SAME `CardDefinition`, never judgment
+  text. `reasoning` IS free prose by design (the user's own explicit ask
+  for "written reasoning") — the tightness constraint is on the POINTER
+  shape, not on banning prose entirely. `CoverageFieldName` is a second
+  closed union (`'pt'|'cmc'|'alternateCosts'|...`) for any other
+  structured field whose mere presence conveys coverage (no finer sub-key
+  needed) — both unions grow on demand, same discipline `Keyword`/
+  `Trigger.on` already follow elsewhere in this file. No `any` introduced
+  anywhere in either addition (audited).
+
+Both fields are `readonly`, optional, and FIN never populates either —
+structurally a no-op for `functional-model/cards/`.
+
+### Redefined gate semantics (`validate-card-definition.mjs`, `pipeline-status.ts`)
+
+- **`staticAbilities` is now a HARD FDN policy violation, not a capacity
+  gap** — `findStaticAbilitiesPolicyViolationReasons` (renamed from the
+  retired `findStaticAbilityGapReasons`) now routes ANY non-empty
+  `staticAbilities` array on an FDN card to `failureKind: 'other'` (a hard
+  block, never `purple`), checked FIRST, before any other part of the
+  gate. Checked directly against the real pool (2026-09-18): all 22 real
+  pre-existing `staticAbilities` entries across 20 FDN cards were genuine
+  capacity-gap markers in disguise — **zero genuinely rules-irrelevant
+  flavor-text uses were found** — so allowing `staticAbilities` to remain
+  usable in FDN as an alternate "same meaning, different field" gap-marker
+  would reopen exactly the "two ways to say the same thing" looseness this
+  whole redesign exists to close. `staticAbilities` strings ARE the
+  "random strings" the user's ruling objected to, for this pool
+  specifically.
+- **`missingSchemaFunctionality` presence is a capacity-gap**, exactly
+  like the retired `staticAbilities` rule was —
+  `findMissingSchemaFunctionalityGapReasons` is its direct structural
+  successor (same dual-face walk, folded into the same `capacity-gap`
+  bucket the vocabulary walk and the FDN-only name-only-trigger rule
+  already produce).
+- **New, mechanical `validateCoverageJustification` check** — does NOT
+  attempt semantic verification (declined, not merely skipped: the prior
+  investigation already established that's not gate-feasible). Checks only
+  what doesn't require judgment: the manifest is real/present/non-empty
+  (per face), every entry has real non-empty `clause`/`reasoning` text,
+  every `coveredBy` pointer actually RESOLVES to something real on that
+  same `CardDefinition` (a named trigger/ability that exists, a real
+  `Effect.kind` actually used, a `missingSchemaFunctionality` index in
+  range, ...), and a directional completeness check — every real
+  `missingSchemaFunctionality` entry must be referenced by at least one
+  manifest entry, so a declared gap can never go unreasoned-about.
+  **Deliberately declined** the task brief's own floated "manifest entry
+  count roughly matches real oracle-text clause count" heuristic — an FDN
+  `CardDefinition` carries no `oracleText` field at all, and the only place
+  real oracle text exists on disk for SOME (not all) FDN cards is an ad hoc
+  per-card scratch cache (`functional-model/.fdn-scratch/<slug>/
+  scryfall.json`), not a guaranteed/complete input this gate could
+  honestly depend on pool-wide — building a heuristic against that would
+  be exactly the fragile heuristic the brief said not to force.
+- **`CardDefinitionValidationResult.failureKind` gained a third real
+  value: `'incomplete-authoring'`** (alongside the unchanged `'capacity-
+  gap'`/`'other'`) — a card that's otherwise schema-valid but has no real,
+  well-formed coverage-justification manifest yet. Checked independent of,
+  and BEFORE, the capacity-gap classification: a card can't reach `purple`
+  OR `blue` without a real manifest, regardless of whether it also has
+  declared capacity gaps.
+- **Where a manifest-less card lands, decided explicitly**:
+  `pipelineStatusFromGateResult` now maps `failureKind: 'incomplete-
+  authoring'` to `status: 'gray'` (`pipeline-status.ts`) — a REAL,
+  intentional widening of what that function can produce (previously it
+  only ever wrote `blue`/`purple`, throwing on `other`; `gray` was
+  documented as "never computed by this file"). Reasoning, stated
+  explicitly per the task's own ask: `gray`'s pre-existing meaning ("ready
+  for agent work... hasn't been attempted") is EXACTLY "no manifest
+  written yet" too — not a stretch, not a 6th status. `other` (real
+  structural/vocabulary errors, or the new `staticAbilities`-in-FDN policy
+  violation) is UNCHANGED — still a hard throw, never a written status, so
+  it was already correctly below `purple` before this redesign and needed
+  no new handling. `gate-and-write-status.mjs`'s own summary/exit-code
+  logic was updated to track a `gray` outcome bucket alongside `blue`/
+  `purple`/`other`/`missing-file` (a real, WRITTEN outcome, unlike
+  `other`/`missing-file` — exit code 0 still requires zero `other`/
+  `missing-file`, `gray` does NOT fail the batch).
+- **Redefined bar, stated plainly**: `purple` = passes the structural/
+  vocabulary validity checks AND has a real, non-empty, internally-
+  consistent `coverageJustification` manifest (regardless of whether
+  `missingSchemaFunctionality` is also non-empty). `blue` = purple's bar,
+  PLUS zero `missingSchemaFunctionality` entries. A card failing either
+  the vocabulary walk or the scoped type-check still can't reach `purple`/
+  `blue` at all (unchanged, pre-existing `other`/other-`capacity-gap`
+  behavior).
+
+### Migration of the 22 real pre-existing `staticAbilities` gap markers
+
+All 22 real entries (not ~40 — the task brief's own estimate; the real,
+counted figure, confirmed via a live vite-node sweep of the whole pool, is
+22 entries across 20 FDN cards) were migrated to `missingSchemaFunctionality`
+— same gap, same reasoning, reshaped into the structured `{clause, demand}`
+form (all pre-existing content, no new capacity-gap DISCOVERY, per the
+task's own explicit scope). Two entries were NOT migrated as gaps, because
+re-checking them against the rest of their own card revealed they're
+actually already covered (found while doing the migration, not assumed):
+- **Inspiring Paladin's own FIRST ability** ("During your turn, this
+  creature has first strike.") — fully covered by its own pre-existing
+  `continuousKeywordGrants` entry; removed from `staticAbilities` outright,
+  NOT migrated to `missingSchemaFunctionality` (keeping a covered clause
+  declared as an open "demand" would misrepresent it). Its own SECOND
+  ability (the counter-conditional one) is a real, migrated gap.
+- **Twinblade Blessing's own "Enchant creature"** targeting-restriction
+  clause — its `onEnter` trigger's own `custom` attach effect already
+  filters its candidate pool to `.filter((c) => c.isCreature())` before
+  choosing a target; that IS the real structural enforcement, just living
+  in the attach effect rather than a dedicated field. Removed outright, not
+  migrated.
+
+`billowing-shriekmass`'s own Threshold P/T bonus is flagged, in its own
+`missingSchemaFunctionality` demand text, as a case where the EXISTING
+`continuousPTGrants` entry is a known, pre-existing UNCONDITIONAL
+approximation of a real conditional clause (same "approximate as always-on"
+simplification Crypt Feaster's own Threshold trigger already documents) —
+not a new bug, called out for honesty.
+
+**New Arahbo-class silent gap found, NOT fixed (flagged, out of scope for
+this task)**: `skyknight-squire`'s own `onEnter` trigger ("Whenever ANOTHER
+creature you control enters, put a +1/+1 counter on this creature") has the
+exact same under-scoped `on:'enter'`-fires-self-only problem Arahbo's own
+gap already documents — but unlike Arahbo, this one was previously only a
+CODE COMMENT, never declared via `staticAbilities` at all, so it was
+completely gate-invisible before AND after this task (this task only
+migrated pre-EXISTING `staticAbilities` entries, per its own explicit
+scope — it did not audit for undeclared gaps). A future pass should declare
+it via `missingSchemaFunctionality`, same as Arahbo.
+
+### 5-card proof-of-concept — real, honest, pool-wide-verified
+
+Per the task's own explicit scope, a full-pool manifest retrofit was NOT
+attempted. 5 cards got a real, hand-written `coverageJustification`
+manifest, spanning the shapes already seen this session:
+- **`felidar-savior`** — clean 2-clause card (Lifelink keyword + a
+  `program`-built ETB counter trigger), zero gaps → `blue`.
+- **`claws-out`** — clean 2-clause card, genuinely different vocabulary
+  shape (a `costReduction` field + a top-level `pumpAll` effect, no
+  triggers, an Instant), zero gaps → `blue`. Picked as the 5th sample
+  specifically for pointer-kind diversity (`field`/`effect`, vs. the other
+  4 samples' `keyword`/`trigger`/`missingSchemaFunctionality`).
+- **`sire-of-seven-deaths`** — 8-clause card (7 keywords + Ward's own
+  non-default cost), the Ward cost-payload gap → `purple`.
+- **`arahbo-the-first-fang`** — 3-clause card, the partial-coverage ETB
+  trigger gap (Arahbo's own entrance covered, "another Cat enters" not) →
+  `purple`.
+- **`inspiring-paladin`** — the original motivating card for the whole
+  prior `staticAbilities`-gate investigation; 2-clause card, first ability
+  now correctly shown as covered (not a false gap), second ability's real
+  counter-conditional gap → `purple`.
+
+**Verified live, both individually (CLI) and pool-wide (`gate-and-write-
+status.mjs --all`, exit code 0)**: the 5 POC cards land exactly where
+designed (2 `blue`, 3 `purple`); the OTHER 95 real FDN cards (every
+previously-`blue`/`purple` card this task did NOT hand-write a manifest
+for, including all 17 non-POC migrated cards) correctly land at `gray`
+— honestly reflecting "5 cards ready under the new bar, ~95 not yet
+retrofitted," not papered over. Real, current pool-wide counts: **2 blue /
+3 purple / 95 gray / 0 other / 0 missing-file**. Confirmed zero real
+`staticAbilities:` field usages remain anywhere in
+`functional-model/fdn-cards/` (`grep -rn '^\s*staticAbilities:'` — 0
+matches). `npm run test` (functional-model scope): 120 files, 1290 passed /
+5 skipped (was 1276/5 before this task — new tests for
+`findStaticAbilitiesPolicyViolationReasons`/
+`findMissingSchemaFunctionalityGapReasons`/`validateCoverageJustification`/
+the new `pipelineStatusFromGateResult` `gray` branch). `npx tsc --noEmit -p
+.nuxt/tsconfig.server.json`: identical pre-existing 4-error baseline
+(`card-status.ts:263`, `card.ts`'s `endTurn` line — shifted by this task's
+own insertions but the same pre-existing error, `mana.ts:275`,
+`server/api/tokens/by-key.ts:32`), zero new errors from any file this task
+touched.

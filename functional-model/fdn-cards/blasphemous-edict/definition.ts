@@ -12,12 +12,14 @@ export const blasphemousEdict: CardDefinition = {
   // `AlternateCost` (that shape is fixed to `from: 'graveyard'|'exile'`,
   // real Flashback/Jump-start territory; this is a same-zone (hand) cost
   // SWAP gated on a creature-count threshold). No such conditional-cost
-  // vocabulary exists anywhere in this engine; kept as free text only,
-  // same fallback CardDefinition's own `staticAbilities` doc comment
-  // describes for "a real Forge K:/S: line not yet in the controlled
-  // list."
-  staticAbilities: [
-    "You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield.",
+  // vocabulary exists anywhere in this engine. Migrated from
+  // `staticAbilities` to `missingSchemaFunctionality` (2026-09-18, FDN
+  // schema-tightness redesign).
+  missingSchemaFunctionality: [
+    {
+      clause: "You may pay {B} rather than pay this spell's mana cost if there are thirteen or more creatures on the battlefield.",
+      demand: 'A board-state-CONDITIONAL alternate-cost vocabulary — `AlternateCost` today is fixed to `from: \'graveyard\'|\'exile\'` zone-based alternates only; need a variant gated on a live board-state count threshold (Forge\'s own `AlternativeCost` + `IsPresent$`/`PresentCompare$` pairing) rather than a zone change.',
+    },
   ],
 
   effects: [

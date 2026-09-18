@@ -11,15 +11,20 @@ export const zulAshurLichLord: CardDefinition = {
   // cost isn't tracked, no counterspell-trigger machinery exists to
   // enforce it), same established convention raubahn-bull-of-ala-mhigo's
   // own definition.ts already documents for an identical "Ward—Pay life
-  // equal to..." clause. Also declared via `staticAbilities` below (added
-  // 2026-09-18, sire-of-seven-deaths' own sweep) so this specific
-  // non-default-cost gap is a real, gate-visible `reasons` entry, not only
-  // a comment — this card was already `purple` for the unrelated MayPlay
-  // gap below, so this had no VISIBLE effect on its status before now, but
-  // would have silently gone unrecorded if that other gap were ever
-  // closed first.
+  // equal to..." clause. Declared via `missingSchemaFunctionality` (moved
+  // out of `staticAbilities`, 2026-09-18, FDN schema-tightness redesign)
+  // so this specific non-default-cost gap is a real, gate-visible
+  // `reasons` entry, not only a comment — this card was already `purple`
+  // for the unrelated MayPlay gap below, so this had no VISIBLE effect on
+  // its status before now, but would have silently gone unrecorded if that
+  // other gap were ever closed first.
   keywords: ['Ward'],
-  staticAbilities: ['Ward—Pay 2 life. (the "pay 2 life" cost specifically — not the base Ward keyword fact, already tracked above)'],
+  missingSchemaFunctionality: [
+    {
+      clause: 'Ward—Pay 2 life. (the "pay 2 life" cost specifically — not the base Ward keyword fact, already tracked above)',
+      demand: '`Keyword` needs a cost-payload field for a non-default Ward cost — currently a bare string-literal union with no place to record "Pay 2 life" (or any other non-mana-cost Ward template) at all.',
+    },
+  ],
 
   abilities: [
     {
