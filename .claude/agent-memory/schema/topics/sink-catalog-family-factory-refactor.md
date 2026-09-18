@@ -5,12 +5,52 @@ display-metadata field tried earlier the same day (`116afa14`, reverted
 `d3e92571` — "we don't need variants," zero behavior attached). This pass
 gave the concept real behavior on two axes: matching AND review status.
 
+## 2026-09-18 follow-up: file split + category-derivation + Counters rename
+
+Real file-layout change on top of the same architecture (no matching-logic
+change): the factory (family) and each curated configuration (instance) no
+longer share a module. `catalog/families/battlefield-presence.ts`/
+`catalog/families/counters.ts` now hold ONLY the factory + config type +
+shared matcher wiring; each real instance gets its own small config file —
+`catalog/counters-plus1plus1.ts`, `catalog/battlefield-presence-{cats,
+creatures,hare-apparent}.ts` (the `battlefield-presence-*` instance
+filenames are back to their pre-refactor, pre-factory names — that's
+expected, only what's IN the file changed). `catalog/index.ts` imports
+updated accordingly. `sink-catalog-status.ts`'s `sourceFileFor`/
+`computeSinkCatalogFingerprint` updated to hash BOTH the shared
+`families/${key}.ts` file AND each real member's own `${slug}.ts` instance
+file (previously one combined file covered both) — new test case added
+(`sink-catalog-status.test.ts`) proving an instance-only content change
+alone (family file untouched) still trips `re-review`, not just a
+family-file change.
+
+Both factories also stopped accepting a separately-authored `category`
+field (real duplication risk — `counterType`/`category` were always
+identical strings) — each now derives `query.category` internally via its
+own `getName` helper at instance-creation time: `CountersSink`'s is trivial
+(`counterType` verbatim); `BattlefieldPresenceSink`'s maps `filter` (a
+`{subtype}` pluralizes; `{sameNameAsSelf: true}` is a hardcoded special
+case, no clean structural derivation exists for it) to the label. Verified
+all 4 real instances still resolve to the exact same served labels.
+
+Also: Counters' one instance's display category renamed `'Counters
+(+1/+1)'` -> `'+1/+1'` (was the one config still carrying the redundant
+family-name prefix; Battlefield presence's 3 instances were already bare
+labels). Propagated through `card-interactions.test.ts` (5 assertions),
+`SINK_MODEL_DESIGN.md`, both family files' own doc comments. Landed in the
+same commit as the file split per explicit instruction (same config shapes
+being touched either way).
+
+`npx vitest run functional-model`: 120 files / 1339 passed / 5 skipped.
+`npm run typecheck`: same pre-existing 7-diagnostic baseline, zero new.
+
 ## Vocabulary (user-specified, use going forward)
 
 - **Sink family** — the factory: `BattlefieldPresenceSink`/`CountersSink`
-  (`functional-model/sink-model/catalog/battlefield-presence.ts`/
-  `counters.ts`). Real type: `SinkFamily<Config> = (config: Config) =>
-  SinkInstance` (`catalog/entry.ts`).
+  (`functional-model/sink-model/catalog/families/battlefield-presence.ts`/
+  `families/counters.ts`, 2026-09-18 split — see follow-up section above).
+  Real type: `SinkFamily<Config> = (config: Config) => SinkInstance`
+  (`catalog/entry.ts`).
 - **Sink instance** — one configured value a family factory returns (the
   Cats config, the +1/+1 config). Real type: `SinkInstance = SinkCatalogEntry
   & ((candidate: CardDefinition, root?: string) => SinkMatchDetail | null)`
