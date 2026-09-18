@@ -36,7 +36,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
 
   it('SOURCE CANDIDATE: matches a plain self-targeted putCounter effect with counterType "+1/+1" (the real Exemplar of Light, FDN #11, shape)', () => {
     const card: CardDefinition = {
-      name: 'Mock Counter Creature',
+      name: 'Mock Counter Source',
       manaCost: '{2}{W}',
       typeLine: 'Creature — Angel',
       pt: [2, 2],
@@ -47,7 +47,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
 
   it('SOURCE CANDIDATE: matches a TRIGGERED putCounter (trigger effects are walked too, not just top-level effects)', () => {
     const card: CardDefinition = {
-      name: 'Mock Triggered Counter Creature',
+      name: 'Mock Triggered Counter Source',
       manaCost: '{2}{W}',
       typeLine: 'Creature — Bird',
       pt: [1, 1],
@@ -58,7 +58,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
 
   it('SOURCE CANDIDATE: matches a broadcast putCounterAll effect with counterType "+1/+1" (a real "put a +1/+1 counter on each creature you control" shape)', () => {
     const card: CardDefinition = {
-      name: 'Mock Counter Anthem Spell',
+      name: 'Mock Counter Anthem Source',
       manaCost: '{2}{W}',
       typeLine: 'Sorcery',
       effects: [{ kind: 'putCounterAll', predicate: 'creatures-you-control', counterType: '+1/+1', amount: 1 } satisfies Effect],
@@ -88,7 +88,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
 
   it('SINK CANDIDATE: matches a card whose own named trigger is "onCounterAdded" (the real Exemplar of Light shape) even with no putCounter effect walked for THIS check — proves the sink-candidate signal is a genuinely separate check from the source-candidate check', () => {
     const card: CardDefinition = {
-      name: 'Mock Counter Reactor',
+      name: 'Mock Counter Sink',
       manaCost: '{1}{W}',
       typeLine: 'Creature — Human Cleric',
       pt: [1, 1],
@@ -125,7 +125,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       typeLine: 'Creature — Human',
       pt: [2, 2],
       backFace: {
-        name: 'Mock Back Face',
+        name: 'Mock Back Face Sink',
         manaCost: '',
         typeLine: 'Creature — Human',
         pt: [3, 3],
@@ -146,7 +146,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
   // (`.producer.via`/`.consumer`/`null`), not just presence/absence.
   it('CALLABLE: source-candidate-only match returns real detail (producer.via set, no consumer)', () => {
     const card: CardDefinition = {
-      name: 'Mock Counter Creature',
+      name: 'Mock Counter Source',
       manaCost: '{2}{W}',
       typeLine: 'Creature — Angel',
       pt: [2, 2],
@@ -160,7 +160,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
 
   it('CALLABLE: sink-candidate-only match returns real detail (consumer.via set, no producer)', () => {
     const card: CardDefinition = {
-      name: 'Mock Counter Reactor',
+      name: 'Mock Counter Sink',
       manaCost: '{1}{W}',
       typeLine: 'Creature — Human Cleric',
       pt: [1, 1],
