@@ -63,13 +63,16 @@ directly to you about planning/decisions.
 Specialists:
 - `ui` — general UI + graph visualizer (`.claude/agents/ui.md`)
 - `server` — Nuxt app shell, build/deploy, CI (`.claude/agents/server.md`)
-- `engine` — MTG functional-model engine + its tests (`.claude/agents/engine.md`)
+- `engine` — MTG functional-model engine (real simulation) + its tests (`.claude/agents/engine.md`)
 - `card` — card page (facts/scenarios/replay) + card-serving API (`.claude/agents/card.md`)
+- `schema` — FDN authoring-pipeline schema/vocabulary + gate (`.claude/agents/schema.md`)
 
 Contracts specialists read instead of each other's code:
-- `.claude/contracts/card-schema.md` — engine ↔ card boundary
+- `.claude/contracts/card-schema.md` — schema/engine ↔ card boundary (source side owned by `schema`; FIN's own definitions stay `engine`-owned)
 - `.claude/contracts/state-event-format.md` — engine ↔ replay/UI trace boundary
 - `.claude/contracts/api-contract.md` — server ↔ UI data boundary
+- `.claude/contracts/engine-status-schema.md` — engine-status dashboard boundary (owner: `engine`)
+- `.claude/contracts/sink-derivation-status-schema.md` — sink-derivation predicate boundary (owner: `schema`)
 
 ## Dispatch template
 

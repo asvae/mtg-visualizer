@@ -1,10 +1,11 @@
 # Contract: Sink-derivation-predicate status axis
 
-Owner: **engine** agent (`functional-model/sink-derivation-status.ts` +
-`server/api/sink-derivations/*`). Consumer: **ui** agent's not-yet-built
-status page. If this file drifts from the real served shape, whoever
-noticed says so to the orchestrator — don't silently patch around a stale
-contract.
+Owner: **schema** agent (`functional-model/sink-derivation-status.ts` +
+`server/api/sink-derivations/*` — sink-derivation predicates operate on
+schema/AST alone, no engine execution). Consumer: **ui** agent's
+not-yet-built status page. If this file drifts from the real served
+shape, whoever noticed says so to the orchestrator — don't silently patch
+around a stale contract.
 
 ## What this is (and isn't)
 

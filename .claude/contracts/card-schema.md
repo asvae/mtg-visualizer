@@ -1,11 +1,13 @@
 # Contract: Engine ↔ Card boundary
 
-Owner of source: **engine** agent. Owner of generated/served output:
-**card** agent. If this file drifts from either side's real shape, whoever
-noticed says so to the orchestrator — don't silently patch around a stale
-contract.
+Owner of source: **schema** agent (FDN's `fdn-cards/*` + the `card.ts`
+vocabulary itself); FIN's own `cards/<slug>/*` stays **engine**-owned
+(reference-only for new authoring, see `.claude/agents/engine.md`). Owner
+of generated/served output: **card** agent. If this file drifts from
+either side's real shape, whoever noticed says so to the orchestrator —
+don't silently patch around a stale contract.
 
-## Per-card functional model (source, `engine` agent owns)
+## Per-card functional model (source, `schema`/`engine` agents own — see above)
 
 `functional-model/cards/<slug>/`:
 - `definition.ts` — exports a `CardDefinition` (see

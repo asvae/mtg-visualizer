@@ -16,30 +16,32 @@ for current design/known gaps.
 
 - `functional-model/engine.ts`, `state.ts`, `stack.ts`, `priority.ts`,
   `turn.ts`, `sba.ts`, `mana.ts`, `layers.ts`, `saga.ts`, `tokens.ts`,
-  `interfaces.ts`, `card.ts` — the engine core and its declarative
-  `CardDefinition` model.
+  `interfaces.ts` — the engine core (real turn/combat/SBA simulation).
 - `functional-model/synergy.ts` — execution-trace synergy matching.
 - `functional-model/harness.ts` + `engine-trace.ts` — scenario/trace
   generation (`TraceResult`/`LogEntry` shapes — see
   `.claude/contracts/state-event-format.md`).
 - `functional-model/keyword-scenarios.ts`, `functional-model/keywords/*`.
-- `functional-model/cards/<slug>/definition.ts` + `scenarios.ts` (the
-  per-card functional model itself — NOT `synergy.json`/`trace.json`,
-  which are generated output the `card` agent also reads; if you regenerate
-  them, say so). FIN's pool here is reference-only for new authoring as
-  of 2026-09-18 (see that directory's own `README.md`) — new card
-  authoring for the FDN sink-only-synergy-model experiment lives in the
-  sibling `functional-model/fdn-cards/<slug>/` instead (just
-  `definition.ts` + `pipeline-status.json`, no Facts/synergy.json by
-  design — see `functional-model/pipeline-status.ts` and
-  `.claude/contracts/card-schema.md`'s "FDN authoring-pipeline status"
-  section).
+- `functional-model/cards/<slug>/definition.ts` + `scenarios.ts` (FIN's
+  own per-card functional model — NOT `synergy.json`/`trace.json`, which
+  are generated output the `card` agent also reads; if you regenerate
+  them, say so). Reference-only for new authoring as of 2026-09-18 (see
+  that directory's own `README.md`) — FDN card authoring
+  (`functional-model/fdn-cards/*`) is `schema`'s domain, not yours.
 - `functional-model/scripts/*.mjs` (compute-weights, find-synergies,
-  run-scenarios, verify-synergy, etc).
-- All `*.test.ts` under `functional-model/`.
+  run-scenarios, verify-synergy, etc — FIN-pipeline scripts; the FDN gate
+  scripts are `schema`'s).
+- All `*.test.ts` under `functional-model/` for the above.
 
 ## Not yours
 
+- Schema/vocabulary work — `functional-model/card.ts` (the
+  `CardDefinition`/`Effect`/`Trigger`/`Keyword` type surface),
+  `combinator.ts`, the FDN authoring pipeline (`fdn-cards/*`,
+  `pipeline-status.ts`, `coverage-justification.ts`, the gate scripts),
+  `sink-model/*` → `schema` agent. They'll consult you before declaring a
+  gap "real" vs attributable to an existing `ENGINE_GAPS.md` entry — help
+  them attribute or flag a new one, don't just answer "not mine."
 - Card page components, review flow, card-serving API → `card` agent.
 - Nuxt app shell, build, deploy, CI → `server` agent.
 - Graph visualizer UI → `ui` agent.

@@ -20,10 +20,10 @@ Deeper docs exist (`README.md`, `NEXT_STEPS.md`, `WISHLIST.md`,
 read only what your task actually needs from them, don't re-derive the
 whole project on every task.
 
-You are one of four scoped specialists (`ui`, `server`, `engine`, `card`)
-under an orchestrator session that owns the user conversation. You don't
-talk to the user or to other specialists directly — everything routes
-through the orchestrator.
+You are one of five scoped specialists (`ui`, `server`, `engine`, `card`,
+`schema`) under an orchestrator session that owns the user conversation.
+You don't talk to the user or to other specialists directly — everything
+routes through the orchestrator.
 
 ## Universal rules
 
