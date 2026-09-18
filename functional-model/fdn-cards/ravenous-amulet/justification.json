@@ -36,7 +36,7 @@
     "reasoning": "This same ability's drawCard(1) then putCounter({target:'self', counterType:'SOUL', amount:1}) effects are the exact real draw-and-counter sequence this sentence describes."
   },
   {
-    "type": "rules",
+    "type": "definition",
     "textLocation": "oracle_text",
     "spans": [
       {
@@ -47,11 +47,11 @@
     ],
     "definitionKeys": [
       {
-        "kind": "missingSchemaFunctionality",
-        "index": 0
+        "kind": "ability",
+        "name": "drawAndSoul"
       }
     ],
-    "reasoning": "Genuinely uncovered \u2014 no timing/speed-restriction field exists on a named abilities[] entry."
+    "reasoning": "This card's own named ability 'drawAndSoul' carries cost:'{1}, {T}, Sacrifice a creature, Activate only as a sorcery' \u2014 engine.ts's own real canActivateAbility already runs /activate only as a sorcery/i.test(cost) against a named ability's own cost string and enforces sorcerySpeedTimingOk when it matches (same real pool precedent garland-knight-of-cornelia's own 'returnTransformed' ability already establishes for a named abilities[] entry), so this is a real, mechanically-enforced restriction, not an uncovered gap."
   },
   {
     "type": "definition",

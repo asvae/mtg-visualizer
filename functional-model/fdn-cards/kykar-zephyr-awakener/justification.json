@@ -1,0 +1,78 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 0,
+        "to": 6,
+        "text": "Flying"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "keyword",
+        "keyword": "Flying"
+      }
+    ],
+    "reasoning": "This card's own keywords:['Flying'] is the exact real printed evasion keyword this clause names."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 7,
+        "to": 58,
+        "text": "Whenever you cast a noncreature spell, choose one —"
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "trigger",
+        "name": "onCastNoncreatureSpell"
+      },
+      {
+        "kind": "effect",
+        "effectKind": "modal"
+      }
+    ],
+    "reasoning": "This card's own 'onCastNoncreatureSpell' trigger carries a single kind:'modal' effect with two modes — the exact real cast-triggered choose-one structure this clause names (real Forge: T:Mode$ SpellCast | ValidCard$ Card.nonCreature ... Execute$ TrigCharm; SVar:TrigCharm:DB$ Charm | Choices$ DBBlink,DBToken)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 59,
+        "to": 204,
+        "text": "• Exile another target creature you control. Return that card to the battlefield under its owner's control at the beginning of the next end step."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "custom"
+      }
+    ],
+    "reasoning": "The modal's first mode carries a kind:'custom' effect that exiles a target creature (excluding self) chosen from ctx.you.getCreaturesInPlay(), then schedules its return via actions.delayUntil('EndOfTurn', ...) — the same real 603.4/603.7 delayed-trigger primitive Elrond, Moon-Reader's own identical \"next end step\" clause already uses, mirroring real Forge's own DB$ ChangeZone (exile) + SVar:DelTrig:DB$ DelayedTrigger | Mode$ Phase | Phase$ End of Turn (return)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 205,
+        "to": 260,
+        "text": "• Create a 1/1 white Spirit creature token with flying."
+      }
+    ],
+    "definitionKeys": [
+      {
+        "kind": "effect",
+        "effectKind": "createToken"
+      }
+    ],
+    "reasoning": "The modal's second mode carries a kind:'createToken' effect with token:{name:'Spirit', types:['Creature','Spirit'], basePower:1, baseToughness:1, keywords:['Flying']}, amount:1 — the exact real 1/1 white Spirit creature token with flying this clause describes."
+  }
+]

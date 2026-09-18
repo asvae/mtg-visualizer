@@ -1,4 +1,4 @@
-import type { CardDefinition, Effect } from '../../card';
+import type { CardDefinition, Effect, EffectContext, Actions } from '../../card';
 
 export const kykarZephyrAwakener: CardDefinition = {
   name: 'Kykar, Zephyr Awakener',
@@ -16,7 +16,30 @@ export const kykarZephyrAwakener: CardDefinition = {
           modes: [
             {
               describe: "Exile another target creature you control. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
-              effects: [],
+              effects: [
+                {
+                  // Real Forge (kykar_zephyr_awakener.txt): `DB$ ChangeZone |
+                  // ValidTgts$ Creature.YouCtrl+Other | ... | Destination$
+                  // Exile | ... | SubAbility$ DelTrig` then `SVar:DelTrig:DB$
+                  // DelayedTrigger | Mode$ Phase | Phase$ End of Turn |
+                  // Execute$ TrigReturn ...` — a real 603.4/603.7 delayed
+                  // trigger, same shape Elrond, Moon-Reader's own "next end
+                  // step" clause already uses via `actions.delayUntil`
+                  // (functional-model/interfaces.ts). No "no delayed-trigger
+                  // primitive" gap here — `delayUntil` IS that primitive.
+                  kind: 'custom',
+                  describe: "exile another target creature you control, then return it to the battlefield under its owner's control at the beginning of the next end step",
+                  run: (ctx: EffectContext, actions: Actions) => {
+                    const pool = ctx.you.getCreaturesInPlay().filter((c) => c.getId() !== ctx.self.getId());
+                    if (pool.length === 0) return;
+                    const target = actions.chooseTarget(pool);
+                    actions.moveTo(target, 'Exile');
+                    actions.delayUntil('EndOfTurn', () => {
+                      actions.moveTo(target, 'Battlefield');
+                    });
+                  },
+                } satisfies Effect,
+              ],
             },
             {
               describe: 'Create a 1/1 white Spirit creature token with flying.',
@@ -31,14 +54,6 @@ export const kykarZephyrAwakener: CardDefinition = {
           ],
         } satisfies Effect,
       ],
-    },
-  ],
-
-  missingSchemaFunctionality: [
-    {
-      clause: "Exile another target creature you control. Return that card to the battlefield under its owner's control at the beginning of the next end step.",
-      demand:
-        'No delayed-trigger primitive exists anywhere in this schema (schedule an effect to fire at a LATER game event, e.g. "at the beginning of the next end step") — only `untilEndOfTurn`-style flat durations exist, not a genuine future trigger.',
     },
   ],
 };
