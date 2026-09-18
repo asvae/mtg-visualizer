@@ -79,6 +79,14 @@ export interface CardResponse {
     // `interactions` field below (the older paired source+sink Fact
     // model's own cross-card join), a genuinely different mechanism.
     cardInteractions: EnrichedCardInteractionCategory[];
+    // `fdn`-only, 2026-09-19 — this card's own `functional-model/
+    // fdn-cards/<slug>/NOTES.md` raw content, when one exists. See
+    // server/api/card/[set]/[number].ts's own `FunctionalModelData.notes`
+    // doc comment. Always `null` for a `fin` entry (no NOTES.md convention
+    // exists for that set), and `null` for most `fdn` entries too (a card
+    // hasn't gotten one yet) — absence is the common, expected case, not
+    // an error.
+    notes: string | null;
   } | null;
   interactions: EnrichedInteractionGroup[];
 }

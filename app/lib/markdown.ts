@@ -1,17 +1,24 @@
 // Hand-rolled, deliberately non-CommonMark-complete Markdown -> HTML
-// renderer for the dev-only `/docs` page (app/pages/docs/[[slug]].vue). No
-// markdown-rendering dependency exists in package.json (marked/markdown-it/
-// @nuxt/content) and adding one is `server` agent's call, not this file's —
-// this covers exactly what this repo's own docs actually use (checked by
-// grepping README.md/NEXT_STEPS.md/WISHLIST.md/SET_STATUS.md/docs/prds/*.md/
-// functional-model/*.md before writing this): ATX headers, fenced code
-// blocks (plain/`ts`/`json`/`jsonc`), flat + one-level-nested bulleted/
-// numbered lists (including wrapped continuation text under an item, which
-// is how e.g. ENGINE_GAPS.md's own numbered list items are actually
-// formatted), blockquotes, horizontal rules, paragraphs, and inline
-// bold/italic/code/links. Not a general-purpose parser — no tables, no
-// setext headings, no images (none of the real docs use them, confirmed by
-// the same grep).
+// renderer for the dev-only `/docs` page (app/pages/docs/[[slug]].vue) and
+// (2026-09-19) `MarkdownView.vue`'s per-card `NOTES.md` rendering
+// (`functional-model/fdn-cards/<slug>/NOTES.md`, see CardDetailTabs.vue's
+// own "Notes" tab). No markdown-rendering dependency exists in package.json
+// (marked/markdown-it/@nuxt/content) and adding one is `server` agent's
+// call, not this file's — this covers exactly what this repo's own docs
+// actually use (checked by grepping README.md/NEXT_STEPS.md/WISHLIST.md/
+// SET_STATUS.md/docs/prds/*.md/functional-model/*.md before writing this):
+// ATX headers, fenced code blocks (plain/`ts`/`json`/`jsonc`), flat +
+// one-level-nested bulleted/numbered lists (including wrapped continuation
+// text under an item, which is how e.g. ENGINE_GAPS.md's own numbered list
+// items are actually formatted), blockquotes, horizontal rules, GFM pipe
+// tables (added 2026-09-19 — the first real NOTES.md to need one,
+// exemplar-of-light's own Forge-param audit table; no doc in the original
+// grep above used one, hence the header/tables note this used to carry),
+// paragraphs, and inline bold/italic/strikethrough/code/links. Not a
+// general-purpose parser — no setext headings, no images, no escaped `\|`
+// within a table cell (none of the real docs need either, confirmed by the
+// same grep, now re-checked against every `functional-model/fdn-cards/*/
+// NOTES.md` too).
 //
 // Code-fence highlighting reuses the exact pattern already established by
 // FunctionalModelScript.vue/JsonHighlight.vue: `highlight.js/lib/core` (not
@@ -196,6 +203,43 @@ const FENCE_CLOSE_RE = /^\s*```\s*$/;
 const HEADING_RE = /^(#{1,6})\s+(.*)$/;
 const QUOTE_RE = /^\s*>\s?/;
 
+// GFM pipe tables — a header row, a `| --- | --- |`-style separator row (the
+// only signal that actually distinguishes a table from an ordinary line of
+// prose that happens to contain a couple of `|` characters), then zero or
+// more body rows, each a `|`-delimited line. No escaped-`\|`-within-a-cell
+// support (see this file's own header comment) — a plain split on `|` is
+// exactly right for every real table in this repo's docs/NOTES.md pool
+// today.
+const TABLE_ROW_RE = /^\s*\|.*\|\s*$/;
+const TABLE_SEP_RE = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+
+function splitTableRow(line: string): string[] {
+  let trimmed = line.trim();
+  if (trimmed.startsWith('|')) trimmed = trimmed.slice(1);
+  if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1);
+  return trimmed.split('|').map((c) => c.trim());
+}
+
+// `start` must already point at a real header row with a valid separator
+// row directly beneath it (checked by the caller before invoking this, same
+// "confirm the two-line signal first" shape `parseList`'s own caller uses
+// for `LIST_MARKER`) — this only walks the header + separator + however
+// many further `|`-delimited body rows follow directly after.
+function parseTable(lines: string[], start: number): { html: string; next: number } {
+  const headers = splitTableRow(lines[start]!);
+  const rows: string[][] = [];
+  let i = start + 2;
+  while (i < lines.length && TABLE_ROW_RE.test(lines[i]!)) {
+    rows.push(splitTableRow(lines[i]!));
+    i++;
+  }
+  const thead = `<thead><tr>${headers.map((h) => `<th>${renderInline(h)}</th>`).join('')}</tr></thead>`;
+  const tbody = `<tbody>${rows
+    .map((r) => `<tr>${r.map((c) => `<td>${renderInline(c)}</td>`).join('')}</tr>`)
+    .join('')}</tbody>`;
+  return { html: `<table>${thead}${tbody}</table>`, next: i };
+}
+
 // Inline-only entry point — for text that's already known to be a single
 // flattened line (no headers/lists/fences/blockquotes of its own), e.g.
 // `EngineStatusEvidence.excerpt` (server/api/engine-status's own
@@ -239,6 +283,13 @@ export function renderMarkdown(md: string): string {
       continue;
     }
 
+    if (TABLE_ROW_RE.test(line) && lines[i + 1] !== undefined && TABLE_SEP_RE.test(lines[i + 1]!)) {
+      const { html, next } = parseTable(lines, i);
+      out.push(html);
+      i = next;
+      continue;
+    }
+
     const heading = line.match(HEADING_RE);
     if (heading) {
       const level = heading[1]!.length;
@@ -273,7 +324,8 @@ export function renderMarkdown(md: string): string {
       !FENCE_OPEN_RE.test(lines[i]!) &&
       !HEADING_RE.test(lines[i]!) &&
       !QUOTE_RE.test(lines[i]!) &&
-      !HR_RE.test(lines[i]!)
+      !HR_RE.test(lines[i]!) &&
+      !(TABLE_ROW_RE.test(lines[i]!) && lines[i + 1] !== undefined && TABLE_SEP_RE.test(lines[i + 1]!))
     ) {
       paraLines.push(lines[i]!);
       i++;

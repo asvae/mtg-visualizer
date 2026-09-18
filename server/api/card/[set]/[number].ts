@@ -303,6 +303,28 @@ interface FunctionalModelData {
   // which is synced across every set, not just `fin`) — see
   // `EnrichedCardInteractionCategory` below.
   cardInteractions: EnrichedCardInteractionCategory[];
+  // **`fdn`-only, 2026-09-19** — this card's own `functional-model/
+  // fdn-cards/<slug>/NOTES.md` raw content, when one exists — the
+  // established convention (as of this session) for where an FDN card's
+  // authoring-history/reasoning prose lives (a `definition.ts` stays
+  // readable for a human reviewer; the "why"/param-audit/agent-
+  // communication content goes here instead — see
+  // `functional-model/fdn-cards/exemplar-of-light/NOTES.md` for a real,
+  // current example). A normal, git-tracked, checked-in project file — NOT
+  // the dev-only/gitignored-checkout `forgeScriptResult` pattern
+  // (`GET /api/forge-script`) this otherwise superficially resembles, so
+  // there's no NODE_ENV/dev-only gate on this field itself (though it's
+  // still only ever populated by `loadFdnFunctionalModel`, which IS
+  // dev-only for unrelated reasons — see that function's own header — so in
+  // practice this is dev-only anyway today, same as every other `fdn`-only
+  // field here). `null` when the file doesn't exist — the common case: most
+  // FDN cards that have entered the pipeline don't have one yet, and this
+  // is always `null` for a `fin` entry (that set has no NOTES.md
+  // convention at all). Absence is expected and unremarkable, not an
+  // error — same "untracked = nothing to show" posture every other
+  // optional per-card file on this route already takes
+  // (progress.json/verified-snapshot.json/pipeline-status.json).
+  notes: string | null;
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -520,6 +542,10 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       // `fin`-only fields never populate this `fdn`-only field either — see
       // `FunctionalModelData.cardInteractions`'s own doc comment.
       cardInteractions: [],
+      // `fin`-only fields never populate this `fdn`-only field either — see
+      // `FunctionalModelData.notes`'s own doc comment (no NOTES.md
+      // convention exists for `fin` cards at all).
+      notes: null,
       // Precomputed at `npm run sync:fm-bundle` build time (scripts/
       // build-fm-bundle.mjs, same classifyCardStatus/computeTextCoverage
       // recipe as the dev branch below and compute-card-status.mjs) —
@@ -609,6 +635,7 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       slug: null,
       oracleText: null,
       cardInteractions: [],
+      notes: null,
     };
   } catch {
     data = null;
@@ -758,6 +785,14 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
   const definition = pool.find((d) => d.name === name);
   const rawCardInteractions = definition ? computeCardInteractions(definition, pool, root) : [];
   const cardInteractions = await enrichCardInteractions(rawCardInteractions, name);
+  // See `FunctionalModelData.notes`'s own doc comment — a normal, optional,
+  // git-tracked file, `null` when absent (most of the pool today).
+  let notes: string | null = null;
+  try {
+    notes = readFileSync(join(root, 'functional-model', 'fdn-cards', slug, 'NOTES.md'), 'utf8');
+  } catch {
+    // No NOTES.md for this card yet — the common case.
+  }
   return {
     source,
     synergy: null,
@@ -775,6 +810,7 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
     slug,
     oracleText,
     cardInteractions,
+    notes,
   };
 }
 

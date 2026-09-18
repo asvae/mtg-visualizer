@@ -959,8 +959,13 @@ export function useGraphStore() {
   // offered for either card kind whenever `GET /api/forge-script` reports a
   // local checkout is present (CardDetailTabs.vue's own `forgeScriptAvailable`
   // gate); see `server/utils/forgeScript.ts`'s own header for the dev-only/
-  // GPL-safety posture.
-  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition', 'forgeScript'] as const;
+  // GPL-safety posture. `'notes'` (2026-09-19, same day, later still) — this
+  // card's own real, checked-in `functional-model/fdn-cards/<slug>/NOTES.md`,
+  // offered whenever one exists (`CardDetailTabs.vue`'s own `notesAvailable`
+  // gate) — a NORMAL project file, not dev-only/GPL-gated like Forge Script,
+  // but still absent for most cards today (every `fin` card, plus any `fdn`
+  // card that hasn't gotten one yet), same "offered conditionally" shape.
+  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition', 'notes', 'forgeScript'] as const;
   type FunctionalModelTab = (typeof FUNCTIONAL_MODEL_TABS)[number];
   let savedFunctionalModelTab: FunctionalModelTab = 'facts';
   try {

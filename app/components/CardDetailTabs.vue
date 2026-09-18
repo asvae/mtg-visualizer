@@ -1197,9 +1197,24 @@ if (import.meta.dev) {
 }
 const forgeScriptAvailable = computed(() => import.meta.dev && !!forgeScriptResult.value?.available);
 
+// Notes tab (2026-09-19) — this card's own `functional-model/fdn-cards/
+// <slug>/NOTES.md`, when one exists (`FunctionalModelData.notes`, see that
+// field's own doc comment in server/api/card/[set]/[number].ts for the full
+// "why this file exists" convention). Unlike Forge Script, this is a
+// normal, always-present-when-served field (no separate `$fetch`/loading
+// state of its own) — the server route already read the file synchronously
+// alongside everything else this component gets in one shot, so this is
+// just a computed over `props.data`, same as `synergy`/`cardJson` above.
+// Gates the TAB'S OWN EXISTENCE the same "absent = no tab, not an empty
+// one" call this file already made for Scenarios (`scenariosCount > 0`) —
+// most cards (every `fin` card, and any `fdn` card that hasn't gotten a
+// NOTES.md yet) have nothing here, and a tab that can only ever open onto
+// nothing isn't a real affordance.
+const notesAvailable = computed(() => !!props.data.functionalModel?.notes);
+
 interface FunctionalModelTabItem {
   label: string;
-  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'forgeScript';
+  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript';
   badge?: number;
 }
 const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
@@ -1207,6 +1222,7 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
     ? [
         ...(scenariosCount.value > 0 ? [{ label: 'Scenarios', value: 'scenarios' as const, badge: scenariosCount.value || undefined }] : []),
         { label: 'Card Definition', value: 'definition' as const },
+        ...(notesAvailable.value ? [{ label: 'Notes', value: 'notes' as const }] : []),
         ...(forgeScriptAvailable.value ? [{ label: 'Forge Script', value: 'forgeScript' as const }] : []),
       ]
     : [
@@ -1215,6 +1231,7 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
         { label: 'Facts Json', value: 'json' as const },
         { label: 'Card Json', value: 'cardJson' as const },
         { label: 'Card Definition', value: 'definition' as const },
+        ...(notesAvailable.value ? [{ label: 'Notes', value: 'notes' as const }] : []),
         ...(forgeScriptAvailable.value ? [{ label: 'Forge Script', value: 'forgeScript' as const }] : []),
       ],
 );
@@ -1249,16 +1266,17 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
 // own sensible default (`'definition'` for `isFdn`, `'facts'` otherwise) —
 // read-only, never written back, so a user who genuinely prefers Scenarios
 // still resumes there the next time they land on a card that has some.
-const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'forgeScript'>({
+const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript'>({
   get: () => {
     const stored = store.functionalModelTab.value;
-    // `'forgeScript'` widened in alongside `'scenarios'` (2026-09-19) — both
-    // are real tabs `functionalModelTabs` can offer for an `fdn` card (see
-    // that computed's own `isFdn` branch above), so a stored `'forgeScript'`
-    // value must survive this fallback the same way `'scenarios'` already
+    // `'forgeScript'` widened in alongside `'scenarios'` (2026-09-19), then
+    // `'notes'` widened in the same day, later still — all three are real
+    // tabs `functionalModelTabs` can offer for an `fdn` card (see that
+    // computed's own `isFdn` branch above), so a stored value of any of
+    // them must survive this fallback the same way `'scenarios'` already
     // does, rather than being forced back to `'definition'` every time an
     // FDN card loads.
-    if (isFdn.value && stored !== 'scenarios' && stored !== 'forgeScript') return 'definition';
+    if (isFdn.value && stored !== 'scenarios' && stored !== 'forgeScript' && stored !== 'notes') return 'definition';
     if (stored === 'scenarios' && scenariosCount.value === 0) return isFdn.value ? 'definition' : 'facts';
     // A stored `'forgeScript'` value is only meaningful while the CURRENT
     // card's own tab strip actually offers it (`forgeScriptAvailable`) —
@@ -1267,6 +1285,9 @@ const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJ
     // with a Forge match to one without doesn't land on an empty `v-else-if`
     // branch with no visible tab selected.
     if (stored === 'forgeScript' && !forgeScriptAvailable.value) return isFdn.value ? 'definition' : 'facts';
+    // Same guard, sibling case, for a stored `'notes'` value on a card with
+    // no NOTES.md of its own — see `notesAvailable`'s own doc comment.
+    if (stored === 'notes' && !notesAvailable.value) return isFdn.value ? 'definition' : 'facts';
     return stored;
   },
   set: (v) => {
@@ -2072,6 +2093,21 @@ watch(
       <JsonHighlight
         :json="cardJson ?? ''"
         class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-2"
+      />
+    </template>
+
+    <!-- Notes — this card's own real, checked-in functional-model/fdn-cards/
+         <slug>/NOTES.md (see `notesAvailable`'s own doc comment), rendered
+         as actual Markdown (MarkdownView.vue) since it's real prose meant to
+         be read, unlike Forge Script's raw DSL dump just below. Only ever
+         reachable when `notesAvailable` is true (see `functionalModelTabs`/
+         `functionalModelTabValue` above) — `data.functionalModel.notes` is
+         guaranteed non-null here, but the `?? ''` fallback stays anyway as
+         cheap insurance rather than a non-null assertion. -->
+    <template v-else-if="functionalModelTabValue === 'notes'">
+      <MarkdownView
+        :markdown="data.functionalModel.notes ?? ''"
+        class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-3"
       />
     </template>
 
