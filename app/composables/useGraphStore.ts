@@ -952,7 +952,12 @@ export function useGraphStore() {
   // store outlives the page component; see graph.vue's layout-level provide),
   // AND persisted to localStorage, same sanitize-against-a-stale-value
   // reasoning as gravityMode above.
-  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition'] as const;
+  // `'sinks'` (2026-09-18, later same day) — FDN's own per-card
+  // sink-ATTACHMENT tab (CardDetailTabs.vue's `isFdn` tab strip); a FIN card
+  // never offers it, same as `'definition'` being technically selectable
+  // there too — this list is a flat superset across both card kinds, not a
+  // per-kind union, same convention already established for the other four.
+  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition', 'sinks'] as const;
   type FunctionalModelTab = (typeof FUNCTIONAL_MODEL_TABS)[number];
   let savedFunctionalModelTab: FunctionalModelTab = 'facts';
   try {

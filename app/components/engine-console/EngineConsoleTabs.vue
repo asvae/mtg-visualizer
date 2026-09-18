@@ -19,7 +19,14 @@
 //     link here. `/app/keywords` (the older standalone route this tab's
 //     content duplicates) is ALSO still left in place/linked from
 //     AppHeader.vue, untouched by this reshuffle either.
-// New primary order: Cards | Predicates | Features.
+// New primary order: Cards | Predicates | Features | Sinks.
+//
+// 2026-09-18, later same day: added "Sinks" (`/app/engine/sinks`, the
+// shared sink-CATALOG review axis — genuinely different from Predicates'
+// own sink-derivation-PREDICATE axis, see that page's own header),
+// appended after Features per this task's own "your call, append after
+// Features unless a stronger reason" instruction — still ahead of the
+// Keywords overflow trigger.
 import { computed } from 'vue';
 
 const route = useRoute();
@@ -28,6 +35,7 @@ const TABS = [
   { label: 'Cards', to: '/app/engine/cards', match: '/app/engine/cards' },
   { label: 'Predicates', to: '/app/engine/predicates', match: '/app/engine/predicates' },
   { label: 'Features', to: '/app/engine/features', match: '/app/engine/features' },
+  { label: 'Sinks', to: '/app/engine/sinks', match: '/app/engine/sinks' },
 ];
 
 const activeTo = computed(() => TABS.find((t) => route.path.startsWith(t.match))?.to);

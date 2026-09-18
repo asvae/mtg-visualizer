@@ -3792,3 +3792,75 @@ worth remembering the pitfalls before re-deriving them:
     concurrent `engine` session had `functional-model/ENGINE_GAPS.md` and
     `functional-model/engine.test.ts` mid-edit throughout this task; left
     both alone.
+
+- 2026-09-18, new "Sinks" engine-console tab (`app/pages/app/engine/sinks/
+  [[slug]].vue`) for the sink-CATALOG review axis (`functional-model/
+  sink-catalog-status.ts`, foundation landed in `a6bcb4f` — genuinely
+  different from Predicates' sink-derivation-PREDICATE axis: catalog
+  entries are the shared, reviewed `SinkQuery` list itself, not
+  engine-automation mechanisms). Built by mirroring Predicates
+  (`predicates/[[slug]].vue` + `server/api/sink-derivations/*`)
+  byte-for-byte per the task's own instruction, including its
+  `[[slug]].vue` URL-deep-linking convention — this axis has no separate
+  `key`/`slug` split the way sink-derivations does, so `slug` alone is
+  reused everywhere (route param, `keyOf`, review-overlay identity, POST
+  body field name).
+  - New: `server/api/sink-catalog/index.get.ts` (GET, mirrors
+    `sink-derivations/index.get.ts` — combines
+    `computeSinkCatalogStatus`+`computeSinkCatalogColor` with a live
+    `SINK_CATALOG` lookup for the full `query` object, since
+    `computeSinkCatalogStatus` itself only surfaces `category`; plus the
+    same 3-file `sourceFiles` inlining pattern — catalog entry `.ts` /
+    `.corpus.json` / `.test.ts`), `server/api/sink-catalog/review.post.ts`
+    (POST, mirrors `sink-derivations/review.post.ts` exactly: body
+    `{slug, verdict, note?, reviewedBy?}`, same reject-needs-note /
+    confirm-reject-only-on-blue-baseline / fingerprint-on-confirm / clear
+    -via-`verdict:null` rules, writes `functional-model/
+    sink-catalog-reviews.json`), `app/pages/app/engine/sinks/
+    [[slug]].vue` (page).
+  - Only real UI-content difference from Predicates: no `expectedSinkShapes`
+    equivalent — added a "Query" section instead, rendering the entry's
+    full curated `SinkQuery` as pretty-printed JSON through the SAME
+    `EngineConsoleCodeSection`/`JsonHighlight` pairing Predicates' corpus-
+    manifest panel already uses, via a synthetic `{path:'query', exists:
+    true, content: JSON.stringify(...), truncated:false}` object (the
+    query is a live in-memory value, never a file on disk) — `default-open`
+    since it's the one section a reviewer needs to see immediately, unlike
+    the collapsed source panels below it.
+  - Deliberately did NOT add `hide-nav` here despite only 2 real entries
+    today (unlike Predicates' own 4-mechanism `hide-nav`) — the catalog is
+    explicitly designed to grow "much faster/more organically"
+    (`catalog/index.ts`'s own header), so the visible position-label/
+    chevron row earns its keep once this list is no longer tiny; worth
+    revisiting if it turns out wrong.
+  - `EngineConsoleTabs.vue`: added "Sinks" after Features, before the
+    Keywords overflow trigger (own judgment call per the task's own "your
+    call on ordering" — new primary order Cards | Predicates | Features |
+    Sinks).
+  - Verified LIVE via a real Playwright/Chromium session against an
+    already-running dev server (peer session's own, same "another Nuxt dev
+    server already running" situation prior tasks this same day hit):
+    tab bar order correct; sidebar lists both real entries alphabetically
+    (`Graveyard fodder`, `Lifegain`), both genuinely `blue`/Verified with
+    real 4/4 corpus-passing counts and real query JSON
+    (`{category:'Lifegain', event:'lifegain', controller:'you'}` etc.);
+    clicking a row and deep-linking via URL both select the right entry
+    and update the address bar; Confirm -> reload (persists) -> Clear
+    review (back to Verified) round-tripped correctly on `lifegain`;
+    Reject-with-note -> reload (persists) -> Confirm (the "confirm-after
+    -reject must work" rule) -> Clear review round-tripped correctly on
+    `graveyard-fodder`; zero console/page errors throughout. Left
+    `functional-model/sink-catalog-reviews.json` back at `{}` after
+    testing (same real, checked-in-by-convention shape
+    `sink-derivation-reviews.json`/`engine-status-reviews.json` already
+    have, just not yet committed by the user).
+  - `npx vue-tsc --noEmit -p .`: zero errors. `npx nuxi typecheck`: same
+    pre-existing baseline error set already on file above
+    (`CardDetailTabs.vue`, `card-status.ts`/`card.ts`/`mana.ts`,
+    `tokens/by-key.ts`) — zero new errors from this task's files. `npx
+    vitest run app/`: 71/71 passed, no regressions. Didn't touch
+    `CardDetailTabs.vue`, `functional-model/sink-attachment.ts`,
+    `functional-model/fdn-cards/*/sinks.json`, or `server/api/
+    fdn-cards/**` (a concurrent `card` session had several of those
+    mid-edit throughout this task, confirmed via `git status` before/
+    after — left every one of them alone).

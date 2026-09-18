@@ -34,6 +34,8 @@ import { isStandardPrint } from '../../../utils/isStandardPrint';
 import type { CardStatusEntry } from '../../../../functional-model/card-status';
 import { readPipelineStatus, effectivePipelineStatus } from '../../../../functional-model/pipeline-status';
 import type { PipelineStatusFile } from '../../../../functional-model/pipeline-status';
+import { readSinkAttachment, effectiveSinkAttachmentStatus } from '../../../../functional-model/sink-attachment';
+import type { SinkAttachmentFile, SinkAttachmentStatus } from '../../../../functional-model/sink-attachment';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
@@ -277,6 +279,22 @@ interface FunctionalModelData {
   // real text to show" empty state a `fin` card's own oracle-text-less
   // face already degrades to under `FunctionalModelText.vue`.
   oracleText: string | null;
+  // **`fdn`-only, 2026-09-18, later same day** — this card's own per-card
+  // sink-ATTACHMENT file (`functional-model/fdn-cards/<slug>/sinks.json`,
+  // `functional-model/sink-attachment.ts` — see `.claude/contracts/
+  // card-schema.md`'s "Sink CATALOG..." section), served RAW/verbatim (no
+  // `status` substitution the way `pipelineStatus` above gets — this file
+  // has no such field to begin with; `sinkAttachmentStatus` right below is
+  // the drift-aware computed read). `null` when no `sinks.json` exists yet
+  // (the common case — the attachment step hasn't been performed for this
+  // card at all), or trivially for any `fin` entry.
+  sinkAttachment: SinkAttachmentFile | null;
+  // The drift-aware status a consumer should actually trust
+  // (`effectiveSinkAttachmentStatus`) — `'not-started'` when
+  // `sinkAttachment` above is `null`, same real states that function
+  // documents otherwise. Always `null` for a `fin` entry (this axis is
+  // `fdn`-only, same posture as `pipelineStatus`/`slug`/`oracleText` above).
+  sinkAttachmentStatus: SinkAttachmentStatus | null;
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -485,12 +503,14 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       reviewSnapshotAt: entry.reviewSnapshotAt ?? null,
       continuousKeywordGrants: front || back ? { front, back } : null,
       annotatedNonFactSpans: entry.annotatedNonFactSpans ?? [],
-      // `fin`-only fields never populate these three `fdn`-only fields —
-      // see `FunctionalModelData.pipelineStatus`/`.slug`/`.oracleText`'s
-      // own doc comments.
+      // `fin`-only fields never populate these five `fdn`-only fields — see
+      // `FunctionalModelData.pipelineStatus`/`.slug`/`.oracleText`/
+      // `.sinkAttachment`/`.sinkAttachmentStatus`'s own doc comments.
       pipelineStatus: null,
       slug: null,
       oracleText: null,
+      sinkAttachment: null,
+      sinkAttachmentStatus: null,
       // Precomputed at `npm run sync:fm-bundle` build time (scripts/
       // build-fm-bundle.mjs, same classifyCardStatus/computeTextCoverage
       // recipe as the dev branch below and compute-card-status.mjs) —
@@ -563,7 +583,25 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
     // `fin`-only branch — never populates the three `fdn`-only fields, see
     // `FunctionalModelData.pipelineStatus`/`.slug`/`.oracleText`'s own doc
     // comments.
-    data = { source, synergy, traces, annotatedCard, review, reviewCaveat, scenariosReview, interactionsReview, reviewSnapshotAt, continuousKeywordGrants, annotatedNonFactSpans, cardStatus, pipelineStatus: null, slug: null, oracleText: null };
+    data = {
+      source,
+      synergy,
+      traces,
+      annotatedCard,
+      review,
+      reviewCaveat,
+      scenariosReview,
+      interactionsReview,
+      reviewSnapshotAt,
+      continuousKeywordGrants,
+      annotatedNonFactSpans,
+      cardStatus,
+      pipelineStatus: null,
+      slug: null,
+      oracleText: null,
+      sinkAttachment: null,
+      sinkAttachmentStatus: null,
+    };
   } catch {
     data = null;
   }
@@ -633,6 +671,14 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
   // of real `\n`s stays untouched; a blank line separates multiple faces
   // (see `FunctionalModelData.oracleText`'s own doc comment).
   const oracleText = faces.map((f) => f.oracleText).filter((t) => t.trim().length > 0).join('\n\n') || null;
+  // Same "no file at all" real, transparent state as `pipelineStatus` above
+  // — `readSinkAttachment` returns `undefined` for it, served as `null`.
+  // `effectiveSinkAttachmentStatus` is always computable regardless (its
+  // own `'not-started'` state covers exactly this case), unlike
+  // `effectivePipelineStatus` which needs a stored file to have anything to
+  // fold drift-detection onto.
+  const sinkAttachment = readSinkAttachment(slug, root) ?? null;
+  const sinkAttachmentStatus = effectiveSinkAttachmentStatus(slug, root);
   return {
     source,
     synergy: null,
@@ -649,6 +695,8 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
     pipelineStatus,
     slug,
     oracleText,
+    sinkAttachment,
+    sinkAttachmentStatus,
   };
 }
 

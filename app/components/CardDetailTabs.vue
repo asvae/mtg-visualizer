@@ -42,8 +42,12 @@ import type { CardStatusBucket } from '../lib/cardStatus';
 import { cardStatusBaseline } from '../../functional-model/card-status';
 import { emitReviewStatusChanged } from '../composables/useReviewStatusBus';
 import { PIPELINE_STATUS_META } from '../lib/pipelineStatus';
+import { SINK_ATTACHMENT_STATUS_META } from '../lib/sinkAttachmentStatus';
 import { statusBadgeStyle } from '../lib/badgeColor';
 import type { PipelineStatusFile } from '../../functional-model/pipeline-status';
+import type { SinkAttachmentFile, SinkAttachmentStatus } from '../../functional-model/sink-attachment';
+import { SINK_CATALOG } from '../../functional-model/sink-model/catalog/index';
+import type { SinkCatalogEntry } from '../../functional-model/sink-model/catalog/index';
 
 // Debug column showing each row's raw `Fact` JSON, so it's inspectable
 // without switching to the separate JSON tab or opening devtools. On by
@@ -105,6 +109,25 @@ const pipelineStatusOverride = ref<PipelineStatusFile | null>(null);
 const pipelineStatusEntry = computed<PipelineStatusFile | null>(() => pipelineStatusOverride.value ?? props.data.functionalModel?.pipelineStatus ?? null);
 const pipelineStatusColor = computed(() => pipelineStatusEntry.value?.status ?? 'gray');
 const pipelineStatusMeta = computed(() => PIPELINE_STATUS_META[pipelineStatusColor.value]);
+
+// FDN's own per-card sink-ATTACHMENT axis (`functional-model/
+// sink-attachment.ts`) — same-tab optimistic overlay + editable draft
+// selection, declared up here (not alongside the rest of the Sinks-tab UI
+// logic further down this file) for the exact same synchronous-immediate-
+// watch TDZ reason `pipelineStatusOverride` above already documents (the
+// combined `watch(() => props.data.functionalModel, ..., {immediate:true})`
+// below resets/reinitializes these too). `selectedSinkSlugs` is the
+// user's own currently-EDITED draft picker selection (may legitimately
+// differ from the last-saved `sinkAttachmentEntry.attachedSlugs` until
+// "Mark attachment reviewed" is clicked) — never written to directly by a
+// server response, only by `toggleSinkSlug`/the reset logic below.
+const sinkAttachmentOverride = ref<SinkAttachmentFile | null>(null);
+const sinkAttachmentStatusOverride = ref<SinkAttachmentStatus | null>(null);
+const sinkAttachmentEntry = computed<SinkAttachmentFile | null>(() => sinkAttachmentOverride.value ?? props.data.functionalModel?.sinkAttachment ?? null);
+const sinkAttachmentStatus = computed<SinkAttachmentStatus>(
+  () => sinkAttachmentStatusOverride.value ?? props.data.functionalModel?.sinkAttachmentStatus ?? 'not-started',
+);
+const selectedSinkSlugs = ref<string[]>([]);
 
 // Per-card (not per-face) fact-authoring status badge — LIVE, computed
 // fresh per request by the API route itself (server/api/card/[set]/
@@ -974,6 +997,15 @@ watch(
     // Same reasoning, for the FDN pipeline-status axis's own optimistic
     // overlay (see pipelineStatusOverride's own doc comment above).
     pipelineStatusOverride.value = null;
+    // Same reasoning, for the FDN sink-attachment axis's own optimistic
+    // overlay + editable draft selection (see sinkAttachmentOverride's own
+    // doc comment above) — the draft picker resets to whatever this
+    // genuinely new card's own last-saved attachment already has (`[]` for
+    // "no sinks.json at all yet", the same real "not started" case as any
+    // other attachment field here).
+    sinkAttachmentOverride.value = null;
+    sinkAttachmentStatusOverride.value = null;
+    selectedSinkSlugs.value = fm?.sinkAttachment?.attachedSlugs ? [...fm.sinkAttachment.attachedSlugs] : [];
   },
   { immediate: true }
 );
@@ -1094,10 +1126,27 @@ const scenariosCount = computed(() => props.data.functionalModel?.traces?.length
 // below has its own matching read-only fallback for when the user's stored
 // tab preference happens to be `'scenarios'` on a card that doesn't offer
 // it right now.
-const functionalModelTabs = computed(() =>
+// Explicit item type (rather than letting TS infer one from the ternary
+// below) — added 2026-09-18, later still, alongside the new `'sinks'`
+// branch: without it, TS's generic-component-prop inference for `UTabs`'s
+// `:items` binding collapses the two ternary branches' own slightly
+// differently-shaped literal-array types into a union that no longer
+// type-checks against itself once a third distinct item shape (`'sinks'`)
+// is in the mix — a real, narrow TS inference fragility, not a sign
+// anything about the runtime shape is wrong. `badge` is optional/`number`
+// on every branch now (both `undefined`-only members already tolerated
+// this via `item.badge || undefined`), so one shared interface covers
+// every real item any branch below produces.
+interface FunctionalModelTabItem {
+  label: string;
+  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'sinks';
+  badge?: number;
+}
+const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
   isFdn.value
     ? [
         ...(scenariosCount.value > 0 ? [{ label: 'Scenarios', value: 'scenarios' as const, badge: scenariosCount.value || undefined }] : []),
+        { label: 'Sinks', value: 'sinks' as const, badge: sinkAttachmentEntry.value?.attachedSlugs.length || undefined },
         { label: 'Card Definition', value: 'definition' as const },
       ]
     : [
@@ -1139,10 +1188,10 @@ const functionalModelTabs = computed(() =>
 // own sensible default (`'definition'` for `isFdn`, `'facts'` otherwise) —
 // read-only, never written back, so a user who genuinely prefers Scenarios
 // still resumes there the next time they land on a card that has some.
-const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition'>({
+const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'sinks'>({
   get: () => {
     const stored = store.functionalModelTab.value;
-    if (isFdn.value && stored !== 'scenarios') return 'definition';
+    if (isFdn.value && stored !== 'scenarios' && stored !== 'sinks') return 'definition';
     if (stored === 'scenarios' && scenariosCount.value === 0) return isFdn.value ? 'definition' : 'facts';
     return stored;
   },
@@ -1416,6 +1465,92 @@ watch(
     pipelineStatusOverride.value = null;
   },
 );
+
+// --- FDN sink ATTACHMENT tab (`functional-model/sink-attachment.ts`,
+// `SINK_CATALOG` from `functional-model/sink-model/catalog/index`) — a
+// genuinely EARLIER, separate step from the Pipeline-status Confirm/Reject
+// block above (see `.claude/contracts/card-schema.md`'s "Sink CATALOG..."
+// section, and `sink-attachment.ts`'s own header): "which of the shared
+// catalog's sinks does THIS card's author determine it genuinely wants, and
+// mark that determination explicitly done" — a card can legitimately want
+// ZERO sinks (Serra Angel's own real, `reviewed: true` shape), so an empty
+// `selectedSinkSlugs` is never treated as "nothing to save."
+//
+// `canEditSinkAttachment`: any real FDN card that's actually entered the
+// pipeline (a real `functional-model/fdn-cards/<slug>/definition.ts`, same
+// precondition `POST /api/fdn-cards/:slug/sinks` itself 404s on) —
+// deliberately NOT gated on `pipelineStatusColor`/`effectivePipelineStatus`
+// the way `canReviewPipeline` above is: the attachment step is meant to
+// happen independently of (often before) a card's own schema-gate status,
+// not as a second review action layered on top of an already-`blue` card.
+const canEditSinkAttachment = computed(() => isFdn.value && !!props.data.functionalModel?.slug);
+
+function isSinkSlugSelected(slug: string): boolean {
+  return selectedSinkSlugs.value.includes(slug);
+}
+function toggleSinkSlug(slug: string) {
+  selectedSinkSlugs.value = isSinkSlugSelected(slug) ? selectedSinkSlugs.value.filter((s) => s !== slug) : [...selectedSinkSlugs.value, slug];
+}
+
+// Real, order-insensitive "does the draft selection differ from the
+// last-saved attachment" check — drives the Save button's own
+// enabled/disabled state (and a small "unsaved changes" note) rather than
+// letting it always be clickable regardless of whether there's anything new
+// to persist. Compared as sets, not arrays, since re-ordering the same
+// slugs is not a real change worth re-saving over.
+const sinkAttachmentDirty = computed(() => {
+  const saved = new Set(sinkAttachmentEntry.value?.attachedSlugs ?? []);
+  const draft = new Set(selectedSinkSlugs.value);
+  return saved.size !== draft.size || [...draft].some((s) => !saved.has(s));
+});
+
+// Compact, human-readable structural summary of a catalog entry's own
+// `SinkQuery` — reuses `factConditions`/`describeFact` (functional-model/
+// synergy.ts, `app/lib/factConditions.ts` — the SAME rendering vocabulary
+// the Facts tab's own rows already use), rather than a hand-rolled JSON
+// dump, since `SinkQuery` is structurally just `Fact` minus `annotations`/
+// `provenance`/`role`/`triggeredBy` (`sink-query.ts`'s own doc comment) —
+// every field either function inspects is either absent (tolerated; both
+// already handle an unset `role`/`recipient`/etc.) or present with the
+// exact same meaning. `entry.query.category` (the catalog's own curated
+// mechanic name, e.g. "Lifegain") is shown separately as the row's primary
+// label — this summary is the secondary "what does it actually check"
+// detail, same label+conditions split `factLabel`/`factConditions` already
+// establish for a real Fact row.
+function sinkCatalogSummary(entry: SinkCatalogEntry): string {
+  const fact = entry.query as unknown as Fact;
+  const conditions = factConditions(fact);
+  return conditions || describeFact(fact) || '(no constraints)';
+}
+
+const sinkAttachmentSaving = ref(false);
+async function saveSinkAttachment() {
+  const slug = props.data.functionalModel?.slug;
+  if (!slug || sinkAttachmentSaving.value) return;
+  sinkAttachmentSaving.value = true;
+  try {
+    const updated = await $fetch<SinkAttachmentFile>(`/api/fdn-cards/${slug}/sinks`, {
+      method: 'POST',
+      body: { attachedSlugs: selectedSinkSlugs.value },
+    });
+    sinkAttachmentOverride.value = updated;
+    // A freshly-written attachment always stamps `reviewedFingerprint` off
+    // this card's CURRENT `definition.ts` (`markSinkAttachmentReviewed`) —
+    // so it's genuinely `'complete'` the instant this response lands, no
+    // need to wait for a full page reload to reflect that.
+    sinkAttachmentStatusOverride.value = 'complete';
+    selectedSinkSlugs.value = [...updated.attachedSlugs];
+  } catch (err: any) {
+    toast.add({
+      title: 'Sink attachment not saved',
+      description: err?.data?.error ?? err?.data?.statusMessage ?? err?.message ?? 'Request failed.',
+      color: 'error',
+      icon: 'i-lucide-triangle-alert',
+    });
+  } finally {
+    sinkAttachmentSaving.value = false;
+  }
+}
 </script>
 
 <template>
@@ -1925,6 +2060,65 @@ watch(
         :continuous-keyword-grants="data.functionalModel.continuousKeywordGrants"
       />
       <div v-else class="text-xs text-muted italic">No scenarios recorded.</div>
+    </template>
+
+    <!-- FDN's own per-card sink-ATTACHMENT tab (`functional-model/
+         sink-attachment.ts` + `SINK_CATALOG`) — see this file's own
+         `canEditSinkAttachment`/`saveSinkAttachment` doc comments. A
+         genuinely different, EARLIER step from the Pipeline status block's
+         Confirm/Reject above: which shared catalog sinks does THIS card
+         want, explicitly marked done (zero is a real, legitimate answer,
+         same as Serra Angel's own on-disk shape). -->
+    <template v-else-if="functionalModelTabValue === 'sinks'">
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Attachment status</span>
+        <UBadge :style="statusBadgeStyle(SINK_ATTACHMENT_STATUS_META[sinkAttachmentStatus].hex)" size="sm" variant="solid">
+          {{ SINK_ATTACHMENT_STATUS_META[sinkAttachmentStatus].label }}
+        </UBadge>
+        <span v-if="sinkAttachmentEntry?.reviewedAt" class="text-[11px] text-muted">as of {{ sinkAttachmentEntry.reviewedAt }}</span>
+      </div>
+      <p v-if="sinkAttachmentStatus === 're-review'" class="mt-1.5 text-[11px] leading-relaxed text-muted">
+        This card's <code class="rounded bg-surface px-1 py-0.5">definition.ts</code> has changed since attachment was last marked
+        reviewed — re-check the selection below and save again.
+      </p>
+      <p v-else-if="sinkAttachmentStatus === 'not-started'" class="mt-1.5 text-[11px] leading-relaxed text-muted italic">
+        Attachment hasn't been performed for this card yet — pick the catalog sinks it genuinely wants below (zero is a valid
+        answer for a card with no real synergy hooks) and save.
+      </p>
+
+      <ul class="mt-3 flex flex-col gap-1.5">
+        <li
+          v-for="entry in SINK_CATALOG"
+          :key="entry.slug"
+          class="flex items-start gap-2 rounded-md border border-border px-2.5 py-1.5 text-xs text-text"
+          :class="isSinkSlugSelected(entry.slug) ? 'bg-surface/60' : 'bg-panel'"
+        >
+          <input
+            :id="`sink-catalog-${entry.slug}`"
+            type="checkbox"
+            class="mt-0.5 shrink-0"
+            :disabled="!canEditSinkAttachment || sinkAttachmentSaving"
+            :checked="isSinkSlugSelected(entry.slug)"
+            @change="toggleSinkSlug(entry.slug)"
+          />
+          <label :for="`sink-catalog-${entry.slug}`" class="flex min-w-0 flex-col gap-0.5">
+            <span class="flex items-center gap-1.5">
+              <span class="font-medium">{{ entry.query.category }}</span>
+              <code class="rounded bg-surface px-1 py-0.5 text-[10px] text-muted">{{ entry.slug }}</code>
+            </span>
+            <span class="text-[11px] text-muted">{{ sinkCatalogSummary(entry) }}</span>
+          </label>
+        </li>
+        <li v-if="!SINK_CATALOG.length" class="text-xs text-muted italic">No catalog sinks exist yet.</li>
+      </ul>
+
+      <div v-if="canEditSinkAttachment" class="mt-3 flex items-center gap-2">
+        <UButton size="xs" color="success" variant="subtle" :disabled="sinkAttachmentSaving" :loading="sinkAttachmentSaving" @click="saveSinkAttachment">
+          Mark attachment reviewed
+        </UButton>
+        <span v-if="sinkAttachmentDirty" class="text-[11px] text-muted italic">unsaved changes</span>
+      </div>
+      <p v-else class="mt-3 text-[11px] text-muted italic">No functional-model/fdn-cards/&lt;slug&gt;/ folder for this card yet.</p>
     </template>
 
     <template v-else-if="functionalModelTabValue === 'json'">

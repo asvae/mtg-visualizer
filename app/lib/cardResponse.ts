@@ -15,6 +15,7 @@ import type { LogEntry, Scenario } from '../../functional-model/harness';
 import type { Fact } from '../../functional-model/synergy';
 import type { CardStatusEntry } from '../../functional-model/card-status';
 import type { PipelineStatusFile } from '../../functional-model/pipeline-status';
+import type { SinkAttachmentFile, SinkAttachmentStatus } from '../../functional-model/sink-attachment';
 
 export interface CardResponse {
   card: CardData;
@@ -60,6 +61,11 @@ export interface CardResponse {
     // `FunctionalModelData.oracleText` doc comment. Always `null` for a
     // `fin` entry (FIN already has its own richer `annotatedCard` path).
     oracleText: string | null;
+    // `fdn`-only, 2026-09-18, later same day — see server/api/card/[set]/
+    // [number].ts's own `FunctionalModelData.sinkAttachment`/
+    // `.sinkAttachmentStatus` doc comments. Always `null` for a `fin` entry.
+    sinkAttachment: SinkAttachmentFile | null;
+    sinkAttachmentStatus: SinkAttachmentStatus | null;
   } | null;
   interactions: EnrichedInteractionGroup[];
 }

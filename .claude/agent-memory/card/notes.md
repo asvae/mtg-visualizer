@@ -6906,3 +6906,93 @@ might diverge at some point in the future." Restored the STANDALONE PAGE
   right before finishing: those three show as changes I didn't make).
 - No contract mismatch found — pure page-routing/UI work, no engine-shape
   questions touched.
+
+## 2026-09-18, later still — Sink CATALOG/ATTACHMENT card-side wiring
+
+Built the `card`-side half of the sink-only-synergy experiment's
+catalog/attachment foundation (engine landed `functional-model/
+sink-attachment.ts`, `pipeline-status.ts`'s `blue` redefinition,
+`sink-model/catalog/*` in `a6bcb4f` just before this task).
+
+- New `server/api/fdn-cards/[slug]/sinks.post.ts` — `POST` body
+  `{ attachedSlugs: string[] }`, writes `functional-model/fdn-cards/<slug>/
+  sinks.json` via `markSinkAttachmentReviewed`+`writeSinkAttachment` (never
+  hand-rolled a second fingerprint scheme). 404 if no `definition.ts`
+  exists for the slug; 400 if `attachedSlugs` isn't a string array or
+  references an unknown `SINK_CATALOG` slug (`validateSinkAttachment`
+  reused, not reimplemented); dev-only (403 in production), same posture as
+  the sibling `review.post.ts`.
+- **Fixed the real, contract-flagged gap in `server/api/fdn-cards/[slug]/
+  review.post.ts`**: it re-runs the schema gate fresh but never checked
+  attachment completeness — added an `isSinkAttachmentComplete(slug, root)`
+  check right after the fresh gate passes, 400ing with a clear message if
+  not. Deliberately does NOT call `effectivePipelineStatus` directly against
+  the STORED file for this (that would break the route's own pre-existing
+  "reject after confirmed"/"confirm after rejected" support, since a stored
+  `yellow`/`green` is never `'blue'` under `effectivePipelineStatus`) — just
+  re-derives the same "schema-pass AND attachment-complete" rule against the
+  FRESH gate result instead. Live-verified: `helpful-hunter` (schema passes,
+  no `sinks.json`) correctly 400s on review; attaching `[]` sinks then makes
+  the *identical* review request succeed (`green`). Reverted the live test's
+  on-disk side effects (`helpful-hunter/sinks.json` removed,
+  `pipeline-status.json` restored via `git checkout`) before finishing —
+  don't re-break that card's "still gray, no attachment" demonstration state.
+- `FunctionalModelData` (`server/api/card/[set]/[number].ts`) gained two new
+  `fdn`-only fields: `sinkAttachment: SinkAttachmentFile | null` (raw file,
+  `readSinkAttachment`) and `sinkAttachmentStatus: SinkAttachmentStatus |
+  null` (`effectiveSinkAttachmentStatus`, always computable even with no
+  file — `'not-started'`). Both `null` for `fin`. Mirrored into the
+  hand-maintained `app/lib/cardResponse.ts` `CardResponse` interface too —
+  that file doesn't import the server route's own type, easy to forget.
+- New "Sinks" tab in `CardDetailTabs.vue`'s `isFdn` strip (now `Scenarios? /
+  Sinks / Card Definition`) — status badge (new `app/lib/
+  sinkAttachmentStatus.ts`, `SINK_ATTACHMENT_STATUS_META`, reuses the shared
+  gray/green/re-review color vocabulary rather than coining a 4th palette),
+  a checkbox picker over `SINK_CATALOG` (category label + slug + a
+  `factConditions`/`describeFact`-rendered structural summary — `SinkQuery`
+  is structurally `Fact` minus 4 fields, so this reuses the exact same
+  Facts-tab rendering vocabulary rather than a hand-rolled JSON dump), and
+  its own explicit "Mark attachment reviewed" button — deliberately
+  SEPARATE from the card-level pipeline-status Confirm/Reject block above it
+  (two different completion steps, per the task's own instruction). Added
+  `'sinks'` to `useGraphStore.ts`'s shared `FUNCTIONAL_MODEL_TABS`/
+  `functionalModelTabValue` union + fallback logic.
+- Real TS inference gotcha, fixed: adding the 3rd distinct FDN tab-item
+  literal shape (`'sinks'`) to the pre-existing `isFdn ? [...] : [...]`
+  ternary building `functionalModelTabs` broke `UTabs`'s generic `:items`
+  prop inference (a real, narrow fragility, not a runtime-shape problem) —
+  fixed by giving that computed an explicit `FunctionalModelTabItem[]`
+  return type instead of letting TS infer one from the ternary.
+- Live-verified (shared dev server, already running from a concurrent `ui`
+  session — same `:3000`, no conflict) via a throwaway Playwright script
+  (run from a copy inside the project root so `node_modules/playwright`
+  resolves, deleted after): `ajani-s-pridemate` → effective `blue`
+  ("Transcribed"), Sinks tab badge "1", Lifegain checked, Attachment status
+  "Attached"; `serra-angel` → effective `blue`, zero checked, still
+  "Attached" (the real zero-sink-but-complete case); `helpful-hunter` →
+  effective `gray` ("Not started" — same label `gray` already carries
+  elsewhere, not a bug), no Confirm/Reject buttons rendered (`canReviewPipeline`
+  already correctly gates off the EFFECTIVE status, no extra card-side fix
+  needed for point 4 — `effectivePipelineStatus` folds attachment
+  completeness in at the engine layer, and every consumer here already read
+  through it before this task). Clicking a checkbox flips draft state +
+  shows "unsaved changes" with zero disk writes until Save is clicked
+  (confirmed via `git status` before/after).
+- `npm run typecheck`: same pre-existing baseline errors only (confirmed via
+  `git stash` A/B — `CardStatusBucket` string-index issues at now-shifted
+  line numbers, `card-status.ts`/`card.ts`/`mana.ts`/`tokens/by-key.ts`,
+  none touched by this task); zero NEW errors after the `FunctionalModelTabItem`
+  fix. `npx vitest run`: same 5 pre-existing `tagging/` ENOENT failures
+  (historical-sets sweep's own in-progress files), otherwise clean.
+- Concurrent `ui`-agent work landed in the same working tree while this ran
+  (`EngineConsoleTabs.vue`, `app/pages/app/engine/sinks/**`,
+  `functional-model/sink-catalog-reviews.json`, `server/api/sink-catalog/**`,
+  `.claude/agent-memory/ui/notes.md`) — confirmed via `git status` I never
+  touched any of them, per this task's own "not yours" scope.
+- No contract mismatch found against `.claude/contracts/card-schema.md`'s
+  "Sink CATALOG..." section — it already correctly described the exact gap
+  this task closed; no orchestrator update needed there beyond someone
+  eventually striking the "not yet done" framing now that it's fixed (left
+  for the orchestrator/engine agent's own contract-maintenance pass, not
+  edited here since this agent only flags, doesn't author engine-owned
+  contract sections).
