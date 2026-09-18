@@ -29,10 +29,21 @@
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, Effect } from '../../card';
 import { matchesConsumerTriggerNames } from '../match-sink';
-import { countersPlus1Plus1 } from './counters-plus1plus1';
+import { CountersSink } from './families/counters';
 
 describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
-  const entry = countersPlus1Plus1;
+  // Built directly via the real `CountersSink` family factory rather than
+  // importing the pre-built production singleton (`counters-plus1plus1.ts`'s
+  // own `countersPlus1Plus1` export) — this test constructs its own instance
+  // so both the config AND the behavior it exercises are visible in one
+  // file. This config literal MUST match `counters-plus1plus1.ts`'s own
+  // real production config byte-for-byte, or this test silently stops
+  // testing the real production configuration.
+  const entry = CountersSink({
+    slug: 'counters-plus1plus1',
+    counterType: '+1/+1',
+    consumerTriggerNames: ['onCounterAdded'],
+  });
 
   it('SOURCE CANDIDATE: matches a plain self-targeted putCounter effect with counterType "+1/+1" (the real Exemplar of Light, FDN #11, shape)', () => {
     const card: CardDefinition = {

@@ -88,3 +88,28 @@ sinks review page.
 Full detail: `sink-model/SINK_MODEL_DESIGN.md`'s "SinkQuery becomes
 optional, `CountersSink` migrates off it" section;
 `.claude/contracts/card-schema.md` section 11.
+
+**2026-09-19 follow-up**: mocked `CardDefinition.name` values in
+`counters.test.ts` itself renamed to carry the Source/Sink Candidate
+terminology too (e.g. `'Mock Counter Creature'` → `'Mock Counter
+Source'`, `'Mock Counter Reactor'` → `'Mock Counter Sink'`; the DFC
+back-face fixture in the transform test → `'Mock Back Face Sink'`).
+Negative/discrimination fixtures (wrong counter type, wrong trigger
+name, no signal at all) deliberately keep plain names implying neither
+role (`'Mock Vanilla Creature'`, `'Mock Unrelated Reactor'`, etc.) —
+pure rename, zero assertion changes, 12/12 still pass.
+`battlefield-presence.test.ts` mocks are UNCHANGED (still the old
+`SinkQuery` mechanism, deliberately deferred, same as the open follow-up
+above).
+
+**2026-09-19, self-contained-test follow-up**: `counters.test.ts` no
+longer imports the pre-built production singleton `countersPlus1Plus1`
+from `counters-plus1plus1.ts` — user objected to a test reaching into
+another module for an opaque pre-built object. Now imports `CountersSink`
+(`families/counters.ts`) directly and builds its own `entry` in-file with
+an explicit config, commented as needing to stay byte-identical to
+`counters-plus1plus1.ts`'s own real config. `counters-plus1plus1.ts`
+itself untouched. Same drift risk applies to any future sibling family
+test that imports a singleton instead of calling its factory directly —
+worth checking `battlefield-presence.test.ts`/others if this pattern
+recurs.
