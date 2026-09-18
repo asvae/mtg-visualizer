@@ -2033,8 +2033,13 @@ watch(
     </ul>
   </div>
 
-  <!-- FDN's own real Interactions section — see `fdnInteractions`'s own doc
-       comment above for why this is a clearly-labeled, SEPARATE block from
+  <!-- FDN's own real "Sinks" section (labeled "Interactions" until
+       2026-09-18 — renamed per the user's own instruction: sharing a label
+       with the FIN panel below/above invited confusion between two
+       genuinely different mechanisms; the internal `fdnInteractions`
+       identifier is unchanged, only the visible label moved) — see
+       `fdnInteractions`'s own doc comment above for why this is a
+       clearly-labeled, SEPARATE block from
        the FIN-only panel above rather than a shared/generalized one.
        Category label + count + matching cards (self-inclusive), same
        "shaped like the graph's own node display" shape
@@ -2052,7 +2057,7 @@ watch(
        provenance vs. this mechanism's plain name-equality check). -->
   <div v-if="isFdn && fdnInteractions.length" class="mt-4 w-full max-w-full">
     <div class="mb-1 flex items-center gap-2">
-      <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Interactions</span>
+      <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Sinks</span>
     </div>
     <ul class="flex flex-col gap-1.5">
       <li v-for="cat in fdnInteractions" :key="cat.category" class="rounded-md border border-border bg-panel px-2.5 py-1.5 text-xs text-text">

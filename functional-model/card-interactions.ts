@@ -242,7 +242,7 @@
 // nothing in scope produces it yet," not a hidden/omitted row.
 // ---------------------------------------------------------------------------
 import type { CardDefinition } from './card';
-import { matchesConsumerTriggerNames, matchSink } from './sink-model/match-sink';
+import { matchesBattlefieldPresenceConsumer, matchesConsumerTriggerNames, matchesConsumerTriggerOn, matchSink } from './sink-model/match-sink';
 import { SINK_CATALOG } from './sink-model/catalog/index';
 import { isSinkCatalogEntryUsable } from './sink-catalog-status';
 
@@ -295,8 +295,56 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
     // (`sink-model/catalog/entry.ts`) for why this is a safe, structural,
     // oracle-text-free signal. Either is sufficient; both may hold.
     const selfProducerMatch = matchSink(entry.query, definition, root);
-    const selfConsumerMatch = matchesConsumerTriggerNames(entry.consumerTriggerNames, definition);
-    if (!selfProducerMatch.matched && !selfConsumerMatch) continue;
+    // A predicate-derived producer match (Lifelink's automatic lifegain,
+    // Saga chapter-completion death, Crew's tap activation — see
+    // `ProducerOccurrence.predicateDerived`'s own doc comment) is real
+    // enough to make `definition` a MATCH for someone else's category (the
+    // reverse direction, below, is unaffected), but never enough to make
+    // `definition` OWN/self-display the category on its own page: the
+    // category isn't a genuine, directly-authored statement of what this
+    // card does (compare Day of Judgment's own real `destroy all
+    // creatures` program, a direct effect walk) — it's a structural
+    // inference the engine happens to guarantee as a side effect. 2026-09-18,
+    // added for the real Healer's Hawk/Felidar Savior bug: both used to
+    // self-display "Lifegain" purely off their own Lifelink keyword, with
+    // no `gainLife` effect anywhere on either card.
+    const selfDirectProducerMatch = selfProducerMatch.matched && !selfProducerMatch.predicateDerived;
+    // Three independent consumer-side signals — a candidate may declare any
+    // combination (`etb`'s own `consumerTriggerOn: ['enter']`, `lifegain`'s
+    // own `consumerTriggerNames: ['onLifeGained']`, the `battlefield-
+    // presence-cats`/`battlefield-presence-creatures` pair's own
+    // `consumerBattlefieldPresence`, 2026-09-18 — Claws Out's own real
+    // "Affinity for Cats"/bare "Creatures you control get +2/+2" shapes);
+    // see each field's own doc comment (`sink-model/catalog/entry.ts`) for
+    // why `Trigger.on` (closed enum), `Trigger.name` (free text), and
+    // `CostReduction.perControlled`/`pumpAll`/`putCounterAll` (a genuinely
+    // different, non-trigger-based structural shape) each needed their own
+    // check.
+    const selfConsumerMatch =
+      matchesConsumerTriggerNames(entry.consumerTriggerNames, definition) ||
+      matchesConsumerTriggerOn(entry.consumerTriggerOn, definition) ||
+      matchesBattlefieldPresenceConsumer(entry.consumerBattlefieldPresence, definition);
+    // Real bug fix (2026-09-18, found live: Helpful Hunter — a genuine,
+    // printed Cat — self-displayed "Cats" on its OWN page purely for BEING
+    // a Cat, no cost-reduction/anthem effect of its own at all). Every
+    // OTHER catalog entry treats a direct producer match as sufficient for
+    // self-ownership on its own (Bigfin Bouncer's real bounce effect, Day
+    // of Judgment's real destroy-all program — genuine authored abilities).
+    // That's the WRONG rule for "Battlefield presence": merely BEING a
+    // Cat/Creature is passive type/subtype membership, not a deliberate
+    // ability — bare membership alone must never grant self-ownership, or
+    // literally every Cat/Creature card in the pool would self-display it.
+    // `entry.requireConsumerForSelfOwnership` (see its own doc comment,
+    // `sink-model/catalog/entry.ts`) narrows self-ownership down to
+    // `selfConsumerMatch` ALONE for exactly the 2 entries that need it
+    // (`battlefield-presence-cats`/`-creatures`) — every other entry keeps
+    // its pre-existing `selfDirectProducerMatch || selfConsumerMatch` rule
+    // unchanged. The REVERSE direction (the per-candidate loop just below,
+    // deciding who counts as a MATCH for whoever does own the category) is
+    // completely unaffected either way — Helpful Hunter still correctly
+    // appears in Claws Out's own "Cats" `matchingCardNames`.
+    const selfOwnsCategory = entry.requireConsumerForSelfOwnership ? selfConsumerMatch : selfDirectProducerMatch || selfConsumerMatch;
+    if (!selfOwnsCategory) continue;
     const category = entry.query.category;
     const matchedNames = matchesByCategory.get(category) ?? new Set<string>();
     // Only PRODUCER matches ever count as a match here — consumer mode

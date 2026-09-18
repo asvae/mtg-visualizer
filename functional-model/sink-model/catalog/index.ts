@@ -18,7 +18,10 @@
 // .json`, has been built and is fully passing).
 import { entry as graveyardFodder } from './graveyard-fodder';
 import { entry as lifegain } from './lifegain';
+import { entry as etb } from './etb';
+import { entry as battlefieldPresenceCats } from './battlefield-presence-cats';
+import { entry as battlefieldPresenceCreatures } from './battlefield-presence-creatures';
 
 export type { SinkCatalogEntry } from './entry';
 
-export const SINK_CATALOG = [lifegain, graveyardFodder];
+export const SINK_CATALOG = [lifegain, graveyardFodder, etb, battlefieldPresenceCats, battlefieldPresenceCreatures];

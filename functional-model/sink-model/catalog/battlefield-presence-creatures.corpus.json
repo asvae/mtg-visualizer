@@ -1,0 +1,66 @@
+{
+  "total": 10,
+  "passing": 10,
+  "cases": [
+    {
+      "case": "PRODUCER: any real creature",
+      "mirrors": "virtually every real Creature card in the pool — its own baseline entersBattlefield occurrence",
+      "expectedVerdict": "matches",
+      "note": "Mocked Creature — Human Soldier, no effects. Verified in battlefield-presence-creatures.test.ts via matchSink. Deliberately broad by design — see this entry's own header."
+    },
+    {
+      "case": "PRODUCER: creates a creature token (any subtype)",
+      "mirrors": "any real token-making effect whose token is a Creature",
+      "expectedVerdict": "matches",
+      "note": "Mocked Sorcery creating a Creature/Bird token. Verified via matchSink."
+    },
+    {
+      "case": "PRODUCER: non-creature permanent",
+      "mirrors": "any real Artifact/Enchantment/Land with no creature type",
+      "expectedVerdict": "no-match",
+      "note": "Mocked bare Artifact. Verified via matchSink."
+    },
+    {
+      "case": "PRODUCER: non-creature spell, no token creation",
+      "mirrors": "any real removal/interaction spell",
+      "expectedVerdict": "no-match",
+      "note": "Mocked Instant with a destroy effect only. Verified via matchSink."
+    },
+    {
+      "case": "CONSUMER: bare (no-subtype) pumpAll",
+      "mirrors": "the real Claws Out (FDN #6) \"Creatures you control get +2/+2\" shape",
+      "expectedVerdict": "matches (consumer mode only — an Instant is never itself a producer)",
+      "note": "Mocked Instant with a pumpAll effect, predicate:'creatures-you-control', no subtype. Verified via matchesBattlefieldPresenceConsumer; matchSink asserted false explicitly."
+    },
+    {
+      "case": "CONSUMER: bare (no-subtype) putCounterAll",
+      "mirrors": "a real Warren Elder-shaped \"put a counter on each creature you control\" effect",
+      "expectedVerdict": "matches",
+      "note": "Mocked Sorcery with a putCounterAll effect, no subtype. Verified via matchesBattlefieldPresenceConsumer."
+    },
+    {
+      "case": "CONSUMER: pumpAll with its OWN subtype filter (Cat)",
+      "mirrors": "the sibling battlefield-presence-cats entry's own real shape",
+      "expectedVerdict": "no-match",
+      "note": "Mocked Sorcery with a pumpAll effect, subtype:'Cat'. Verified via matchesBattlefieldPresenceConsumer — proves this entry does not vacuously accept a subtype-scoped anthem."
+    },
+    {
+      "case": "CONSUMER: cost reduction (Affinity for Cats)",
+      "mirrors": "Claws Out's OTHER ability — this entry declares no subtype at all, so a cost-reduction check never fires for it",
+      "expectedVerdict": "no-match",
+      "note": "Mocked Instant with costReduction:{perControlled:{subtype:'Cat'}} and no pumpAll/putCounterAll effect. Verified via matchesBattlefieldPresenceConsumer."
+    },
+    {
+      "case": "CONSUMER: vanilla card, no pumpAll/putCounterAll at all",
+      "mirrors": "any real card with neither mechanic",
+      "expectedVerdict": "no-match",
+      "note": "Mocked Sorcery with only a drawCard effect. Verified via matchesBattlefieldPresenceConsumer."
+    },
+    {
+      "case": "CONSUMER: matches via the BACK face of a transforming DFC",
+      "mirrors": "the same face-plurality convention matchesConsumerTriggerNames/matchesConsumerTriggerOn already honor",
+      "expectedVerdict": "matches",
+      "note": "Mocked front/back face pair; the bare pumpAll effect lives only on backFace.effects. Verified via matchesBattlefieldPresenceConsumer."
+    }
+  ]
+}

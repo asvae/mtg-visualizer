@@ -36,6 +36,10 @@ import { ajanisPridemate } from './fdn-cards/ajani-s-pridemate/definition';
 import { dayOfJudgment } from './fdn-cards/day-of-judgment/definition';
 import { serraAngel } from './fdn-cards/serra-angel/definition';
 import { helpfulHunter } from './fdn-cards/helpful-hunter/definition';
+import { felidarSavior } from './fdn-cards/felidar-savior/definition';
+import { healersHawk } from './fdn-cards/healer-s-hawk/definition';
+import { bigfinBouncer } from './fdn-cards/bigfin-bouncer/definition';
+import { clawsOut } from './fdn-cards/claws-out/definition';
 
 const lifegainMock: CardDefinition = {
   name: 'Test Lifegain Producer',
@@ -52,7 +56,7 @@ const blankLandMock: CardDefinition = {
 };
 
 describe('computeCardInteractions', () => {
-  it("Ajani's Pridemate gets a 'Lifegain' category (owns it via consumerTriggerNames — its real onLifeGained trigger name), but is NEVER itself among the matches: it has no gainLife effect of its own, it's purely a consumer ('whenever you gain life') — only the real producer (the mock) is a match; catalog-only means its baseline 'enters the battlefield'/'counters' raw categories no longer appear at all", () => {
+  it("Ajani's Pridemate gets a 'Lifegain' category (owns it via consumerTriggerNames — its real onLifeGained trigger name), but is NEVER itself among the matches: it has no gainLife effect of its own, it's purely a consumer ('whenever you gain life') — only the real producer (the mock) is a match; catalog-only means its baseline 'enters the battlefield'/'counters' raw categories no longer appear at all. It does NOT self-display 'Cats' (2026-09-18, Battlefield presence, `requireConsumerForSelfOwnership`) even though it structurally IS a Cat creature — merely BEING a Cat is passive membership, not a deliberate ability (see the real Helpful Hunter bug fix below)", () => {
     const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate, lifegainMock]);
     const categories = result.map((r) => r.category).sort();
     expect(categories).toEqual(['Lifegain']);
@@ -110,9 +114,85 @@ describe('computeCardInteractions', () => {
     expect(computeCardInteractions(blankLandMock, [blankLandMock, ajanisPridemate])).toEqual([]);
   });
 
-  it('catalog-only: Helpful Hunter\'s real on:enter "draw a card" ETB is a real structural fact but no catalog entry covers "card draw" — it no longer surfaces a "card draw" category, and (matching neither Lifegain nor Graveyard fodder) gets no categories at all against a pool with no other catalog-relevant card', () => {
+  it('catalog-only: Helpful Hunter\'s real on:enter "draw a card" ETB is a real structural fact but no catalog entry covers "card draw" — it no longer surfaces a "card draw" category; it DOES now get the real "ETB" catalog category instead (added 2026-09-18)', () => {
     const result = computeCardInteractions(helpfulHunter, [helpfulHunter, serraAngel]);
     expect(result.find((r) => r.category === 'card draw')).toBeUndefined();
+    expect(result.find((r) => r.category === 'Lifegain' || r.category === 'Graveyard fodder')).toBeUndefined();
+    const etb = result.find((r) => r.category === 'ETB');
+    expect(etb).toBeDefined();
+  });
+
+  it('real bug fix, 2026-09-18: "ETB" is redesigned as a genuine two-role "blink/bounce value" archetype (same shape as Lifegain), not a single self-referential fact — the ORIGINAL design over-matched (Felidar Savior self-showed "ETB: 20" against the real 100-card pool, just for having an on:\'enter\' trigger). Helpful Hunter OWNS "ETB" via its real on:\'enter\' trigger (a pure consumer — the thing worth re-triggering), but has zero matches with no real bounce/blink producer in the pool: it never counts as its own match merely for having the ability, same rule Lifegain/Ajani\'s Pridemate already established. Helpful Hunter does NOT self-display "Cats"/"Creatures" either (2026-09-18, real bug fix — see the dedicated Battlefield presence tests below): its typeLine is literally \'Creature — Cat\', but bare type/subtype MEMBERSHIP alone must never grant self-ownership of a battlefield-presence category, only a genuine consumer effect does', () => {
+    const result = computeCardInteractions(helpfulHunter, [helpfulHunter, serraAngel]);
+    expect(result).toEqual([{ category: 'ETB', count: 0, matchingCardNames: [] }]);
+  });
+
+  it('real bug fix, 2026-09-18: Felidar Savior likewise OWNS "ETB" via its own real on:\'enter\' trigger (consumer), but its matchingCardNames now correctly shows the real PRODUCER — Bigfin Bouncer\'s own real "return target creature to hand" effect (FDN) — never itself or Helpful Hunter, since neither has a bounce/blink effect of its own; vanilla Serra Angel is excluded entirely', () => {
+    const result = computeCardInteractions(felidarSavior, [felidarSavior, helpfulHunter, bigfinBouncer, serraAngel]);
+    const etb = result.find((r) => r.category === 'ETB');
+    expect(etb).toBeDefined();
+    expect(etb!.matchingCardNames).toEqual(['Bigfin Bouncer']);
+  });
+
+  it('real bug fix, 2026-09-18: Bigfin Bouncer is BOTH a producer (its own real bounce-to-hand effect) AND a consumer (it also has its own real on:\'enter\' trigger) for "ETB" — genuinely counts as its OWN match, same as any other category where a card satisfies its own want (contrast Felidar Savior/Helpful Hunter above, consumer-only, never self-matching). It does NOT self-display "Creatures" (2026-09-18, Battlefield presence, `requireConsumerForSelfOwnership`) — being a Creature is bare membership, not a deliberate ability, unlike ETB\'s own genuine bounce EFFECT', () => {
+    const result = computeCardInteractions(bigfinBouncer, [bigfinBouncer]);
+    expect(result).toEqual([{ category: 'ETB', count: 1, matchingCardNames: ['Bigfin Bouncer'] }]);
+  });
+
+  it("real bug fix, 2026-09-18: Healer's Hawk does NOT self-display 'Lifegain' — its only path to the category is the `lifelink` sink-derivation predicate (a structural INFERENCE from its bare Lifelink keyword, no `gainLife` effect anywhere on its own definition), which is real enough to make it a MATCH for someone else's want (see the next test) but not a genuine, directly-authored statement of what this card itself does, so it must not self-own the category (contrast Day of Judgment above, whose own real 'destroy all creatures' program IS a direct statement, and correctly still self-owns 'Graveyard fodder'). It also does NOT self-display 'Creatures' (typeLine 'Creature — Bird', 2026-09-18 Battlefield presence, `requireConsumerForSelfOwnership`) — bare Creature-type membership, no anthem/Affinity effect of its own", () => {
+    expect(computeCardInteractions(healersHawk, [healersHawk])).toEqual([]);
+  });
+
+  it("real bug fix, 2026-09-18: Felidar Savior does NOT self-display 'Lifegain' (same predicate-only reasoning as Healer's Hawk) — it DOES still self-display 'ETB' (a genuine, directly-authored on:'enter' trigger owns the category as a consumer, per the ETB redesign above) but with zero matches when alone in the pool: it has no bounce/blink effect of its own to be a producer. It does NOT self-display 'Cats'/'Creatures' (typeLine 'Creature — Cat Beast', 2026-09-18 Battlefield presence, `requireConsumerForSelfOwnership`) — bare Cat/Creature-type membership, no Affinity/anthem effect of its own", () => {
+    const result = computeCardInteractions(felidarSavior, [felidarSavior]);
+    expect(result).toEqual([{ category: 'ETB', count: 0, matchingCardNames: [] }]);
+  });
+
+  it("real bug fix, 2026-09-18 — the REVERSE direction is unchanged: Ajani's Pridemate (a genuine consumer, owns 'Lifegain' via consumerTriggerNames) still sees BOTH Healer's Hawk AND Felidar Savior as real Lifegain producers in its own matchingCardNames — a predicate-derived match is still a real match for someone else's want, only SELF-ownership is affected by the fix above", () => {
+    const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate, healersHawk, felidarSavior]);
+    const lifegain = result.find((r) => r.category === 'Lifegain');
+    expect(lifegain).toBeDefined();
+    expect(lifegain!.matchingCardNames).toEqual(['Felidar Savior', "Healer's Hawk"]);
+  });
+
+  it("Battlefield presence (2026-09-18): Claws Out (FDN #6) self-displays BOTH 'Cats' (its own real \"Affinity for Cats\" costReduction) AND 'Creatures' (its own real bare pumpAll \"Creatures you control get +2/+2\") — never itself among the matches for either, since it's an Instant with no Cat/Creature-producing effect of its own", () => {
+    const result = computeCardInteractions(clawsOut, [clawsOut, ajanisPridemate, serraAngel]);
+    const categories = result.map((r) => r.category).sort();
+    expect(categories).toEqual(['Cats', 'Creatures']);
+    const cats = result.find((r) => r.category === 'Cats')!;
+    const creatures = result.find((r) => r.category === 'Creatures')!;
+    expect(cats.matchingCardNames).not.toContain('Claws Out');
+    expect(creatures.matchingCardNames).not.toContain('Claws Out');
+  });
+
+  it("Battlefield presence: Claws Out's own 'Cats' row correctly includes Ajani's Pridemate (a real Cat creature — its own baseline entersBattlefield occurrence structurally guarantees a Cat permanent) but excludes Serra Angel (no Cat subtype)", () => {
+    const result = computeCardInteractions(clawsOut, [clawsOut, ajanisPridemate, serraAngel]);
+    const cats = result.find((r) => r.category === 'Cats')!;
+    expect(cats.matchingCardNames).toEqual(["Ajani's Pridemate"]);
+  });
+
+  it("Battlefield presence: Claws Out's own 'Creatures' row includes BOTH Ajani's Pridemate and Serra Angel — deliberately broad, any real creature counts as a PRODUCER for the reverse direction (see battlefield-presence-creatures.ts's own header)", () => {
+    const result = computeCardInteractions(clawsOut, [clawsOut, ajanisPridemate, serraAngel]);
+    const creatures = result.find((r) => r.category === 'Creatures')!;
+    expect(creatures.matchingCardNames).toEqual(["Ajani's Pridemate", 'Serra Angel']);
+  });
+
+  it("real bug fix, 2026-09-18 (found live: Helpful Hunter self-displayed 'Cats' on its own page purely for BEING a Cat): Ajani's Pridemate (a real Cat creature, no Affinity/anthem effect of its own) does NOT self-display 'Cats' — bare Cat-type MEMBERSHIP is passive, not a deliberate ability, so `requireConsumerForSelfOwnership` withholds self-ownership even though it's a genuine, direct (non-predicate-derived) producer match", () => {
+    const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate, serraAngel]);
+    expect(result.find((r) => r.category === 'Cats')).toBeUndefined();
+    expect(result.find((r) => r.category === 'Creatures')).toBeUndefined();
+  });
+
+  it("Battlefield presence — the REVERSE direction is unaffected by the self-ownership fix: Ajani's Pridemate still correctly appears as a real 'Cats' AND 'Creatures' PRODUCER in Claws Out's own matchingCardNames (already covered by the 2 tests above) and in ANY other card's own battlefield-presence matches — e.g. Helpful Hunter (real Cat) is still a genuine 'Cats' match for Claws Out", () => {
+    const result = computeCardInteractions(clawsOut, [clawsOut, helpfulHunter]);
+    const cats = result.find((r) => r.category === 'Cats')!;
+    expect(cats.matchingCardNames).toEqual(['Helpful Hunter']);
+  });
+
+  it("Battlefield presence: a card with neither the Cats nor the Creatures shape (Serra Angel — a vanilla, non-Cat creature with no Affinity/anthem effect of its own) does NOT self-display EITHER 'Cats' or 'Creatures' — bare Creature-type membership alone is never enough (real bug fix, 2026-09-18)", () => {
+    const result = computeCardInteractions(serraAngel, [serraAngel]);
+    expect(result.find((r) => r.category === 'Cats')).toBeUndefined();
+    expect(result.find((r) => r.category === 'Creatures')).toBeUndefined();
     expect(result).toEqual([]);
   });
 

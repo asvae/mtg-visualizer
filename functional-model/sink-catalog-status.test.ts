@@ -12,9 +12,9 @@ import {
 import { SINK_CATALOG } from './sink-model/catalog/index';
 
 describe('computeSinkCatalogStatus — real catalog entries', () => {
-  it('has exactly the real, statically-registered SINK_CATALOG entries — lifegain, graveyard-fodder', () => {
+  it('has exactly the real, statically-registered SINK_CATALOG entries — lifegain, graveyard-fodder, etb, battlefield-presence-cats, battlefield-presence-creatures', () => {
     const entries = computeSinkCatalogStatus();
-    expect(entries.map((e) => e.slug).sort()).toEqual(['graveyard-fodder', 'lifegain']);
+    expect(entries.map((e) => e.slug).sort()).toEqual(['battlefield-presence-cats', 'battlefield-presence-creatures', 'etb', 'graveyard-fodder', 'lifegain']);
     expect(entries.length).toBe(SINK_CATALOG.length);
   });
 
@@ -31,6 +31,9 @@ describe('computeSinkCatalogStatus — real catalog entries', () => {
     const bySlug = Object.fromEntries(computeSinkCatalogStatus().map((e) => [e.slug, e]));
     expect(bySlug['lifegain']!.category).toBe('Lifegain');
     expect(bySlug['graveyard-fodder']!.category).toBe('Graveyard fodder');
+    expect(bySlug['etb']!.category).toBe('ETB');
+    expect(bySlug['battlefield-presence-cats']!.category).toBe('Cats');
+    expect(bySlug['battlefield-presence-creatures']!.category).toBe('Creatures');
   });
 
   it('evidence path points at the documented functional-model/sink-model/catalog/<slug> convention', () => {

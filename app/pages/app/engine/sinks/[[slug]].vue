@@ -269,6 +269,71 @@ async function submitReject() {
           </div>
         </div>
 
+        <!-- Real FDN pool matches (2026-09-18) — genuinely different
+             question from the mocked-fixture corpus manifest above (does
+             the entry BEHAVE correctly against a hand-picked fixture set)
+             vs. this (who in the ACTUAL dev pool matches it today). Same
+             collapsible `<details>`/`<summary>` + "N cards" count pattern
+             `CardDetailTabs.vue`'s own Interactions/Sinks panels use — kept
+             producer/consumer as two SEPARATE collapsibles (never merged),
+             since they answer different questions ("who causes this event"
+             vs. "who owns/reacts to it") and a card can genuinely appear in
+             one, the other, or both. `undefined` (not `[]`) `realMatches`
+             means the dev-only FDN pool wasn't computed at all (production,
+             or the loader failed) — rendered as a plain note, not hidden
+             silently, so a reviewer doesn't mistake "not computed" for "zero
+             real matches." -->
+        <div class="mt-3 border-t border-border-subtle pt-3">
+          <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Real FDN pool matches</div>
+          <p v-if="!selectedEntry.realMatches" class="mt-1.5 text-[11px] text-muted italic">
+            Not computed — dev-only FDN pool unavailable (production build, or the pool failed to load).
+          </p>
+          <div v-else class="mt-1.5 flex flex-col gap-1.5">
+            <details class="rounded-md border border-border-subtle bg-surface/40 px-2.5 py-1.5 text-[11px] text-text">
+              <summary class="flex cursor-pointer items-center gap-1.5">
+                <UIcon name="i-lucide-log-out" class="h-3.5 w-3.5 shrink-0 text-produce" />
+                Producer matches — who causes this event
+                <span class="ml-auto shrink-0 rounded-full bg-bg px-2 py-px text-[10px] font-bold text-muted">
+                  {{ selectedEntry.realMatches.producerMatches.length }} card{{ selectedEntry.realMatches.producerMatches.length === 1 ? '' : 's' }}
+                </span>
+              </summary>
+              <ul v-if="selectedEntry.realMatches.producerMatches.length" class="mt-1.5 flex flex-wrap gap-1.5">
+                <li
+                  v-for="name in selectedEntry.realMatches.producerMatches"
+                  :key="name"
+                  class="rounded bg-bg px-1.5 py-0.5 font-mono text-[10px] text-text"
+                >
+                  {{ name }}
+                </li>
+              </ul>
+              <p v-else class="mt-1.5 text-muted italic">No real FDN pool card matches this query today.</p>
+            </details>
+
+            <details
+              v-if="selectedEntry.realMatches.consumerMatches"
+              class="rounded-md border border-border-subtle bg-surface/40 px-2.5 py-1.5 text-[11px] text-text"
+            >
+              <summary class="flex cursor-pointer items-center gap-1.5">
+                <UIcon name="i-lucide-log-in" class="h-3.5 w-3.5 shrink-0 text-consume" />
+                Consumer matches — who owns/reacts to this event
+                <span class="ml-auto shrink-0 rounded-full bg-bg px-2 py-px text-[10px] font-bold text-muted">
+                  {{ selectedEntry.realMatches.consumerMatches.length }} card{{ selectedEntry.realMatches.consumerMatches.length === 1 ? '' : 's' }}
+                </span>
+              </summary>
+              <ul v-if="selectedEntry.realMatches.consumerMatches.length" class="mt-1.5 flex flex-wrap gap-1.5">
+                <li
+                  v-for="name in selectedEntry.realMatches.consumerMatches"
+                  :key="name"
+                  class="rounded bg-bg px-1.5 py-0.5 font-mono text-[10px] text-text"
+                >
+                  {{ name }}
+                </li>
+              </ul>
+              <p v-else class="mt-1.5 text-muted italic">No real FDN pool card carries this entry's consumer-side signal today.</p>
+            </details>
+          </div>
+        </div>
+
         <div class="mt-3 border-t border-border-subtle pt-3">
           <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Source — real evidence</div>
           <div class="mt-1.5 flex flex-col gap-1">

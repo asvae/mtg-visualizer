@@ -176,6 +176,29 @@ export interface ProducerOccurrence extends Constraints {
   colors?: TypeConstraint;
   tapped?: boolean;
   resolvedAttrs?: StaticAttrs;
+  /**
+   * True iff this occurrence came from a `sink-model/predicates/*.ts`
+   * sink-derivation predicate (Saga chapter completion / Crew tap
+   * activation / Lifelink automatic lifegain) rather than a direct walk of
+   * `CardDefinition`'s own `effects`/`triggers`/`program` AST (`walkEffects`/
+   * `walkProgramEffect`/the baseline `collectForFace` rules). Set by
+   * `deriveOccurrences` at its 3 predicate call sites below — never by a
+   * predicate module itself, so this stays a single, centralized marker
+   * rather than something each new predicate has to remember to set.
+   *
+   * **Why this distinction is load-bearing, not just debuggability**: a
+   * predicate infers a category from GENERIC ENGINE AUTOMATION the card's
+   * own definition never actually states as an effect (Lifelink's lifegain
+   * is a `state.ts`-level side effect of dealing damage, never a `gainLife`
+   * `Effect` node) — real for the REVERSE/consumer direction (another
+   * card's own want correctly sees this card as a producer), but too
+   * indirect to justify the producing card SELF-displaying that category on
+   * its own page (`card-interactions.ts`'s self-ownership gate is the one
+   * real consumer of this field — see that file's own header for the
+   * Healer's Hawk/Felidar Savior worked example this was added for,
+   * 2026-09-18).
+   */
+  predicateDerived?: boolean;
 }
 
 /**
@@ -321,6 +344,28 @@ function walkEffects(effects: Effect[] | undefined, via: string, out: ProducerOc
           ...(types ? { types } : {}),
           via: `${via}:move->${effect.to}`,
         });
+        // Real "bounce a permanent" producer signal (2026-09-18, `catalog/
+        // etb.ts`'s producer half — see that file's own header for the full
+        // "blink/bounce value" archetype writeup) — a card is only ever a
+        // genuine PERMANENT while it's actually ON the battlefield (CR 110.1),
+        // so a `move` whose own `from` includes `'Battlefield'` and whose own
+        // `to` is `'Hand'` is, unconditionally, "this effect returns a
+        // permanent to its owner's hand" — the real Bigfin Bouncer (FDN)
+        // shape (`from:'Battlefield', to:'Hand', validType:'creature'`), NOT
+        // conflated with a `from:'Graveyard'`-shaped recursion effect
+        // (Vampire Soulcaller/Inspiration from Beyond, FDN) — a card sitting
+        // in a graveyard is never a "permanent" (CR 110.1 again), so that
+        // shape correctly does NOT produce this occurrence. Deliberately
+        // scoped to bounce-to-hand only, NOT blink (exile-then-return) — no
+        // real card in this pool models "exile, then return to the
+        // battlefield" as a single structural shape at all (checked directly:
+        // every real `to:'Exile'` move in this pool is a one-way removal
+        // effect, never paired with a same-effect return) — a real, separate,
+        // documented future gap, not guessed at here.
+        const fromZones = Array.isArray(effect.from) ? effect.from : [effect.from];
+        if (effect.to === 'Hand' && fromZones.includes('Battlefield')) {
+          out.push({ event: 'bounce', controller: 'you', via: `${via}:move:bounce-to-hand` });
+        }
         break;
       }
       case 'modal':
@@ -427,6 +472,19 @@ function collectForFace(face: CardDefinition, faceLabel: 'front' | 'back', out: 
     // fallback `isNormalPermanent` deliberately doesn't cover.
     out.push({ event: 'entersBattlefield', to: 'Battlefield', controller: 'you', subject: 'self', target: 'self', via: `${faceLabel}:baseline:on-enter-trigger` });
   }
+  // **SUPERSEDED, 2026-09-18, later still — the dedicated `event:'etb'`
+  // occurrence this block used to push here is GONE, not just unused.** The
+  // real user-corrected design (`catalog/etb.ts`'s own header) is a genuine
+  // two-role "blink/bounce value" archetype, same shape as `lifegain`: a
+  // card OWNS the "ETB" category via a structural CONSUMER check straight
+  // off `CardDefinition.triggers[].on` (`SinkCatalogEntry.consumerTriggerOn`,
+  // `matchesConsumerTriggerOn` below) — no occurrence needed for that side
+  // at all, since "has a real `on:'enter'` trigger" is a bare field read,
+  // not something a candidate PRODUCES for some other card to consume. The
+  // PRODUCER side (does this card cause the bounce/blink) is instead a real,
+  // new `event:'bounce'` occurrence in the `move`-effect case above. Kept
+  // here as a historical note rather than silently deleted, since this exact
+  // spot is where the old (wrong) design used to live.
   if (isNormalInstantOrSorcery(face)) {
     out.push({ to: 'Graveyard', controller: 'you', subject: 'self', via: `${faceLabel}:baseline:normal-instant-sorcery` });
   }
@@ -456,10 +514,18 @@ export function deriveOccurrences(card: CardDefinition, root: string = process.c
   // unrecognized `Effect.kind` above already follows. GATED: a mechanism
   // whose live status isn't blue/green contributes nothing here, same
   // silent-decline convention — never an error, never a guess.
-  if (isSinkDerivationMechanismUsable('saga', root)) out.push(...sagaChapterCompletionOccurrences(card));
-  if (isSinkDerivationMechanismUsable('crew', root)) out.push(...crewTapOccurrences(card));
-  if (isSinkDerivationMechanismUsable('lifelink', root)) out.push(...lifelinkProductionOccurrences(card));
+  // Marked `predicateDerived: true` here (not inside each predicate module
+  // itself) — see `ProducerOccurrence.predicateDerived`'s own doc comment
+  // for why this needs to be a single, centralized marker rather than
+  // something each new predicate has to remember to set independently.
+  if (isSinkDerivationMechanismUsable('saga', root)) out.push(...sagaChapterCompletionOccurrences(card).map(markPredicateDerived));
+  if (isSinkDerivationMechanismUsable('crew', root)) out.push(...crewTapOccurrences(card).map(markPredicateDerived));
+  if (isSinkDerivationMechanismUsable('lifelink', root)) out.push(...lifelinkProductionOccurrences(card).map(markPredicateDerived));
   return out;
+}
+
+function markPredicateDerived(occ: ProducerOccurrence): ProducerOccurrence {
+  return { ...occ, predicateDerived: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -667,6 +733,13 @@ export interface SinkMatchResult {
   /** Which derived occurrence (effect/trigger/baseline path) satisfied the
    * sink — `ProducerOccurrence.via` — present iff `matched`. */
   via?: string;
+  /** `ProducerOccurrence.predicateDerived` of whichever occurrence satisfied
+   * the sink — present iff `matched`. `true` means the match came from a
+   * `sink-model/predicates/*.ts` sink-derivation predicate (Saga/Crew/
+   * Lifelink) rather than a direct effect/trigger walk — see that field's
+   * own doc comment for why `card-interactions.ts`'s self-ownership gate
+   * specifically needs to tell the two apart. */
+  predicateDerived?: boolean;
 }
 
 /** Does `candidate` (read directly off its own `CardDefinition` — no
@@ -674,7 +747,7 @@ export interface SinkMatchResult {
  * `deriveOccurrences`'s own doc comment — defaults to `process.cwd()`. */
 export function matchSink(sink: SinkQuery, candidate: CardDefinition, root: string = process.cwd()): SinkMatchResult {
   for (const occ of deriveOccurrences(candidate, root)) {
-    if (occurrenceSatisfiesSink(occ, sink, candidate)) return { matched: true, via: occ.via };
+    if (occurrenceSatisfiesSink(occ, sink, candidate)) return { matched: true, via: occ.via, predicateDerived: occ.predicateDerived };
   }
   return { matched: false };
 }
@@ -718,4 +791,82 @@ export function matchesConsumerTriggerNames(names: string[] | undefined, candida
   const nameSet = new Set(names);
   if (candidate.triggers?.some((t) => nameSet.has(t.name))) return true;
   return candidate.backFace?.triggers?.some((t) => nameSet.has(t.name)) ?? false;
+}
+
+/**
+ * Real, structural CONSUMER-side signal (2026-09-18, added for `etb`'s own
+ * "blink/bounce value" redesign) for a catalog entry's own
+ * `SinkCatalogEntry.consumerTriggerOn` (`catalog/entry.ts`) — does
+ * `candidate` (front OR back face) carry a trigger whose own `Trigger.on`
+ * is one of `onValues`? Same shape as `matchesConsumerTriggerNames` just
+ * above, checking `Trigger.on` (the engine's own real, CLOSED
+ * trigger-precondition enum — `card.ts`'s `Trigger.on` union) instead of
+ * `Trigger.name` (a free-text label) — genuinely SAFER than
+ * `matchesConsumerTriggerNames`, since there's no free-text-collision risk
+ * at all: `on:'enter'` means exactly one real, auto-fired thing, always.
+ * `onValues` undefined or empty means the catalog entry declares no
+ * consumer-side signal at all — never matches.
+ */
+export function matchesConsumerTriggerOn(onValues: Array<Trigger['on']> | undefined, candidate: CardDefinition): boolean {
+  if (!onValues || onValues.length === 0) return false;
+  const onSet = new Set(onValues);
+  if (candidate.triggers?.some((t) => onSet.has(t.on))) return true;
+  return candidate.backFace?.triggers?.some((t) => onSet.has(t.on)) ?? false;
+}
+
+/**
+ * Real, structural CONSUMER-side signal (2026-09-18, added for the shared
+ * "Battlefield presence" catalog pair, `catalog/battlefield-presence-cats
+ * .ts`/`catalog/battlefield-presence-creatures.ts`) for a genuine "cares
+ * about the board-state COUNT of a filtered set of permanents you control"
+ * mechanic — see `SinkCatalogEntry.consumerBattlefieldPresence`'s own doc
+ * comment (`catalog/entry.ts`) for the full "Affinity for Cats" (Claws Out,
+ * FDN #6) worked example. Checks `CardDefinition.costReduction
+ * .perControlled` (front OR back face — same face-plurality convention
+ * `matchesConsumerTriggerNames`/`matchesConsumerTriggerOn` already
+ * establish) and every real `pumpAll`/`putCounterAll` effect reachable from
+ * that face's own `effects`, named `triggers[].effects`/`abilities[]
+ * .effects`, or a nested `modal` mode's own `effects` — the SAME set of
+ * effect locations `walkEffects`/`collectForFace` above already walk for
+ * the producer side, just read directly rather than turned into a
+ * `ProducerOccurrence` (this is a "what does this card WANT" check, not a
+ * "what does this card structurally guarantee" one, so it deliberately
+ * doesn't go through `deriveOccurrences`/`matchSink` at all — same
+ * standalone-function shape `matchesConsumerTriggerNames` already
+ * established for the identical reason). Does NOT walk a `kind:'program'`
+ * AST or `grantKeywordAll`/`putCounterTarget` — no real FDN card needs
+ * either for this mechanic today; same "closed vocabulary, grow on demand"
+ * discipline every other check in this file already follows.
+ *
+ * `filter` undefined means the catalog entry declares no
+ * battlefield-presence consumer signal at all — never matches. `filter
+ * .subtype` undefined (but `filter` itself present, e.g. `{}`) means "no
+ * subtype filter" — matched only against an equally subtype-less
+ * `pumpAll`/`putCounterAll` (exact `===` comparison both ways), never a
+ * vacuous "any subtype counts."
+ */
+export function matchesBattlefieldPresenceConsumer(filter: { subtype?: string } | undefined, candidate: CardDefinition): boolean {
+  if (!filter) return false;
+  if (faceCaresAboutBattlefieldPresence(candidate, filter.subtype)) return true;
+  return candidate.backFace ? faceCaresAboutBattlefieldPresence(candidate.backFace, filter.subtype) : false;
+}
+
+function faceCaresAboutBattlefieldPresence(face: CardDefinition, subtype: string | undefined): boolean {
+  if (face.costReduction?.perControlled && face.costReduction.perControlled.subtype === subtype) return true;
+  if (effectsCareAboutBattlefieldPresence(face.effects, subtype)) return true;
+  for (const trig of face.triggers ?? []) if (effectsCareAboutBattlefieldPresence(trig.effects, subtype)) return true;
+  for (const ab of face.abilities ?? []) if (effectsCareAboutBattlefieldPresence(ab.effects, subtype)) return true;
+  return false;
+}
+
+function effectsCareAboutBattlefieldPresence(effects: Effect[] | undefined, subtype: string | undefined): boolean {
+  for (const effect of effects ?? []) {
+    if ((effect.kind === 'pumpAll' || effect.kind === 'putCounterAll') && effect.predicate === 'creatures-you-control' && effect.subtype === subtype) {
+      return true;
+    }
+    if (effect.kind === 'modal' && effect.modes.some((m) => effectsCareAboutBattlefieldPresence(m.effects, subtype))) {
+      return true;
+    }
+  }
+  return false;
 }

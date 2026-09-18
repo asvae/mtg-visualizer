@@ -23,6 +23,9 @@ import type { SinkCatalogBaseline, SinkCatalogColor, SinkCatalogEvidence } from 
 import { SINK_CATALOG } from '../../../functional-model/sink-model/catalog/index';
 import type { SinkQuery } from '../../../functional-model/sink-model/sink-query';
 import { readFunctionalModelFile, type SourceFileResult } from '../../../functional-model/source-files';
+import { matchSink, matchesConsumerTriggerNames, matchesConsumerTriggerOn } from '../../../functional-model/sink-model/match-sink';
+import { loadFdnDefinitionPool } from '../../utils/fdnDefinitionPool';
+import type { CardDefinition } from '../../../functional-model/card';
 
 const REVIEWS_PATH = join(process.cwd(), 'functional-model', 'sink-catalog-reviews.json');
 const CATALOG_DIR = join('functional-model', 'sink-model', 'catalog');
@@ -74,6 +77,45 @@ function loadReviews(): Record<string, SinkCatalogReview> {
   }
 }
 
+/**
+ * Real FDN cards (dev pool, `functional-model/fdn-cards/`, via the shared
+ * `loadFdnDefinitionPool`) that actually match this entry TODAY — the
+ * mocked-fixture corpus manifest (`evidence`/`sourceFiles.corpusManifest`
+ * above) answers "does the curated query/consumer signal behave correctly
+ * against a hand-picked fixture set," this answers the separate, real-world
+ * question "who in the CURRENT pool actually satisfies it." Computed
+ * UNCONDITIONALLY (not gated on this entry's own review `color`) — a
+ * reviewer needs to see real matches for a not-yet-verified (`gray`/
+ * `purple`) entry too, to help decide whether it's even right; this is a
+ * different concern from `card-interactions.ts`'s own `isSinkCatalogEntryUsable`
+ * gate, which protects the PRODUCTION card page from an unverified entry,
+ * not this review tool.
+ *
+ * `producerMatches` — every pool card whose own structural occurrences
+ * (`matchSink`, same producer-shaped check the corpus test itself uses)
+ * satisfy `entry.query` ("who CAUSES this event"). `consumerMatches` —
+ * every pool card recognized via EITHER real consumer-side signal an entry
+ * may declare (`entry.consumerTriggerNames` via `matchesConsumerTriggerNames`,
+ * a free-text `Trigger.name` check; `entry.consumerTriggerOn` via
+ * `matchesConsumerTriggerOn`, the engine's own closed `Trigger.on` enum —
+ * see `catalog/entry.ts`'s own doc comments for why both exist and why
+ * `consumerTriggerOn` is the safer of the two) — merged into one list
+ * (union, not two further sub-lists) since both answer the exact same
+ * "who OWNS/REACTS to this event" question, just via different structural
+ * evidence; omitted entirely (not just empty) when the entry declares
+ * NEITHER consumer-side mechanism, per this task's own explicit "no empty
+ * consumer section needed" instruction. Kept separate from
+ * `producerMatches` rather than merged with it — a card can appear in
+ * both, and collapsing that distinction would hide exactly the producer-
+ * vs-consumer role confusion this task exists to make visible (e.g.
+ * Felidar Savior: producer of Lifegain; Ajani's Pridemate: consumer of it,
+ * never a producer).
+ */
+export interface SinkCatalogRealMatches {
+  producerMatches: string[];
+  consumerMatches?: string[];
+}
+
 export interface SinkCatalogPageEntry {
   /** Stable identity key — a catalog entry has no separate `key`/`slug`
    * split the way sink-derivation mechanisms do (`sink-catalog-status.ts`'s
@@ -99,12 +141,37 @@ export interface SinkCatalogPageEntry {
    * the field a consumer should render/filter on. */
   color: SinkCatalogColor;
   review?: SinkCatalogReview;
+  /** `undefined` in production (see `loadFdnDefinitionPool`'s own doc
+   * comment — the dev-only FDN pool never survives a Netlify Function
+   * bundle); a real entry list otherwise, `producerMatches: []` (not
+   * omitted) when the pool is genuinely empty (no `fdn-cards/` folders
+   * yet) — an honest "nothing to match against yet," not hidden. */
+  realMatches?: SinkCatalogRealMatches;
 }
 
-export default defineEventHandler((): SinkCatalogPageEntry[] => {
+function computeRealMatches(entry: (typeof SINK_CATALOG)[number], pool: CardDefinition[], root: string): SinkCatalogRealMatches {
+  const producerMatches = pool.filter((c) => matchSink(entry.query, c, root).matched).map((c) => c.name).sort();
+  const result: SinkCatalogRealMatches = { producerMatches };
+  const hasConsumerSignal = (entry.consumerTriggerNames && entry.consumerTriggerNames.length > 0) || (entry.consumerTriggerOn && entry.consumerTriggerOn.length > 0);
+  if (hasConsumerSignal) {
+    const consumerNames = new Set(
+      pool
+        .filter((c) => matchesConsumerTriggerNames(entry.consumerTriggerNames, c) || matchesConsumerTriggerOn(entry.consumerTriggerOn, c))
+        .map((c) => c.name),
+    );
+    result.consumerMatches = [...consumerNames].sort();
+  }
+  return result;
+}
+
+export default defineEventHandler(async (): Promise<SinkCatalogPageEntry[]> => {
   const root = process.cwd();
   const baselineEntries = computeSinkCatalogStatus(root);
   const reviews = loadReviews();
+  // Dev-only real FDN pool (see `loadFdnDefinitionPool`'s own doc comment):
+  // loaded ONCE per request, shared across every entry below, rather than
+  // once per entry — the whole point of the shared, process-cached loader.
+  const pool = process.env.NODE_ENV === 'production' ? [] : await loadFdnDefinitionPool(root);
 
   return baselineEntries.map((entry): SinkCatalogPageEntry => {
     const catalogEntry = SINK_CATALOG.find((e) => e.slug === entry.slug);
@@ -130,6 +197,7 @@ export default defineEventHandler((): SinkCatalogPageEntry[] => {
       sourceFiles: loadSourceFiles(entry.slug, entry.evidence),
       color,
       review,
+      realMatches: catalogEntry && process.env.NODE_ENV !== 'production' ? computeRealMatches(catalogEntry, pool, root) : undefined,
     };
   });
 });

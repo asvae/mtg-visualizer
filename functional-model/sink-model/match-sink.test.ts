@@ -123,6 +123,11 @@ describe('sink D — lifegain (Aerith Gainsborough, as-authored)', () => {
   it('SUPERSEDED, 2026-09-18 — DISAGREES with production, deliberately, not a regression: Aerith Gainsborough’s own printed Lifelink keyword now DOES satisfy it. Until 2026-09-18 this asserted `false`, matching `synergy.ts`’s own PARKED `LIFELINK_SYNTHETIC_FACT_ENABLED = false` decision (2026-09-14) — that parked flag is UNCHANGED and still governs production’s own `augmentPoolCards`/`findInteractionsForCard` path (FIN’s real served Interactions/graph-links output is untouched by this file). This prototype matcher instead now derives Lifelink’s automatic lifegain via a dedicated, corpus-verified sink-derivation predicate (`sink-model/predicates/lifelink.ts`, added for Felidar Savior/FDN #12, the same real engine-automation-hidden-mechanic shape Saga/Crew already use) — a deliberate, explicit, freshly-commissioned design decision for THIS matcher specifically, not a silent revival of the parked FIN pattern. See `sink-derivation-status.ts`’s own `lifelink` entry + `lifelink.test.ts`’s real `state.dealDamage` engine-agreement corpus for the verification trail.', () => {
     expect(matchSink(lifegainSink, aerithGainsborough).matched).toBe(true);
   });
+
+  it('2026-09-18: `SinkMatchResult.predicateDerived` distinguishes the two real ways this sink can match — Aerith Gainsborough’s own match above comes ONLY from the `lifelink` predicate (no `gainLife` effect anywhere on her own definition) and is marked `predicateDerived: true`; Battle Menu’s match comes from a real, direct `gainLife` effect and is NOT marked (`undefined`) — the real signal `card-interactions.ts`’s own self-ownership gate (`.claude/contracts/card-schema.md` section 7) is built on.', () => {
+    expect(matchSink(lifegainSink, aerithGainsborough).predicateDerived).toBe(true);
+    expect(matchSink(lifegainSink, battleMenu).predicateDerived).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------

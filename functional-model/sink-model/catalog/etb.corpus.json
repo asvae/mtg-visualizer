@@ -1,0 +1,54 @@
+{
+  "total": 8,
+  "passing": 8,
+  "cases": [
+    {
+      "case": "PRODUCER: real bounce-to-hand effect (from Battlefield, to Hand, validType creature)",
+      "mirrors": "Bigfin Bouncer (FDN) — real ETB bounce permanent",
+      "expectedVerdict": "matches",
+      "note": "Mocked Creature with an onEnter trigger whose effect is kind:'move', from:'Battlefield', to:'Hand', validType:'creature', target:true. Verified in etb.test.ts via matchSink."
+    },
+    {
+      "case": "PRODUCER: graveyard-recursion move (from Graveyard, to Hand)",
+      "mirrors": "Vampire Soulcaller / Inspiration from Beyond (FDN) — real graveyard-recursion, NOT a bounce",
+      "expectedVerdict": "no-match",
+      "note": "A card sitting in a graveyard is never a 'permanent' (CR 110.1), so returning it to hand is not the bounce/blink archetype this sink represents. Verified in etb.test.ts via matchSink."
+    },
+    {
+      "case": "PRODUCER: move to a different destination (sacrifice-shaped, Battlefield -> Graveyard)",
+      "mirrors": "any real sacrifice effect with no bounce shape at all",
+      "expectedVerdict": "no-match",
+      "note": "Mocked sacrifice effect. Proves real discrimination on the move's own `to`, not 'any zone-change effect counts'. Verified in etb.test.ts via matchSink."
+    },
+    {
+      "case": "PRODUCER: vanilla creature, no effects at all",
+      "mirrors": "Serra Angel (FDN) — a real, deliberate no-bounce case",
+      "expectedVerdict": "no-match",
+      "note": "Mocked vanilla creature. Verified in etb.test.ts via matchSink."
+    },
+    {
+      "case": "CONSUMER: creature with a real on:'enter' trigger",
+      "mirrors": "Felidar Savior (FDN #12) / Helpful Hunter (FDN) — real ETB permanents worth re-triggering",
+      "expectedVerdict": "matches",
+      "note": "Mocked Creature with triggers:[{name:'onEnter', on:'enter', effects:[{kind:'drawCard'}]}] — matches via consumerTriggerOn regardless of the effect kind, and does NOT match the producer query (no move effect at all). Verified in etb.test.ts via matchesConsumerTriggerOn."
+    },
+    {
+      "case": "CONSUMER: creature with a differently-scoped trigger (on:'attacks')",
+      "mirrors": "any real attack-triggered permanent with no ETB ability",
+      "expectedVerdict": "no-match",
+      "note": "Mocked creature with triggers:[{name:'onAttack', on:'attacks', ...}] only. Verified in etb.test.ts via matchesConsumerTriggerOn."
+    },
+    {
+      "case": "CONSUMER: no triggers at all",
+      "mirrors": "Serra Angel (FDN) — a real, deliberate no-ETB case",
+      "expectedVerdict": "no-match",
+      "note": "Mocked vanilla creature. Verified in etb.test.ts via matchesConsumerTriggerOn."
+    },
+    {
+      "case": "CONSUMER: on:'enter' trigger on the BACK face of a transforming DFC",
+      "mirrors": "a transforming DFC whose back face carries the ETB ability",
+      "expectedVerdict": "matches",
+      "note": "Mocked front/back face pair; the onEnter trigger lives only on backFace.triggers. Verified in etb.test.ts via matchesConsumerTriggerOn."
+    }
+  ]
+}
