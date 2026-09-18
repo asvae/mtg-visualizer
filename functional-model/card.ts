@@ -1861,6 +1861,40 @@ export interface Trigger {
    * None of these ten are dispatched by `engine.ts` yet — same Ward
    * pattern as `'otherPermanentEnters'`; see `engine-support-registry.ts`'s
    * own `fdn-trigger-cluster-not-enforced` entry.
+   *
+   * 2026-09-19, later still (sink-model pass) — `'counterAdded'`. Closes the
+   * real gap `sink-model/catalog/families/counters.ts`'s own header comment
+   * flagged: "no dedicated `on` value exists for 'a counter was put on this
+   * creature' yet," which relied on a free-text `Trigger.name` allowlist
+   * (`COUNTER_ADDED_TRIGGER_NAMES`) instead. Real Forge
+   * `TriggerCounterAdded`/`TriggerCounterAddedOnce`
+   * (`forge-game/.../trigger/TriggerCounterAdded(Once).java`) — THIS
+   * permanent's own counter(s) being put on it, self-only scope (`ValidCard$
+   * Card.Self`), the counter-side mirror of `'dies'` above (self-only
+   * zone-change) rather than a board-wide watch like
+   * `'otherPermanentEnters'`/`'otherCreatureDies'` — no real FDN card needs
+   * a board-wide "a counter was put on ANY permanent" watch yet, so that
+   * broader shape isn't modeled here (grow a sibling `on` value if one ever
+   * does). Exemplar of Light's own real second ability, "Whenever you put
+   * one or more +1/+1 counters on this creature, draw a card. This ability
+   * triggers only once each turn." (`res/cardsfolder/e/exemplar_of_light
+   * .txt`, real script: `T:Mode$ CounterAddedOnce | CounterType$ P1P1 |
+   * ValidSource$ You | ValidCard$ Card.Self | TriggerZones$ Battlefield |
+   * ActivationLimit$ 1 | Execute$ TrigDraw`) is the first, and so far only,
+   * real FDN card using this — the pre-existing `activationLimit` field
+   * above already covers its own real `ActivationLimit$ 1` cap. Forge's own
+   * `CounterAddedOnce` mode is specifically the "batch multiple counters of
+   * the same event into one firing" variant of this trigger family
+   * (`TriggerCounterAdded`/`TriggerCounterAddedOnce`/
+   * `TriggerCounterAddedAll` are three real, closely-related Forge trigger
+   * classes for the same underlying `CounterAdded` runtime event); only the
+   * `Once` shape has a real FDN card using it so far, so this schema
+   * addition doesn't attempt to distinguish the three — revisit if a real
+   * card ever needs the `All` variant's own per-counter-batch distinction.
+   * See `counterAddedMatch` below for the real `CounterType$` gate. NOT yet
+   * dispatched by `engine.ts` — same Ward pattern as every other value in
+   * this union; see `engine-support-registry.ts`'s own
+   * `counter-added-trigger-not-enforced` entry.
    */
   on?:
     | 'enter'
@@ -1879,7 +1913,8 @@ export interface Trigger {
     | 'castInstantOrSorcery'
     | 'dealsCombatDamageToPlayer'
     | 'creatureYouControlDealsCombatDamageToPlayer'
-    | 'opponentLifeLost';
+    | 'opponentLifeLost'
+    | 'counterAdded';
   /**
    * Real CR 603.4 "intervening if" gate — this trigger's own `effects` only
    * actually apply while this condition holds (checked at the moment the
@@ -1936,6 +1971,59 @@ export interface Trigger {
    * controller's own.
    */
   otherCreatureDiesMatch?: { nonToken?: boolean; sameController?: boolean };
+  /**
+   * Only consulted when `on === 'counterAdded'` — real Forge `CounterType$`
+   * param (`TriggerCounterAdded.performTest`: absent means ANY counter type
+   * satisfies it — `hasParam("CounterType")` is false; present means the
+   * added counter's own type must equal it exactly). Exemplar of Light's own
+   * real `CounterType$ P1P1` needs `{ counterType: '+1/+1' }` — the schema's
+   * own `'+1/+1'` spelling for this counter type (see `Effect.counterType`
+   * on `putCounter`/`putCounterTarget`/`putCounterAll`, the SAME string
+   * `sink-model/catalog/families/counters.ts`'s own `CountersSink` factory
+   * already keys a whole sink instance's identity on). Omitted means "any
+   * counter type" — same "omitted = any" posture `tapLandForManaColor` above
+   * already takes for its own color gate, NOT a silent `'+1/+1'` default.
+   *
+   * **Deliberately NOT shaped like the `'enter'`/`'otherPermanentEnters'` or
+   * `'dies'`/`'otherCreatureDies'` default-plus-named-exception pairs above**
+   * — considered and rejected, checked against both real Forge semantics and
+   * this pool's own real counter-type distribution before landing on a plain
+   * parameter instead:
+   *  - Those pairs split on SCOPE (this permanent vs. some other one), where
+   *    the un-parameterized case has exactly one clean, unambiguous Forge
+   *    meaning (`ValidCard$ Card.Self`) with no competing "any permanent"
+   *    reading to collide with — "self" isn't a guessed default, it's the
+   *    ONLY thing the bare value could mean.
+   *  - `CounterType$` has no such single meaning to default to: Forge's own
+   *    real un-parameterized case is a genuine WILDCARD ("any counter type
+   *    qualifies"), not "assume the most common type." Silently defaulting
+   *    a bare `on: 'counterAdded'` to `'+1/+1'` would misrepresent that real
+   *    wildcard semantics AND collide with it — a hypothetical future card
+   *    whose own real text cares about ANY counter type ("whenever one or
+   *    more counters are put on this creature, of any kind, ...") would be
+   *    indistinguishable from Exemplar of Light's own real +1/+1-SPECIFIC
+   *    clause if both used the identical bare `on` value with no field to
+   *    tell them apart.
+   *  - Checked the real distribution before assuming `'+1/+1'` was even a
+   *    safe-enough default in practice, the same way `'otherPermanentEnters'`
+   *    only got split out once real non-self cards existed: `+1/+1` is the
+   *    large majority of real `Effect.counterType` USES pool-wide (21/26 FDN,
+   *    25/37 FIN) but is genuinely NOT the only live counter type in active
+   *    use — `stun`/`revival`/`loyalty`/`incubation`/`SOUL` (FDN) and
+   *    `stun`/`LORE`/`CHARGE`/`finality`/`blight`/`Indestructible` (FIN) are
+   *    all real, checked-in, non-+1/+1 producer effects today. On the
+   *    CONSUMER-trigger side specifically (the actual shape this field
+   *    gates), Exemplar of Light is the ONLY real card in either pool using
+   *    `on: 'counterAdded'` at all — a sample size of one is not a basis for
+   *    asserting an empirical "dominant case" the way self-vs-other
+   *    triggers had dozens of real self-only cards already in the pool
+   *    before `'otherPermanentEnters'` was ever added as the named
+   *    exception.
+   * Required-in-practice rather than speculatively optional-and-untested for
+   * that reason — every real FDN card using this `on` value states its own
+   * `counterType` explicitly.
+   */
+  counterAddedMatch?: { counterType?: string };
   /**
    * Only consulted when `on === 'attackersDeclared'` — real Forge
    * `ValidAttackersAmount$ GEn` (`TriggerAttackersDeclared.performTest`,

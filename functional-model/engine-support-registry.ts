@@ -118,6 +118,20 @@ export const ENGINE_SUPPORT_REGISTRY: EngineSupportGapEntry[] = [
       "SpellCostReductionGrant.cardTypes (added 2026-09-18, later still — archmage-of-runes's own card-type-gated \"Instant and sorcery spells you cast cost {1} less\") is declaratively real but state.ts's own activeSpellCostDiscount only ever checks grant.colors.some(...) — a cardTypes-only grant (colors: []) currently contributes ZERO real discount, a stronger \"always a no-op today\" case than the usual Ward pattern.",
     matches: (def) => hasSpellCostReductionCardTypeGate(def) || (def.backFace ? hasSpellCostReductionCardTypeGate(def.backFace) : false),
   },
+  {
+    // 2026-09-19, sink-model pass (schema agent) — closes the real gap
+    // sink-model/catalog/families/counters.ts's own header comment flagged
+    // (its prior citation of this as an ENGINE_GAPS.md entry was checked and
+    // found wrong — no such entry ever existed there; corrected in that
+    // file's own comment alongside this registry entry, not tracked as a
+    // NEW ENGINE_GAPS.md numbered entry either, same "sparse registry entry,
+    // no gapRef" posture every other FDN-pass Trigger.on addition above
+    // already takes).
+    id: 'counter-added-trigger-not-enforced',
+    description:
+      "Trigger.on:'counterAdded' + counterAddedMatch.counterType (added 2026-09-19 — Exemplar of Light's own real \"Whenever you put one or more +1/+1 counters on this creature, draw a card\" second ability, res/cardsfolder/e/exemplar_of_light.txt) is declaratively real but engine.ts dispatches no real Forge TriggerCounterAdded/TriggerCounterAddedOnce-equivalent sweep for it — same Ward pattern as every other Trigger.on value in this registry.",
+    matches: (def) => hasCounterAddedTrigger(def) || (def.backFace ? hasCounterAddedTrigger(def.backFace) : false),
+  },
 ];
 
 /** Shared by `board-state-condition-not-enforced` — true if any trigger or
@@ -158,6 +172,12 @@ function hasFdnTriggerClusterOnValue(def: CardDefinition): boolean {
  * non-empty `cardTypes`. */
 function hasSpellCostReductionCardTypeGate(def: CardDefinition): boolean {
   return (def.spellCostReductionGrants ?? []).some((g) => (g.cardTypes ?? []).length > 0);
+}
+
+/** Shared by `counter-added-trigger-not-enforced` — true if any trigger on
+ * this ONE face uses the new (2026-09-19) `on: 'counterAdded'` value. */
+function hasCounterAddedTrigger(def: CardDefinition): boolean {
+  return (def.triggers ?? []).some((t) => t.on === 'counterAdded');
 }
 
 /**

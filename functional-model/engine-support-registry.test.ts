@@ -42,7 +42,7 @@ describe('computeEngineSupport', () => {
     expect(computeEngineSupport(definition)).toBe('on');
   });
 
-  it('the registry is seeded with exactly the real, confirmed entries (Ward + the 2026-09-18 schema-completeness cluster + the same-day trigger-dispatch-cluster pass)', () => {
+  it('the registry is seeded with exactly the real, confirmed entries (Ward + the 2026-09-18 schema-completeness cluster + the same-day trigger-dispatch-cluster pass + the 2026-09-19 counter-added-trigger entry)', () => {
     expect(ENGINE_SUPPORT_REGISTRY.map((e) => e.id)).toEqual([
       'ward-not-enforced',
       'kicker-not-enforced',
@@ -52,6 +52,7 @@ describe('computeEngineSupport', () => {
       'other-permanent-enters-trigger-not-enforced',
       'fdn-trigger-cluster-not-enforced',
       'spell-cost-reduction-card-type-gate-not-enforced',
+      'counter-added-trigger-not-enforced',
     ]);
   });
 

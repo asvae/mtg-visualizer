@@ -22,6 +22,8 @@ export const exemplarOfLight: CardDefinition = {
     },
     {
       name: 'onCounterAdded',
+      on: 'counterAdded',
+      counterAddedMatch: { counterType: '+1/+1' },
       activationLimit: 1,
       effects: [
         {

@@ -2815,3 +2815,143 @@ passed / 5 skipped (net +3 vs. the prior 1344/5 baseline — new
 pre-existing baseline (`CardDetailTabs.vue` x3, `card-status.ts:263`,
 `card.ts`'s `endTurn` line, `mana.ts:275`, `server/api/tokens/by-key.ts:32`),
 zero new.
+
+## New `Trigger.on: 'counterAdded'` + `counterAddedMatch` (2026-09-19, schema agent)
+
+Closes a real schema gap `sink-model/catalog/families/counters.ts`'s own
+header comment had been flagging since 2026-09-18: Exemplar of Light's real
+second ability ("Whenever you put one or more +1/+1 counters on this
+creature, draw a card. This ability triggers only once each turn.") had no
+structural way to say WHICH counter type fires it — only a free-text
+`Trigger.name` convention (`'onCounterAdded'`) the sink-model family had to
+trust by authoring discipline alone. **That file's own prior citation of
+this as a tracked `ENGINE_GAPS.md` entry was checked and found WRONG** — no
+such entry ever existed (`grep`-confirmed against `functional-model/
+ENGINE_GAPS.md` before writing this section) — corrected in that file's own
+comment alongside this change, not backfilled as a new `ENGINE_GAPS.md`
+numbered entry either (see the `engine-support-registry.ts` entry below —
+same sparse, no-`gapRef` posture every other FDN `Trigger.on` addition in
+this pool already takes).
+
+**Real Forge citation** (`tmp/mtg-forge`): `TriggerCounterAdded`/
+`TriggerCounterAddedOnce` (`forge-game/.../trigger/
+TriggerCounterAdded(Once).java`) — Exemplar of Light's own real shipped
+script (`res/cardsfolder/e/exemplar_of_light.txt`): `T:Mode$
+CounterAddedOnce | CounterType$ P1P1 | ValidSource$ You | ValidCard$
+Card.Self | TriggerZones$ Battlefield | ActivationLimit$ 1 | Execute$
+TrigDraw`.
+
+**Schema shape landed** (`functional-model/card.ts`'s `Trigger` interface):
+
+```ts
+on?: ... | 'counterAdded';
+counterAddedMatch?: { counterType?: string };
+```
+
+- `on: 'counterAdded'` — THIS permanent's own counter(s) being put on it,
+  self-only scope (real Forge `ValidCard$ Card.Self`) — the counter-side
+  mirror of `'dies'` (self-only) rather than the board-wide
+  `'otherPermanentEnters'`/`'otherCreatureDies'` pattern; no real FDN card
+  needs a board-wide "a counter was put on ANY permanent" watch yet.
+- `counterAddedMatch.counterType` — real Forge `CounterType$` param, mirrors
+  `Effect.counterType`'s own string spelling (`'+1/+1'`, etc.) already used
+  by `putCounter`/`putCounterTarget`/`putCounterAll`. **Omitted means "any
+  counter type"** (Forge's own real `hasParam("CounterType")` wildcard
+  semantics when the param is absent) — NOT a silent default to `'+1/+1'`.
+- **Deliberately NOT shaped as a default-plus-named-exception pair** (unlike
+  `'enter'`/`'otherPermanentEnters'` or `'dies'`/`'otherCreatureDies'`) —
+  considered and rejected. Those pairs split on SCOPE, where the
+  un-parameterized case has exactly one unambiguous Forge meaning
+  (`ValidCard$ Card.Self`) with nothing else it could mean. `CounterType$`
+  has no such single default to fall back to: Forge's own un-parameterized
+  case is a genuine WILDCARD ("any type qualifies"), not "assume the most
+  common type" — collapsing a silent `'+1/+1'` default and that real
+  wildcard case onto the same bare `on: 'counterAdded'` value would be
+  actively lossy (a hypothetical future "whenever a counter of ANY kind is
+  put on this creature" card would be indistinguishable from Exemplar of
+  Light's own +1/+1-SPECIFIC clause). Also checked the real counter-type
+  distribution before assuming `'+1/+1'` was even a safe default in
+  practice: it's the large majority of real `Effect.counterType` USES
+  pool-wide (21/26 FDN, 25/37 FIN) but genuinely not the only live type in
+  active use (`stun`/`revival`/`loyalty`/`incubation`/`SOUL` real FDN
+  producer effects; `stun`/`LORE`/`CHARGE`/`finality`/`blight`/
+  `Indestructible` real FIN ones) — and on the CONSUMER-trigger side
+  specifically (the shape this field actually gates), Exemplar of Light is
+  the only real card in either pool using `on: 'counterAdded'` at all, too
+  small a sample to assert an empirical "dominant case" default the way
+  self-vs-other triggers had dozens of real self-only cards in the pool
+  before `'otherPermanentEnters'` was ever split out as the named
+  exception. Full reasoning trail lives on `counterAddedMatch`'s own doc
+  comment in `card.ts`.
+
+**Real card updated**: `functional-model/fdn-cards/exemplar-of-light/
+definition.ts`'s `onCounterAdded` trigger now sets `on: 'counterAdded',
+counterAddedMatch: { counterType: '+1/+1' }` alongside its pre-existing
+`name`/`activationLimit: 1` fields — `name` is KEPT (not redundant): it's
+still the `Scenario.trigger` handle (`card.ts`'s own `Trigger.name` doc
+comment) and still what `functional-model/sink-model/catalog/families/
+counters.ts`'s pre-existing `deriveConsumerTriggerNames`/
+`COUNTER_ADDED_TRIGGER_NAMES` fallback path keys on for a hypothetical
+future name-only (no real `on` value) card using the same convention — but
+it is NO LONGER the primary signal for Exemplar of Light itself, which now
+resolves via the structurally-safer path below. Re-gating this card
+(`gate-and-write-status.mjs exemplar-of-light`) flips its own
+`pipeline-status.json` from `purple` (`"name-only trigger with no real `on`
+value"`) to `blue`, `reasons: []` — re-verified against
+`functional-model/fdn-cards/exemplar-of-light/justification.json`'s own
+pre-existing real-oracle-text span for this clause (`verify-coverage-
+justification-cli.mjs exemplar-of-light` → `OK`, unchanged span, no
+justification rewrite needed).
+
+**`CountersSink` derivation widened** (`sink-model/catalog/families/
+counters.ts`) — additive, not a replacement of the existing producer-effect
+path:
+- `deriveCounterTypes` now UNIONS its pre-existing producer-effect walk with
+  a new `counterTypesFromConsumerTrigger` helper (every distinct
+  `counterType` named by a `trigger.on === 'counterAdded'` +
+  `counterAddedMatch.counterType` on `definition`) — only throws when BOTH
+  signals come up empty. This is the real unblock: a definition with ONLY a
+  consumer trigger (no co-located producer effect at all — the real
+  "whenever a counter is put on this creature, draw a card" oracle-text
+  shape with no separate granting ability on the same card) now
+  successfully constructs via `CountersSink(definition)` instead of
+  throwing.
+- New `deriveConsumerTriggerOn` (mirrors `etb.ts`'s own
+  `consumerTriggerOn: ['enter']` precedent) — returns `['counterAdded']`
+  when `definition` has a real `on: 'counterAdded'` trigger, threaded onto
+  the built `SinkCatalogEntry.consumerTriggerOn` field alongside the
+  pre-existing `consumerTriggerNames`. Checked via `match-sink.ts`'s own
+  pre-existing `matchesConsumerTriggerOn` — already read generically by
+  `card-interactions.ts`'s `matchEntry`, so this needed no further
+  plumbing. The old `deriveConsumerTriggerNames`/`COUNTER_ADDED_TRIGGER_NAMES`
+  free-text-name path is UNCHANGED in its own logic (still explicitly skips
+  any trigger that already carries a real `on` value) — since Exemplar of
+  Light's own trigger now sets `on: 'counterAdded'`, it naturally resolves
+  via the new structural `consumerTriggerOn` path instead of the old
+  name-based one going forward; the name-based path stays alive only as the
+  fallback for a hypothetical future differently-spelled, still name-only
+  convention. Confirmed backward-compatible: the pre-existing (pre-rewrite)
+  test suite's full 20-case coverage (`counters.test.ts`'s prior real
+  content, git history) still passes unmodified against this widened
+  `families/counters.ts`.
+
+**Engine-support registry** (`functional-model/engine-support-registry.ts`)
+— new `counter-added-trigger-not-enforced` entry, same Ward-pattern shape
+as every other `Trigger.on` addition in this pool (no `gapRef` — see this
+section's own opening paragraph for why no new `ENGINE_GAPS.md` entry was
+added either). `engine` agent should be consulted to confirm this
+classification (schema-recognized, engine-unenforced, ordinary Ward
+pattern) rather than something needing its own numbered `ENGINE_GAPS.md`
+entry — flagged for the orchestrator to relay, since this session's own
+tool access had no direct agent-to-agent messaging capability.
+
+**Verification**: `npx vitest run functional-model` — 119/120 files green
+(1328 passed, 5 skipped); the one failing file
+(`sink-model/catalog/counters.test.ts`) is a live, in-progress rewrite a
+concurrent session owns directly (explicitly out of this task's scope to
+touch) — it still authors its consumer-trigger mock with the OLD
+name-only, no-`on` shape, so it fails identically before and after this
+change for the same underlying "no real counterType signal at all" reason;
+not a regression. `npm run typecheck` — identical pre-existing 7-diagnostic
+baseline (line numbers shifted in `card.ts` from added doc comments only,
+zero new diagnostics).
