@@ -2,7 +2,7 @@
 // `catalog/index.ts` (the registry) and every individual `catalog/<slug>.ts`
 // module can both import it without a circular dependency between the
 // registry and its own entries.
-import type { CardDefinition, Trigger } from '../../card';
+import type { CardDefinition, TriggerOnValue } from '../../card';
 import type { SinkQuery } from '../sink-query';
 
 /**
@@ -116,7 +116,7 @@ export interface SinkCatalogEntry {
    * "blink/bounce value" archetype writeup — the real, motivating user
    * correction to an earlier, wrong "no split needed" design).
    */
-  consumerTriggerOn?: Array<Trigger['on']>;
+  consumerTriggerOn?: Array<TriggerOnValue>;
   /**
    * Real, structural CONSUMER-side recognition mode (2026-09-18, added for
    * the shared "Battlefield presence" catalog pair —

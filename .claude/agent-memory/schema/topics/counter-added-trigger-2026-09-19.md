@@ -139,3 +139,51 @@ precedent as the original field's own unresolved engine-consult.
 
 Full detail: `.claude/contracts/card-schema.md`'s new dated section
 ("`counterAddedMatch.source` — real `ValidSource$` gap closed").
+
+## Follow-up 2: `Trigger`/`TriggerOld`/`TriggerCause` split (2026-09-19, even later still)
+
+Mid-task course correction (3 successive orchestrator-relayed refinements)
+on top of the `source` field above: real Forge genuinely separates a `T:`
+line's condition params from its `Execute$`-pointed effect (two real
+objects, not one flat blob) — user wanted this reflected structurally, but
+STRICTLY narrow/additive: no migration anywhere else (FIN's 139 files, rest
+of FDN untouched), new shape ONLY for exemplar-of-light's two triggers.
+Final naming direction: OLD flat interface renamed `TriggerOld`; NEW
+`cause`/`effects`-nested shape takes the clean unsuffixed `Trigger` name
+(the preferred-going-forward one) — coexist via `CardDefinition.triggers?:
+(Trigger | TriggerOld)[]`.
+
+**Shape**: `TriggerCause { on: TriggerOnValue; condition?; otherPermanentEntersMatch?;
+otherCreatureDiesMatch?; counterAddedMatch?; attackersDeclaredMinCount?;
+drawNthCardThisTurnNumber?; tapLandForManaColor?; activationLimit?; }`;
+new `Trigger { name; effects; annotation?; cause?: TriggerCause }`. New
+exported `TriggerOnValue = NonNullable<TriggerOld['on']>` alias (single
+source of truth for the closed `on` union — any external `Trigger['on']`
+reference now resolves to the WRONG, new interface and needs swapping to
+this alias instead). New exported narrowing helpers: `triggerOn`,
+`triggerCondition`, `triggerCounterAddedMatch`, `triggerActivationLimit`,
+`triggerTapLandForManaColor` — plain `cause ? cause.field : field` duck-
+checks, safe for either real shape.
+
+**Real regression caught+fixed**: widening `CardDefinition.triggers` broke
+`validate-card-definition.mjs`'s `findNameOnlyTriggerGapReasons` (plain
+runtime `trigger.on` check, blind to `cause.on`) — exemplar-of-light
+flipped back to `purple` immediately after the restructure. Fixed:
+`trigger.on || trigger.cause?.on`. Re-gated, back to `blue`. Additive-only
+fix, not re-run `--all` (would only touch other cards' `computedAt`
+timestamps for zero real status change).
+
+**In-lane fixes** (own the type-checking fallout from widening
+`CardDefinition.triggers`): `sink-model/catalog/entry.ts`,
+`sink-model/match-sink.ts`, `sink-model/catalog/families/counters.ts`,
+`engine-support-registry.ts` (schema-owned per this agent's own brief) —
+all switched from direct `.on`/`.condition`/`.counterAddedMatch` access to
+the new helpers.
+
+**Out-of-lane, flagged for `engine`, NOT fixed**: 9 real `tsc` diagnostics
+in `engine.ts` (lines 582, 1114, 1154, 1204×3, 1249, 1256) and
+`triggers.ts` (lines 85, 86) — all mechanical one-line swaps to the same
+new helpers. Runtime unaffected (vitest doesn't type-check; full suite
+confirmed green throughout). Full precise line list + exact fix pattern:
+`.claude/contracts/card-schema.md`'s new dated section ("New nested
+`Trigger`/`TriggerCause` shape, `TriggerOld` split off").

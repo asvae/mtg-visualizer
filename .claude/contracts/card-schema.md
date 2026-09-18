@@ -3042,3 +3042,108 @@ own match shape, not a new capability), so no new `ENGINE_GAPS.md` entry
 or registry entry was added for it. Flagging for confirmation rather than
 asserting it outright, per this file's own existing "flagged for the
 orchestrator to relay" precedent two sections up.
+
+## New nested `Trigger`/`TriggerCause` shape, `TriggerOld` split off (2026-09-19, even later still, schema agent)
+
+Live mid-task course correction (3 successive user refinements, relayed by
+the orchestrator) on top of the `counterAddedMatch.source` work above:
+real Forge structure genuinely separates a `T:` line's own condition
+params (`Mode$`/`ValidCard$`/`CounterType$`/`ValidSource$`/
+`ActivationLimit$`) from its `Execute$`-pointed effect (a SEPARATE
+`SVar:<name>:...`) — two real, distinct objects, not the one flat blob
+`Trigger` has always been. User wanted this reflected structurally, but
+EXPLICITLY scoped narrow and additive only: no migration of any existing
+trigger anywhere (FIN's 139 production files untouched, rest of FDN pool
+untouched) — new shape used ONLY by `fdn-cards/exemplar-of-light/
+definition.ts`'s own two triggers, "rework would wait until things are
+solidified." Naming: flip the suffix direction — the OLD flat interface
+becomes `TriggerOld`, the clean unsuffixed `Trigger` name goes to the NEW
+nested shape (since it's the one new authoring should reach for), coexisting
+via `CardDefinition.triggers?: (Trigger | TriggerOld)[]`.
+
+**Landed shape** (`functional-model/card.ts`):
+```ts
+export interface TriggerOld { name: string; effects: Effect[]; activationLimit?: number; annotation?: ...; on?: TriggerOnValue; condition?: BoardStateCondition; otherPermanentEntersMatch?: {...}; otherCreatureDiesMatch?: {...}; counterAddedMatch?: {...}; attackersDeclaredMinCount?: number; drawNthCardThisTurnNumber?: number; tapLandForManaColor?: ManaColor; }
+export type TriggerOnValue = NonNullable<TriggerOld['on']>;
+export interface TriggerCause { on: TriggerOnValue; condition?: ...; otherPermanentEntersMatch?: ...; otherCreatureDiesMatch?: ...; counterAddedMatch?: ...; attackersDeclaredMinCount?: ...; drawNthCardThisTurnNumber?: ...; tapLandForManaColor?: ...; activationLimit?: number; }
+export interface Trigger { name: string; effects: Effect[]; annotation?: ...; cause?: TriggerCause; }
+```
+Every field inside `TriggerCause` is the EXACT same field/semantics as its
+identically-named `TriggerOld` sibling (their doc comments now cross-
+reference instead of duplicating a second driftable copy). `cause` is
+optional on the new `Trigger` too, mirroring `TriggerOld`'s own pre-
+existing name-only-trigger convention. `TriggerOnValue` is a new exported
+alias (`NonNullable<TriggerOld['on']>`) — the single source of truth for
+the closed `on` union, used by both shapes and by every external
+consumer that used to write `Trigger['on']` directly (that pattern now
+resolves to the wrong, NEW `Trigger` interface, which has no flat `on` —
+swap to `TriggerOnValue`).
+
+**New narrowing helpers** (`card.ts`, exported): `triggerOn`,
+`triggerCondition`, `triggerCounterAddedMatch`, `triggerActivationLimit`,
+`triggerTapLandForManaColor` — each takes `Trigger | TriggerOld` and
+returns the field's value regardless of which real shape the object is,
+via a plain runtime `cause ? cause.field : field` duck-check (not
+`instanceof`/tag-based, since neither shape carries a discriminant tag).
+Every in-lane consumer below was updated to call these instead of direct
+`.on`/`.counterAddedMatch`/etc. property access.
+
+**Real card**: `fdn-cards/exemplar-of-light/definition.ts`'s own two
+triggers (`onLifeGain`, `onCounterAdded`) both now use the new `cause`-
+nested `Trigger` shape (`satisfies Trigger`), the one real card in active
+scope. Re-gated: unchanged `blue`, `reasons: []`.
+
+**Real regression caught and fixed mid-task**: widening `CardDefinition
+.triggers` to the union broke `functional-model/scripts/validate-card-
+definition.mjs`'s own `findNameOnlyTriggerGapReasons` gate rule (plain
+runtime `trigger.on` check, blind to the new nested shape) — re-gating
+exemplar-of-light immediately after the restructure flipped it back to
+`purple` ("name-only trigger", wrongly, for BOTH triggers). Fixed: that
+check now reads `trigger.on || trigger.cause?.on` (plain JS, mirroring
+`triggerOn`'s own duck-check, since this file is a `.mjs` runtime script,
+not type-checked TS) — re-gated again, back to `blue`. This fix is
+STRICTLY ADDITIVE (only ever adds a match, never removes one), so it
+cannot regress any other FDN card's status; not re-run pool-wide via
+`--all` for that reason (would only rewrite every other card's
+`computedAt` timestamp for zero real status change).
+
+**In-lane consumer fixes** (all real reads of `.on`/`.condition`/
+`.counterAddedMatch`/`.activationLimit` on a generic `Trigger[]`-typed
+value, switched to the new helpers): `sink-model/catalog/entry.ts`
+(`Trigger['on']` → `TriggerOnValue`), `sink-model/match-sink.ts`
+(`hasOnEnterTrigger`, `matchesConsumerTriggerOn`), `sink-model/catalog/
+families/counters.ts` (`deriveCounterTypes`'s consumer-signal walk,
+`deriveConsumerTriggerNames`, `deriveConsumerTriggerOn`,
+`buildCounterInstance`'s param type), `engine-support-registry.ts`
+(`hasBoardStateCondition`, `hasOtherPermanentEntersTrigger`,
+`hasFdnTriggerClusterOnValue`, `hasCounterAddedTrigger`) —
+`engine-support-registry.ts` is schema-owned per this agent's own brief,
+included here rather than left to `engine`.
+
+**Out-of-lane fallout, NOT fixed here, flagged for `engine`**: widening
+`CardDefinition.triggers`'s own type surfaced 9 real `tsc` diagnostics in
+two `engine`-owned files that read `.on`/`.tapLandForManaColor`/
+`.activationLimit` directly off a generic trigger without narrowing:
+- `functional-model/engine.ts` — lines 582, 1114, 1154, 1204 (×3, both
+  `.on` and `.tapLandForManaColor` on the same line), 1249, 1256 — all
+  `.on ===` comparisons except 1204's `.tapLandForManaColor` reads.
+- `functional-model/triggers.ts` — lines 85, 86 — `.activationLimit`
+  reads inside the shared `fireTrigger` chokepoint.
+Every one is a mechanical, behavior-preserving one-line swap
+(`t.on` → `triggerOn(t)`, `t.tapLandForManaColor` →
+`triggerTapLandForManaColor(t)`, `t.activationLimit` →
+`triggerActivationLimit(t)`, all exported from `card.ts` for exactly this
+reuse) — deliberately NOT touched here, per this agent's own lane
+boundary (`engine.ts`/`triggers.ts` are `engine`-owned). Runtime behavior
+is UNAFFECTED today (every real trigger in play everywhere outside
+Exemplar of Light is still `TriggerOld`-shaped, and `vitest` doesn't
+type-check at build time — confirmed full suite green both before and
+after), so this is a real, but currently cosmetic-only, `tsc` diagnostic
+gap for `engine` to close whenever convenient, not a live bug.
+
+**Verification**: confirmed starting baseline first (120 files/1329
+passed/0 failed/5 skipped), identical after every step of this change.
+`npm run typecheck`: 9 new diagnostics, ALL in the two flagged
+`engine`-owned files above — zero new diagnostics anywhere in this
+agent's own lane. Re-gated `exemplar-of-light` directly (not `--all`) —
+`blue`, `reasons: []`, unchanged.

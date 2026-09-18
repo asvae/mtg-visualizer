@@ -1569,7 +1569,28 @@ export type BoardStateCondition =
  * `effects` array, so a scenario can pick exactly which one it's exercising
  * (see functional-model/harness.ts's own `Scenario.trigger`).
  */
-export interface Trigger {
+/**
+ * **Renamed from `Trigger` to `TriggerOld` (2026-09-19, even later still)** —
+ * this is the pre-existing FLAT shape (every "what fires this"/"only
+ * consulted when on===X" field sits at the root, alongside `effects`
+ * itself), kept byte-for-byte unchanged so every trigger anywhere in the
+ * codebase today (all of FIN's 139 production card files, the rest of the
+ * FDN pool) keeps compiling against it completely unchanged/un-migrated —
+ * this rename touches zero of those literal object authorings (grepped:
+ * zero `satisfies Trigger`/`: Trigger` references inside `functional-model/
+ * cards/` or `functional-model/fdn-cards/`; every card's trigger array is
+ * inferred structurally against `CardDefinition.triggers`, never against
+ * this type by name). The new, preferred `Trigger` (below, unsuffixed —
+ * real Forge scripts genuinely separate a `T:` line's own condition params
+ * from its `Execute$`-pointed effect, so the new shape mirrors that with a
+ * real `cause`/`effects` split) is additive, new surface area — used ONLY
+ * by `fdn-cards/exemplar-of-light/definition.ts`'s own two triggers as of
+ * this writing, coexisting with this flat shape via `CardDefinition
+ * .triggers?: (Trigger | TriggerOld)[]`. NOT a rework of any existing
+ * card — see this rename's own commit/`.claude/contracts/card-schema.md`
+ * dated section for the full "why now, why this narrow" reasoning.
+ */
+export interface TriggerOld {
   /** Short label — 'onEnter'/'onAttack'/'onDealsDamage'/etc. Matches a scenario's own `trigger` field. */
   name: string;
   effects: Effect[];
@@ -2103,6 +2124,116 @@ export interface Trigger {
 }
 
 /**
+ * Real Forge `T:` line's own closed condition-mode vocabulary — extracted
+ * as a named alias (2026-09-19, even later still) off `TriggerOld['on']`
+ * (`NonNullable` since that field is itself optional there) so `Trigger`/
+ * `TriggerCause` below share the EXACT SAME closed union as a single
+ * source of truth, rather than a second, driftable copy of the same giant
+ * string-literal list.
+ */
+export type TriggerOnValue = NonNullable<TriggerOld['on']>;
+
+/**
+ * **New (2026-09-19, even later still) — the "what fires this" HALF of a
+ * `Trigger`**, grouped into its own real, named object instead of sitting
+ * flat on `Trigger`'s own root the way `TriggerOld` does. Mirrors real
+ * Forge structure directly: a real `T:` line carries every condition param
+ * (`Mode$`/`ValidCard$`/`CounterType$`/`ValidSource$`/`ActivationLimit$`)
+ * as ONE clause, pointing at a SEPARATELY defined `SVar:<name>:...` effect
+ * via `Execute$` — condition and effect are two genuinely distinct real
+ * objects in Forge itself, not one flat blob. Every field here is the
+ * EXACT SAME field, same semantics, same real-Forge grounding as its
+ * identically-named `TriggerOld` sibling above (see that field's own doc
+ * comment for the full citation/reasoning — not repeated here to avoid a
+ * second, driftable copy of the same prose) — this is purely a
+ * RESTRUCTURING of where these fields live, not a semantic schema change.
+ * `on` is REQUIRED here (unlike `TriggerOld.on`, optional) — `cause`'s
+ * entire reason to exist is naming what fires this trigger; a `Trigger`
+ * with no real `on` value has no reason to carry an (empty) `cause` object
+ * at all and should simply omit `cause` (name-only trigger, mirroring
+ * `TriggerOld`'s own pre-existing name-only convention).
+ */
+export interface TriggerCause {
+  on: TriggerOnValue;
+  /** See `TriggerOld.condition`'s own doc comment — identical field. */
+  condition?: BoardStateCondition;
+  /** See `TriggerOld.otherPermanentEntersMatch`'s own doc comment — identical field. */
+  otherPermanentEntersMatch?: { subtype?: string; nonToken?: boolean; sameController?: boolean; isLand?: boolean };
+  /** See `TriggerOld.otherCreatureDiesMatch`'s own doc comment — identical field. */
+  otherCreatureDiesMatch?: { nonToken?: boolean; sameController?: boolean };
+  /** See `TriggerOld.counterAddedMatch`'s own doc comment — identical field. */
+  counterAddedMatch?: { counterType?: string; source?: 'you' };
+  /** See `TriggerOld.attackersDeclaredMinCount`'s own doc comment — identical field. */
+  attackersDeclaredMinCount?: number;
+  /** See `TriggerOld.drawNthCardThisTurnNumber`'s own doc comment — identical field. */
+  drawNthCardThisTurnNumber?: number;
+  /** See `TriggerOld.tapLandForManaColor`'s own doc comment — identical field. */
+  tapLandForManaColor?: ManaColor;
+  /** See `TriggerOld.activationLimit`'s own doc comment — identical field. */
+  activationLimit?: number;
+}
+
+/**
+ * **New, preferred `Trigger` shape (2026-09-19, even later still)** — the
+ * clean, unsuffixed name goes to this shape (not `TriggerOld`'s) since
+ * it's the one new authoring should reach for going forward; `TriggerOld`
+ * keeps every pre-existing trigger anywhere in the codebase compiling
+ * unchanged. `name`/`effects`/`annotation` stay at the root (unrelated to
+ * "what fires this" — `annotation` is FIN's own unrelated
+ * `PRD_AUTOMATED_AUTHORING.md` prototype field, see `TriggerOld
+ * .annotation`'s own doc comment); every "what fires this" field moves
+ * into `cause` (see `TriggerCause` above). `cause` itself is optional,
+ * mirroring `TriggerOld`'s own pre-existing name-only-trigger
+ * convention (a trigger fired only by a `Scenario.trigger` handle, not yet
+ * a closed auto-fire `on` occasion) — NOT required just because this is
+ * the new shape.
+ */
+export interface Trigger {
+  name: string;
+  effects: Effect[];
+  annotation?: FactAnnotationAuthoring;
+  cause?: TriggerCause;
+}
+
+/**
+ * Narrowing helpers (2026-09-19, even later still) for reading a single
+ * "what fires this" field off EITHER real `Trigger` shape without every
+ * call site re-deriving the same `'cause' in trigger` duck-check by hand —
+ * a plain runtime shape check (not `instanceof`/discriminant-tag based,
+ * since neither shape carries one), safe because `cause` is a key `Trigger`
+ * alone can ever carry (`TriggerOld` has no `cause` field at all). Returns
+ * `undefined` identically for a genuine name-only trigger under EITHER
+ * shape (no `cause` object / no flat field set) — same "omitted" meaning
+ * both shapes already give that case. Exported for `engine`/other
+ * consumers to reuse rather than re-deriving their own copy of this same
+ * union-narrowing logic.
+ */
+export function triggerOn(trigger: Trigger | TriggerOld): TriggerOnValue | undefined {
+  const t = trigger as { cause?: TriggerCause; on?: TriggerOnValue };
+  return t.cause ? t.cause.on : t.on;
+}
+/** See `triggerOn`'s own doc comment — same pattern, for `condition`. */
+export function triggerCondition(trigger: Trigger | TriggerOld): BoardStateCondition | undefined {
+  const t = trigger as { cause?: TriggerCause; condition?: BoardStateCondition };
+  return t.cause ? t.cause.condition : t.condition;
+}
+/** See `triggerOn`'s own doc comment — same pattern, for `counterAddedMatch`. */
+export function triggerCounterAddedMatch(trigger: Trigger | TriggerOld): { counterType?: string; source?: 'you' } | undefined {
+  const t = trigger as { cause?: TriggerCause; counterAddedMatch?: { counterType?: string; source?: 'you' } };
+  return t.cause ? t.cause.counterAddedMatch : t.counterAddedMatch;
+}
+/** See `triggerOn`'s own doc comment — same pattern, for `activationLimit`. */
+export function triggerActivationLimit(trigger: Trigger | TriggerOld): number | undefined {
+  const t = trigger as { cause?: TriggerCause; activationLimit?: number };
+  return t.cause ? t.cause.activationLimit : t.activationLimit;
+}
+/** See `triggerOn`'s own doc comment — same pattern, for `tapLandForManaColor`. */
+export function triggerTapLandForManaColor(trigger: Trigger | TriggerOld): ManaColor | undefined {
+  const t = trigger as { cause?: TriggerCause; tapLandForManaColor?: ManaColor };
+  return t.cause ? t.cause.tapLandForManaColor : t.tapLandForManaColor;
+}
+
+/**
  * A controlled vocabulary of real Forge `K:` keyword names — see
  * `CardDefinition.keywords`'s own doc comment for which of these actually
  * change resolution behavior (today: only `Lifelink`/`Indestructible`) vs.
@@ -2508,8 +2639,15 @@ export interface CardDefinition {
    * reading as "annotates the whole card" at this top level.
    */
   readonly effectsAnnotation?: FactAnnotationAuthoring;
-  /** Zero or more independent named triggered abilities — see `Trigger` above. */
-  readonly triggers?: Trigger[];
+  /**
+   * Zero or more independent named triggered abilities. Union of the new,
+   * preferred `Trigger` (`cause`/`effects`-nested, see that type's own doc
+   * comment) and `TriggerOld` (the pre-existing flat shape every trigger
+   * anywhere in the codebase used before 2026-09-19, even later still) —
+   * additive coexistence, not a migration; see both types' own doc
+   * comments for the full "why two shapes" reasoning.
+   */
+  readonly triggers?: (Trigger | TriggerOld)[];
   /**
    * Real Forge `K:` lines — a CONTROLLED, executable vocabulary (as opposed
    * to `staticAbilities`' freeform text below), Forge's own real K:/S: split

@@ -167,7 +167,8 @@
 //    the pool today) has exactly one distinct `counterType`, so this is a
 //    single-element array in practice today — zero real behavior change,
 //    only a widened, honest contract.
-import type { CardDefinition, Effect, Trigger } from '../../../card';
+import type { CardDefinition, Effect, TriggerOnValue } from '../../../card';
+import { triggerCounterAddedMatch, triggerOn } from '../../../card';
 import { deriveOccurrences } from '../../match-sink';
 import type { SinkCatalogEntry, SinkFamily, SinkInstance } from '../entry';
 
@@ -288,8 +289,9 @@ function deriveCounterTypes(definition: CardDefinition): string[] {
 function counterTypesFromConsumerTrigger(definition: CardDefinition): string[] {
   const seen = new Set<string>();
   for (const trigger of definition.triggers ?? []) {
-    if (trigger.on === 'counterAdded' && trigger.counterAddedMatch?.counterType) {
-      seen.add(trigger.counterAddedMatch.counterType);
+    const counterAddedMatch = triggerCounterAddedMatch(trigger);
+    if (triggerOn(trigger) === 'counterAdded' && counterAddedMatch?.counterType) {
+      seen.add(counterAddedMatch.counterType);
     }
   }
   return [...seen];
@@ -382,7 +384,7 @@ const COUNTER_ADDED_TRIGGER_NAMES = ['onCounterAdded'];
  * yet" contract `SinkCatalogEntry.consumerTriggerNames` already documents.
  */
 function deriveConsumerTriggerNames(definition: CardDefinition): string[] | undefined {
-  const names = (definition.triggers ?? []).filter((trigger) => !trigger.on && COUNTER_ADDED_TRIGGER_NAMES.includes(trigger.name)).map((trigger) => trigger.name);
+  const names = (definition.triggers ?? []).filter((trigger) => !triggerOn(trigger) && COUNTER_ADDED_TRIGGER_NAMES.includes(trigger.name)).map((trigger) => trigger.name);
   return names.length > 0 ? names : undefined;
 }
 
@@ -400,8 +402,8 @@ function deriveConsumerTriggerNames(definition: CardDefinition): string[] | unde
  * the caller side (`card-interactions.ts`), same as every other
  * `consumerTriggerOn`-declaring entry.
  */
-function deriveConsumerTriggerOn(definition: CardDefinition): Array<Trigger['on']> | undefined {
-  const hasCounterAddedTrigger = (definition.triggers ?? []).some((trigger) => trigger.on === 'counterAdded');
+function deriveConsumerTriggerOn(definition: CardDefinition): Array<TriggerOnValue> | undefined {
+  const hasCounterAddedTrigger = (definition.triggers ?? []).some((trigger) => triggerOn(trigger) === 'counterAdded');
   return hasCounterAddedTrigger ? ['counterAdded'] : undefined;
 }
 
@@ -467,7 +469,7 @@ function buildCounterInstance(
   definition: CardDefinition,
   counterType: string,
   consumerTriggerNames: string[] | undefined,
-  consumerTriggerOn: Array<Trigger['on']> | undefined,
+  consumerTriggerOn: Array<TriggerOnValue> | undefined,
 ): SinkInstance {
   const slug = slugForCounterType(counterType);
   const category = counterType;

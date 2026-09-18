@@ -96,7 +96,8 @@
 // not `target` is set — a deliberate, documented improvement, not an
 // oversight; see the task's own final report for why this is judged a real
 // production bug rather than an intentional simplification.
-import type { CardDefinition, Computed, Effect, Trigger } from '../card';
+import type { CardDefinition, Computed, Effect, Trigger, TriggerOld, TriggerOnValue } from '../card';
+import { triggerOn } from '../card';
 import type { Filter, ProgramNode, Query, ValueRef } from '../combinator';
 import { extractOccurrences } from '../recognizers/program-ast-walker';
 import type { Constraints, Side, StaticAttrs, Subject, TypeConstraint } from '../synergy';
@@ -240,8 +241,8 @@ function isNormalInstantOrSorcery(card: { typeLine: string }): boolean {
  * structurally-derivable `entersBattlefield` occurrence at all, even though
  * its own hand-authored `synergy.json` fact says it plainly does.
  */
-function hasOnEnterTrigger(face: { triggers?: Trigger[] }): boolean {
-  return !!face.triggers?.some((t) => t.on === 'enter');
+function hasOnEnterTrigger(face: { triggers?: (Trigger | TriggerOld)[] }): boolean {
+  return !!face.triggers?.some((t) => triggerOn(t) === 'enter');
 }
 
 /** Real per-effect-kind mapping — the structural core of this prototype.
@@ -807,11 +808,15 @@ export function matchesConsumerTriggerNames(names: string[] | undefined, candida
  * `onValues` undefined or empty means the catalog entry declares no
  * consumer-side signal at all — never matches.
  */
-export function matchesConsumerTriggerOn(onValues: Array<Trigger['on']> | undefined, candidate: CardDefinition): boolean {
+export function matchesConsumerTriggerOn(onValues: Array<TriggerOnValue> | undefined, candidate: CardDefinition): boolean {
   if (!onValues || onValues.length === 0) return false;
   const onSet = new Set(onValues);
-  if (candidate.triggers?.some((t) => onSet.has(t.on))) return true;
-  return candidate.backFace?.triggers?.some((t) => onSet.has(t.on)) ?? false;
+  const matches = (t: Trigger | TriggerOld) => {
+    const on = triggerOn(t);
+    return on !== undefined && onSet.has(on);
+  };
+  if (candidate.triggers?.some(matches)) return true;
+  return candidate.backFace?.triggers?.some(matches) ?? false;
 }
 
 /**

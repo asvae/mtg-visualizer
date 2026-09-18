@@ -448,12 +448,22 @@ export function findMissingSchemaFunctionalityGapReasons(definition) {
  * type — read defensively off the plain runtime object, same "transpile-
  * only import" reality this whole gate already works around for the
  * vocabulary walk).
+ *
+ * **`trigger.cause?.on` also checked (2026-09-19, even later still)** — the
+ * new, preferred `Trigger` shape (`card.ts`'s own `Trigger`/`TriggerOld`
+ * split, see that file's own doc comments) moves the real `on` value under
+ * a nested `cause` object instead of the flat root `TriggerOld` still uses;
+ * this gate reads the plain runtime object either way (same defensive
+ * style already used for `description`/`describe` above), so a genuine
+ * `cause.on` value counts exactly the same as a flat `on` value — Exemplar
+ * of Light's own two `cause`-nested triggers must NOT regress to
+ * "name-only" just because this rule predates that shape.
  */
 export function findNameOnlyTriggerGapReasons(definition) {
   const reasons = [];
   const walk = (def, faceLabel) => {
     for (const trigger of def.triggers ?? []) {
-      if (trigger.on) continue;
+      if (trigger.on || trigger.cause?.on) continue;
       const label = typeof trigger.name === 'string' && trigger.name.length > 0 ? trigger.name : '(unnamed trigger)';
       const detail = trigger.description ?? trigger.describe;
       reasons.push(

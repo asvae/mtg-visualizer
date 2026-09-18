@@ -28,6 +28,7 @@
 // `PipelineStatusFile` by `pipeline-status.ts` itself (see that file for
 // the wiring — this module only owns the registry + the pure classifier).
 import type { CardDefinition } from './card';
+import { triggerCondition, triggerOn } from './card';
 
 export interface EngineSupportGapEntry {
   /** Stable, kebab-case identity — never reused for a different gap once
@@ -137,7 +138,7 @@ export const ENGINE_SUPPORT_REGISTRY: EngineSupportGapEntry[] = [
 /** Shared by `board-state-condition-not-enforced` — true if any trigger or
  * continuous grant on this ONE face declares a `BoardStateCondition`. */
 function hasBoardStateCondition(def: CardDefinition): boolean {
-  if ((def.triggers ?? []).some((t) => t.condition)) return true;
+  if ((def.triggers ?? []).some((t) => triggerCondition(t))) return true;
   const grantArrays = [def.continuousKeywordGrants, def.continuousPTGrants, def.continuousTypeGrants];
   return grantArrays.some((grants) => (grants ?? []).some((g) => g.condition));
 }
@@ -145,7 +146,7 @@ function hasBoardStateCondition(def: CardDefinition): boolean {
 /** Shared by `other-permanent-enters-trigger-not-enforced` — true if any
  * trigger on this ONE face uses the new watch-trigger `on` value. */
 function hasOtherPermanentEntersTrigger(def: CardDefinition): boolean {
-  return (def.triggers ?? []).some((t) => t.on === 'otherPermanentEnters');
+  return (def.triggers ?? []).some((t) => triggerOn(t) === 'otherPermanentEnters');
 }
 
 /** Shared by `fdn-trigger-cluster-not-enforced` — true if any trigger on
@@ -164,7 +165,10 @@ const FDN_TRIGGER_CLUSTER_ON_VALUES = new Set<string>([
   'opponentLifeLost',
 ]);
 function hasFdnTriggerClusterOnValue(def: CardDefinition): boolean {
-  return (def.triggers ?? []).some((t) => typeof t.on === 'string' && FDN_TRIGGER_CLUSTER_ON_VALUES.has(t.on));
+  return (def.triggers ?? []).some((t) => {
+    const on = triggerOn(t);
+    return typeof on === 'string' && FDN_TRIGGER_CLUSTER_ON_VALUES.has(on);
+  });
 }
 
 /** Shared by `spell-cost-reduction-card-type-gate-not-enforced` — true if
@@ -177,7 +181,7 @@ function hasSpellCostReductionCardTypeGate(def: CardDefinition): boolean {
 /** Shared by `counter-added-trigger-not-enforced` — true if any trigger on
  * this ONE face uses the new (2026-09-19) `on: 'counterAdded'` value. */
 function hasCounterAddedTrigger(def: CardDefinition): boolean {
-  return (def.triggers ?? []).some((t) => t.on === 'counterAdded');
+  return (def.triggers ?? []).some((t) => triggerOn(t) === 'counterAdded');
 }
 
 /**
