@@ -15,6 +15,7 @@ export const kaitoCunningInfiltrator: CardDefinition = {
   triggers: [
     {
       name: 'onCombatDamageToPlayer',
+      on: 'creatureYouControlDealsCombatDamageToPlayer',
       effects: [{ kind: 'putCounter', target: 'self', counterType: 'loyalty', amount: 1 } satisfies Effect],
     },
   ],

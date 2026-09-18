@@ -9,6 +9,7 @@ export const infestationSage: CardDefinition = {
   triggers: [
     {
       name: 'onDeath',
+      on: 'dies',
       effects: [
         {
           kind: 'createToken',

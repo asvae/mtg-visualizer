@@ -10,6 +10,8 @@ export const beastKinRanger: CardDefinition = {
   triggers: [
     {
       name: 'onOtherCreatureEnters',
+      on: 'otherPermanentEnters',
+      otherPermanentEntersMatch: { sameController: true },
       effects: [{ kind: 'pumpSelf', power: 1, toughness: 0, untilEndOfTurn: true } satisfies Effect],
     },
   ],

@@ -9,6 +9,7 @@ export const battlesongBerserker: CardDefinition = {
   triggers: [
     {
       name: 'onAttack',
+      on: 'attackersDeclared',
       effects: [
         {
           kind: 'pumpTarget',

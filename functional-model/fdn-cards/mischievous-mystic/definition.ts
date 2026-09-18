@@ -10,6 +10,8 @@ export const mischiefousMystic: CardDefinition = {
   triggers: [
     {
       name: 'onSecondDraw',
+      on: 'drawNthCardThisTurn',
+      drawNthCardThisTurnNumber: 2,
       effects: [
         {
           kind: 'createToken',

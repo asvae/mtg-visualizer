@@ -10,6 +10,7 @@ export const eagerTrufflesnout: CardDefinition = {
   triggers: [
     {
       name: 'onCombatDamageToPlayer',
+      on: 'dealsCombatDamageToPlayer',
       effects: [
         {
           kind: 'createToken',

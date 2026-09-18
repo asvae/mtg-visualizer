@@ -1,6 +1,6 @@
 [
   {
-    "type": "rules",
+    "type": "definition",
     "textLocation": "oracle_text",
     "spans": [
       {
@@ -11,11 +11,11 @@
     ],
     "definitionKeys": [
       {
-        "kind": "missingSchemaFunctionality",
-        "index": 0
+        "kind": "field",
+        "field": "spellCostReductionGrants"
       }
     ],
-    "reasoning": "Genuinely uncovered — SpellCostReductionGrant only gates on colors, never card type, so a flat type-gated broadcast discount can't be declared; formally declared as a real capacity gap rather than left as undeclared prose."
+    "reasoning": "SpellCostReductionGrant gained a real cardTypes field (2026-09-18, later still) alongside its existing colors gate — this card's own grant ({amount:1, colors:[], cardTypes:['Instant','Sorcery']}) is the exact real structure this sentence describes. Not yet consulted by state.ts's own activeSpellCostDiscount (colors-only today) — see engine-support-registry.ts's own spell-cost-reduction-card-type-gate-not-enforced entry; that's an engine-runtime question, not a schema-representation gap."
   },
   {
     "type": "definition",
@@ -33,6 +33,6 @@
         "name": "onInstantOrSorceryCast"
       }
     ],
-    "reasoning": "This card's own onInstantOrSorceryCast trigger (real drawCard effect, amount:1) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists for a spell-cast-by-type event) — this FDN pool's own gate automatically classifies any name-only trigger as a capacity gap, so this card lands at purple via BOTH this and the cost-reduction gap above."
+    "reasoning": "This card's own onInstantOrSorceryCast trigger (real drawCard effect, amount:1) now carries a real on:'castInstantOrSorcery' value (added 2026-09-18, later still, FDN trigger-dispatch-cluster pass — real Forge TriggerSpellAbilityCastOrCopy, Mode$ SpellCast | ValidCard$ Instant,Sorcery) — no longer a name-only trigger."
   }
 ]

@@ -15,10 +15,10 @@
         "name": "onDeath"
       }
     ],
-    "reasoning": "This card's own onDeath trigger is named for, and structurally represents, this exact dies occasion \u2014 no on value exists for a dies event in this schema's Trigger.on union, so it's a real but not-yet-auto-firing (name-only) trigger, same convention every other not-yet-auto-fired trigger in this pool already uses."
+    "reasoning": "This card's own onDeath trigger now carries a real on:'dies' value (added 2026-09-18, later still, FDN trigger-dispatch-cluster pass \u2014 real Forge TriggerChangesZone, Mode$ ChangesZone | Origin$ Battlefield | Destination$ Graveyard | ValidCard$ Card.Self) \u2014 no longer a name-only trigger."
   },
   {
-    "type": "rules",
+    "type": "definition",
     "textLocation": "oracle_text",
     "spans": [
       {
@@ -29,11 +29,11 @@
     ],
     "definitionKeys": [
       {
-        "kind": "missingSchemaFunctionality",
-        "index": 0
+        "kind": "trigger",
+        "name": "onDeath"
       }
     ],
-    "reasoning": "Genuinely uncovered \u2014 no BoardStateCondition variant (or any other field) checks the triggering permanent's own current type membership; the rest of this trigger's real, executable custom effect runs unconditionally instead."
+    "reasoning": "This card's own onDeath trigger now declares condition: {kind:'selfLacksType', type:'Demon'} (BoardStateCondition's new selfLacksType variant, added 2026-09-18, later still) \u2014 AND, beyond the documentary condition field (not itself consulted by resolveCard), the trigger's own kind:'custom' closure carries a REAL functional guard (if (ctx.self.hasSubtype('Demon')) return;) before running the return-with-counters sequence, so this clause is genuinely enforced, not just declared."
   },
   {
     "type": "definition",

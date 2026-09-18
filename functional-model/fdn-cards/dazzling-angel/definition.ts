@@ -10,6 +10,8 @@ export const dazzlingAngel: CardDefinition = {
   triggers: [
     {
       name: 'onOtherCreatureEnter',
+      on: 'otherPermanentEnters',
+      otherPermanentEntersMatch: { sameController: true },
       effects: [
         {
           kind: 'gainLife',

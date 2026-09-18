@@ -21,6 +21,13 @@ export const catCollector: CardDefinition = {
     },
     {
       name: 'onGainLifeFirst',
+      on: 'lifeGained',
+      // Real Forge FirstTime$ True | PlayerTurn$ True ("...for the first time
+      // during each of your turns") — same per-turn-reset outcome as the
+      // pre-existing activationLimit field's own ActivationLimit$ 1 (see
+      // Trigger.activationLimit's own doc comment), reused here rather than
+      // adding a second, narrower "first time" field for the same effect.
+      activationLimit: 1,
       effects: [
         {
           kind: 'createToken',

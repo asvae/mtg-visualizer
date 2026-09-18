@@ -16,6 +16,8 @@ export const homunculusHorde: CardDefinition = {
   triggers: [
     {
       name: 'onSecondDraw',
+      on: 'drawNthCardThisTurn',
+      drawNthCardThisTurnNumber: 2,
       effects: [
         {
           kind: 'custom',

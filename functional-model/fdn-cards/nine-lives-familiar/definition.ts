@@ -24,6 +24,7 @@ export const nineLivesFamiliar: CardDefinition = {
       // return it to the battlefield with one fewer revival counter on it
       // at the beginning of the next end step."
       name: 'onDeath',
+      on: 'dies',
       effects: [
         {
           kind: 'custom',

@@ -11,6 +11,7 @@ export const bloodthirstyConqueror: CardDefinition = {
   triggers: [
     {
       name: 'onOpponentLifeLoss',
+      on: 'opponentLifeLost',
       effects: [
         {
           kind: 'gainLife',

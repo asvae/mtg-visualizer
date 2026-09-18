@@ -19,6 +19,8 @@ export const highSocietyHunter: CardDefinition = {
     },
     {
       name: 'onCreatureDies',
+      on: 'otherCreatureDies',
+      otherCreatureDiesMatch: { nonToken: true },
       effects: [
         {
           kind: 'drawCard',

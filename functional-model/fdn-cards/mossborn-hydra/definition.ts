@@ -15,6 +15,8 @@ export const mossbornHydra: CardDefinition = {
     },
     {
       name: 'onLandfallDouble',
+      on: 'otherPermanentEnters',
+      otherPermanentEntersMatch: { isLand: true, sameController: true },
       effects: [
         {
           kind: 'putCounter',

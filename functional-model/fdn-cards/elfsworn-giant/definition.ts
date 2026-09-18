@@ -10,6 +10,8 @@ export const elfswornGiant: CardDefinition = {
   triggers: [
     {
       name: 'onLandfall',
+      on: 'otherPermanentEnters',
+      otherPermanentEntersMatch: { isLand: true, sameController: true },
       effects: [
         {
           kind: 'createToken',

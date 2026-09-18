@@ -6,17 +6,13 @@ export const archmageOfRunes: CardDefinition = {
   typeLine: 'Creature — Giant Wizard',
   pt: [3, 6],
 
-  missingSchemaFunctionality: [
-    {
-      clause: 'Instant and sorcery spells you cast cost {1} less to cast.',
-      demand:
-        '`SpellCostReductionGrant` (this permanent\'s own broadcast cost-reduction shape) only ever gates on `colors: string[]` — no card-TYPE-gated variant exists (Instant/Sorcery, as opposed to a color), so a flat, unconditional type-gated discount onto every future instant/sorcery the controller casts can\'t be declared today.',
-    },
-  ],
+  // "Instant and sorcery spells you cast cost {1} less to cast."
+  spellCostReductionGrants: [{ amount: 1, colors: [], cardTypes: ['Instant', 'Sorcery'] }],
 
   triggers: [
     {
       name: 'onInstantOrSorceryCast',
+      on: 'castInstantOrSorcery',
       effects: [
         {
           kind: 'drawCard',

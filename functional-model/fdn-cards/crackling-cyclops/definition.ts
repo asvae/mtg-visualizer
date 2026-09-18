@@ -9,6 +9,7 @@ export const cracklingCyclops: CardDefinition = {
   triggers: [
     {
       name: 'NoncreatureSpellCast',
+      on: 'castNoncreatureSpell',
       effects: [
         {
           kind: 'pumpSelf',

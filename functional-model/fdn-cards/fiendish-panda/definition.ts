@@ -9,10 +9,12 @@ export const fiendishPanda: CardDefinition = {
   triggers: [
     {
       name: 'onGainLife',
+      on: 'lifeGained',
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
     },
     {
       name: 'onDies',
+      on: 'dies',
       effects: [
         {
           kind: 'custom',

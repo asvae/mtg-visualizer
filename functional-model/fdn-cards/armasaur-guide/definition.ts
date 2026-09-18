@@ -10,6 +10,8 @@ export const armasaurGuide: CardDefinition = {
   triggers: [
     {
       name: 'onMassAttack',
+      on: 'attackersDeclared',
+      attackersDeclaredMinCount: 3,
       effects: [
         {
           kind: 'putCounterTarget',

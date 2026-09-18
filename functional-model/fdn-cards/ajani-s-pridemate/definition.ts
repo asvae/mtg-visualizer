@@ -10,6 +10,7 @@ export const ajanisPridemate: CardDefinition = {
   triggers: [
     {
       name: 'onLifeGained',
+      on: 'lifeGained',
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
     },
   ],

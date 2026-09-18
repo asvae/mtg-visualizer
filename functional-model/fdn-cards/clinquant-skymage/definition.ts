@@ -11,6 +11,7 @@ export const clinquantSkymage: CardDefinition = {
   triggers: [
     {
       name: 'onDraw',
+      on: 'drawNthCardThisTurn',
       effects: [
         {
           kind: 'putCounter',

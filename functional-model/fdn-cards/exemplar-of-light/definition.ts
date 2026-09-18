@@ -10,6 +10,7 @@ export const exemplarOfLight: CardDefinition = {
   triggers: [
     {
       name: 'onLifeGain',
+      on: 'lifeGained',
       effects: [
         {
           kind: 'putCounter',
