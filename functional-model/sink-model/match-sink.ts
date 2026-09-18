@@ -507,11 +507,29 @@ function isGraveyardArrivalWant(w: SinkQuery): boolean {
 /** Mirrors `synergy.ts`'s own private `destroyGuaranteedTypes` — only a
  * `target.types.has` is a real GUARANTEE about what a destroy (or,
  * generalized here, any occurrence with a `target` filter) actually
- * affects; `hasAny`/`not`/absent guarantees nothing SPECIFIC. */
+ * affects; `hasAny`/`not`/absent guarantees nothing SPECIFIC.
+ *
+ * **Widened 2026-09-18** (found building the sink catalog's own
+ * `graveyard-fodder` corpus, `sink-model/catalog/graveyard-fodder.test.ts`):
+ * a `target` filter is the right shape when an effect CHOOSES among a wider
+ * pool (`destroy`/`putCounterTarget`/... — "target creature," could have
+ * been a different one), but `sacrifice`/`move`'s own `walkEffects` cases
+ * instead put their guarantee directly on the occurrence's own top-level
+ * `Constraints` (`ProducerOccurrence extends Constraints`) — there IS no
+ * wider pool to have chosen among (a sacrifice/move effect's own victim set
+ * is exactly what `effect.validType` says, full stop, CR 701.16 — no
+ * indestructible/regeneration escape the way `destroy` has). Falls back to
+ * `p.types?.has` when there's no `target`-shaped guarantee, so a zone-shaped
+ * occurrence with a bare top-level `types` constraint (previously silently
+ * un-consultable by ANY matching branch — confirmed dead code before this
+ * fix, since the zone-shaped branch in `occurrenceSatisfiesSink` only ever
+ * called `resolveOccurrenceSubject` and never read `p.types` at all) now
+ * counts as a real guarantee too, via `satisfiesViaSubjectOrGuarantee`
+ * below. */
 function guaranteedTypes(p: ProducerOccurrence): string[] {
   const t = p.target;
-  if (!t || typeof t !== 'object') return [];
-  return t.types?.has ?? [];
+  if (t && typeof t === 'object' && t.types?.has) return t.types.has;
+  return p.types?.has ?? [];
 }
 
 /** Mirrors `synergy.ts`'s own private `satisfiesDestroyImpliesDies` — CR
@@ -562,8 +580,15 @@ function occurrenceSatisfiesSink(p: ProducerOccurrence, w: SinkQuery, candidate:
     if (effectiveZone(p) === undefined || effectiveZone(p) !== effectiveZone(w)) return false;
     const wantConstraints = constraintsOf(w);
     if (!hasAnyConstraint(wantConstraints)) return true;
-    const attrs = resolveOccurrenceSubject(p, candidate);
-    return !!attrs && satisfiesConstraints(attrs, wantConstraints);
+    // 2026-09-18 widening — see `guaranteedTypes`'s own doc comment: this
+    // used to be a bespoke `!!attrs && satisfiesConstraints(...)` check
+    // (subject-only, no fallback), silently failing every zone-shaped
+    // occurrence with no resolvable subject even when the occurrence's own
+    // `types` constraint genuinely guaranteed a match (`sacrifice`/`move`).
+    // Reuses the SAME subject-or-guarantee fallback chain the event-vs-event
+    // branch below already established, applied uniformly to the zone-shaped
+    // branch too.
+    return satisfiesViaSubjectOrGuarantee(p, candidate, wantConstraints);
   }
 
   // event-vs-event

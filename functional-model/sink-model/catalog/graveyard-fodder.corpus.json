@@ -1,0 +1,30 @@
+{
+  "total": 4,
+  "passing": 4,
+  "cases": [
+    {
+      "case": "unrestricted \"destroy target creature\"",
+      "mirrors": "Battle Menu's own \"destroy target creature\" mode (FIN) — real production match into Fight On!'s own real graveyard-fodder sink",
+      "expectedVerdict": "matches",
+      "note": "Mocked Instant with effects:[{kind:'destroy', validType:'creature', qty:1}]. Verified in graveyard-fodder.test.ts via matchSink."
+    },
+    {
+      "case": "self-sacrifice of a creature (701.16, no indestructible/regeneration escape)",
+      "mirrors": "any real \"sacrifice a creature\" effect",
+      "expectedVerdict": "matches",
+      "note": "Mocked Sorcery with effects:[{kind:'sacrifice', owner:'you', validType:'creature'}]. Verified in graveyard-fodder.test.ts via matchSink."
+    },
+    {
+      "case": "unrestricted \"destroy target permanent\" (no guaranteed Creature type)",
+      "mirrors": "a generic removal spell that COULD legally hit a land/artifact instead",
+      "expectedVerdict": "no-match",
+      "note": "Mocked Sorcery with effects:[{kind:'destroy', validType:'permanent', qty:1}] — no guaranteed type, so it cannot honestly satisfy a Creature-typed graveyard-arrival want. Verified in graveyard-fodder.test.ts via matchSink."
+    },
+    {
+      "case": "vanilla, unrelated card (bare lifegain spell)",
+      "mirrors": "any real card with no creature-destroying/sacrificing effect at all",
+      "expectedVerdict": "no-match",
+      "note": "Mocked Sorcery with effects:[{kind:'gainLife', amount:2}] only. Verified in graveyard-fodder.test.ts via matchSink."
+    }
+  ]
+}

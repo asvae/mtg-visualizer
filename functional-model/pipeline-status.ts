@@ -41,9 +41,54 @@
 //     "some other blocking reason might need its own status later" case,
 //     so `gray`/`purple`/`blue`/`yellow`/`green` is the complete, final
 //     5-state list — no 6th status is needed.
-//   `blue`  — the agent completed the transcription step fully: `functional-
-//     model/scripts/validate-card-definition.mjs`'s own deterministic
-//     schema-validation gate passed.
+//   `blue`  — **redefined 2026-09-18, later same day, per an explicit user
+//     ruling (sink-only-synergy-model experiment, catalog/attachment
+//     workstream) — now requires BOTH of:**
+//     (a) the pre-existing condition above: `functional-model/scripts/
+//         validate-card-definition.mjs`'s own deterministic
+//         schema-validation gate passed, AND
+//     (b) `functional-model/sink-attachment.ts`'s own per-card sink-
+//         ATTACHMENT step is complete (`isSinkAttachmentComplete` —
+//         `functional-model/fdn-cards/<slug>/sinks.json` exists, is marked
+//         `reviewed: true`, every referenced catalog slug is real, and its
+//         own recorded fingerprint still matches the card's CURRENT
+//         `definition.ts`). Zero attached sinks is a fully legitimate,
+//         "complete" outcome (Serra Angel's own real shape — a vanilla
+//         creature with no real synergy hooks) — the requirement is that
+//         the attachment step was explicitly PERFORMED, never that the
+//         resulting slug count is nonzero.
+//     Applied uniformly, no grandfathering: `pipelineStatusFromGateResult`
+//     ITSELF is UNCHANGED (still writes a raw `status: 'blue'` purely off
+//     the schema gate, same as before this redefinition — see that
+//     function's own doc comment, "a pure function, no fs reads inside
+//     itself," a property this redefinition does not disturb) — the second
+//     condition is enforced only in `effectivePipelineStatus` below (the
+//     computed, display-time value every real consumer should read
+//     instead of the raw stored `status`), which downgrades an otherwise-
+//     `blue` stored entry to `gray` (see that function's own doc comment
+//     for why `gray`, not a new bucket or the broadened `purple` above, is
+//     the correct fallback here) whenever the attachment step hasn't been
+//     completed yet. Consequence, verified directly against the real pool
+//     (`functional-model/fdn-cards/*/pipeline-status.json`) at the moment
+//     this redefinition landed: all 7 real FDN cards that were stored
+//     `blue` under the OLD, gate-only definition (`ajani-s-pridemate`,
+//     `day-of-judgment`, `essence-scatter`, `fleeting-distraction`,
+//     `healer-s-hawk`, `helpful-hunter`, `serra-angel`) genuinely regressed
+//     to an effective `gray` the instant this landed — none of them had a
+//     `sinks.json` yet. Two were then given a real attachment (restoring
+//     their effective `blue`): `ajani-s-pridemate` (wants the shared
+//     `lifegain` catalog sink — its own real `onLifeGained` trigger) and
+//     `serra-angel` (zero sinks, `reviewed: true` — the explicit "vanilla
+//     creature, zero is a legitimate complete outcome" demonstration). The
+//     other 5 remain effectively `gray` until their own attachment step is
+//     done — a real, intentional, checked consequence of this redefinition,
+//     not an oversight.
+//     **Deliberately scoped to `blue` only, not `yellow`/`green` too** — see
+//     `effectivePipelineStatus`'s own doc comment for the full reasoning
+//     (in short: a human review outcome, once it genuinely happens, is not
+//     retroactively second-guessed by this completeness axis; the review
+//     ROUTE's own precondition is a separate, not-yet-updated concern,
+//     flagged in `.claude/contracts/card-schema.md`, not addressed here).
 //   `yellow`— a human reviewed a `blue` card and found it wrong (carries a
 //     required `reviewNote`).
 //   `green` — a human reviewed a `blue` card and confirmed it (carries
@@ -126,6 +171,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFunctionalModelFile } from './source-files';
+import { isSinkAttachmentComplete } from './sink-attachment';
 
 // `validate-card-definition.mjs`'s own real return shape, duplicated here
 // as a type only (that script is plain `.mjs` — no exported TS types to
@@ -315,9 +361,36 @@ export function computePipelineDefinitionFingerprint(slug: string, root: string 
  * `computePipelineDefinitionFingerprint` — any mismatch, OR a missing
  * `reviewedFingerprint` at all (an old, pre-fingerprint entry), downgrades
  * the effective status to `'re-review'` rather than trusting a possibly-
- * stale `'green'`. Every other stored status (`gray`/`purple`/`blue`/
- * `yellow`) passes through unchanged — drift only ever matters for a
- * confirmed `green`.
+ * stale `'green'`. Every other stored status (`gray`/`purple`/`yellow`)
+ * passes through unchanged — drift only ever matters for a confirmed
+ * `green`.
+ *
+ * **`blue` redefinition (2026-09-18, later same day) — see this file's own
+ * header for the full rationale.** A stored `'blue'` entry additionally
+ * requires `sink-attachment.ts`'s own `isSinkAttachmentComplete(slug,
+ * root)` to be `true`; when it isn't, this function returns `'gray'`
+ * instead of `'blue'` — chosen deliberately over inventing a 7th bucket or
+ * reusing the now-broadened `'purple'` (that status is reserved for a
+ * genuine, detected engine-capacity/vocabulary gap, `failureKind:
+ * 'capacity-gap'` — attachment-incompleteness isn't that; it's real,
+ * ordinary, still-pending agent work, which is exactly what `'gray'`
+ * ("ready for agent work... or simply hasn't been attempted") already
+ * means). **Deliberately scoped to `'blue'` only — a stored `'yellow'`/
+ * `'green'` entry passes through UNCHANGED regardless of attachment
+ * status, even though either could only have been reached from a `'blue'`
+ * precondition (`applyPipelineReview`'s own gate).** Reasoning: a human
+ * review outcome, once it genuinely happened, records a real judgment call
+ * that this completeness axis should not silently override or hide behind
+ * a `'gray'` fallback — and, as of this writing, the review ROUTE itself
+ * (`POST /api/fdn-cards/:slug/review`, `card`/`server`-owned, re-runs the
+ * schema gate fresh but does NOT yet also check attachment completeness —
+ * a real, separate, flagged-not-fixed-here follow-up, see `.claude/
+ * contracts/card-schema.md`) could in principle still produce a `'yellow'`/
+ * `'green'` without attachment ever having been done; this function
+ * doesn't try to retroactively guess or punish that case. No real FDN card
+ * is `'yellow'`/`'green'` today (checked), so this distinction is
+ * currently inert in practice, not just in theory — but is real, tested
+ * behavior, not an oversight.
  *
  * The SAME shared function `server/api/card-status/[set].get.ts`'s `fdn`
  * branch and `server/api/fdn-cards/[slug]/review.post.ts` both call — see
@@ -328,6 +401,7 @@ export function computePipelineDefinitionFingerprint(slug: string, root: string 
 export function effectivePipelineStatus(slug: string, root: string = process.cwd()): PipelineStatus | undefined {
   const stored = readPipelineStatus(slug, root);
   if (!stored) return undefined;
+  if (stored.status === 'blue' && !isSinkAttachmentComplete(slug, root)) return 'gray';
   if (stored.status !== 'green') return stored.status;
   const currentFingerprint = computePipelineDefinitionFingerprint(slug, root);
   if (!stored.reviewedFingerprint || !currentFingerprint || stored.reviewedFingerprint !== currentFingerprint) {

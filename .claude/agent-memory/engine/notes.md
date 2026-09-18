@@ -2,6 +2,86 @@
 
 ## Decisions
 
+- **2026-09-18 — Sink catalog + per-card sink attachment + pipeline-status
+  `blue` redefinition.** New foundational layer for the sink-only-synergy
+  experiment (`ui`/`card` build UI on top of this next) — full contract
+  written up in `.claude/contracts/card-schema.md`'s new "Sink CATALOG
+  (shared, reviewed) + per-card sink ATTACHMENT + `blue` redefinition"
+  section (read that first on any follow-up, don't re-derive from source).
+  - New files: `functional-model/sink-model/catalog/{entry,index,lifegain,
+    graveyard-fodder}.ts` + their `.test.ts`/`.corpus.json` siblings
+    (2 real seeded catalog entries, both `blue`); `functional-model/
+    sink-catalog-status.ts` + `.test.ts` (the catalog's own gray/purple/
+    blue/yellow/green/re-review review axis, mirrors `sink-derivation-
+    status.ts`'s shape — closer analog than `pipeline-status.ts` per the
+    task's own instruction, since both compute a LIST of entries each with
+    their own baseline+overlay, not one flat per-card file);
+    `functional-model/sink-attachment.ts` + `.test.ts` (per-card `sinks.json`
+    — `attachedSlugs`/`reviewed`/`reviewedFingerprint`, zero-sink is a
+    legitimate complete outcome, drift-checked against `definition.ts`).
+  - Real bug FOUND AND FIXED in `functional-model/sink-model/match-sink.ts`
+    while building the `graveyard-fodder` catalog entry's own mocked-fixture
+    corpus: the zone-shaped matching branch in `occurrenceSatisfiesSink`
+    only ever resolved a producer occurrence's type guarantee via a
+    concrete SUBJECT (self/token) — a zone-shaped occurrence with a real,
+    guaranteed top-level `types` constraint but no resolvable subject (the
+    shape `sacrifice`/`move`'s own `walkEffects` cases produce) could NEVER
+    satisfy ANY type-constrained zone-shaped want; confirmed dead code
+    before the fix (nothing in the existing test suite exercised or relied
+    on that gap). Fixed by widening `guaranteedTypes(p)` to also check
+    `p.types?.has` and reusing the existing `satisfiesViaSubjectOrGuarantee`
+    fallback chain (previously only used by the event-vs-event branch) in
+    the zone-shaped branch too. Verified: full `sink-model` suite (47
+    tests) and full `functional-model` suite (1202 tests, 114 files) both
+    green after the fix, zero regressions — the fix only ever ADDS
+    previously-impossible matches, never removes one.
+  - `functional-model/pipeline-status.ts`'s `effectivePipelineStatus`:
+    `blue` now ALSO requires `isSinkAttachmentComplete` (a stored `blue`
+    with no complete attachment downgrades to effective `gray` — a
+    deliberate choice over a new bucket or the broadened `purple`, see that
+    file's own updated header/doc-comment for the full reasoning).
+    `pipelineStatusFromGateResult` itself is UNCHANGED (still pure, gate-
+    only). Deliberately scoped to `blue` only — stored `yellow`/`green`
+    pass through unaffected (a real human review outcome isn't
+    retroactively second-guessed by this axis); flagged as a real, open
+    follow-up that `POST /api/fdn-cards/:slug/review` (card/server
+    territory) doesn't yet ALSO check attachment completeness before
+    allowing a review action — currently inert since no real FDN card is
+    yellow/green yet, but worth closing once one exists.
+  - **Verified live, not just at the JSON level**: ran
+    `effectivePipelineStatus` against all 10 real `functional-model/
+    fdn-cards/*` before creating any `sinks.json` — all 7 previously-blue
+    cards (`ajani-s-pridemate`, `day-of-judgment`, `essence-scatter`,
+    `fleeting-distraction`, `healer-s-hawk`, `helpful-hunter`,
+    `serra-angel`) genuinely regressed to effective `gray`; the 3 `purple`
+    cards were unaffected. Then wrote 2 real attachment files via the real
+    `markSinkAttachmentReviewed`/`writeSinkAttachment` functions (not
+    hand-typed JSON): `ajani-s-pridemate/sinks.json` (`attachedSlugs:
+    ["lifegain"]` — its own real `onLifeGained` trigger) and
+    `serra-angel/sinks.json` (`attachedSlugs: []`, `reviewed:true` — the
+    explicit "vanilla creature, zero sinks is a legitimate complete
+    outcome" demonstration the task named by name). Re-verified after:
+    both recovered to effective `blue`; the other 5 (no attachment file at
+    all) correctly stayed `gray`.
+  - `npx tsc --noEmit`: 0 errors. Full-repo `npx vitest run`: 118/119 files
+    green (the 1 failing file, `scripts/relations.test.mjs`, is the same
+    pre-existing, unrelated `tagging/sets/{lea,leb,2ed,arn}`/
+    `card-enrichment-status.json` baseline failure ENGINE_GAPS.md's own
+    history already documents — untouched by this task).
+  - **Open, not done this pass (explicitly out of scope, flagged for a
+    follow-up)**: no route serves `computeSinkCatalogStatus`/
+    `sink-attachment.ts` yet (no `GET`/review `POST` — same "scaffolding
+    only" starting point `pipeline-status.ts`/`sink-derivation-status.ts`
+    both had before their own review routes landed); the review-route
+    attachment-completeness gap noted above; only 2 catalog entries exist
+    (`lifegain`, `graveyard-fodder`) — growing the catalog for real FDN
+    authoring is future work, not attempted beyond proving the mechanism.
+    No Forge verification needed for this task (pure data-model/schema
+    infrastructure, no new engine/rules behavior beyond the one
+    `match-sink.ts` matching-logic bug fix, which is a correctness fix to
+    existing `Effect`-walking logic already Forge-cited elsewhere in that
+    file, not a new rules citation of its own).
+
 - **2026-09-18 — sink-derivation-predicate real-matching gate.** Added a
   structural guard so `match-sink.ts`'s `deriveOccurrences` can never use a
   not-yet-`blue`/`green` sink-derivation predicate (`saga.ts`, `crew.ts`,

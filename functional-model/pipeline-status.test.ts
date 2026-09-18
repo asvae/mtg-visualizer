@@ -11,6 +11,7 @@ import {
   readPipelineStatus,
   type PipelineStatusFile,
 } from './pipeline-status';
+import { markSinkAttachmentReviewed, writeSinkAttachment } from './sink-attachment';
 
 describe('pipelineStatusFromGateResult', () => {
   it('ok:true -> blue, no reasons, no failureKind/engineGapsContext', () => {
@@ -290,7 +291,7 @@ describe("effectivePipelineStatus — the real, drift-aware status a consumer sh
     }
   });
 
-  it.each(['gray', 'purple', 'blue', 'yellow'] as const)('a stored %s entry passes through unchanged (drift only matters for green)', (status) => {
+  it.each(['gray', 'purple', 'yellow'] as const)('a stored %s entry passes through unchanged (drift/attachment only matter for green/blue)', (status) => {
     const root = makeRoot();
     try {
       const entry: PipelineStatusFile =
@@ -301,6 +302,42 @@ describe("effectivePipelineStatus — the real, drift-aware status a consumer sh
             : { status, reasons: [], computedAt: '2026-09-18T00:00:00.000Z' };
       setUpCard(root, 'some-fdn-card', 'export const definition = {};\n', entry);
       expect(effectivePipelineStatus('some-fdn-card', root)).toBe(status);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  // `blue` redefinition (2026-09-18, later same day) — see pipeline-status
+  // .ts's own header + effectivePipelineStatus's own doc comment.
+  it("a stored 'blue' entry with NO sinks.json at all regresses to 'gray' — the sink-attachment step hasn't been completed yet", () => {
+    const root = makeRoot();
+    try {
+      setUpCard(root, 'some-fdn-card', 'export const definition = {};\n', { status: 'blue', reasons: [], computedAt: '2026-09-18T00:00:00.000Z' });
+      expect(effectivePipelineStatus('some-fdn-card', root)).toBe('gray');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("a stored 'blue' entry with a real, reviewed, ZERO-sink attachment (Serra Angel's own shape) stays 'blue' — zero attached sinks is a legitimate complete outcome", () => {
+    const root = makeRoot();
+    try {
+      const definitionContent = 'export const definition = { name: "Serra Angel" };\n';
+      setUpCard(root, 'serra-angel', definitionContent, { status: 'blue', reasons: [], computedAt: '2026-09-18T00:00:00.000Z' });
+      writeSinkAttachment('serra-angel', markSinkAttachmentReviewed('serra-angel', [], root), root);
+      expect(effectivePipelineStatus('serra-angel', root)).toBe('blue');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("a stored 'blue' entry whose attachment references an unknown catalog slug still regresses to 'gray' even though it's marked reviewed", () => {
+    const root = makeRoot();
+    try {
+      const definitionContent = 'export const definition = { name: "Some Card" };\n';
+      setUpCard(root, 'some-fdn-card', definitionContent, { status: 'blue', reasons: [], computedAt: '2026-09-18T00:00:00.000Z' });
+      writeSinkAttachment('some-fdn-card', markSinkAttachmentReviewed('some-fdn-card', ['not-a-real-sink'], root), root);
+      expect(effectivePipelineStatus('some-fdn-card', root)).toBe('gray');
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

@@ -1,0 +1,30 @@
+{
+  "total": 4,
+  "passing": 4,
+  "cases": [
+    {
+      "case": "plain effect-level gainLife",
+      "mirrors": "a direct \"you gain N life\" spell/permanent effect — same real shape Battle Menu's own \"Item\" mode (FIN) already produces",
+      "expectedVerdict": "matches",
+      "note": "Mocked Sorcery with effects:[{kind:'gainLife', amount:3}]. Verified in lifegain.test.ts via matchSink."
+    },
+    {
+      "case": "triggered gainLife",
+      "mirrors": "a real \"when this enters, you gain life\" permanent",
+      "expectedVerdict": "matches",
+      "note": "Mocked creature whose onEnter trigger's own effects contain kind:'gainLife' — proves trigger effects are walked, not just top-level effects. Verified in lifegain.test.ts via matchSink."
+    },
+    {
+      "case": "vanilla creature, no effects at all",
+      "mirrors": "Serra Angel (FDN) — a real, deliberate no-sink case",
+      "expectedVerdict": "no-match",
+      "note": "Mocked vanilla creature. Verified in lifegain.test.ts via matchSink."
+    },
+    {
+      "case": "unrelated effect kind (drawCard)",
+      "mirrors": "any real card-draw spell with no lifegain clause",
+      "expectedVerdict": "no-match",
+      "note": "Mocked Sorcery with effects:[{kind:'drawCard'}] only. Verified in lifegain.test.ts via matchSink."
+    }
+  ]
+}

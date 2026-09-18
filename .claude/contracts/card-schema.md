@@ -1850,3 +1850,83 @@ Not wired into any route/UI yet (explicitly deferred to a follow-up dispatch, pe
 **Real design investigation, NOT overclaimed — see `card-interactions.ts`'s own header comment for the full writeup, summarized here**: the task that created this function asked whether a trigger's own FIRING PRECONDITION (e.g. Ajani's Pridemate's `name:'onLifeGained'`) could be auto-derived into a matchable category ("any card with a `gainLife` effect") with no hand-curation. Checked directly against `card.ts` first: `Trigger.on` (the engine's only real, closed, auto-fired precondition vocabulary — `'enter'|'upkeep'|'endStep'|'tapLandForMana'|'attacks'|'equippedAttacks'`) has no lifegain-shaped member, and `Trigger.name` is documented, in `card.ts` itself, as a free-text label with "no SAFE general structural rule" to derive a precondition from — citing this exact trigger name as its own worked example. `recognizers/lifegain-trigger-structural.ts` already independently confirms this the hard way: it solves the identical `onLifeGained` trigger name (on 3 FIN cards) by matching literal ORACLE TEXT, never the trigger name — and FDN `CardDefinition`s carry no `oracleText` field at all, so even that fallback isn't available here. **Verdict: generic precondition-to-category auto-derivation does not hold up beyond `Trigger.on`'s closed enum** — building it anyway (even a small hand-curated name table) would re-introduce exactly the per-card curation the sink-only experiment exists to remove, just moved onto an equally-unreliable free-text field. Real, narrower consequence: Ajani's Pridemate's own derived categories under `computeCardInteractions` are `"enters the battlefield"` (baseline — it's a normal creature) and `"counters"` (its own `putCounter` trigger effect) — **not** `"Lifegain"`. Getting Ajani specifically into a lifegain-shaped category needs either the later curated per-card `SinkQuery`-authoring pipeline stage this project's plan already anticipates, or a genuine `Trigger.on` vocabulary addition (the same kind of change `'tapLandForMana'` was) — neither attempted here, flagged rather than guessed.
 
 Tests: `functional-model/card-interactions.test.ts` — Ajani's Pridemate's own real categories (and the explicit absence of a lifegain-shaped one), self-inclusion (Ajani's own `"counters"` category, Day of Judgment's own `"destroy"` category, both against REAL FDN `CardDefinition`s), a real `gainLife`-effect-bearing card (one MOCKED `CardDefinition` — the real FDN 10-card pool has none today, only Healer's Hawk's un-walked Lifelink KEYWORD) producing a non-zero-count `"life gain"` category with self-inclusion, a card with no matchable triggers/effects (a bare mocked Land) producing `[]` rather than throwing, a real `on:'enter'` trigger (Helpful Hunter's own "draw a card" ETB) producing a real `"card draw"` category, and sort-order/count-consistency invariants.
+
+## Sink CATALOG (shared, reviewed) + per-card sink ATTACHMENT + `blue` redefinition (2026-09-18)
+
+New foundational layer for the sink-only-synergy experiment, built specifically so `ui`/`card` can build a real catalog/attachment UI against it next — **this section is the contract, read it instead of the source**. Confirmed with the user before building: a sink is NEVER per-card/bespoke storage — a sink with only one real card wanting it is still just a catalog entry with low reuse, not a separate mechanism. This is genuinely additive: nothing in `sink-model/sink-query.ts`'s `SinkQuery` type, `synergy.ts`, or FIN's own pipeline changed shape (one real, narrow bug FIX in `match-sink.ts` did land alongside this — see "Real bug fixed" below, it only ever ADDS previously-impossible matches, verified zero regression against the full existing suite).
+
+### 1. Sink catalog — `functional-model/sink-model/catalog/`
+
+Mirrors the existing sink-derivation-**predicate** convention (`sink-model/predicates/<mechanism>.ts` + `.test.ts` + `.corpus.json`) as closely as the two concepts allow, per the task's own explicit "mirror the closer analog" instruction. One file trio per catalog entry:
+
+- `catalog/<slug>.ts` — exports `query: SinkQuery` and `entry: SinkCatalogEntry`:
+  ```ts
+  // catalog/entry.ts
+  export interface SinkCatalogEntry {
+    slug: string;   // stable identity — matches the filename, and the review/attachment key
+    query: SinkQuery; // today's sink Fact shape minus annotations/provenance/role/triggeredBy, PLUS its own category label
+  }
+  ```
+- `catalog/<slug>.test.ts` — the STRUCTURAL GATE itself: real vitest cases running `matchSink(query, mockedFixture)` against MOCKED `CardDefinition` fixtures ONLY (never real cards — same confirmed project convention the sink-derivation-predicate corpus tests already use).
+- `catalog/<slug>.corpus.json` — hand-authored manifest, `{ total, passing, cases: [...] }`, kept in sync by hand with the `.test.ts` file's own case count (same convention `predicates/saga.corpus.json`/`crew.corpus.json` already establish — no automated writer script exists for either).
+- `catalog/index.ts` — the registry: statically imports every real entry and exports `SINK_CATALOG: SinkCatalogEntry[]`. **Deliberately NOT a hand-seeded metadata array + fs directory scan** (unlike `sink-derivation-status.ts`'s own `SINK_DERIVATION_MECHANISMS`) — a catalog entry is real the moment it's in this array (one new file + one import line to register), since the catalog is expected to grow much faster/more organically than the small, fixed set of engine-automation mechanisms that file tracks.
+
+Real, seeded entries as of this writing (both `blue`, both demonstrated against real FDN cards below): `lifegain` (`{category:'Lifegain', event:'lifegain', controller:'you'}` — verbatim adaptation of Aerith Gainsborough's real FIN sink), `graveyard-fodder` (`{category:'Graveyard fodder', to:'Graveyard', controller:'you', types:{has:['Creature']}}` — verbatim adaptation of Fight On!'s real FIN sink).
+
+**Real bug fixed in `match-sink.ts` alongside this (2026-09-18, found building `graveyard-fodder`'s own corpus)**: the zone-shaped matching branch in `occurrenceSatisfiesSink` only ever resolved a producer occurrence's type guarantee via a concrete SUBJECT (`resolveOccurrenceSubject` — self, or a created token's `resolvedAttrs`) — a zone-shaped occurrence with no resolvable subject but a real, guaranteed top-level `types` constraint (the shape `sacrifice`/`move`'s own `walkEffects` cases produce) could NEVER satisfy ANY type-constrained zone-shaped want, confirmed dead code before this fix. Fixed by widening `guaranteedTypes(p)` to also check `p.types?.has` (not just `p.target?.types?.has`) and reusing the SAME `satisfiesViaSubjectOrGuarantee` fallback chain the event-vs-event branch already had, now applied uniformly to the zone-shaped branch too. Verified zero regression: full `sink-model` suite (47 tests, was passing before) + full `functional-model` suite (1202 tests) both green after the fix; the fix only ever ADDS previously-impossible matches (a real "sacrifice a creature" spell can now correctly satisfy a Creature-typed graveyard-arrival sink), never removes one.
+
+### 2. Sink catalog review axis — `functional-model/sink-catalog-status.ts`
+
+Mirrors `sink-derivation-status.ts`'s shape (chosen as the closer analog over `pipeline-status.ts`, since both compute a LIST of entries each with their own baseline+overlay color, not a single flat per-card file):
+
+- `gray` — listed in `SINK_CATALOG` but `<slug>.corpus.json` is missing or `total === 0` — drafted, gate not run yet.
+- `purple` — a corpus manifest exists but `passing < total` — built, not fully verified.
+- `blue` — `total > 0 && passing === total` — the structural gate passed for real.
+- `yellow`/`green` — human review overlay (confirm/reject), stored in `functional-model/sink-catalog-reviews.json` (new, sibling to `sink-derivation-reviews.json`), only ever meaningful on top of a `blue` baseline (a stale/hand-authored review on `gray`/`purple` is silently ignored, never trusted upward).
+- `re-review` — computed only, never stored: a `confirm` review whose snapshotted fingerprint (sha256 of `<slug>.ts` + `<slug>.corpus.json` content, `computeSinkCatalogFingerprint`) no longer matches the entry's CURRENT content.
+
+Exports: `computeSinkCatalogStatus(root?)`, `computeSinkCatalogColor(slug, root?)`, `computeSinkCatalogFingerprint(slug, root?)`, `isSinkCatalogEntryUsable(slug, root?)` (cached per-root; `true` iff `blue`/`green`), `resetSinkCatalogColorCacheForTests()`. No route wired to this yet (same "scaffolding only" starting point `pipeline-status.ts`/`sink-derivation-status.ts` each had before their own review routes landed) — `ui`/`card`'s own follow-up, same shape as `GET /api/sink-derivations`.
+
+### 3. Per-card sink ATTACHMENT — `functional-model/sink-attachment.ts`
+
+`functional-model/fdn-cards/<slug>/sinks.json` — a new sibling file to that card's own `pipeline-status.json`. Answers "which of the catalog's sinks does THIS card want, and was that determination explicitly made":
+
+```ts
+export interface SinkAttachmentFile {
+  attachedSlugs: string[]; // catalog slugs — EMPTY is a legitimate, complete outcome (Serra Angel's own real shape: a vanilla creature, zero real synergy hooks)
+  reviewed: boolean;       // was the attachment step EXPLICITLY performed — never inferred from attachedSlugs.length > 0
+  reviewedAt?: string;     // set iff reviewed
+  reviewedFingerprint?: string; // sha256 of this card's definition.ts at the moment reviewed was set — set iff reviewed
+  computedAt: string;
+}
+```
+
+Exports: `readSinkAttachment(slug, root?)` (`undefined` for "no file/folder at all," never throws — same convention `readPipelineStatus` establishes), `validateSinkAttachment(file)` (real check: does every `attachedSlugs` entry actually exist in `SINK_CATALOG`), `computeDefinitionFingerprint(slug, root?)` (small, deliberate duplication of `pipeline-status.ts`'s own identical fingerprint helper — importing it directly would be circular, since `pipeline-status.ts` imports FROM this file, see point 4), `effectiveSinkAttachmentStatus(slug, root?)` → `'not-started' | 'incomplete' | 're-review' | 'complete'` (`'incomplete'` covers BOTH `reviewed:false` AND `reviewed:true` with a broken/unknown slug reference — a broken reference never counts as done even if marked reviewed; `'re-review'` covers a definition.ts change since the attachment step was performed, OR an old pre-fingerprint entry), `isSinkAttachmentComplete(slug, root?)` (boolean gate, `true` iff `'complete'`), `markSinkAttachmentReviewed(slug, attachedSlugs, root?, now?)` (builds a fresh `reviewed:true` file, stamping the current fingerprint), `writeSinkAttachment(slug, file, root?)` (thin fs writer — no server route exists yet, same "not-yet-built follow-up" status `pipeline-status.json`'s own review route once had before Workstream 5 landed).
+
+Two real `sinks.json` files exist today, demonstrating both real shapes end to end:
+- `functional-model/fdn-cards/ajani-s-pridemate/sinks.json` — `attachedSlugs: ["lifegain"]` (its own real `onLifeGained` trigger).
+- `functional-model/fdn-cards/serra-angel/sinks.json` — `attachedSlugs: []` (the explicit zero-sink, still-complete case).
+
+### 4. `pipeline-status.ts`'s `blue` redefinition — real, verified regression
+
+`PipelineStatus`'s stored-value semantics and `pipelineStatusFromGateResult` are **UNCHANGED** (still a pure function, no fs reads, purely the schema gate — same property as before). The change is entirely in `effectivePipelineStatus(slug, root?)` (the function every real consumer — `GET /api/card-status/[set]`, the FDN review route — already calls instead of trusting the raw stored file): a stored `'blue'` now ALSO requires `isSinkAttachmentComplete(slug, root)`; when attachment isn't complete, `effectivePipelineStatus` returns `'gray'` instead of `'blue'` (chosen over a new bucket or the broadened `'purple'` — see `pipeline-status.ts`'s own doc comment for the full reasoning: attachment-incompleteness is ordinary pending agent work, not a capacity gap). **Deliberately scoped to `'blue'` only** — a stored `'yellow'`/`'green'` passes through unaffected (a human review outcome isn't retroactively second-guessed by this axis).
+
+**Real, verified regression** (live-checked against the actual repo, not just JSON-level): before this landed, 7 real FDN cards were stored (and effectively) `blue`: `ajani-s-pridemate`, `day-of-judgment`, `essence-scatter`, `fleeting-distraction`, `healer-s-hawk`, `helpful-hunter`, `serra-angel`. After landing, with no `sinks.json` yet for any of them:
+
+| slug | stored | effective (before attachment) | effective (after attachment) |
+|---|---|---|---|
+| ajani-s-pridemate | blue | gray | **blue** (attached `lifegain`) |
+| day-of-judgment | blue | gray | gray (no attachment yet) |
+| essence-scatter | blue | gray | gray (no attachment yet) |
+| fleeting-distraction | blue | gray | gray (no attachment yet) |
+| healer-s-hawk | blue | gray | gray (no attachment yet) |
+| helpful-hunter | blue | gray | gray (no attachment yet) |
+| serra-angel | blue | gray | **blue** (attached zero sinks, `reviewed:true`) |
+
+The 3 already-`purple` cards (`aetherize`, `angel-of-finality`, `make-your-move`) are unaffected (the attachment gate never applies to a non-`blue` stored status).
+
+**Not yet done, flagged for a follow-up (`card`/`server` territory, not built here)**: `POST /api/fdn-cards/:slug/review` (the Ok/Not-ok review route) re-runs the schema-validation gate fresh but does NOT yet also check `isSinkAttachmentComplete` before allowing a review action — meaning, in principle, a card could still be reviewed `yellow`/`green` without its own attachment step ever having happened. No real FDN card is `yellow`/`green` today, so this is currently inert, but a future pass wiring the review route should add the same attachment check there for full end-to-end consistency.
+
+### 5. Not built this pass, explicitly deferred
+
+No UI (`/app/engine/sinks` tab, per-card Sinks tab, catalog review buttons) — `ui`/`card`'s own follow-up work, per this task's own explicit scope. No route serves `computeSinkCatalogStatus`/`sink-attachment.ts` yet (mirrors how `pipeline-status.ts`/`sink-derivation-status.ts` both started as "scaffolding only" before their own review routes landed) — same shape as the existing `GET /api/sink-derivations`/`POST /api/fdn-cards/:slug/review` is the template to follow.
