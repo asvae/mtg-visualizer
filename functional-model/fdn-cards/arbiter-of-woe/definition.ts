@@ -8,8 +8,6 @@ export const arbiterOfWoe: CardDefinition = {
 
   keywords: ['Flying'],
 
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
   missingSchemaFunctionality: [
     {
       clause: 'As an additional cost to cast this spell, sacrifice a creature.',

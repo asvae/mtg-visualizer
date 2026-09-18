@@ -14,14 +14,7 @@ export const soulShackledZombie: CardDefinition = {
         {
           // "Exile up to two target cards from a single graveyard. If at
           // least one creature card was exiled this way, each opponent
-          // loses 2 life and you gain 2 life." The "single graveyard"
-          // restriction (all chosen cards must share one owner) isn't
-          // representable (accepted simplification); the conditional
-          // life-swing genuinely depends on what the SAME effect just
-          // exiled, which no declarative `move`+later-`Computed` chaining
-          // can read back — real, non-empty `custom`, using the real
-          // `Player.loseLife`/`gainLife` methods directly (not a
-          // placeholder).
+          // loses 2 life and you gain 2 life."
           kind: 'custom',
           describe:
             'exile up to two target cards from a single graveyard. If at least one creature card was exiled this way, each opponent loses 2 life and you gain 2 life.',

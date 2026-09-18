@@ -10,8 +10,6 @@ export const exemplarOfLight: CardDefinition = {
   triggers: [
     {
       name: 'onLifeGain',
-      // Note: Trigger "whenever you gain life" doesn't have an `on` value yet (ENGINE_GAPS.md).
-      // Modeled as a named trigger for manual scenario invocation.
       effects: [
         {
           kind: 'putCounter',
@@ -23,9 +21,6 @@ export const exemplarOfLight: CardDefinition = {
     },
     {
       name: 'onCounterAdded',
-      // Note: Trigger "whenever you put one or more +1/+1 counters on this creature" doesn't have an
-      // `on` value yet (ENGINE_GAPS.md). Modeled as a named trigger for manual scenario invocation.
-      // The activationLimit applies: triggers only once each turn.
       activationLimit: 1,
       effects: [
         {

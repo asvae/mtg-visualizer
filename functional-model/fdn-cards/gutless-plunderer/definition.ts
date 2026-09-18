@@ -8,15 +8,9 @@ export const gutlessPlunderer: CardDefinition = {
 
   keywords: ['Deathtouch'],
 
-  // Real Raid — the "you attacked this turn" gate is now a real
-  // `Trigger.condition` (`BoardStateCondition.kind:'attackedThisTurn'`,
-  // 2026-09-18 schema-completeness pass) — declaratively real but NOT
-  // itself engine-enforced yet (same real gap Midnight Snack's own Raid
-  // clause names, Ward pattern — see `engine-support-registry.ts`'s own
-  // `board-state-condition-not-enforced` entry), so this creature's own
-  // `dig` effect below still fires on every ETB in practice, same as before
-  // this field existed; the real gate is now at least structurally declared
-  // instead of silently approximated as always-on.
+  // "Raid — When this creature enters, if you attacked this turn, look at
+  // the top three cards of your library. You may put one of those cards
+  // back on top of your library. Put the rest into your graveyard."
   triggers: [
     {
       name: 'onEnter',

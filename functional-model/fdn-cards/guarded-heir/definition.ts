@@ -7,7 +7,6 @@ export const guardedHeir: CardDefinition = {
   pt: [1, 1],
   keywords: ['Lifelink'],
 
-  // When this creature enters, create two 3/3 white Knight creature tokens.
   triggers: [
     {
       name: 'onEnter',

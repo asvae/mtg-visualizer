@@ -1,9 +1,5 @@
 import type { CardDefinition } from '../../card';
 
-// Real Forge (wardens_of_the_cycle.txt): `T:Mode$ Phase | Phase$ End of
-// Turn | CheckSVar$ Morbid | ... | SVar:Morbid:Count$Morbid.1.0` — same
-// genuine Morbid capacity gap `slumbering-cerberus`/`cackling-prowler`/
-// `needletooth-pack`/`tragic-banshee` already document.
 export const wardensOfTheCycle: CardDefinition = {
   name: 'Wardens of the Cycle',
   manaCost: '{1}{B}{G}{G}',

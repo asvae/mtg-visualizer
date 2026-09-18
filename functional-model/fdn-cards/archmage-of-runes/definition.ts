@@ -6,12 +6,6 @@ export const archmageOfRunes: CardDefinition = {
   typeLine: 'Creature — Giant Wizard',
   pt: [3, 6],
 
-  // Real Forge: S:Mode$ ReduceCost | ValidCard$ Instant,Sorcery | ...
-  // "Instant and sorcery spells you cast cost {1} less to cast."
-  // The SpellCostReductionGrant interface only supports color-gated reductions
-  // (e.g. "White spells you cast cost {1} less"), not card-type-gated ones.
-  // No cost-reduction field can express this gap — flagged in final report.
-
   triggers: [
     {
       name: 'onInstantOrSorceryCast',

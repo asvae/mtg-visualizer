@@ -6,12 +6,12 @@ export const celestialArmor: CardDefinition = {
   typeLine: 'Artifact — Equipment',
   keywords: ['Flash'],
 
-  // Equipped creature gets +2/+0 and has flying
   continuousPTGrants: [{ power: 2, toughness: 0, includeSelf: false, equippedBySelf: true }],
   continuousKeywordGrants: [{ keywords: ['Flying'], includeSelf: false, equippedBySelf: true }],
 
-  // When this Equipment enters, attach it to target creature you control.
-  // That creature gains hexproof and indestructible until end of turn.
+  // "When this Equipment enters, attach it to target creature you
+  // control. That creature gains hexproof and indestructible until end
+  // of turn."
   triggers: [
     {
       name: 'onEnter',
@@ -34,7 +34,7 @@ export const celestialArmor: CardDefinition = {
     },
   ],
 
-  // Equip {3}{W}
+  // "Equip {3}{W}"
   activationCost: '{3}{W}',
   effects: [
     {

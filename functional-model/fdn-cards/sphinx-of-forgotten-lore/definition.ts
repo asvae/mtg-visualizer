@@ -15,10 +15,7 @@ export const sphinxOfForgottenLore: CardDefinition = {
         {
           kind: 'custom',
           describe: 'Grant flashback to target instant or sorcery in graveyard until end of turn (flashback grant mechanic not yet modeled)',
-          run: () => {
-            // NOTE: Granting flashback to graveyard cards is not modeled.
-            // This would require a new Effect kind or a complex custom implementation.
-          },
+          run: () => {},
         },
       ],
     },

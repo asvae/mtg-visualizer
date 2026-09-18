@@ -6,9 +6,6 @@ export const divineResilience: CardDefinition = {
   typeLine: 'Instant',
   keywords: ['Kicker'],
 
-  // Kicker {2}{W} — modeled using `modal` mechanism (mode 0 = not kicked, mode 1 = kicked),
-  // same convention chocobo-kick/vayne-s-treachery use. Mode 0 targets one creature,
-  // mode 1 targets any number.
   effects: [
     {
       kind: 'modal',
@@ -31,13 +28,7 @@ export const divineResilience: CardDefinition = {
             {
               kind: 'custom',
               describe: 'any number of target creatures you control gain indestructible until end of turn',
-              run: (ctx) => {
-                // This effect would be triggered only if the spell was kicked
-                // In practice, the scenario would select this mode (mode 1) to indicate kicker was paid
-                // and would select the targets. The grantKeyword effect would then apply to all chosen targets.
-                // For now, this is modeled as a placeholder since grantKeywordTarget doesn't support
-                // "any number" of targets yet.
-              },
+              run: (ctx) => {},
             } satisfies Effect,
           ],
         },

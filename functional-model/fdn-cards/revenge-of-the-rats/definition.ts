@@ -8,6 +8,8 @@ export const revengeOfTheRats: CardDefinition = {
 
   alternateCosts: [flashback('{2}{B}{B}')],
 
+  // "Create a tapped 1/1 black Rat creature token for each creature card
+  // in your graveyard."
   effects: [
     {
       kind: 'createToken',
@@ -18,7 +20,6 @@ export const revengeOfTheRats: CardDefinition = {
         basePower: 1,
         baseToughness: 1,
       },
-      // `Card` has no `.typeLine` (only `Player.getCardsIn`/`Card.isCreature()`).
       amount: (ctx) => ctx.you.getCardsIn('Graveyard').filter((c) => c.isCreature()).length,
       tapped: true,
     } satisfies Effect,

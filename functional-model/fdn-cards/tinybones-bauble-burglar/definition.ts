@@ -13,17 +13,12 @@ export const tinybonesBaubleBurglar: CardDefinition = {
         {
           kind: 'custom',
           describe: 'Exile discarded card from opponent graveyard with a stash counter.',
-          run: (ctx, actions) => {
-            // This requires tracking discarded cards and applying stash counters
-            // which is beyond current vocabulary representation
-          },
+          run: (ctx, actions) => {},
         } satisfies Effect,
       ],
     },
   ],
 
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
   missingSchemaFunctionality: [
     {
       clause: "During your turn, you may play cards you don't own with stash counters on them from exile, and mana of any type can be spent to cast those spells.",

@@ -15,11 +15,7 @@ export const skyshipBuccaneer: CardDefinition = {
         {
           kind: 'custom',
           describe: 'If you attacked this turn, draw a card (Raid mechanic with turn-state check)',
-          run: (ctx) => {
-            // NOTE: Raid mechanic requires checking if the player attacked this turn.
-            // This requires turn-state tracking not yet modeled.
-            // Placeholder implementation - would need real Raid mechanic support.
-          },
+          run: (ctx) => {},
         },
       ],
     },

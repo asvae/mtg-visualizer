@@ -6,8 +6,6 @@ export const cracklingCyclops: CardDefinition = {
   typeLine: 'Creature — Cyclops Wizard',
   pt: [0, 4],
 
-  // Whenever you cast a noncreature spell, this creature gets +3/+0 until end of turn.
-  // NOTE: Trigger fires on spell-cast (noncreature only). The pump effect is clean.
   triggers: [
     {
       name: 'NoncreatureSpellCast',

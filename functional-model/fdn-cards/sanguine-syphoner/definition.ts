@@ -6,8 +6,6 @@ export const sanguineSyphoner: CardDefinition = {
   typeLine: 'Creature — Vampire Warlock',
   pt: [1, 3],
 
-  // Real Forge: `Mode$ Attacks | ValidCard$ Card.Self` — a real self-attack
-  // auto-fire trigger.
   triggers: [
     {
       name: 'onAttack',

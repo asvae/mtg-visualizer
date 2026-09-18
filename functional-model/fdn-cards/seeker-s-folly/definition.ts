@@ -10,11 +10,6 @@ export const seekersFolly: CardDefinition = {
       kind: 'modal',
       modes: [
         {
-          // "Target opponent discards two cards" — approximated to every
-          // opponent (`owner: 'opponents'`), same established
-          // single-chosen-opponent simplification al-bhed-salvagers/
-          // combat-tutorial already document (no single-chosen-opponent
-          // Effect shape exists; only matters with 3+ players).
           describe: 'Target opponent discards two cards.',
           effects: [
             {
@@ -25,12 +20,6 @@ export const seekersFolly: CardDefinition = {
           ],
         },
         {
-          // Real Forge: `DB$ PumpAll | ValidCards$ Creature.OppCtrl |
-          // NumAtt$ -1 | NumDef$ -1` — `pumpAll`'s own `predicate` union
-          // has no "opponents' creatures" shape (only
-          // 'creatures-you-control'|'attacking-creatures'), so this needs
-          // `custom` — real, executable code (`actions.pump`, not the
-          // nonexistent `actions.pumpTarget`), not a placeholder.
           describe: 'Creatures your opponents control get -1/-1 until end of turn.',
           effects: [
             {

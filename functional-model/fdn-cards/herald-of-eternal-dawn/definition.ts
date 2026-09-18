@@ -6,8 +6,6 @@ export const heraldOfEternalDawn: CardDefinition = {
   typeLine: 'Creature — Angel',
   pt: [6, 6],
   keywords: ['Flash', 'Flying'],
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
   missingSchemaFunctionality: [
     {
       clause: "You can't lose the game and your opponents can't win the game.",

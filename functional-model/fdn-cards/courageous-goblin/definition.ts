@@ -6,10 +6,6 @@ export const courageousGoblin: CardDefinition = {
   typeLine: 'Creature — Goblin',
   pt: [2, 2],
 
-  // Whenever this creature attacks while you control a creature with power 4 or greater,
-  // this creature gets +1/+0 and gains menace until end of turn.
-  // NOTE: The conditional gate (power >= 4 control check) is a Forge-side condition
-  // not yet modeled in CardDefinition. The effects themselves are clean.
   triggers: [
     {
       name: 'AttackWithPowerGate',

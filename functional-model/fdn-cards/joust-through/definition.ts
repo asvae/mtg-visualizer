@@ -5,10 +5,6 @@ export const joustThrough: CardDefinition = {
   manaCost: '{W}',
   typeLine: 'Instant',
 
-  // Spell that targets attacking or blocking creature, deals 3 damage to it,
-  // and you gain 1 life.
-  // NOTE: The targeting restriction "attacking or blocking creature" is a
-  // spell-level mechanic not currently expressed in the effects vocabulary.
   effects: [
     {
       kind: 'dealDamageTarget',
