@@ -5,6 +5,17 @@ Records what changed in the Sep 2026 design session, why, and what is
 deliberately parked. Worked example throughout: Aerith Gainsborough
 (`cards/aerith-gainsborough/`).
 
+**Scope note (2026-09-18): this doc covers FIN's paired-Fact model only**
+(the recognizer-authored `source`/`sink` `Fact` pairs described below,
+served via `synergy.ts`/`synergy.json`). It does NOT cover the newer
+**sink-only synergy model** the FDN experiment uses instead (no
+per-card authored Facts at all — a shared, curated sink catalog matched
+directly against `CardDefinition`s at read time). That model's own
+conceptual design — the Self/Sink/Predicates/Candidate chain, why
+`CardDefinition` is "compressed," and why the sink catalog is the one
+place genuine curation judgment concentrates in that pipeline — is
+written up in `functional-model/sink-model/SINK_MODEL_DESIGN.md`.
+
 ## What changed, in one paragraph
 
 Facts are no longer flat colon-strings (`zone:Battlefield:Creature:you`)
