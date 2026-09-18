@@ -20,6 +20,7 @@
 - [PlainOracleText collapse toggle](topics/plain-oracle-text-collapse-toggle.md) — FDN-only hover-reveal Shorter/Longer button; short state = oracle text only, mana icons intact.
 - [Shared card-meta resolver](topics/shared-card-meta-resolver.md) — `server/utils/cardMeta.ts`/`scryfallFetch.ts` + `CardMatchGallery.vue`; the one correct way to render a card-name match list with real thumbnails, never a live per-card client fetch.
 - [Notes tab + MarkdownView](topics/notes-tab-and-markdown-view.md) — FDN NOTES.md rendering; adding a tab value touches 3 places, `useGraphStore.ts`'s `FUNCTIONAL_MODEL_TABS` is the easy one to miss.
+- [Forge JSON tab](topics/forge-json-mapper-tab.md) — forge-json-mapper experiment output (20 FDN cards), not dev-gated, reuses forgeScript.ts's slugify; mapper's own output dir still uncommitted.
 
 ## Known open item (not yet fixed, flagged to orchestrator each time)
 
