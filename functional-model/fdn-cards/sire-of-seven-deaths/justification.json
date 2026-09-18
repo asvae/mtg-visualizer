@@ -1,0 +1,58 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 5, "text": "Reach" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Reach" }],
+    "reasoning": "Printed keyword, present verbatim in this card's own `keywords` array — the base fact is tracked (this simplified engine doesn't model combat restrictions beyond block-legality, but the keyword fact itself is fully represented)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 7, "to": 19, "text": "first strike" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "FirstStrike" }],
+    "reasoning": "Printed keyword, present as 'FirstStrike' in this card's own `keywords` array — same base-fact-tracked coverage as Reach above."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 20, "to": 29, "text": "Vigilance" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Vigilance" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array — same base-fact-tracked coverage as Reach above."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 31, "to": 37, "text": "menace" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Menace" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array — same base-fact-tracked coverage as Reach above."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 38, "to": 45, "text": "Trample" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Trample" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array — same base-fact-tracked coverage as Reach above."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 47, "to": 55, "text": "lifelink" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Lifelink" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array — mechanically ENFORCED (not just tracked) by state.ts's own real dealDamage chokepoint (CR 702.15e)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 56, "to": 60, "text": "Ward" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Ward" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array — the base \"this permanent has Ward\" fact is tracked (recognized-but-inert: no counterspell-trigger machinery exists anywhere in this engine to actually enforce any Ward cost, default or otherwise), same established convention zul-ashur-lich-lord's own identical clause already documents. The SPECIFIC non-default cost (\"Pay 7 life\") is a separate, distinct capacity gap — see the next entry."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 61, "to": 71, "text": "Pay 7 life" }],
+    "definitionKeys": [{ "kind": "missingSchemaFunctionality", "index": 0 }],
+    "reasoning": "The SPECIFIC non-default cost half of Ward (as opposed to the base Ward keyword fact, covered above) has no schema field to live in at all — `Keyword` is a bare string-literal union with no cost-payload field — declared as a real, structured demand rather than silently dropped."
+  }
+]

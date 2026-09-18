@@ -49,11 +49,15 @@
 //     sanctioned place to declare a real, printed clause this schema
 //     can't express, replacing the informal `staticAbilities`-as-gap-
 //     marker convention below. See `findMissingSchemaFunctionalityGapReasons`.
-//   - `coverageJustification: { clause, coveredBy, reasoning }[]` — the
-//     author's own per-clause, written "this text is covered by this
-//     code" reasoning, REQUIRED (real, non-empty, internally consistent)
-//     to reach EITHER `purple` or `blue` now. See
-//     `validateCoverageJustification`.
+//   - a real, SPAN-VERIFIED, per-slug `justification.json` file (NOT an
+//     inline `CardDefinition` field at all anymore — see "Coverage-
+//     justification manifest" below, 2026-09-18, LATER STILL, for the
+//     redesign that moved it out and made it mechanically span-verified
+//     against real oracle text) — the author's own per-clause, written
+//     "this text is covered by this code" reasoning, REQUIRED (real,
+//     non-empty, internally consistent, AND now provably accounting for
+//     every real character of the card's own printed oracle text) to reach
+//     EITHER `purple` or `blue`.
 //
 // ## `staticAbilities` is now a hard FDN policy violation, not a capacity
 // gap (2026-09-18, later same day again)
@@ -90,39 +94,36 @@
 // only change is reading the new, structured `{clause, demand}` field
 // instead of a bare string.
 //
-// ## Coverage-justification manifest (2026-09-18, later same day again)
+// ## Coverage-justification manifest (2026-09-18, later same day again;
+// REDESIGNED 2026-09-18, LATER STILL — real span verification, not just
+// pointer-resolution)
 //
 // A fully general "does every real oracle-text clause have a matching
 // functional counterpart" check is still NOT feasible here (that's
-// NLP-complete oracle-text-vs-effects matching, not a deterministic
-// structural gate — the `engine` agent's own prior investigation already
-// established this, see `.claude/agent-memory/engine/topics/
-// fdn-static-abilities-gate-rule.md`). `validateCoverageJustification`
-// below does NOT attempt it — it mechanically checks only what doesn't
-// require judgment: the manifest is real/present/non-empty, every entry
-// carries real non-empty `clause`/`reasoning` text, and every `coveredBy`
-// pointer actually resolves to something real on this SAME
-// `CardDefinition` (a named trigger/ability that exists, a
-// `missingSchemaFunctionality` index in range, a real `Effect.kind`
-// actually used somewhere on the card, ...) — plus one directional
-// completeness check: every real `missingSchemaFunctionality` entry must
-// be referenced by at least one manifest entry, so a declared gap can
-// never go unreasoned-about. This is NOT semantic verification (whether
-// the reasoning is actually TRUE is never checked, by design) — its real
-// value is forcing the reasoning to be written down at authoring time and
-// making it inspectable later, per the user's own explicit framing.
-// Deliberately did NOT build a "manifest entry count roughly matches real
-// oracle-text clause count" heuristic (floated as a maybe in the task
-// brief) — declined, not merely skipped: `CardDefinition` carries no
-// `oracleText` field at all for an FDN card (confirmed directly, `card.ts`),
-// and the only place real oracle text exists on disk for some (not all)
-// FDN cards is an ad hoc per-card scratch cache
-// (`functional-model/.fdn-scratch/<slug>/scryfall.json`, opportunistically
-// populated during earlier gap sweeps, not a guaranteed/complete input this
-// gate could honestly depend on for every card) — building a heuristic
-// against a data source that doesn't reliably exist for the whole pool
-// would be exactly the "fragile heuristic" the task brief asked NOT to
-// force.
+// NLP-complete oracle-text-vs-effects SEMANTIC matching — the `engine`
+// agent's own prior investigation already established this, see
+// `.claude/agent-memory/engine/topics/fdn-static-abilities-gate-rule.md`).
+// This gate still does NOT attempt semantic verification (whether the
+// author's own `reasoning` is actually TRUE is never checked). But the
+// ORIGINAL version of this manifest (2026-09-18, earlier same day —
+// historical record: an inline `CardDefinition.coverageJustification`
+// field, checked only for pointer-resolution) has been SUPERSEDED by a
+// real, per-slug `justification.json` file
+// (`functional-model/coverage-justification.ts`'s own
+// `validateCoverageJustification`, called here via
+// `verify-coverage-justification.mjs`'s `verifyCoverageJustificationForPath`)
+// that mechanically verifies real CHARACTER SPANS against the card's own
+// real, checked-in printed oracle text (`data/fdn/fdn_scryfall.json`) —
+// exact-substring match per span, PLUS a real tiling/interval-coverage
+// check proving every non-punctuation/non-whitespace character of the real
+// text is claimed by exactly one entry. The earlier version's own declined
+// "manifest entry count roughly matches real oracle-text clause count"
+// heuristic is now MOOT — this redesign doesn't need a heuristic proxy for
+// "did the author walk the whole card," it mechanically PROVES it (see
+// `coverage-justification.ts`'s own header for the full redesign writeup,
+// including why a checked-in `data/fdn/fdn_scryfall.json` is now the real
+// durable ground-truth source, not the old scratch-cache/no-oracle-text-
+// field limitation that originally forced the heuristic to be declined).
 // A card failing this check gets `failureKind: 'incomplete-authoring'`
 // (maps to `gray`, see `pipeline-status.ts`) — NOT `purple` (no manifest at
 // all is a strictly LOWER bar than "schema valid, capacity gap declared and
@@ -292,6 +293,7 @@ import { collectEffects, findUnsupportedConstructs } from '../card-status.ts';
 import { synergyTags } from '../card.ts';
 import { walkProgram } from '../combinator.ts';
 import { computeEngineStatus } from '../engine-status.ts';
+import { verifyCoverageJustificationForPath } from './verify-coverage-justification.mjs';
 
 /** Matches this file's own header note: `synergyTags`/`walkProgram`'s real
  * exhaustive-switch `default` branches all throw a message of this exact
@@ -390,102 +392,20 @@ export function findMissingSchemaFunctionalityGapReasons(definition) {
   return reasons;
 }
 
-/**
- * The real closed set of `CoverageReference.kind` values this checker
- * knows how to resolve — mirrors `card.ts`'s own `CoverageReference` union
- * (duplicated here as a plain runtime list for the same "small, documented
- * duplication across the JS/TS boundary" reason `pipeline-status.ts`'s own
- * header already accepts for `CardDefinitionValidationResult`). Grows only
- * in lockstep with that real type.
- */
-const COVERAGE_REFERENCE_KINDS = new Set(['keyword', 'trigger', 'ability', 'effect', 'field', 'missingSchemaFunctionality', 'staticAbilities']);
-
-/**
- * Mechanically checks a `CoverageJustificationEntry.coveredBy` pointer
- * actually resolves to something real on `definition` — see this file's
- * own header, "Coverage-justification manifest," for the full "what this
- * does and doesn't verify" reasoning. Returns `undefined` when the pointer
- * resolves, otherwise a real, specific reason string.
- */
-function unresolvedCoverageReferenceReason(coveredBy, definition) {
-  if (!coveredBy || typeof coveredBy !== 'object' || !COVERAGE_REFERENCE_KINDS.has(coveredBy.kind)) {
-    return `coveredBy has no real, recognized \`kind\` (got ${JSON.stringify(coveredBy)})`;
-  }
-  switch (coveredBy.kind) {
-    case 'keyword':
-      return (definition.keywords ?? []).includes(coveredBy.keyword) ? undefined : `coveredBy.kind:'keyword' names "${coveredBy.keyword}", not present in this card's own \`keywords\``;
-    case 'trigger':
-      return (definition.triggers ?? []).some((t) => t.name === coveredBy.name)
-        ? undefined
-        : `coveredBy.kind:'trigger' names "${coveredBy.name}", not a real trigger name on this card's own \`triggers\``;
-    case 'ability':
-      return (definition.abilities ?? []).some((a) => a.name === coveredBy.name)
-        ? undefined
-        : `coveredBy.kind:'ability' names "${coveredBy.name}", not a real ability name on this card's own \`abilities\``;
-    case 'effect':
-      return collectEffects(definition).some((e) => e.kind === coveredBy.effectKind)
-        ? undefined
-        : `coveredBy.kind:'effect' names Effect kind "${coveredBy.effectKind}", not actually used anywhere on this card`;
-    case 'field':
-      return definition[coveredBy.field] !== undefined && !(Array.isArray(definition[coveredBy.field]) && definition[coveredBy.field].length === 0)
-        ? undefined
-        : `coveredBy.kind:'field' names "${coveredBy.field}", not actually present (or empty) on this card`;
-    case 'missingSchemaFunctionality':
-      return typeof coveredBy.index === 'number' && coveredBy.index >= 0 && coveredBy.index < (definition.missingSchemaFunctionality ?? []).length
-        ? undefined
-        : `coveredBy.kind:'missingSchemaFunctionality' index ${coveredBy.index} is out of range (this card has ${(definition.missingSchemaFunctionality ?? []).length} real entries)`;
-    case 'staticAbilities':
-      return typeof coveredBy.index === 'number' && coveredBy.index >= 0 && coveredBy.index < (definition.staticAbilities ?? []).length
-        ? undefined
-        : `coveredBy.kind:'staticAbilities' index ${coveredBy.index} is out of range (this card has ${(definition.staticAbilities ?? []).length} real entries)`;
-    default:
-      return `coveredBy has no real, recognized \`kind\` (got ${JSON.stringify(coveredBy)})`;
-  }
-}
-
-/**
- * The real, mechanical coverage-justification-manifest check (2026-09-18,
- * later same day again — see this file's own header, "Coverage-
- * justification manifest," for the full "what this does and doesn't
- * verify" reasoning). Walks both faces (same convention as every other
- * checker in this file); a face with no real content of its own (no
- * `backFace` at all) is simply skipped, never required to carry its own
- * manifest. Returns `{ok: true}` or `{ok: false, reasons: string[]}` —
- * never throws (every input here is already a real, already-imported plain
- * object by the time this runs).
- */
-export function validateCoverageJustification(definition) {
-  const reasons = [];
-  const walk = (def, faceLabel) => {
-    const manifest = def.coverageJustification;
-    if (!Array.isArray(manifest) || manifest.length === 0) {
-      reasons.push(`missing/empty coverageJustification manifest${faceLabel} — every FDN card needs real, written, per-clause coverage reasoning (see card.ts's own CoverageJustificationEntry doc comment)`);
-      return;
-    }
-    manifest.forEach((entry, i) => {
-      const label = `${faceLabel} entry [${i}]`;
-      if (typeof entry?.clause !== 'string' || entry.clause.trim().length === 0) {
-        reasons.push(`coverageJustification${label} has no real, non-empty \`clause\` text`);
-      }
-      if (typeof entry?.reasoning !== 'string' || entry.reasoning.trim().length === 0) {
-        reasons.push(`coverageJustification${label} has no real, non-empty \`reasoning\` text`);
-      }
-      const unresolved = unresolvedCoverageReferenceReason(entry?.coveredBy, def);
-      if (unresolved) reasons.push(`coverageJustification${label}'s coveredBy does not resolve: ${unresolved}`);
-    });
-    // Directional completeness: every declared gap must be referenced by
-    // at least one manifest entry — a `missingSchemaFunctionality` entry
-    // with no coverageJustification entry pointing at it is an orphaned
-    // gap, never reasoned about at all.
-    (def.missingSchemaFunctionality ?? []).forEach((_, i) => {
-      const referenced = manifest.some((entry) => entry?.coveredBy?.kind === 'missingSchemaFunctionality' && entry.coveredBy.index === i);
-      if (!referenced) reasons.push(`missingSchemaFunctionality${faceLabel} index ${i} has no coverageJustification entry referencing it (coveredBy: {kind:'missingSchemaFunctionality', index:${i}})`);
-    });
-    if (def.backFace) walk(def.backFace, ' [back face]');
-  };
-  walk(definition, '');
-  return reasons.length > 0 ? { ok: false, reasons } : { ok: true, reasons: [] };
-}
+// The old inline-field `validateCoverageJustification`/
+// `unresolvedCoverageReferenceReason`/`COVERAGE_REFERENCE_KINDS` trio used
+// to live here, reading `definition.coverageJustification` directly — ALL
+// THREE are gone (2026-09-18, later still), superseded by the real,
+// SPAN-VERIFIED `functional-model/fdn-cards/<slug>/justification.json` file
+// + `functional-model/coverage-justification.ts`'s own pure
+// `validateCoverageJustification` (a genuinely different function, same
+// name, now taking `(definition, entries, texts)` and verifying real
+// character spans against real oracle text, not merely checking a
+// `coveredBy` pointer resolves) + `verify-coverage-justification.mjs`'s own
+// `verifyCoverageJustificationForPath` (the fs-orchestration wrapper this
+// gate now calls directly, part 1.5 below). See
+// `coverage-justification.ts`'s own header and `.claude/contracts/
+// card-schema.md`'s matching dated section for the full redesign writeup.
 
 /**
  * The blunt, deterministic "name-only trigger" rule (2026-09-18, fourth
@@ -682,9 +602,12 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
   // Part 1.5 — the coverage-justification manifest (see this file's own
   // header, "Coverage-justification manifest") — checked independent of,
   // and BEFORE, the capacity-gap classification below: a card can't reach
-  // `purple` OR `blue` without a real, well-formed manifest, regardless of
-  // whether it also has declared capacity gaps.
-  const manifestResult = validateCoverageJustification(definition);
+  // `purple` OR `blue` without a real, well-formed, SPAN-VERIFIED
+  // `justification.json` (2026-09-18, later still — see
+  // `verify-coverage-justification.mjs`'s own header for where the real
+  // ground-truth oracle text this now verifies against actually comes
+  // from), regardless of whether it also has declared capacity gaps.
+  const manifestResult = await verifyCoverageJustificationForPath(definition, absPath, root);
   if (!manifestResult.ok) {
     return { ok: false, failureKind: 'incomplete-authoring', reasons: manifestResult.reasons };
   }

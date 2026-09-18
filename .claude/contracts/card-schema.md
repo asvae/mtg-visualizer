@@ -2223,3 +2223,261 @@ the new `pipelineStatusFromGateResult` `gray` branch). `npx tsc --noEmit -p
 own insertions but the same pre-existing error, `mana.ts:275`,
 `server/api/tokens/by-key.ts:32`), zero new errors from any file this task
 touched.
+
+## `justification.json` redesign: span-verified coverage-justification, real durable oracle text (2026-09-18, later still)
+
+Direct follow-up to the section immediately above — the SAME day's earlier
+"FDN foundational schema-tightness redesign" shipped an inline
+`CardDefinition.coverageJustification` field checked only for PRESENCE and
+`coveredBy`-pointer RESOLUTION, never against the card's own real printed
+text. Per the user's own explicit follow-up ask ("Author should provide
+coverage justification as a separate file... run a script (no ai) against
+original card description and ensure nothing is lost"), that inline field
+is now RETIRED entirely and replaced by a real, per-slug, mechanically
+SPAN-VERIFIED file — mirroring FIN's own real `annotations-authoring.json`/
+`compute-annotations.mjs`/`annotation-coverage.mjs` precedent (see this
+file's own "Fact-to-oracle-text pointers" section above), but with a
+genuinely STRONGER completeness bar than that precedent ever required: full
+real-text tiling, not just per-fact optional anchoring. **FDN-pipeline-
+scoped only**, same isolation every prior rule here has used — FIN
+(`functional-model/cards/`) is completely untouched.
+
+### New module: `functional-model/coverage-justification.ts`
+
+The real types + pure verification core (no fs access at all — mirrors
+`text-coverage.mjs`'s own "pure core, fs stays in the caller" split). Read
+that file's own header in full for the complete design rationale; summary:
+
+- **`CoverageReference`/`CoverageFieldName`** — RELOCATED here, unchanged in
+  shape, from `card.ts` (which no longer has ANY `coverageJustification`-
+  related type at all — see that file's own header note right above
+  `MissingSchemaFunctionality`'s doc comment for where it moved).
+  `missingSchemaFunctionality` itself is UNCHANGED, still lives inline on
+  `CardDefinition` — only `coverageJustification` moved out.
+- **`CoverageSpan`**: `{from: number; to: number; text: string}` — a real,
+  exact, half-open character range into the named `textLocation`'s real
+  text, PLUS the exact substring at that range (verified byte-for-byte by
+  `validateCoverageJustification`, a hard, loud failure on any mismatch —
+  the same "the author pointed at real text and it doesn't resolve = loud
+  error" precedent `FactAnnotationAuthoring`'s own doc comment establishes
+  for its analogous case, just unconditional here rather than conditional
+  on a prior successful anchor).
+- **`CoverageJustificationEntry`**: `{type: 'definition'|'rules'|'lore';
+  textLocation: 'oracle_text'|'type_line'; face?: 'front'|'back'; spans:
+  [CoverageSpan, ...CoverageSpan[]]; definitionKeys?: CoverageReference[];
+  reasoning: string}`. No separate free-text `clause` field at all — unlike
+  the old inline shape, the claimed text lives ONLY in `spans[].text`
+  (verified), never duplicated as a second, unverified string.
+  - `type: 'definition'|'rules'` — real rules text needing code coverage;
+    `definitionKeys` REQUIRED (real, non-empty, every pointer resolving
+    against the SAME card's real `CardDefinition`, same mechanism the old
+    inline `coveredBy` check already had, just relocated/ported unchanged).
+  - `type: 'lore'` — flavor/reminder text that does NOT need a functional
+    counterpart; `definitionKeys` must be OMITTED/empty (declaring one
+    would misrepresent a flavor span as functionally backed) — but the
+    span is still real and verified, so it still counts toward full-text
+    coverage rather than being silently ignorable (the user's own explicit
+    ask).
+  - **`spans` is an array, not a single range (2026-09-18, later still —
+    user correction mid-task)**: a single logical coverage claim can
+    legitimately correspond to more than one DISJOINT real span — Arahbo's
+    own "Whenever Arahbo or another nontoken Cat you control enters,
+    create a 1/1 white Cat creature token." splits into an Arahbo-covered
+    half ("Whenever Arahbo" + "enters, create a 1/1 white Cat creature
+    token") and a genuinely uncovered middle ("or another nontoken Cat you
+    control") that are NOT contiguous — forcing them into one span would
+    require either quoting the whole sentence (falsely claiming the
+    uncovered middle) or "..." elision (which would not literal-match the
+    real text, defeating the exact-substring check). Each span in the
+    array carries its OWN `text` (verified independently), never one
+    concatenated string for the whole entry.
+- **`JustificationFile = CoverageJustificationEntry[]`** — on-disk shape of
+  `functional-model/fdn-cards/<slug>/justification.json` (chosen name:
+  matches this pipeline's existing `definition.ts`/`pipeline-status.json`
+  naming convention — short, singular, one word naming what the file IS).
+  A plain flat array, no `source`/`sink` split (coverage-justification has
+  no role axis the way FIN's Fact model does).
+- **`validateCoverageJustification(definition, entries, texts)`** — the
+  real orchestrator, genuinely different signature from the old, RETIRED,
+  same-named function in `validate-card-definition.mjs` (which took just
+  `definition`). Checks, in order: entries present/non-empty; every entry
+  well-formed (`type`/`textLocation`/`face`/`spans` real,
+  `definitionKeys` required-or-forbidden per `type`); `face:'back'` only
+  legal when `definition.backFace` is real; real text is actually
+  available for every `(face, textLocation)` an entry claims (a card not
+  yet synced into the durable oracle-text source below fails here, loudly,
+  with an actionable "run sync-fdn-oracle-text.mjs" message); every span's
+  `text` EXACTLY matches the real text at `[from, to)`; every
+  `definitionKeys` pointer resolves; full-text TILING per `(face,
+  'oracle_text')` — zero overlaps (a character double-claimed by two
+  entries is always an error, on either text location), zero uncovered
+  non-punctuation/non-whitespace runs (the real "nothing is lost"
+  mechanical enforcement, ported from `text-coverage.mjs`'s own segment-
+  merging algorithm but over whole-text flat offsets, not per-line ones,
+  and WITHOUT that file's own "reminder text is automatically covered"
+  exemption — a reminder-text span must be its own real, verified `'lore'`
+  entry here, never a free pass); directional completeness (every real
+  `missingSchemaFunctionality[i]` referenced by at least one same-face
+  `definitionKeys` pointer, same check the old inline mechanism already
+  had). **`oracle_text` coverage is checked even when a face has ZERO
+  entries at all** (100% uncovered is still a real, reportable gap, not
+  "nothing to check" — a real bug caught and fixed mid-task, see this
+  file's own test suite).
+- **Full-text coverage is enforced for `oracle_text` ONLY, not
+  `type_line`** — a deliberate scope decision (see `coverage-
+  justification.ts`'s own header): a real printed type line is
+  mechanically trivial, already unconditionally covered by baseline
+  `typeLine`/`name`/`pt` fields with no authoring effort possible to skip,
+  unlike hand-written `oracle_text` rules prose. `type_line` spans (when
+  authored — rare, mirrors `AnnotationRef`'s own rare `target:'typeLine'`
+  variant) are still exact-match- and overlap-checked, just never required
+  to reach 100%.
+- **Punctuation/whitespace exemption** mirrors `text-coverage.mjs`'s own
+  `isGapWorthy` character class exactly (`\s,.;:—-`) for consistency
+  pool-wide — a mana-symbol brace (`{1}`) or a counter-notation `+`/`/`
+  (`+1/+1`) is deliberately NOT exempted (real content, expected to fall
+  naturally inside whichever entry's span already covers that whole
+  clause).
+
+### Where the real ground-truth oracle text now comes from
+
+**New, durable, CHECKED-IN `data/fdn/fdn_scryfall.json`** — mirrors FIN's
+own real `data/fin/fin_scryfall.json` precedent exactly (same plain-array-
+of-raw-Scryfall-card-objects shape). Decided AFTER tracing where FDN's
+real oracle text is served from today (`server/api/card/[set]/[number].ts`'s
+`fdn` branch) and finding it resolves through `data/cards.db` (gitignored,
+~600MB, local-only bulk sync) or a live Scryfall call — NEITHER durable/
+reproducible enough for a verification GATE that must work the same way on
+every checkout. The ephemeral `functional-model/.fdn-scratch/<slug>/
+scryfall.json` per-card cache several earlier gap-closing passes used ad
+hoc is also confirmed gitignored — explicitly rejected as a gate-time input
+for the same reason.
+
+**Not a reopening of `scripts/sync-card-db.mjs`'s own documented "why this
+project moved OFF ad hoc per-set static JSON snapshots" decision** — that
+decision was about avoiding HUNDREDS of small LIVE Scryfall calls (a real
+429 lockout during the historical-sets bulk-tagging sweep); the new
+`functional-model/scripts/sync-fdn-oracle-text.mjs` makes ZERO live calls —
+it's a narrow, incremental EXTRACT from the already-bulk-synced local
+`data/cards.db`, covering only the small, slowly-growing subset of FDN
+cards that have actually entered the authoring pipeline (100 today, not
+FDN's whole ~271-card set). Usage: `npx vite-node functional-model/scripts/
+sync-fdn-oracle-text.mjs [<slug> ...]` (no args = whole current
+`fdn-cards/` pool, same "whole pool when no argv" convention
+`compute-annotations.mjs` already uses) — merges into whatever's already
+checked in (incremental, not a destructive rebuild). Run once this task for
+the whole current pool: **100/100 real cards resolved, 0 missing** (611KB
+written).
+
+`type_line` needs no separate durable source at all — read straight off the
+already-imported `CardDefinition` itself
+(`definition.typeLine`/`.backFace.typeLine`), same "this project's own
+'static CardDefinition fields mirror real Scryfall data verbatim'
+convention already guarantees it's the real printed type line" reasoning
+`compute-annotations.mjs`'s own header already establishes for the
+identical FIN-side case.
+
+### New scripts
+
+- **`functional-model/scripts/verify-coverage-justification.mjs`** — the
+  real fs/CLI orchestration (mirrors `validate-card-definition.mjs`'s own
+  "reusable, not just a CLI" split, same vite-node-argv reason for why the
+  CLI is a separate sibling file). `verifyCoverageJustificationForPath
+  (definition, definitionPath, root)` is the real entry point (path-
+  agnostic — looks for a sibling `justification.json` next to whatever
+  `definitionPath` is, NOT hardcoded to `fdn-cards/<slug>/`, so a test can
+  point it at an arbitrary throwaway fixture); `verifyCoverageJustification
+  ForSlug(slug, root)` is a thin convenience wrapper for the common case
+  (dynamic-imports `definition.ts` itself). `resolveJustificationTexts`
+  builds the real `JustificationTexts` shape from `data/fdn/
+  fdn_scryfall.json` + the already-imported `CardDefinition`'s own
+  `typeLine`.
+- **`functional-model/scripts/verify-coverage-justification-cli.mjs`** —
+  standalone CLI: `npx vite-node functional-model/scripts/
+  verify-coverage-justification-cli.mjs <slug> [<slug> ...]`.
+- **`functional-model/scripts/sync-fdn-oracle-text.mjs`** — populates/
+  updates `data/fdn/fdn_scryfall.json` (see above).
+
+### Gate wiring (`validate-card-definition.mjs`)
+
+Part 1.5 (unchanged position/semantics — still checked independent of, and
+BEFORE, the capacity-gap classification; still `failureKind:
+'incomplete-authoring'` -> `gray` on failure, never `purple`/`other`) now
+calls `verifyCoverageJustificationForPath(definition, absPath, root)`
+instead of the retired inline-field `validateCoverageJustification
+(definition)`. The old `unresolvedCoverageReferenceReason`/
+`COVERAGE_REFERENCE_KINDS`/`validateCoverageJustification` trio is GONE
+from this file entirely — superseded by `coverage-justification.ts`'s own
+real TS versions (the JS/TS-boundary duplication `COVERAGE_REFERENCE_KINDS`
+used to need is gone too, now that `CoverageReference` lives in a real TS
+module this `.mjs` file can import directly via `vite-node`).
+
+### `CardDefinition.coverageJustification` inline field — RETIRED
+
+Confirmed nothing outside the 5 POC cards' own `definition.ts` ever
+populated it (pool-wide grep before removal) and nothing outside `card.ts`/
+`validate-card-definition.mjs`/their own test files ever referenced the
+retired types — a clean, fully additive-reversal removal. FIN never used it
+at all (confirmed at the time it was first built).
+
+### 5-card migration — real span-verified manifests, SAME pool-wide outcome under the stricter bar
+
+`felidar-savior`/`claws-out`/`sire-of-seven-deaths`/`arahbo-the-first-fang`/
+`inspiring-paladin` all migrated from their inline manifests to real
+`justification.json` files, spans computed and verified against the REAL
+`data/fdn/fdn_scryfall.json` text (not hand-typed guesses) — `arahbo-the-
+first-fang`'s own second entry is the real, checked-in multi-span example
+this task's own design was built around. One real, honest correction
+surfaced while authoring `sire-of-seven-deaths`'s manifest: its own prior
+code comment claimed the printed keyword line was "one comma-separated
+line" — the REAL text (confirmed against `data/cards.db`) is actually 4
+separate lines ("Reach, first strike\nVigilance, menace\nTrample,
+lifelink\nWard—Pay 7 life.") — the new manifest reflects the real text, the
+stale comment was corrected in the same pass.
+
+**Re-gated via `gate-and-write-status.mjs`, both individually and pool-
+wide (`--all`, exit code 0) — outcome UNCHANGED from the presence-only
+bar**: `felidar-savior`/`claws-out` -> `blue` (zero gaps, full real-text
+coverage verified); `sire-of-seven-deaths`/`arahbo-the-first-fang`/
+`inspiring-paladin` -> `purple` (real, reasoned-about, still-declared
+gaps). Pool-wide: **2 blue / 3 purple / 95 gray / 0 other / 0
+missing-file** — identical to the presence-only bar's own outcome. The
+other 95 real FDN cards (every previously `blue`/`purple`/migrated card
+this task did NOT hand-author a `justification.json` for) now report
+`gray` with an updated reason string naming `justification.json`
+specifically (mechanical wording change from the retired field name,
+verified via a real single-file diff — `computedAt` timestamp and the one
+reason string are the ONLY changes, nothing structural).
+
+**A real bug found and fixed mid-task, before any card was migrated**: the
+first implementation only tiled/checked `(face, textLocation)` pairs that
+had at least one relevant entry — a face with a real `backFace` but ZERO
+`justification.json` entries for its own oracle text was silently treated
+as "nothing to check" rather than "100% uncovered." Fixed to always check
+`oracle_text` per face regardless of entry count (a real unit test in
+`coverage-justification.test.ts` catches the regression); `type_line`
+correctly keeps its own "only checked when actually claimed" behavior,
+since it's optional.
+
+Tests: `functional-model/coverage-justification.test.ts` (new, 18 cases —
+exact-match failures, overlap detection, full-coverage gap detection,
+punctuation/whitespace tolerance, the real multi-span Arahbo-class case,
+every `CoverageReference` kind's resolution, `type_line`'s relaxed
+completeness bar, the zero-entries-still-checked back-face case, ...).
+`validate-card-definition.test.ts`'s own OLD `describe('validateCoverage
+Justification', ...)` block (9 cases, testing the retired inline-field
+function) removed outright, replaced by a pointer comment to the new file
+— `findStaticAbilitiesPolicyViolationReasons`/
+`findMissingSchemaFunctionalityGapReasons`/`findNameOnlyTriggerGapReasons`'s
+own tests are unaffected. Full `functional-model` suite: 121 files, 1299
+passed / 5 skipped (was 120 files/1290 before this task — net +1 file/+9
+tests: the new test file's 18 cases minus the retired 9).
+`npx tsc --noEmit -p .nuxt/tsconfig.server.json`: identical pre-existing
+4-error baseline (`card-status.ts:263`, `card.ts`'s `endTurn` line,
+`mana.ts:275`, `server/api/tokens/by-key.ts:32`), zero new errors from any
+file this task touched.
+
+**Open, not attempted this task (explicitly out of scope, same as the
+prior redesign's own POC)**: the other 95 real FDN cards' own manifests —
+a full-pool retrofit remains a separate, larger, later pass, same
+incremental discipline the whole FDN pipeline already follows.

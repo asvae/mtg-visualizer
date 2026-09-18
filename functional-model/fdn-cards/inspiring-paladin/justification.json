@@ -1,0 +1,24 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 48, "text": "During your turn, this creature has first strike" }],
+    "definitionKeys": [{ "kind": "field", "field": "continuousKeywordGrants" }],
+    "reasoning": "This card's own continuousKeywordGrants entry ({includeSelf:true, onlyDuringYourTurn:true, keywords:['FirstStrike']}) is the exact self-only, turn-conditional First Strike grant this sentence describes — state.ts's own effectiveKeywords reads onlyDuringYourTurn live every turn, so this is a real, mechanically-enforced match, not an approximation."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 50, "to": 113, "text": "(It deals combat damage before creatures without first strike.)" }],
+    "reasoning": "Reminder text for First Strike directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "rules",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 114, "to": 199, "text": "During your turn, creatures you control with +1/+1 counters on them have first strike" }
+    ],
+    "definitionKeys": [{ "kind": "missingSchemaFunctionality", "index": 0 }],
+    "reasoning": "Genuinely uncovered — no field on continuousKeywordGrants (or anywhere else) can gate a recipient on \"has a +1/+1 counter on it,\" so this second, independent clause is declared as a real capacity gap rather than silently dropped or conflated with the first (self-only) grant above."
+  }
+]

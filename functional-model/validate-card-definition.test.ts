@@ -1,33 +1,39 @@
 // Unit tests for `scripts/validate-card-definition.mjs`'s pure,
 // fs/tsc-free structural checkers — `findStaticAbilitiesPolicyViolationReasons`,
-// `findMissingSchemaFunctionalityGapReasons`, `findNameOnlyTriggerGapReasons`,
-// `validateCoverageJustification` — directly against mocked
-// `CardDefinition`-shaped objects (same "predicate corpus uses mocks"
-// convention this pool's other structural-check tests already follow, e.g.
-// `card-status.test.ts`'s own `isUnsupportedNoOp`/`findUnsupportedConstructs`
-// tests) — the full `validateCardDefinition` end-to-end path (dynamic
-// import + scoped `tsc`) is exercised live via `gate-and-write-status.mjs
-// --all`, not re-tested here.
+// `findMissingSchemaFunctionalityGapReasons`, `findNameOnlyTriggerGapReasons`
+// — directly against mocked `CardDefinition`-shaped objects (same
+// "predicate corpus uses mocks" convention this pool's other structural-
+// check tests already follow, e.g. `card-status.test.ts`'s own
+// `isUnsupportedNoOp`/`findUnsupportedConstructs` tests) — the full
+// `validateCardDefinition` end-to-end path (dynamic import + scoped `tsc` +
+// the real coverage-justification manifest check) is exercised live via
+// `gate-and-write-status.mjs --all`, not re-tested here.
 //
 // `findStaticAbilitiesPolicyViolationReasons`/`findMissingSchemaFunctionality
-// GapReasons`/`validateCoverageJustification` are all new (2026-09-18,
-// later same day again — the schema-tightness redesign: `staticAbilities`
-// is now a hard FDN policy violation, `missingSchemaFunctionality` is the
-// structured successor to what `staticAbilities` used to informally mark,
-// and a real `coverageJustification` manifest is now required to reach
-// EITHER `purple` or `blue` — see `validate-card-definition.mjs`'s own
-// header for the full writeup). The retired `findStaticAbilityGapReasons`
-// (real bug it originally closed: `fdn-cards/inspiring-paladin`'s second
-// real ability, left completely unmodeled as inert `staticAbilities` free
-// text with no structural marker at all, yet the gate still returned
-// `ok:true`/`blue`) is gone — its old behavior is now split across the two
-// new functions below.
+// GapReasons` are both new (2026-09-18, later same day again — the schema-
+// tightness redesign: `staticAbilities` is now a hard FDN policy violation,
+// `missingSchemaFunctionality` is the structured successor to what
+// `staticAbilities` used to informally mark — see `validate-card-
+// definition.mjs`'s own header for the full writeup). The retired
+// `findStaticAbilityGapReasons` (real bug it originally closed:
+// `fdn-cards/inspiring-paladin`'s second real ability, left completely
+// unmodeled as inert `staticAbilities` free text with no structural marker
+// at all, yet the gate still returned `ok:true`/`blue`) is gone — its old
+// behavior is now split across the two functions below.
+//
+// `validateCoverageJustification`'s own tests used to live in THIS file too
+// (2026-09-18, earlier same day again — back when it read an inline
+// `CardDefinition.coverageJustification` field directly) — that function
+// and its own describe block are GONE, superseded 2026-09-18, later still,
+// by the real, span-verified `functional-model/coverage-justification.ts`'s
+// own `validateCoverageJustification` (genuinely different signature now:
+// `(definition, entries, texts)`, not `(definition)`) — see
+// `coverage-justification.test.ts` for its own tests.
 import { describe, expect, it } from 'vitest';
 import {
   findMissingSchemaFunctionalityGapReasons,
   findNameOnlyTriggerGapReasons,
   findStaticAbilitiesPolicyViolationReasons,
-  validateCoverageJustification,
 } from './scripts/validate-card-definition.mjs';
 import type { CardDefinition, Trigger } from './card';
 
@@ -117,94 +123,6 @@ describe('findMissingSchemaFunctionalityGapReasons', () => {
     expect(reasons).toHaveLength(2);
     expect(reasons[0]).not.toContain('[back face]');
     expect(reasons[1]).toContain('[back face]');
-  });
-});
-
-describe('validateCoverageJustification', () => {
-  it('fails when coverageJustification is missing entirely', () => {
-    const result = validateCoverageJustification(mockDefinition({}));
-    expect(result.ok).toBe(false);
-    expect(result.reasons[0]).toContain('missing/empty coverageJustification manifest');
-  });
-
-  it('fails when coverageJustification is an explicitly empty array', () => {
-    const result = validateCoverageJustification(mockDefinition({ coverageJustification: [] }));
-    expect(result.ok).toBe(false);
-    expect(result.reasons[0]).toContain('missing/empty coverageJustification manifest');
-  });
-
-  it('passes for a well-formed manifest whose coveredBy pointers all resolve', () => {
-    const def = mockDefinition({
-      keywords: ['Lifelink'],
-      coverageJustification: [
-        { clause: 'Lifelink', coveredBy: { kind: 'keyword', keyword: 'Lifelink' }, reasoning: 'Printed Lifelink keyword, mechanically enforced by state.ts dealDamage.' },
-      ],
-    });
-    expect(validateCoverageJustification(def)).toEqual({ ok: true, reasons: [] });
-  });
-
-  it('fails when a coveredBy pointer names a keyword the card does not actually have', () => {
-    const def = mockDefinition({
-      keywords: ['Flying'],
-      coverageJustification: [{ clause: 'Lifelink', coveredBy: { kind: 'keyword', keyword: 'Lifelink' }, reasoning: 'real reasoning' }],
-    });
-    const result = validateCoverageJustification(def);
-    expect(result.ok).toBe(false);
-    expect(result.reasons[0]).toContain("not present in this card's own `keywords`");
-  });
-
-  it('fails when a coveredBy pointer names a trigger that does not exist', () => {
-    const def = mockDefinition({
-      coverageJustification: [{ clause: 'ETB', coveredBy: { kind: 'trigger', name: 'onEnter' }, reasoning: 'real reasoning' }],
-    });
-    const result = validateCoverageJustification(def);
-    expect(result.ok).toBe(false);
-    expect(result.reasons[0]).toContain('not a real trigger name');
-  });
-
-  it('fails when clause or reasoning text is missing/empty', () => {
-    const def = mockDefinition({
-      keywords: ['Flying'],
-      coverageJustification: [{ clause: '', coveredBy: { kind: 'keyword', keyword: 'Flying' }, reasoning: '   ' } as never],
-    });
-    const result = validateCoverageJustification(def);
-    expect(result.ok).toBe(false);
-    expect(result.reasons.some((r) => r.includes('no real, non-empty `clause`'))).toBe(true);
-    expect(result.reasons.some((r) => r.includes('no real, non-empty `reasoning`'))).toBe(true);
-  });
-
-  it('fails when a real missingSchemaFunctionality entry has no manifest entry referencing it', () => {
-    const def = mockDefinition({
-      keywords: ['Ward'],
-      missingSchemaFunctionality: [{ clause: 'Ward—Pay 7 life.', demand: 'cost-payload field' }],
-      coverageJustification: [{ clause: 'Ward', coveredBy: { kind: 'keyword', keyword: 'Ward' }, reasoning: 'Printed Ward keyword, base fact tracked.' }],
-    });
-    const result = validateCoverageJustification(def);
-    expect(result.ok).toBe(false);
-    expect(result.reasons.some((r) => r.includes('has no coverageJustification entry referencing it'))).toBe(true);
-  });
-
-  it('passes when a real missingSchemaFunctionality entry IS referenced by a manifest entry', () => {
-    const def = mockDefinition({
-      keywords: ['Ward'],
-      missingSchemaFunctionality: [{ clause: 'Ward—Pay 7 life.', demand: 'cost-payload field' }],
-      coverageJustification: [
-        { clause: 'Ward', coveredBy: { kind: 'keyword', keyword: 'Ward' }, reasoning: 'Printed Ward keyword, base fact tracked.' },
-        { clause: 'Ward—Pay 7 life.', coveredBy: { kind: 'missingSchemaFunctionality', index: 0 }, reasoning: 'No cost-payload field exists yet; declared as a demand.' },
-      ],
-    });
-    expect(validateCoverageJustification(def)).toEqual({ ok: true, reasons: [] });
-  });
-
-  it('walks the back face too, requiring its own independent manifest', () => {
-    const def = mockDefinition({
-      keywords: ['Flying'],
-      coverageJustification: [{ clause: 'Flying', coveredBy: { kind: 'keyword', keyword: 'Flying' }, reasoning: 'Printed Flying keyword.' }],
-      backFace: mockDefinition({ name: 'Mock Back', keywords: ['Menace'] }),
-    });
-    const result = validateCoverageJustification(def);
-    expect(result.ok).toBe(false);
-    expect(result.reasons[0]).toContain('[back face]');
   });
 });
 

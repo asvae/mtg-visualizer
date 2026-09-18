@@ -1,0 +1,22 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 17, "text": "Affinity for Cats" }],
+    "definitionKeys": [{ "kind": "field", "field": "costReduction" }],
+    "reasoning": "This card's own costReduction: {perControlled: {amountPerMatch: 1, subtype: 'Cat'}} is the exact CR 601.2f per-Cat-controlled discount named by the Affinity keyword."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 18, "to": 79, "text": "(This spell costs {1} less to cast for each Cat you control.)" }],
+    "reasoning": "Reminder text for Affinity for Cats directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 80, "to": 130, "text": "Creatures you control get +2/+2 until end of turn." }],
+    "definitionKeys": [{ "kind": "effect", "effectKind": "pumpAll" }],
+    "reasoning": "This card's own top-level pumpAll effect ({predicate:'creatures-you-control', power:2, toughness:2, untilEndOfTurn:true}) is the exact broadcast P/T pump this clause describes, scoped to the caster's own creatures and expiring at Cleanup (514.2)."
+  }
+]

@@ -19,22 +19,9 @@ export const clawsOut: CardDefinition = {
     } satisfies Effect,
   ],
 
-  // Coverage-justification manifest (2026-09-18, FDN schema-tightness
-  // redesign proof-of-concept — see `.claude/contracts/card-schema.md`).
-  // Real printed oracle text, 2 clauses: "Affinity for Cats (This spell
-  // costs {1} less to cast for each Cat you control.)\nCreatures you
-  // control get +2/+2 until end of turn." Zero `missingSchemaFunctionality`
-  // entries — both clauses are fully, structurally covered.
-  coverageJustification: [
-    {
-      clause: 'Affinity for Cats (This spell costs {1} less to cast for each Cat you control.)',
-      coveredBy: { kind: 'field', field: 'costReduction' },
-      reasoning: "This card's own `costReduction: {perControlled: {amountPerMatch: 1, subtype: 'Cat'}}` is the exact CR 601.2f per-Cat-controlled discount this clause describes — one generic mana discounted per matching Cat, no cap printed.",
-    },
-    {
-      clause: 'Creatures you control get +2/+2 until end of turn.',
-      coveredBy: { kind: 'effect', effectKind: 'pumpAll' },
-      reasoning: "This card's own top-level `pumpAll` effect (`{predicate:'creatures-you-control', power:2, toughness:2, untilEndOfTurn:true}`) is the exact broadcast P/T pump this clause describes, scoped to the caster's own creatures and expiring at Cleanup (514.2).",
-    },
-  ],
+  // Coverage-justification manifest — moved out to a real, SPAN-VERIFIED
+  // functional-model/fdn-cards/claws-out/justification.json (2026-09-18,
+  // later still — the justification.json redesign, see
+  // `.claude/contracts/card-schema.md`). No longer an inline field on
+  // CardDefinition at all — see coverage-justification.ts's own header.
 };

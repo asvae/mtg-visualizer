@@ -55,23 +55,9 @@ export const felidarSavior: CardDefinition = {
     },
   ],
 
-  // Coverage-justification manifest (2026-09-18, FDN schema-tightness
-  // redesign proof-of-concept — see `.claude/contracts/card-schema.md`).
-  // Real printed oracle text, 2 clauses: "Lifelink (Damage dealt by this
-  // creature also causes you to gain that much life.)\nWhen this creature
-  // enters, put a +1/+1 counter on each of up to two other target
-  // creatures you control." Zero `missingSchemaFunctionality` entries —
-  // both clauses are fully, structurally covered.
-  coverageJustification: [
-    {
-      clause: 'Lifelink (Damage dealt by this creature also causes you to gain that much life.)',
-      coveredBy: { kind: 'keyword', keyword: 'Lifelink' },
-      reasoning: "Printed keyword, present in this card's own `keywords` array — mechanically ENFORCED (not just tracked) by `state.ts`'s own real `dealDamage` chokepoint, per that field's own doc comment; the reminder text in parentheses is exactly what that chokepoint does.",
-    },
-    {
-      clause: 'When this creature enters, put a +1/+1 counter on each of up to two other target creatures you control.',
-      coveredBy: { kind: 'trigger', name: 'onEnter' },
-      reasoning: "The `onEnter` trigger (`on:'enter'`, this engine's real self-only ETB auto-fire scope) runs a `program` effect built from `selectUpTo(you.creaturesInPlay().filter('excludeSelf'), 2, 'target', ...)` — the real \"up to two OTHER target creatures you control\" selection (0, 1, or 2 legal picks), each bound index independently applying `putCounter('+1/+1', 1)` via `applyToBound` (a no-op when fewer than `index + 1` targets were actually picked, exactly the real 'UP TO' looseness this clause needs).",
-    },
-  ],
+  // Coverage-justification manifest — moved out to a real, SPAN-VERIFIED
+  // functional-model/fdn-cards/felidar-savior/justification.json (2026-09-18,
+  // later still — the justification.json redesign, see
+  // `.claude/contracts/card-schema.md`). No longer an inline field on
+  // CardDefinition at all — see coverage-justification.ts's own header.
 };

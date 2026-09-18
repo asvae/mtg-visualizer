@@ -44,28 +44,15 @@ export const arahboTheFirstFang: CardDefinition = {
     },
   ],
 
-  // Coverage-justification manifest (2026-09-18, FDN schema-tightness
-  // redesign proof-of-concept — see `.claude/contracts/card-schema.md`).
-  // Real printed oracle text: "Other Cats you control get +1/+1.\nWhenever
-  // Arahbo or another nontoken Cat you control enters, create a 1/1 white
-  // Cat creature token." — 2 sentences, the second genuinely splitting into
-  // an Arahbo-only half (covered) and an other-Cats half (a real,
-  // partial-coverage gap — see `missingSchemaFunctionality` above).
-  coverageJustification: [
-    {
-      clause: 'Other Cats you control get +1/+1.',
-      coveredBy: { kind: 'field', field: 'continuousPTGrants' },
-      reasoning: "This card's own `continuousPTGrants` entry (`{power:1, toughness:1, includeSelf:false, subtype:'Cat'}`) is the exact, unconditional, 613.3/layer-7c broadcast this sentence describes — self excluded (\"OTHER Cats\"), scoped to the `'Cat'` subtype, no counter/duration qualifier printed.",
-    },
-    {
-      clause: "Whenever Arahbo ... enters, create a 1/1 white Cat creature token.",
-      coveredBy: { kind: 'trigger', name: 'onEnter' },
-      reasoning: "The `onEnter` trigger (`on:'enter'`, this engine's real self-only ETB auto-fire scope) fires when Arahbo itself enters and runs the `createToken` effect that creates the real 1/1 Cat token — fully covers the \"Arahbo enters\" half of this sentence.",
-    },
-    {
-      clause: '...or another nontoken Cat you control enters, create a 1/1 white Cat creature token.',
-      coveredBy: { kind: 'missingSchemaFunctionality', index: 0 },
-      reasoning: 'The "another nontoken Cat enters" half is genuinely uncovered — `on:\'enter\'` structurally cannot watch a DIFFERENT permanent\'s own ETB, so this half is declared as a real capacity gap rather than silently approximated or dropped.',
-    },
-  ],
+  // Coverage-justification manifest — moved out to a real, SPAN-VERIFIED
+  // functional-model/fdn-cards/arahbo-the-first-fang/justification.json
+  // (2026-09-18, later still — the justification.json redesign, see
+  // `.claude/contracts/card-schema.md`). No longer an inline field on
+  // CardDefinition at all — see coverage-justification.ts's own header.
+  // The "Whenever Arahbo ... enters" trigger clause is a real, checked-in
+  // example of a MULTI-SPAN entry (two disjoint real spans — "Whenever
+  // Arahbo" and "enters, create a 1/1 white Cat creature token" — under one
+  // coverage claim), since the real, uncovered "or another nontoken Cat you
+  // control" middle sits between them and can't be included without
+  // misrepresenting it as covered.
 };
