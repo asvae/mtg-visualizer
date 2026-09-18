@@ -1,0 +1,33 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 6, "text": "Flying" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Flying" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 7, "to": 51, "text": "When this creature enters, mill three cards." }],
+    "definitionKeys": [{ "kind": "trigger", "name": "onEnter" }],
+    "reasoning": "This card's own `onEnter` trigger (on:'enter') runs a real `mill` effect ({owner:'you', amount:3}) — the exact real ETB self-mill this sentence describes."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 52, "to": 114, "text": "(Put the top three cards of your library into your graveyard.)" }],
+    "reasoning": "Reminder text for \"mill\" directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 115, "to": 126, "text": "Threshold —" },
+      { "from": 127, "to": 151, "text": "This creature gets +2/+1" },
+      { "from": 152, "to": 211, "text": "as long as there are seven or more cards in your graveyard." }
+    ],
+    "definitionKeys": [{ "kind": "field", "field": "continuousPTGrants" }],
+    "reasoning": "This card's own `continuousPTGrants` entry ({power:2, toughness:1, includeSelf:true, condition:{kind:'graveyardCountAtLeast', min:7}}) structurally covers the whole sentence: the fixed +2/+1 delta is the real P/T bonus this clause prints; \"Threshold —\" is this ability's own template label, fully expressed by this same entry's `condition` field, not a separate clause of its own; `condition` (2026-09-18 schema-completeness pass, `BoardStateCondition`) is the exact real \"as long as there are seven or more cards in your graveyard\" continuous gate. The condition is declaratively real but NOT yet engine-enforced (`qualifiesForContinuousGrant` never checks it, Ward pattern — see `engine-support-registry.ts`'s own `board-state-condition-not-enforced` entry), so the grant still applies unconditionally in practice; the gate is now structurally declared rather than silently approximated as always-on."
+  }
+]

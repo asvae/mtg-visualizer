@@ -6,25 +6,18 @@ export const zulAshurLichLord: CardDefinition = {
   typeLine: 'Legendary Creature — Zombie Warlock',
   pt: [2, 2],
 
-  // Real "Ward—Pay 2 life." `Ward` in this model's `Keyword` union is a
-  // bare literal with no cost payload — recognized-but-inert (the specific
-  // cost isn't tracked, no counterspell-trigger machinery exists to
-  // enforce it), same established convention raubahn-bull-of-ala-mhigo's
-  // own definition.ts already documents for an identical "Ward—Pay life
-  // equal to..." clause. Declared via `missingSchemaFunctionality` (moved
-  // out of `staticAbilities`, 2026-09-18, FDN schema-tightness redesign)
-  // so this specific non-default-cost gap is a real, gate-visible
-  // `reasons` entry, not only a comment — this card was already `purple`
-  // for the unrelated MayPlay gap below, so this had no VISIBLE effect on
-  // its status before now, but would have silently gone unrecorded if that
-  // other gap were ever closed first.
+  // Real "Ward—Pay 2 life." The base "this permanent has Ward" fact is
+  // tracked via `keywords` below — recognized-but-inert (the specific cost
+  // isn't enforced, no counterspell-trigger machinery exists anywhere in
+  // this engine). The SPECIFIC non-default cost ("Pay 2 life," not the more
+  // common mana-cost Ward template) is now recorded via `keywordCosts`
+  // (2026-09-18, schema-completeness pass — `card.ts`'s own new
+  // `KeywordCost`/`CardDefinition.keywordCosts` field), same real "Ward—Pay
+  // N life" shape sire-of-seven-deaths (this pool)/raubahn-bull-of-ala-mhigo
+  // (FIN pool) share. This card is still `purple` for the unrelated MayPlay
+  // gap below regardless.
   keywords: ['Ward'],
-  missingSchemaFunctionality: [
-    {
-      clause: 'Ward—Pay 2 life. (the "pay 2 life" cost specifically — not the base Ward keyword fact, already tracked above)',
-      demand: '`Keyword` needs a cost-payload field for a non-default Ward cost — currently a bare string-literal union with no place to record "Pay 2 life" (or any other non-mana-cost Ward template) at all.',
-    },
-  ],
+  keywordCosts: [{ keyword: 'Ward', cost: 'Pay 2 life' }],
 
   abilities: [
     {

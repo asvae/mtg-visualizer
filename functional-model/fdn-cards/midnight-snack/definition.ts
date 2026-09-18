@@ -6,19 +6,21 @@ export const midnightSnack: CardDefinition = {
   manaCost: '{2}{B}',
   typeLine: 'Enchantment',
 
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
-  missingSchemaFunctionality: [
-    {
-      clause: 'Raid — At the beginning of your end step, if you attacked this turn, create a Food token. (It\'s an artifact with "{2}, {T}, Sacrifice this token: You gain 3 life.")',
-      demand: 'Same Raid conditional-trigger-gating gap as Crypt Feaster/Gutless Plunderer — no field lets a trigger\'s firing (here `on:\'endStep\'`) be gated on "you attacked this turn"; the token-creation effect below currently fires every end step unconditionally instead of only on a Raid turn.',
-    },
-  ],
-
+  // Real Raid — the "you attacked this turn" gate is now a real
+  // `Trigger.condition` (`BoardStateCondition.kind:'attackedThisTurn'`,
+  // 2026-09-18 schema-completeness pass) — declaratively real but NOT
+  // itself engine-enforced yet ("attacked this turn" needs real per-turn
+  // combat-history tracking `interfaces.ts`'s own `Player` has no method
+  // for, Ward pattern — see `engine-support-registry.ts`'s own
+  // `board-state-condition-not-enforced` entry), so the token creation
+  // still fires every end step in practice, same as before this field
+  // existed; the real gate is now at least structurally declared instead
+  // of silently approximated as always-on.
   triggers: [
     {
       name: 'onEndStep',
       on: 'endStep',
+      condition: { kind: 'attackedThisTurn' },
       effects: [
         {
           kind: 'createToken',

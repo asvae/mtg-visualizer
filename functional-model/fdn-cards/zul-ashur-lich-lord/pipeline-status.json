@@ -1,8 +1,7 @@
 {
   "status": "purple",
   "reasons": [
-    "documented unsupported construct (kind:'custom' no-op placeholder): you may cast target Zombie creature card from your graveyard this turn (no MayPlay/standing-permission mechanic exists anywhere in this engine)",
-    "declared missingSchemaFunctionality entry: clause: \"Ward—Pay 2 life. (the \"pay 2 life\" cost specifically — not the base Ward keyword fact, already tracked above)\" — demand: \"`Keyword` needs a cost-payload field for a non-default Ward cost — currently a bare string-literal union with no place to record \"Pay 2 life\" (or any other non-mana-cost Ward template) at all.\""
+    "documented unsupported construct (kind:'custom' no-op placeholder): you may cast target Zombie creature card from your graveyard this turn (no MayPlay/standing-permission mechanic exists anywhere in this engine)"
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -29,6 +28,6 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T15:48:57.844Z",
+  "computedAt": "2026-09-18T16:26:58.188Z",
   "engineSupport": "off"
 }

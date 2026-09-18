@@ -6,14 +6,24 @@ export const skyknightSquire: CardDefinition = {
   typeLine: 'Creature — Cat Scout',
   pt: [1, 1],
 
-  // Trigger: "Whenever another creature you control enters, put a +1/+1 counter
-  // on this creature."
-  // GAP: Current engine only models ETB triggers on self; firing when OTHER
-  // creatures enter requires gap closure (no ValidCard$ filter/condition).
+  // Real Forge: `T:Mode$ ChangesZone | Origin$ Any | Destination$
+  // Battlefield | ValidCard$ Creature.YouCtrl+Other` — "Whenever another
+  // creature you control enters, put a +1/+1 counter on this creature." A
+  // board-wide watch for some OTHER permanent's own entrance, genuinely
+  // distinct from `on:'enter'` (self-only) — now expressed via
+  // `Trigger.on:'otherPermanentEnters'` + `otherPermanentEntersMatch`
+  // (2026-09-18, schema-completeness pass): `sameController: true`, no
+  // `subtype`/`nonToken` filter (every OTHER creature you control
+  // qualifies, unlike Arahbo's own narrower "nontoken Cat" filter). NOT
+  // itself dispatched by `engine.ts` — no board-wide "any permanent just
+  // entered" sweep exists yet for ANY card (Ward pattern — see
+  // `engine-support-registry.ts`'s own
+  // `other-permanent-enters-trigger-not-enforced` entry).
   triggers: [
     {
-      name: 'onEnter',
-      on: 'enter',
+      name: 'onOtherCreatureEnters',
+      on: 'otherPermanentEnters',
+      otherPermanentEntersMatch: { sameController: true },
       effects: [
         {
           kind: 'putCounter',
@@ -25,17 +35,27 @@ export const skyknightSquire: CardDefinition = {
     },
   ],
 
-  // Static ability: "As long as this creature has three or more +1/+1 counters
-  // on it, it has flying and is a Knight in addition to its other types."
-  // GAP: Conditional grants (keywords/types) based on counter state are not
-  // yet supported; continuousKeywordGrants only supports subtype/self/Equipment
-  // targeting, not counter-based conditions. Migrated from `staticAbilities`
-  // to `missingSchemaFunctionality` (2026-09-18, FDN schema-tightness
-  // redesign).
-  missingSchemaFunctionality: [
+  // Real Forge static ability: "As long as this creature has three or more
+  // +1/+1 counters on it, it has flying and is a Knight in addition to its
+  // other types." Modeled as two SELF-only continuous grants (one keyword,
+  // one type), each gated on the new `condition` field
+  // (`BoardStateCondition.kind:'selfCounterCountAtLeast'`, 2026-09-18
+  // schema-completeness pass) — declaratively real but NOT itself engine-
+  // enforced yet (`qualifiesForContinuousGrant` never checks `condition`,
+  // Ward pattern — see `engine-support-registry.ts`'s own
+  // `board-state-condition-not-enforced` entry).
+  continuousKeywordGrants: [
     {
-      clause: 'As long as this creature has three or more +1/+1 counters on it, it has flying and is a Knight in addition to its other types.',
-      demand: 'A COUNTER-COUNT-conditional variant of `continuousKeywordGrants`/`continuousTypeGrants` — both fields gate a recipient on subtype/self/Equipment-attachment only, never on a counter threshold on the recipient itself (contrast `ptFormula.kind:\'thresholdBonus\'`, which DOES support a counter-count gate, but only for a P/T delta, not a keyword/type grant).',
+      keywords: ['Flying'],
+      includeSelf: true,
+      condition: { kind: 'selfCounterCountAtLeast', counterType: '+1/+1', min: 3 },
+    },
+  ],
+  continuousTypeGrants: [
+    {
+      types: ['Knight'],
+      includeSelf: true,
+      condition: { kind: 'selfCounterCountAtLeast', counterType: '+1/+1', min: 3 },
     },
   ],
 };

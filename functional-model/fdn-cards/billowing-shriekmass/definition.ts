@@ -22,28 +22,22 @@ export const billowingShriekmass: CardDefinition = {
     },
   ],
 
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign) — the `continuousPTGrants`
-  // entry below is UNCONDITIONAL (no threshold-gating field exists on that
-  // type at all), so this card is currently approximated as ALWAYS having
-  // +2/+1, not gated on the real 7+-graveyard-cards condition — same
-  // established "approximate as always-on when no conditional mechanism
-  // exists" simplification Crypt Feaster's own Threshold trigger already
-  // documents, not a silent, undocumented bug.
-  missingSchemaFunctionality: [
-    {
-      clause: 'Threshold — This creature gets +2/+1 as long as there are seven or more cards in your graveyard.',
-      demand: 'A CONDITIONAL variant of `continuousPTGrants` — today\'s entries apply unconditionally; need a graveyard-count (or general board-state) threshold gate on a self-targeting P/T grant, since the unconditional `{power:2, toughness:1, includeSelf:true}` entry below is only an approximation of the real always-checked Threshold condition.',
-    },
-  ],
-
-  // Threshold condition: +2/+1 if 7+ cards in graveyard (see the real,
-  // unconditional-approximation gap declared above)
+  // Real Threshold — the "7+ cards in graveyard" gate is now a real
+  // `ContinuousGrantTargeting.condition`
+  // (`BoardStateCondition.kind:'graveyardCountAtLeast'`, 2026-09-18
+  // schema-completeness pass) — declaratively real but NOT itself
+  // engine-enforced yet (`qualifiesForContinuousGrant` never checks it,
+  // Ward pattern — see `engine-support-registry.ts`'s own
+  // `board-state-condition-not-enforced` entry), so this grant still
+  // applies unconditionally in practice, same as before this field
+  // existed; the real gate is now at least structurally declared instead
+  // of silently approximated as always-on.
   continuousPTGrants: [
     {
       power: 2,
       toughness: 1,
       includeSelf: true,
+      condition: { kind: 'graveyardCountAtLeast', min: 7 },
     },
   ],
 };

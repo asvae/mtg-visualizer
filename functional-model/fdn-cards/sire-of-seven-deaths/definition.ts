@@ -7,23 +7,17 @@ export const sireOfSevenDeaths: CardDefinition = {
   pt: [7, 7],
   keywords: ['Reach', 'FirstStrike', 'Vigilance', 'Menace', 'Trample', 'Lifelink', 'Ward'],
 
-  // Real "Ward—Pay 7 life." `card.ts`'s own `Keyword` union has NO field
-  // anywhere for a keyword's cost parameter — `Ward` is a bare literal, so
-  // the base "recognized-but-inert Ward" fact is tracked above, but the
-  // SPECIFIC non-default cost ("pay 7 life," not the more common
-  // mana-cost Ward template) has no schema field to live in and would
-  // otherwise be silently dropped. GENUINE CAPACITY GAP, same real
-  // "Ward—Pay N life" shape raubahn-bull-of-ala-mhigo (FIN pool)/
-  // zul-ashur-lich-lord (this pool) already document — declared via
-  // `missingSchemaFunctionality` (migrated out of `staticAbilities`,
-  // 2026-09-18, FDN schema-tightness redesign) so it stays a structural,
-  // gate-visible `reasons` entry, not only a comment.
-  missingSchemaFunctionality: [
-    {
-      clause: 'Ward—Pay 7 life. (the "pay 7 life" cost specifically — not the base Ward keyword fact, already tracked above)',
-      demand: '`Keyword` needs a cost-payload field for a non-default Ward cost — currently a bare string-literal union with no place to record "Pay 7 life" (or any other non-mana-cost Ward template) at all.',
-    },
-  ],
+  // Real "Ward—Pay 7 life." The base "this permanent has Ward" fact is
+  // tracked via `keywords` above; the SPECIFIC non-default cost ("pay 7
+  // life," not the more common mana-cost Ward template) is now recorded via
+  // `keywordCosts` (2026-09-18, schema-completeness pass — `card.ts`'s own
+  // new `KeywordCost`/`CardDefinition.keywordCosts` field). Still
+  // recognized-but-inert (no counterspell-trigger machinery exists anywhere
+  // in this engine to actually enforce any Ward cost, default or
+  // otherwise, default or non-default) — same real "Ward—Pay N life" shape
+  // raubahn-bull-of-ala-mhigo (FIN pool)/zul-ashur-lich-lord (this pool)
+  // share.
+  keywordCosts: [{ keyword: 'Ward', cost: 'Pay 7 life' }],
 
   // Coverage-justification manifest — moved out to a real, SPAN-VERIFIED
   // functional-model/fdn-cards/sire-of-seven-deaths/justification.json

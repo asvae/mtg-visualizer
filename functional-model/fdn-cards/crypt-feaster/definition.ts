@@ -8,25 +8,22 @@ export const cryptFeaster: CardDefinition = {
 
   keywords: ['Menace'],
 
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
-  missingSchemaFunctionality: [
-    {
-      clause: 'Threshold — Whenever this creature attacks, if there are seven or more cards in your graveyard, this creature gets +2/+0 until end of turn.',
-      demand: 'A conditional-trigger gating mechanism on `Trigger` — no field lets a trigger\'s own resolution be gated on a live board-state condition (here, own graveyard count >= 7) before its effects apply; today `on:\'attacks\'` always fires unconditionally once declared, which is why the `onAttack` trigger below applies the pump every attack instead of only past the Threshold.',
-    },
-  ],
-
   // Real Forge: `Mode$ Attacks | ValidCard$ Card.Self` — a real self-attack
   // auto-fire trigger, `on: 'attacks'`. The Threshold condition itself (7+
-  // cards in graveyard) has no gating mechanism on `Trigger` — same
-  // accepted, already-established pool-wide simplification (no
-  // conditional-trigger checking exists anywhere in this model), so the
-  // pump always applies once this fires.
+  // cards in graveyard) is now a real `Trigger.condition`
+  // (`BoardStateCondition.kind:'graveyardCountAtLeast'`, 2026-09-18 schema-
+  // completeness pass) — declaratively real but NOT itself engine-enforced
+  // yet (`resolveCard` has no live `GameState` to check it against, Ward
+  // pattern — see `engine-support-registry.ts`'s own
+  // `board-state-condition-not-enforced` entry), so the pump still applies
+  // every attack in practice, same as before this field existed; the real
+  // gate is now at least structurally declared instead of silently
+  // approximated as always-on.
   triggers: [
     {
       name: 'onAttack',
       on: 'attacks',
+      condition: { kind: 'graveyardCountAtLeast', min: 7 },
       effects: [
         {
           kind: 'pumpSelf',

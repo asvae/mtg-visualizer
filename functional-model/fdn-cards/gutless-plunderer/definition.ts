@@ -8,19 +8,20 @@ export const gutlessPlunderer: CardDefinition = {
 
   keywords: ['Deathtouch'],
 
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
-  missingSchemaFunctionality: [
-    {
-      clause: 'Raid — When this creature enters, if you attacked this turn, look at the top three cards of your library. You may put one of those cards back on top of your library. Put the rest into your graveyard.',
-      demand: 'A Raid-style precondition gate on a `Trigger` ("did you attack this turn") — same missing conditional-trigger-gating capability Crypt Feaster\'s own Threshold gap names, applied to an ETB dig effect instead of a P/T pump; without it, this creature\'s own `dig` effect below fires unconditionally on every ETB, never actually checking Raid.',
-    },
-  ],
-
+  // Real Raid — the "you attacked this turn" gate is now a real
+  // `Trigger.condition` (`BoardStateCondition.kind:'attackedThisTurn'`,
+  // 2026-09-18 schema-completeness pass) — declaratively real but NOT
+  // itself engine-enforced yet (same real gap Midnight Snack's own Raid
+  // clause names, Ward pattern — see `engine-support-registry.ts`'s own
+  // `board-state-condition-not-enforced` entry), so this creature's own
+  // `dig` effect below still fires on every ETB in practice, same as before
+  // this field existed; the real gate is now at least structurally declared
+  // instead of silently approximated as always-on.
   triggers: [
     {
       name: 'onEnter',
       on: 'enter',
+      condition: { kind: 'attackedThisTurn' },
       effects: [
         {
           kind: 'dig',

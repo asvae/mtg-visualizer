@@ -1,0 +1,23 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 6, "text": "Flying" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Flying" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 7, "to": 33, "text": "This creature can't block." }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "CantBlock" }],
+    "reasoning": "This card's own `keywords` array carries `'CantBlock'` (2026-09-18 schema-completeness pass) — the exact unconditional can't-block restriction this sentence prints. Recognized-but-inert: `engine.ts`'s own `canBlock`/`declareBlockers` never check it yet (Ward pattern — see `engine-support-registry.ts`'s own `cant-block-not-enforced` entry), same as `'Unblockable'`'s own existing precedent for the opposite combat-declaration side."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 34, "to": 122, "text": "When this creature enters, return target creature card from your graveyard to your hand." }],
+    "definitionKeys": [{ "kind": "trigger", "name": "onEnter" }],
+    "reasoning": "This card's own `onEnter` trigger (on:'enter') runs a real `move` effect (Graveyard -> Hand, targeted, validType:'creature', owner:'you', qty:1) — the exact real ETB return-to-hand clause this sentence describes."
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 0, "to": 45, "text": "Whenever another creature you control enters," },
+      { "from": 46, "to": 83, "text": "put a +1/+1 counter on this creature." }
+    ],
+    "definitionKeys": [{ "kind": "trigger", "name": "onOtherCreatureEnters" }],
+    "reasoning": "This card's own `onOtherCreatureEnters` trigger (`on:'otherPermanentEnters'`, `otherPermanentEntersMatch:{sameController:true}`, 2026-09-18 schema-completeness pass) is the exact real board-wide watch this clause describes — no `subtype`/`nonToken` filter since every OTHER creature you control qualifies (unlike Arahbo's own narrower nontoken-Cat filter). Its `putCounter` effect ({target:'self', counterType:'+1/+1', amount:1}) is the exact real counter-placement effect. NOT itself dispatched by `engine.ts` — no board-wide \"any permanent just entered\" sweep exists yet for ANY card (Ward pattern — see `engine-support-registry.ts`'s own `other-permanent-enters-trigger-not-enforced` entry)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 84, "to": 148, "text": "As long as this creature has three or more +1/+1 counters on it," },
+      { "from": 149, "to": 162, "text": "it has flying" }
+    ],
+    "definitionKeys": [{ "kind": "field", "field": "continuousKeywordGrants" }, { "kind": "field", "field": "continuousTypeGrants" }],
+    "reasoning": "This card's own `continuousKeywordGrants` entry ({keywords:['Flying'], includeSelf:true, condition:{kind:'selfCounterCountAtLeast', counterType:'+1/+1', min:3}}) is the exact self-only Flying grant this clause describes; the shared \"As long as... three or more +1/+1 counters\" condition clause is the exact real gate both this entry AND the sibling `continuousTypeGrants` entry below carry via the identical `condition` value (`BoardStateCondition.kind:'selfCounterCountAtLeast'`, 2026-09-18 schema-completeness pass). Declaratively real but NOT itself engine-enforced yet (`qualifiesForContinuousGrant` never checks `condition`, Ward pattern — see `engine-support-registry.ts`'s own `board-state-condition-not-enforced` entry)."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 163, "to": 210, "text": "and is a Knight in addition to its other types." }],
+    "definitionKeys": [{ "kind": "field", "field": "continuousTypeGrants" }],
+    "reasoning": "This card's own `continuousTypeGrants` entry ({types:['Knight'], includeSelf:true, condition:{kind:'selfCounterCountAtLeast', counterType:'+1/+1', min:3}}) is the exact self-only Knight type grant this clause describes, sharing the same real counter-count gate the previous entry already covers in full."
+  }
+]

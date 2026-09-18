@@ -1,0 +1,27 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 6, "text": "Menace" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Menace" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 7, "to": 72, "text": "(This creature can't be blocked except by two or more creatures.)" }],
+    "reasoning": "Reminder text for Menace directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 73, "to": 84, "text": "Threshold —" },
+      { "from": 85, "to": 116, "text": "Whenever this creature attacks," },
+      { "from": 117, "to": 168, "text": "if there are seven or more cards in your graveyard," },
+      { "from": 169, "to": 212, "text": "this creature gets +2/+0 until end of turn." }
+    ],
+    "definitionKeys": [{ "kind": "trigger", "name": "onAttack" }],
+    "reasoning": "This card's own `onAttack` trigger structurally covers the whole sentence: `on:'attacks'` is the real self-attack auto-fire this \"Whenever this creature attacks\" clause names (real Forge `Mode$ Attacks | ValidCard$ Card.Self`); \"Threshold —\" is this ability's own template label, fully expressed by this same trigger's `condition` field, not a separate keyword or clause of its own; `condition: {kind:'graveyardCountAtLeast', min:7}` (2026-09-18 schema-completeness pass, `BoardStateCondition`) is the exact real \"if there are seven or more cards in your graveyard\" intervening-if gate; and the trigger's `pumpSelf` effect ({power:2, toughness:0, untilEndOfTurn:true}) is the exact real \"+2/+0 until end of turn\" pump. The condition is declaratively real but NOT yet engine-enforced (`resolveCard` has no live `GameState` to check it against, Ward pattern — see `engine-support-registry.ts`'s own `board-state-condition-not-enforced` entry), so the pump still applies on every attack in practice; the gate is now structurally declared rather than silently approximated as always-on."
+  }
+]

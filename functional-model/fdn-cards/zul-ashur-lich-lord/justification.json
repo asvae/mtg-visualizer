@@ -4,14 +4,14 @@
     "textLocation": "oracle_text",
     "spans": [{ "from": 0, "to": 4, "text": "Ward" }],
     "definitionKeys": [{ "kind": "keyword", "keyword": "Ward" }],
-    "reasoning": "Printed keyword, present in this card's own `keywords` array — the base \"this permanent has Ward\" fact is tracked (recognized-but-inert: no counterspell-trigger machinery exists anywhere in this engine to actually enforce any Ward cost, default or otherwise), same established convention sire-of-seven-deaths's own identical clause already documents. The SPECIFIC non-default cost (\"Pay 2 life\") is a separate, distinct capacity gap — see the next entry."
+    "reasoning": "Printed keyword, present in this card's own `keywords` array — the base \"this permanent has Ward\" fact is tracked (recognized-but-inert: no counterspell-trigger machinery exists anywhere in this engine to actually enforce any Ward cost, default or otherwise), same established convention sire-of-seven-deaths's own identical clause already documents. The SPECIFIC non-default cost (\"Pay 2 life\") is now also structurally represented — see the next entry."
   },
   {
-    "type": "rules",
+    "type": "definition",
     "textLocation": "oracle_text",
     "spans": [{ "from": 5, "to": 15, "text": "Pay 2 life" }],
-    "definitionKeys": [{ "kind": "missingSchemaFunctionality", "index": 0 }],
-    "reasoning": "The SPECIFIC non-default cost half of Ward (as opposed to the base Ward keyword fact, covered above) has no schema field to live in at all — `Keyword` is a bare string-literal union with no cost-payload field — declared as a real, structured demand rather than silently dropped."
+    "definitionKeys": [{ "kind": "field", "field": "keywordCosts" }],
+    "reasoning": "This card's own `keywordCosts` entry ({keyword:'Ward', cost:'Pay 2 life'}, 2026-09-18 schema-completeness pass) is the exact, real, non-default Ward cost payload this text prints — still recognized-but-inert (no counterspell-trigger machinery to enforce it), same as the base Ward fact above, but the specific cost text itself is now structurally recorded rather than a bare `missingSchemaFunctionality` gap."
   },
   {
     "type": "lore",

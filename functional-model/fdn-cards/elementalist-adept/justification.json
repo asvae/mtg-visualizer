@@ -1,0 +1,28 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 5, "text": "Flash" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Flash" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 6, "to": 67, "text": "(You may cast this spell any time you could cast an instant.)" }],
+    "reasoning": "Reminder text for Flash directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 68, "to": 75, "text": "Prowess" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Prowess" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array (`'Prowess'`, 2026-09-18 schema-completeness pass) — the base \"this creature has Prowess\" structural fact is tracked (recognized-but-inert: no `Trigger.on:'castNoncreatureSpell'` auto-fire dispatch exists anywhere in this engine, for any card — a real, already-tracked, genuinely bigger gap, see `ENGINE_GAPS.md`'s own trigger-doubling writeup and `engine-support-registry.ts`'s own `prowess-not-enforced` entry)."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 76, "to": 160, "text": "(Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)" }],
+    "reasoning": "Reminder text for Prowess directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed. The mechanic it restates (the auto-fire trigger) is the real, already-tracked engine gap named on the Prowess keyword entry above, not something this reminder span itself needs to separately justify."
+  }
+]

@@ -6,22 +6,20 @@ export const sunBlessedHealer: CardDefinition = {
   typeLine: 'Creature — Human Cleric',
   pt: [3, 1],
 
-  keywords: ['Lifelink'],
-
-  // Real Kicker {1}{W}. "Kicker" is not in this model's controlled
-  // `Keyword` vocabulary (no such literal in card.ts's own `Keyword`
-  // union). `AlternateCost` doesn't fit either (that shape is fixed to
-  // `from: 'graveyard'|'exile'` — real Flashback/Jump-start territory;
-  // Kicker is an ADDITIONAL, optional cost paid from hand, not a cost
-  // REPLACEMENT). Migrated from `staticAbilities` to
-  // `missingSchemaFunctionality` (2026-09-18, FDN schema-tightness
-  // redesign).
-  missingSchemaFunctionality: [
-    {
-      clause: 'Kicker {1}{W} (You may pay an additional {1}{W} as you cast this spell.)',
-      demand: "A real `Kicker` cost vocabulary — no field records an OPTIONAL additional cost paid at cast time, distinct from `AlternateCost` (a REPLACEMENT cost) or `costReduction` (a discount); the card's own kicked/not-kicked BRANCH is already modeled via `modal`/`ctx.mode` below, but nothing records that the mode choice is gated on having paid this specific extra cost, nor tracks/enforces payment of it at all.",
-    },
-  ],
+  // Real Kicker {1}{W}. `'Kicker'` is now a real `Keyword` union member
+  // (2026-09-18, schema-completeness pass) — the base "this spell has
+  // Kicker" fact is tracked via `keywords`, and the specific non-default
+  // cost payload ("{1}{W}") is recorded via the new sibling
+  // `keywordCosts` field (same split Ward already uses — see
+  // sire-of-seven-deaths/zul-ashur-lich-lord). Still recognized-but-inert:
+  // no payment-tracking or modal-gating-on-payment mechanism exists
+  // anywhere in this engine (Ward pattern — see
+  // `engine-support-registry.ts`'s own `kicker-not-enforced` entry) — the
+  // card's own kicked/not-kicked BRANCH is still modeled via the
+  // pre-existing `modal`/`ctx.mode` mechanism below, same as before this
+  // field existed.
+  keywords: ['Kicker', 'Lifelink'],
+  keywordCosts: [{ keyword: 'Kicker', cost: '{1}{W}' }],
 
   // "When this creature enters, if it was kicked, return target nonland
   // permanent card with mana value 2 or less from your graveyard to the

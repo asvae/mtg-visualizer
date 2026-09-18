@@ -1,0 +1,37 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 0, "to": 6, "text": "Raid —" },
+      { "from": 7, "to": 41, "text": "At the beginning of your end step," },
+      { "from": 42, "to": 68, "text": "if you attacked this turn," },
+      { "from": 69, "to": 89, "text": "create a Food token." }
+    ],
+    "definitionKeys": [{ "kind": "trigger", "name": "onEndStep" }],
+    "reasoning": "This card's own `onEndStep` trigger structurally covers the whole sentence: `on:'endStep'` is the real real \"At the beginning of your end step\" auto-fire this clause names; \"Raid —\" is this ability's own template label, fully expressed by this same trigger's `condition` field, not a separate clause of its own; `condition: {kind:'attackedThisTurn'}` (2026-09-18 schema-completeness pass, `BoardStateCondition`) is the exact real \"if you attacked this turn\" intervening-if gate; and the trigger's `createToken` effect ({token: TOKENS.c_a_food_sac, amount:1}) is the exact real Food-token creation. The condition is declaratively real but NOT yet engine-enforced (Ward pattern — see `engine-support-registry.ts`'s own `board-state-condition-not-enforced` entry), so the token still creates every end step in practice; the gate is now structurally declared rather than silently approximated as always-on."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 90, "to": 164, "text": "(It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")" }],
+    "reasoning": "Reminder text explaining the Food token's own printed rules text — a rules restatement of the token's own separate object (`TOKENS.c_a_food_sac`, already a real, separately-defined token), not independent rules content this card's own definition itself needs to duplicate."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 165, "to": 200, "text": "{2}{B}, Sacrifice this enchantment:" }],
+    "definitionKeys": [{ "kind": "field", "field": "activationCost" }],
+    "reasoning": "This card's own `activationCost: '{2}{B}, sacrifice this enchantment'` is the exact real printed cost for this activated ability — free text, not mechanically parsed/enforced beyond mana/{T} (same convention gogo-master-of-mimicry's own cost and `crewCost`'s own doc comment already establish), but the real cost fact itself is structurally recorded."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 201, "to": 230, "text": "Target opponent loses X life," },
+      { "from": 231, "to": 282, "text": "where X is the amount of life you gained this turn." }
+    ],
+    "definitionKeys": [{ "kind": "effect", "effectKind": "loseLife" }],
+    "reasoning": "This card's own top-level `loseLife` effect ({owner:'opponents', amount: ctx.triggerInput.lifeGainedThisTurn}) is the exact real X-life-loss effect this sentence describes — X supplied via `triggerInput` (same real convention hope-estheim's own \"amount of life you gained this turn\" already establishes), \"Target opponent\" approximated to every opponent (`owner:'opponents'`, same established single-chosen-opponent simplification al-bhed-salvagers/combat-tutorial already document)."
+  }
+]

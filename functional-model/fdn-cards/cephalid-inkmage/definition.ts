@@ -14,16 +14,28 @@ export const cephalidInkmage: CardDefinition = {
   // `Keyword` union.
   //
   // Real Forge: `S:Mode$ CantBlockBy | ValidAttacker$ Card.Self |
-  // Condition$ Threshold` — "Threshold — This creature can't be blocked
-  // as long as there are seven or more cards in your graveyard." The
-  // vocabulary has no way to express conditional static abilities or
-  // unblockable-while-condition mechanics — kept as free text only.
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
-  missingSchemaFunctionality: [
+  // Condition$ Threshold` — "Threshold — This creature can't be blocked as
+  // long as there are seven or more cards in your graveyard." Modeled as a
+  // SELF-only `continuousKeywordGrants` entry granting the pre-existing
+  // `'Unblockable'` keyword (the real "can't BE blocked" fact — distinct
+  // from `'CantBlock'`, the opposite combat-declaration side), gated on the
+  // new `condition` field (`BoardStateCondition.kind:'graveyardCountAtLeast'`,
+  // 2026-09-18 schema-completeness pass). Declaratively real but NOT itself
+  // engine-enforced, for TWO independent reasons: `qualifiesForContinuousGrant`
+  // never checks `condition` at all yet (Ward pattern — see
+  // `engine-support-registry.ts`'s own `board-state-condition-not-enforced`
+  // entry), AND separately, `engine.ts`'s own `canBlock` checks
+  // `attacker.keywords.includes('Unblockable')` directly off the RAW
+  // per-card `keywords` array, never `effectiveKeywords(state, card)` — so
+  // even an UNCONDITIONAL `continuousKeywordGrants`-granted `'Unblockable'`
+  // would not affect blocking legality today, a real, pre-existing
+  // `canBlock` gap this authoring pass surfaces but does not fix (out of
+  // this schema/authoring lane — `engine.ts` is `engine`-owned).
+  continuousKeywordGrants: [
     {
-      clause: "Threshold — This creature can't be blocked as long as there are seven or more cards in your graveyard.",
-      demand: "A conditional \"can't be blocked\" static ability — no vocabulary anywhere in `card.ts` expresses \"can't be blocked\" at all (conditional or otherwise), let alone gated on a live graveyard-count threshold (same Threshold-gating gap Crypt Feaster/Billowing Shriekmass also name, applied to a blocking restriction instead of a P/T bonus).",
+      keywords: ['Unblockable'],
+      includeSelf: true,
+      condition: { kind: 'graveyardCountAtLeast', min: 7 },
     },
   ],
 

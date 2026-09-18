@@ -6,15 +6,14 @@ export const vampireSoulcaller: CardDefinition = {
   typeLine: 'Creature — Vampire Warlock',
   pt: [3, 2],
 
-  keywords: ['Flying'],
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
-  missingSchemaFunctionality: [
-    {
-      clause: "This creature can't block.",
-      demand: "A can't-block static restriction on a permanent — no vocabulary anywhere in `card.ts` expresses this (a distinct gap from Crystal Barricade's own hexproof/noncombat-damage-prevention gaps, and from Cephalid Inkmage's conditional can't-BE-blocked gap — this one is an unconditional restriction on the permanent's own ability to declare AS a blocker).",
-    },
-  ],
+  // Real "This creature can't block." `'CantBlock'` is now a real `Keyword`
+  // union member (2026-09-18, schema-completeness pass) — recognized-but-
+  // inert, same treatment `'Unblockable'` already gets: real enforcement
+  // would need `engine.ts`'s own `canBlock`/`declareBlockers` (509.1) to
+  // check this keyword on the PROPOSED BLOCKER, which they don't yet (Ward
+  // pattern — see `engine-support-registry.ts`'s own
+  // `cant-block-not-enforced` entry).
+  keywords: ['Flying', 'CantBlock'],
 
   triggers: [
     {

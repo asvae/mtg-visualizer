@@ -1,0 +1,29 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 10, "text": "Deathtouch" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Deathtouch" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 11, "to": 83, "text": "(Any amount of damage this deals to a creature is enough to destroy it.)" }],
+    "reasoning": "Reminder text for Deathtouch directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 84, "to": 90, "text": "Raid —" },
+      { "from": 91, "to": 117, "text": "When this creature enters," },
+      { "from": 118, "to": 144, "text": "if you attacked this turn," },
+      { "from": 145, "to": 189, "text": "look at the top three cards of your library." },
+      { "from": 190, "to": 249, "text": "You may put one of those cards back on top of your library." },
+      { "from": 250, "to": 283, "text": "Put the rest into your graveyard." }
+    ],
+    "definitionKeys": [{ "kind": "trigger", "name": "onEnter" }],
+    "reasoning": "This card's own `onEnter` trigger structurally covers the whole sentence: `on:'enter'` is the real self-only ETB auto-fire \"When this creature enters\" clause names; \"Raid —\" is this ability's own template label, fully expressed by this same trigger's `condition` field, not a separate clause of its own; `condition: {kind:'attackedThisTurn'}` (2026-09-18 schema-completeness pass, `BoardStateCondition`) is the exact real \"if you attacked this turn\" intervening-if gate; and the trigger's `dig` effect ({qty:3, take:1, optional:true}) is the exact real \"look at the top three... you may put one back... put the rest into your graveyard\" library-dig effect. The condition is declaratively real but NOT yet engine-enforced (Ward pattern — see `engine-support-registry.ts`'s own `board-state-condition-not-enforced` entry), so the dig still fires on every ETB in practice; the gate is now structurally declared rather than silently approximated as always-on."
+  }
+]

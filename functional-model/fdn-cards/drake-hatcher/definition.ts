@@ -6,21 +6,18 @@ export const drakeHatcher: CardDefinition = {
   typeLine: 'Creature — Human Wizard',
   pt: [1, 3],
 
-  // Real K:Vigilance, K:Prowess. "Prowess" is not in this model's
-  // controlled `Keyword` vocabulary (card.ts's own `Keyword` union has no
-  // 'Prowess' entry — same real gap queen-brahne's own definition.ts
-  // already documents: no "whenever you cast a noncreature spell" auto-
-  // fire hook exists anywhere in this engine for ANY card), so it stays
-  // real printed text instead of a fabricated union member.
-  keywords: ['Vigilance'],
-  // Migrated from `staticAbilities` to `missingSchemaFunctionality`
-  // (2026-09-18, FDN schema-tightness redesign).
-  missingSchemaFunctionality: [
-    {
-      clause: 'Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)',
-      demand: "A real `Prowess` `Keyword` union member PLUS the matching auto-fire hook — no \"whenever you cast a noncreature spell\" trigger precondition exists anywhere in this engine for ANY card (same real gap Elementalist Adept's own identical Prowess line also names).",
-    },
-  ],
+  // Real K:Vigilance, K:Prowess. `'Prowess'` is now a real `Keyword` union
+  // member (2026-09-18, schema-completeness pass) — the base "this
+  // creature has Prowess" structural fact is tracked via `keywords` below.
+  // Still recognized-but-inert: its own auto-fire half needs a real
+  // `Trigger.on:'castNoncreatureSpell'` auto-fire dispatch that exists
+  // nowhere in this engine for ANY card, granted or native —
+  // ENGINE_GAPS.md's own "trigger-doubling ('Panharmonicon effect')"
+  // writeup already tracks this bigger, still wholly-unbuilt trigger family
+  // directly (17+ real FIN cards share it, same real gap Elementalist
+  // Adept's own identical Prowess line also names — see
+  // `engine-support-registry.ts`'s own `prowess-not-enforced` entry).
+  keywords: ['Vigilance', 'Prowess'],
 
   // Real Forge: `Mode$ DamageDone | ValidSource$ Card.Self |
   // ValidTarget$ Player | CombatDamage$ True` — "Whenever this creature

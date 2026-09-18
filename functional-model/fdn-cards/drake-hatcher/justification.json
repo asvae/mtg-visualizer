@@ -1,0 +1,43 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 9, "text": "Vigilance" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Vigilance" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 11, "to": 18, "text": "prowess" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Prowess" }],
+    "reasoning": "Printed keyword (lowercased mid-list per standard Magic reminder-text convention), present in this card's own `keywords` array (`'Prowess'`, 2026-09-18 schema-completeness pass) — the base \"this creature has Prowess\" structural fact is tracked (recognized-but-inert: no `Trigger.on:'castNoncreatureSpell'` auto-fire dispatch exists anywhere in this engine, for any card — a real, already-tracked, genuinely bigger gap, see `ENGINE_GAPS.md`'s own trigger-doubling writeup and `engine-support-registry.ts`'s own `prowess-not-enforced` entry)."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 19, "to": 103, "text": "(Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)" }],
+    "reasoning": "Reminder text for Prowess directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed. The mechanic it restates is the real, already-tracked engine gap named on the Prowess keyword entry above, not something this reminder span itself needs to separately justify."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 104, "to": 200, "text": "Whenever this creature deals combat damage to a player, put that many incubation counters on it." }],
+    "definitionKeys": [{ "kind": "trigger", "name": "onCombatDamageToPlayer" }],
+    "reasoning": "This card's own `onCombatDamageToPlayer` name-only trigger (no dedicated `on` value exists for a combat-damage-to-player event, per that trigger's own comment) runs a `putCounter` effect putting `ctx.triggerInput.damageAmount` incubation counters on this creature — the exact real \"that many incubation counters\" clause, magnitude supplied at trigger-fire time same convention bloodthirsty-conqueror's own \"that much life\" already uses."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 201, "to": 252, "text": "Remove three incubation counters from this creature" }],
+    "definitionKeys": [{ "kind": "field", "field": "activationCost" }],
+    "reasoning": "This card's own `activationCost: 'Remove three incubation counters from this creature'` is the exact real printed counter-removal cost for this activated ability — free text, not mechanically parsed/enforced beyond mana/{T} (same convention gogo-master-of-mimicry's own cost and `crewCost`'s own doc comment already establish), but the real cost fact itself is structurally recorded."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 254, "to": 305, "text": "Create a 2/2 blue Drake creature token with flying." }],
+    "definitionKeys": [{ "kind": "effect", "effectKind": "createToken" }],
+    "reasoning": "This card's own top-level `createToken` effect (a 2/2 'Drake' token with `keywords:['Flying']`, amount 1) is the exact real token this clause creates, paired with the `activationCost` above as the same top-level ability."
+  }
+]

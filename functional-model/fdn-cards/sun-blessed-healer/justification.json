@@ -1,0 +1,48 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 6, "text": "Kicker" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Kicker" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array (`'Kicker'`, 2026-09-18 schema-completeness pass) — the base \"this spell has Kicker\" fact is tracked (recognized-but-inert: no payment-tracking/modal-gating-on-payment mechanism exists anywhere in this engine). The specific non-default cost (\"{1}{W}\") is now also structurally represented — see the next entry."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 7, "to": 13, "text": "{1}{W}" }],
+    "definitionKeys": [{ "kind": "field", "field": "keywordCosts" }],
+    "reasoning": "This card's own `keywordCosts` entry ({keyword:'Kicker', cost:'{1}{W}'}) is the exact real Kicker cost payload this text prints — still recognized-but-inert, same as the base Kicker fact above, but the specific cost text itself is now structurally recorded."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 14, "to": 72, "text": "(You may pay an additional {1}{W} as you cast this spell.)" }],
+    "reasoning": "Reminder text for Kicker directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 73, "to": 81, "text": "Lifelink" }],
+    "definitionKeys": [{ "kind": "keyword", "keyword": "Lifelink" }],
+    "reasoning": "Printed keyword, present in this card's own `keywords` array — mechanically ENFORCED (not just tracked) by state.ts's own real dealDamage chokepoint (CR 702.15e)."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 82, "to": 153, "text": "(Damage dealt by this creature also causes you to gain that much life.)" }],
+    "reasoning": "Reminder text for Lifelink directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 154,
+        "to": 301,
+        "text": "When this creature enters, if it was kicked, return target nonland permanent card with mana value 2 or less from your graveyard to the battlefield."
+      }
+    ],
+    "definitionKeys": [{ "kind": "trigger", "name": "onEnter" }],
+    "reasoning": "This card's own `onEnter` trigger (on:'enter') carries a `kind:'modal'` effect whose two modes structurally represent the full \"if it was kicked\" branch: mode 0 (not kicked) does nothing, mode 1 (kicked) runs the real `move` effect returning a target nonland permanent card with mana value 2 or less from graveyard to battlefield — the exact real reanimation clause this sentence describes. The mode choice itself is not mechanically GATED on kicker payment (no such enforcement exists anywhere in this engine, per the Kicker keyword's own recognized-but-inert entry above), same established `modal`/`ctx.mode` convention chocobo-kick/vayne-s-treachery/divine-resilience already use for Kicker."
+  }
+]

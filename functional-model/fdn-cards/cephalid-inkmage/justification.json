@@ -1,0 +1,32 @@
+[
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [{ "from": 0, "to": 37, "text": "When this creature enters, surveil 3." }],
+    "definitionKeys": [{ "kind": "trigger", "name": "onEnter" }],
+    "reasoning": "This card's own `onEnter` trigger (on:'enter') runs a real `surveil` effect ({qty:3}) — the exact real ETB Surveil 3 this sentence describes."
+  },
+  {
+    "type": "lore",
+    "textLocation": "oracle_text",
+    "spans": [
+      {
+        "from": 38,
+        "to": 182,
+        "text": "(Look at the top three cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)"
+      }
+    ],
+    "reasoning": "Reminder text for Surveil directly above — a rules restatement, not independent rules content of its own; no separate functional counterpart needed."
+  },
+  {
+    "type": "definition",
+    "textLocation": "oracle_text",
+    "spans": [
+      { "from": 183, "to": 194, "text": "Threshold —" },
+      { "from": 195, "to": 225, "text": "This creature can't be blocked" },
+      { "from": 226, "to": 285, "text": "as long as there are seven or more cards in your graveyard." }
+    ],
+    "definitionKeys": [{ "kind": "field", "field": "continuousKeywordGrants" }],
+    "reasoning": "This card's own `continuousKeywordGrants` entry ({keywords:['Unblockable'], includeSelf:true, condition:{kind:'graveyardCountAtLeast', min:7}}) structurally covers the whole sentence: a self-only grant of the real `'Unblockable'` keyword (\"can't BE blocked\", distinct from `'CantBlock'`) is the exact fact this clause describes; \"Threshold —\" is this ability's own template label, fully expressed by this same entry's `condition` field, not a separate clause of its own; `condition` (2026-09-18 schema-completeness pass, `BoardStateCondition`) is the exact real \"as long as there are seven or more cards in your graveyard\" continuous gate. Declaratively real but NOT engine-enforced, for two independent reasons documented on this same field in definition.ts: `qualifiesForContinuousGrant` never checks `condition` yet, AND `engine.ts`'s own `canBlock` reads the RAW per-card `keywords` array for its Unblockable check, never `effectiveKeywords` — so even an unconditional grant here would not affect blocking legality today (a real, pre-existing `canBlock` gap this authoring surfaces, not something this schema/authoring pass fixes)."
+  }
+]

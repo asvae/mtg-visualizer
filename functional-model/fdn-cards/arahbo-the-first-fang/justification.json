@@ -13,14 +13,14 @@
       { "from": 34, "to": 49, "text": "Whenever Arahbo" },
       { "from": 86, "to": 131, "text": "enters, create a 1/1 white Cat creature token" }
     ],
-    "definitionKeys": [{ "kind": "trigger", "name": "onEnter" }],
-    "reasoning": "The onEnter trigger (on:'enter', this engine's real self-only ETB auto-fire scope) fires when Arahbo itself enters and runs the createToken effect that creates the real 1/1 Cat token — fully covers the 'Arahbo enters' half of this sentence, split across two disjoint spans (this trigger clause reads 'Whenever Arahbo [or another nontoken Cat you control] enters, create...' — the bracketed middle is a genuinely separate, uncovered claim, see the next entry) rather than one span that would falsely include that middle."
+    "definitionKeys": [{ "kind": "trigger", "name": "onEnter" }, { "kind": "trigger", "name": "onOtherCatEnters" }],
+    "reasoning": "The shared \"[X] enters, create a 1/1 Cat token\" outcome is covered by BOTH real triggers on this card: `onEnter` (on:'enter', this engine's real self-only ETB auto-fire) fires when Arahbo itself enters, and `onOtherCatEnters` (on:'otherPermanentEnters', 2026-09-18 schema-completeness pass) fires when some OTHER qualifying Cat enters — both run the identical real createToken effect that creates the 1/1 white Cat token this clause describes. The disjoint 'Whenever Arahbo'/'enters, create...' spans (rather than one contiguous span) leave room for the genuinely separate 'or another nontoken Cat you control' middle, covered by the next entry."
   },
   {
-    "type": "rules",
+    "type": "definition",
     "textLocation": "oracle_text",
     "spans": [{ "from": 50, "to": 85, "text": "or another nontoken Cat you control" }],
-    "definitionKeys": [{ "kind": "missingSchemaFunctionality", "index": 0 }],
-    "reasoning": "The 'another nontoken Cat enters' half is genuinely uncovered — on:'enter' structurally cannot watch a DIFFERENT permanent's own ETB, so this half is declared as a real capacity gap rather than silently approximated or dropped."
+    "definitionKeys": [{ "kind": "trigger", "name": "onOtherCatEnters" }],
+    "reasoning": "This card's own `onOtherCatEnters` trigger (`otherPermanentEntersMatch: {subtype:'Cat', nonToken:true, sameController:true}`) is the exact real filter this clause names — a board-wide watch for some OTHER nontoken Cat permanent the SAME controller controls entering. NOT itself dispatched by `engine.ts` — no board-wide \"any permanent just entered\" sweep exists yet for ANY card (Ward pattern — see `engine-support-registry.ts`'s own `other-permanent-enters-trigger-not-enforced` entry); the previously-declared `missingSchemaFunctionality` gap for this exact clause is now closed by this authoring."
   }
 ]
