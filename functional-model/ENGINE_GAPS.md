@@ -532,6 +532,17 @@ so a future pass doesn't mistake them for missing work:
    either today — checked): "each player's"/"each opponent's" upkeep/
    end-step triggers (as opposed to "your own"); "skip your next X
    step/phase" effects.
+   **New real gap surfaced 2026-09-18 (FDN authoring, `niv-mizzet-visionary`):
+   no `maxHandSize` OVERRIDE field.** The 514.1 discard-to-maximum-hand-size
+   mechanism above is real and enforced, but it's hardcoded to the real
+   default of 7 (`turn.ts`'s Cleanup branch) — there is no field anywhere
+   (`CardDefinition`, `RealPlayer`) a card can set to change that number, so
+   "You have no maximum hand size" (real Scryfall oracle text on Niv-Mizzet,
+   Visionary) can't be declared at all. Narrow, additive extension to
+   already-real machinery (a `Player.maxHandSize` override + a
+   `CardDefinition` grant field, checked at the same Cleanup chokepoint) —
+   not a new subsystem. Not built this pass; flagged for a near-term,
+   relatively cheap follow-up.
    **(d) `on: 'tapLandForMana'` trigger auto-fire, CLOSED 2026-09-14**
    (depended on gap #5's own typed-`manaAbilities` closure above — couldn't
    detect "tapped a land for mana" as a real event before mana production
@@ -1089,6 +1100,24 @@ so a future pass doesn't mistake them for missing work:
    are structurally identical to Forge, just parameterized by a subtype vs.
    a type string). Fixed: `effectiveCastCost` now checks
    `c.subtypes.includes(subtype) || c.types.includes(subtype)`.
+
+   **Two more real, narrow extensions surfaced 2026-09-18 (FDN authoring),
+   NOT built this pass:**
+   - `archmage-of-runes` ("Instant and sorcery spells you cast cost {1} less
+     to cast.") — `SpellCostReductionGrant` (the BROADCAST shape above) only
+     ever gates on `colors: string[]`; this is the identical mechanism
+     needing a card-TYPE gate instead (Instant/Sorcery), the same
+     `subtypes.includes(...) || types.includes(...)` widening
+     `valkyrie-aerial-unit` just proved out for `perControlled` above,
+     applied to the sibling `colors`-only field instead. Cheap, same-shaped
+     follow-up.
+   - `quilled-greatwurm` ("You may cast this card from your graveyard by
+     removing six counters from among creatures you control in addition to
+     paying its other costs.") — `AlternateCost` only models a full cost
+     REPLACEMENT (Flashback/Jump-start shape, `from`/`thenExile`); this needs
+     an ADDITIONAL cost paid alongside the normal mana cost (pay the printed
+     cost AND remove 6 counters), a genuinely different shape, not a
+     `colors`-style parameter widening.
    `diamond-weapon`'s own "costs {1} less for each permanent card in your
    graveyard" stays correctly open — genuinely different (GRAVEYARD-
    counted, not battlefield; a broad multi-type "permanent card" category,
@@ -3400,6 +3429,15 @@ so a future pass doesn't mistake them for missing work:
       card. Parked: not worth the structural addition for a singleton,
       especially since a `program`-DSL migration grants no real provenance
       gain yet anyway (see below).
+      **No longer a singleton (2026-09-18, FDN authoring):** `make-your-move`
+      needs the IDENTICAL shape — "target artifact, enchantment, or creature
+      with power 4 or greater" (a 3-way type OR with only ONE branch
+      power-gated, same structural pattern as `airship-crash`'s keyword-gated
+      branch, just a different per-branch predicate). Two real cards now
+      genuinely need a recursive/OR-capable `FilterPredicate` — still not
+      built (out of scope for this triage pass), but the "not worth it for a
+      singleton" calculus above no longer holds; worth real consideration
+      next time either card (or a third) is migrated off its `custom` no-op.
     - `judgment-bolt` ("...and X damage to that creature's CONTROLLER") /
       `elrond-moon-reader` ("move to zone" + a combinator-modeled
       `delayUntil`): also each confirmed singletons (grepped for
@@ -3455,7 +3493,27 @@ so a future pass doesn't mistake them for missing work:
     two-count-sum (creatures you control plus Equipment you control).
 
 25. **No "copy a permanent, with overrides" mechanic — real, OPEN, documented
-    (not built), singleton.** `ardyn-the-usurper`'s own beginning-of-combat
+    (not built).** ~~singleton~~ **No longer a singleton (2026-09-18, FDN
+    authoring) — 3 more real cards independently hit the identical CR 707
+    gap, raising this from "one card, low priority" to a real, recurring
+    engine primitive worth building the next time any of these 4 cards is
+    picked up, not permanently deferred:**
+    - `abyssal-harvester` — "Exile target creature card from a graveyard
+      that was put there this turn. Create a token that's a copy of it,
+      except it's a Nightmare in addition to its other types." (same
+      add-a-type override shape as Ardyn below, plus a graveyard-timing
+      filter and a sweep-exile of this card's own prior tokens — both
+      separate, narrower gaps, not part of this one).
+    - `chandra-flameshaper` — its own `+1` loyalty ability: "Create a token
+      that's a copy of target creature you control, except it has haste and
+      'At the beginning of the end step, sacrifice this token.'" (an
+      add-a-keyword-AND-add-a-triggered-ability override, the closest of the
+      3 new cards to Ardyn's own P/T-and-type override shape).
+    - `homunculus-horde` — "create a token that's a copy of this creature"
+      (its own triggered ability, no overrides at all — the PLAINEST real
+      shape this gap could take, confirming the base "copy with no
+      overrides" case is just as unbuilt as the override case).
+    `ardyn-the-usurper`'s own beginning-of-combat
     trigger ("exile up to one target creature card from a graveyard...
     create a token that's a copy of that card, except it's a 5/5 black
     Demon") is a real Forge `DB$ CopyPermanent | Defined$ Remembered |
@@ -3478,12 +3536,16 @@ so a future pass doesn't mistake them for missing work:
     land card" -> "a land card" category of accepted approximation this
     pool already has elsewhere). No existing recognizer/vocabulary covers a
     copy-effect at ALL — `token-creation-structural.ts` only recognizes
-    fixed `TOKENS`-registry creates, never a dynamic copy. Checked the pool:
-    Ardyn is the ONLY real card needing this. Documented per the
-    coordinator's own framing ("worth a new dated entry, not necessarily
-    something to build") — not built this pass; a real fix would need a
-    general "copy with overrides" `TokenInfo`-adjacent capability plus a
-    `Card.getKeywords()`-style read, both nontrivial for exactly one card.
+    fixed `TOKENS`-registry creates, never a dynamic copy. Checked the FIN
+    pool at the time: Ardyn was the ONLY real card needing this there — the
+    3 new cards above are all FDN, not FIN, confirming this is a real,
+    set-independent Magic template (CR 707 copy effects), not an FIN
+    idiosyncrasy. Documented per the coordinator's own framing ("worth a new
+    dated entry, not necessarily something to build") — still not built as
+    of this triage pass; a real fix would need a general "copy with
+    overrides" `TokenInfo`-adjacent capability plus a `Card.getKeywords()`-
+    style read. With 4 real cards now on record (up from 1), this is a real
+    candidate for the next available engine pass, not a permanent park.
 
 26. **Meld (`AlternateMode:Meld`/`MeldPair`) — entirely unmodeled, real,
     OPEN, documented (not built).** `fang-fearless-l-cie` (Fang, Fearless
@@ -3651,6 +3713,371 @@ so a future pass doesn't mistake them for missing work:
     Instant, is the real-Magic reference case for why this matters) could
     actually exercise. See `cards/ultima/progress.json` for the full,
     dated writeup and verification results.
+
+### FDN-surfaced gaps (2026-09-18 triage)
+
+The `schema` agent's FDN authoring pass (150-card pool: 59 blue/41 purple/50
+gray) surfaced ~34 candidate schema/engine gaps across its
+`coverage-justification`/`missingSchemaFunctionality` authoring. Each below
+is a genuine capacity gap the `schema` agent already documented per-card
+(`functional-model/fdn-cards/<slug>/definition.ts`'s own
+`missingSchemaFunctionality` field — read that for the exact clause/demand
+text this entry summarizes); this section is the central-tracking triage of
+that batch, not a re-derivation. Items with real recurrence or a common,
+set-independent Magic template are tracked below as new numbered entries;
+narrower one-off combinations stay per-card-only (no entry) — see this
+section's own closing note for that list. Two items turned out to be
+**false-positive gap claims** (real capability already exists) — also noted
+at the end, not silently corrected in the FDN files themselves (out of this
+agent's lane).
+
+30. **Morbid ("did a creature die this turn") — real, OPEN, not built,
+    5 real cards.** `BoardStateCondition` (see entry #32 below for its full
+    current shape) has no "did a creature die this turn" variant at all —
+    `slumbering-cerberus`, `cackling-prowler`, `needletooth-pack`,
+    `wardens-of-the-cycle` (all real end-step-triggered effects gated on
+    it), and `tragic-banshee` (an ETB effect with a Morbid-conditional
+    magnitude bump) all independently need it. Real Forge citation: Morbid
+    is `Condition$ EachTurn | Type$ CreatureDiedThisTurn`-shaped in Forge's
+    own scripts (a `Count$` SVar reading a per-turn death log), tracked via
+    `Game.getCardsInGame()` + a per-turn "creatures that died" set Forge
+    resets at Cleanup — the same per-turn-boolean SHAPE this engine already
+    uses for `flippedCoinThisTurn`/`attackedThisTurn` (gap #16), just keyed
+    on ANY creature dying (not a specific player's own action).
+    `slumbering-cerberus` specifically ("At the beginning of EACH end
+    step...") additionally needs an EACH-player end-step trigger scope —
+    `Trigger.on:'endStep'` only ever fires for the ACTIVE player's own
+    permanents today (gap #3's own "Still explicitly deferred" note already
+    names this half separately); the other 4 cards are all "your end step"
+    only, unaffected by that second half. Real, clean, additive extension to
+    already-real per-turn-tracking machinery; the highest-recurrence item in
+    this whole batch.
+
+31. **No player-decision engine — an optional choice whose OUTCOME
+    conditionally gates a later effect ("if you do"), or a "lose N life
+    UNLESS you pay an alternate cost."** Real, OPEN, not built, 4 real
+    cards. `incinerating-blast` ("You may discard a card. If you do, draw a
+    card."), `perforating-artist` ("...each opponent loses 3 life unless
+    that player sacrifices a nonland permanent of their choice or discards a
+    card."), `fishing-pole` ("...remove a bait counter from this Equipment.
+    If you do, create a 1/1 blue Fish creature token."), and
+    `curator-of-destinies` ("...separate them into a face-down pile and a
+    face-up pile. An opponent chooses one of those piles...", the real
+    "Fact or Fiction"-shaped pile-split/opponent-choice template) all
+    independently need SOME real piece of this. **Distinct from the
+    Accepted Simplifications entry above ("No AI / player decision
+    process")** — that entry is about WHO decides (this engine never
+    simulates AI; a caller always supplies the decision, and that stays
+    correct/unchanged) — this gap is about whether the DECLARATIVE
+    vocabulary can even REPRESENT a conditional branch keyed on a choice's
+    outcome at all, regardless of who makes it: `chooseTarget` always takes
+    the first candidate, every existing `optional` field is documentary-only
+    (never actually gates a second effect), and there is no `Effect`/
+    `Trigger` shape for "the affected player picks among N alternatives, and
+    which one they pick changes what happens next." A real fix needs at
+    least: (1) a genuine "may + if-you-do" gate (the narrowest real need —
+    `incinerating-blast`/`fishing-pole`), (2) an "unless" cost-choice gate
+    where the AFFECTED player (not the caster) picks among alternatives
+    (`perforating-artist`), and (3) an opponent-driven pile-split/choice
+    primitive (`curator-of-destinies`) — probably 3 separate, sequenced
+    closures, not one primitive, but all blocked on the same root absence.
+    Worth flagging as a real, likely-recurring future investment given how
+    common "if you do"/"unless"/opponent-choice templating is across real
+    Magic's full history, not an FDN-specific quirk.
+
+32. **`BoardStateCondition` needs more variants — real, OPEN, not built,
+    3 real cards.** Today's 3 kinds (`graveyardCountAtLeast`/
+    `attackedThisTurn`/`selfCounterCountAtLeast`, confirmed directly against
+    `card.ts`) don't cover: a self "lacks/has type X" gate
+    (`infernal-vessel`'s own death trigger, "if it wasn't a Demon"), a
+    live-board POWER threshold on the controller's own creatures
+    (`courageous-goblin`'s own "while you control a creature with power 4 or
+    greater"), or a live life-total comparison
+    (`elenda-saint-of-dusk`'s own "As long as your life total is greater
+    than your starting life total... an additional +5/+5 as long as your
+    life total is at least 10 greater"). Three independent, additive new
+    variants to an already-real, already-extensible closed union — cheap
+    individually, grouped here because they're the same underlying
+    vocabulary gap (missing condition KINDS), not three different gaps.
+    (Morbid, entry #30 above, is really a 4th missing variant of this same
+    union — tracked separately since its own recurrence/trigger-scope
+    interaction warranted its own write-up.)
+
+33. **No per-permanent "chosen value" memory for a runtime choice — real,
+    OPEN, not built. Promoted from a FIN-only documented limitation
+    (`ENGINE_GAPS.md`'s own "Static-ability audit" section, "Genuinely
+    unclosable" bullet list) to central numbered tracking now that FDN hits
+    it too — 4 real cards total.** FIN already had 3 real cards blocked on
+    this (`cavern-of-souls`/`eclipsed-realms`'s own "choose a creature type"
+    referenced by a LATER mana-ability restriction; `selfless-safewright`'s
+    own "choose a creature type" referenced immediately); `banner-of-kinship`
+    (FDN) is the 4th: "As this artifact enters, choose a creature type. This
+    artifact enters with a fellowship counter on it for each creature you
+    control of the chosen type. Creatures you control of the chosen type get
+    +1/+1 for each fellowship counter on this artifact." — the chosen type
+    is read TWICE more, by a counter-count computation AND a later static
+    P/T grant, making this the most demanding real case yet (not just a
+    remembered value, but one multiple OTHER declarative fields need to
+    reference). No existing `subtype` filter (continuous grants, etc.) is
+    ever anything but a fixed, authored string — there's no `RealCard` field
+    for "a value chosen at resolution time, readable by this same card's
+    OTHER declarative fields later." Real, general, worth a dedicated future
+    pass given 4 independent real cards now depend on it.
+
+34. **MayPlay / standing permission to cast a specific card from a non-hand
+    zone — real, OPEN, not built, 2 real cards.** Distinct from gap #7's
+    already-real `AlternateCost` (a FIXED replacement mana cost, paid once,
+    Flashback/Jump-start shape): `zul-ashur-lich-lord`'s own "{T}: You may
+    cast target Zombie creature card from your graveyard this turn" and
+    `strongbox-raider`'s own "Choose one of them. Until the end of your next
+    turn, you may play that card." are both a STANDING permission grant with
+    the card's NORMAL mana cost (no cost replacement at all) and a
+    stated deadline/duration — closer in shape to Forge's own real `MayPlay`
+    SVar (a persistent "you may cast this specific object from this zone"
+    flag consulted at cast-legality-check time) than to `AlternateCost`.
+    `interfaces.ts`'s own `play()` only covers the library-top special
+    action (gap #16, closed); no MayPlay-shaped grant exists for any other
+    zone. Two independent real cards, same real gap — worth tracking
+    together rather than as isolated per-card notes.
+
+35. **Emblem mechanic (CR 701.42) — real, OPEN, not built, 1 real card so
+    far; already documented (not newly discovered) as a permanent sub-gap of
+    gap #13's own closure above.** `kaito-cunning-infiltrator`'s own "You get
+    an emblem with 'Whenever a player casts a spell, you create a 2/1 blue
+    Ninja creature token.'" needs a persistent, OWNERLESS game object that
+    carries its own triggered ability — gap #13's own closure already
+    documented this exact absence for The Masamune's own "...or an emblem
+    you own" clause ("no emblem mechanism exists anywhere in this engine,
+    documented on the field itself as a real, accepted, permanent sub-gap,
+    not silently dropped"). Promoted to its own numbered entry here since
+    Kaito needs the FULL emblem-creation mechanic (not just doubling an
+    emblem's trigger the way Masamune's own gate would) — a real,
+    reasonably well-scoped future primitive (a new object kind with no
+    controller-permanent backing it, carrying one or more `Trigger`s) that
+    would close both cards' own remaining sub-gaps at once. Given planeswalker
+    emblems are a common, recurring Magic template across many real sets,
+    likely to recur again as the FDN pool grows.
+
+36. **CR 614.2 "if it would die this turn, exile it instead" replacement —
+    real, OPEN, not built, 1 real card, but cheap given precedent.**
+    `fiery-annihilation`'s own "Fiery Annihilation deals 5 damage to target
+    creature... If that creature would die this turn, exile it instead."
+    `state.ts` has narrow, per-keyword replacement hooks at their own real
+    chokepoints for damage/lifegain/untap (`DamagePrevention`/
+    `CombatDamagePrevention`/`LifegainDouble`/`CantUntap`, gaps #8/#8b/#18)
+    and a genuine zone-redirect precedent already exists too — the real,
+    already-closed FINALITY-counter replacement (see this file's own
+    "FIN-specific mechanics closed" section, "Stun and finality counters")
+    redirects a real Battlefield→Graveyard `state.move` to Exile at that
+    exact chokepoint, keyed on a counter's presence rather than a granted
+    keyword. This gap is the SAME shape (a `state.move` redirect at the same
+    chokepoint) but keyed on a turn-scoped GRANTED condition instead of a
+    persistent counter — same "narrow hook at the one real call site, not
+    general 614/616 machinery" bar every prior closure in this family
+    cleared. Genuinely cheap to close following the established pattern (a
+    new `Keyword`, e.g. `'DeathReplacementExile'`, checked at `state.move`'s
+    existing Battlefield→Graveyard branch, granted via the same
+    `untilEndOfTurnKeywordGrants` expiry machinery gap #21 already built) —
+    flagged as a good near-term follow-up, not a large new subsystem.
+
+37. **Caster-side casting-TIMING permission grant ("you may cast spells as
+    though they had flash") — real, OPEN, not built, 1 real card.**
+    `high-fae-trickster`'s own "You may cast spells as though they had
+    flash." Every existing keyword/continuous-grant mechanism
+    (`continuousKeywordGrants`/`continuousPTGrants`/`continuousTypeGrants`/
+    `activatedAbilityLock`) broadcasts onto PERMANENTS already on the
+    battlefield — none widens WHEN a controller may cast a spell still in
+    hand (real Forge: `S:Mode$ CastWithFlash | ValidCard$ Card | ValidSA$
+    Spell | Caster$ You`, a static ability keyed on the CASTER, not a
+    battlefield object). A genuinely new grant surface (a
+    `castingPermissionGrants`-shaped field, per the card's own
+    `missingSchemaFunctionality` note) — "cast spells as though they had
+    flash" is a recurring real Magic template (Leyline of Anticipation,
+    Vedalken Orrery, etc.), worth tracking even as a current singleton.
+
+38. **Unbounded "any number of target creatures" primitive — real, OPEN,
+    not built, 1 real card.** `divine-resilience`'s own modal "any number of
+    target creatures you control gain indestructible until end of turn
+    instead." Every existing targeted-effect shape (`grantKeywordTarget`,
+    `selectUpTo`) either targets exactly one or up to a fixed, DECLARED
+    maximum — a real 601.2c "any number" (player-chosen, unbounded, no
+    authored cap) has no declarative shape at all. A common recurring real
+    Magic template ("any number of target X" appears across many sets),
+    worth tracking as a genuine `Effect`/`combinator.ts` vocabulary gap.
+
+39. **Combat-role target filter ("target attacking or blocking creature") —
+    real, OPEN, not built, 1 real card.** `joust-through`'s own "target
+    attacking or blocking creature." `dealDamageTarget` (and every other
+    targeted `Effect`) only restricts its candidate pool by `owner`/`tapped`
+    — never by live 508/509 combat status (is this permanent CURRENTLY
+    attacking or blocking). A common recurring real Magic template (combat
+    tricks/removal keyed on attacker/blocker status), worth tracking.
+
+40. **CR 614.12-family ETB-replacement effects targeting ANOTHER permanent —
+    real, OPEN, not built, 2 real cards.** `giada-font-of-hope`'s own "Each
+    other Angel you control enters with an additional +1/+1 counter on it
+    for each Angel you already control" (an ETB COUNTER-COUNT replacement on
+    another permanent) and `authority-of-the-consuls`'s own "Creatures your
+    opponents control enter tapped" (an ETB TAPPED-STATE replacement on
+    another permanent) are both the same underlying CR 614.12 shape this
+    file's own closed work already excluded from automatic recognizer
+    matching on `zack-fair` ("her own 'enters with a counter' is a real CR
+    614.12 replacement effect the permanent-recognizer's own criteria
+    excludes on purpose" — see the `Fact.provenance` section of
+    `.claude/contracts/card-schema.md`) — that exclusion was scoped to
+    SELF-targeting only; neither existing case nor either of these 2 new
+    ones has a real closure. `Trigger.on:'otherPermanentEnters'` only
+    reacts AFTER a permanent has already entered — none of these can change
+    HOW MANY counters or WHETHER TAPPED the entering permanent arrives with.
+    Needs a new static grant field parallel to the already-real
+    `millModifierGrants`/`spellCostReductionGrants` family (broadcasting a
+    replacement rule onto qualifying OTHER permanents' own ETB, not a
+    reactive trigger). Both real cards independently confirm this recurs.
+
+41. **Recipient/scope-filter vocabulary needs widening: opponent-controlled,
+    and counter-presence-qualified — real, OPEN, not built, 2 real cards,
+    two different fields, same underlying theme.**
+    `authority-of-the-consuls`'s own "Whenever a creature an opponent
+    controls enters, you gain 1 life" needs `Trigger
+    .otherPermanentEntersMatch.sameController` (currently documented/
+    established only for "same controller as the granting permanent," per
+    that field's own doc comment) to also support "controlled by an
+    OPPONENT specifically." `inspiring-paladin`'s own "During your turn,
+    creatures you control with +1/+1 counters on them have first strike"
+    needs `ContinuousKeywordGrant`'s recipient filter (today: subtype/self/
+    Equipment-attachment only) to ALSO support "has a counter of type X on
+    it" as a qualifying condition — genuinely different from Ultima, Origin
+    of Oblivion's existing `CounterConditionalGrant` (gap, closed — see
+    "FIN-specific mechanics closed"), which installs a rule directly onto
+    ONE specific object at the moment a counter lands on it, not a BROADCAST
+    grant whose recipient pool is filtered by counter presence across many
+    permanents. Two different fields, both blocked on the same missing
+    kind of predicate (recipient-side filtering needs to grow past a fixed
+    enum) — grouped here for that reason, not because they're the same
+    field. "+1/+1 counters matter" recipient filters recur constantly across
+    real Magic, worth tracking even as 2 current cards.
+
+42. **CR 603.6e linked-duration primitive ("until [this permanent] leaves
+    the battlefield") — real, OPEN, not built, 1 real card, but a very
+    common real-Magic template (the "O-Ring effect" — exile/removal-aura
+    permanents whose own effect is undone specifically when THEY leave).**
+    `banishing-light`'s own "...until Banishing Light leaves the
+    battlefield." No primitive ties a zone change's own duration to a
+    SEPARATE permanent's own FUTURE departure from the battlefield — only a
+    flat `untilEndOfTurn` (514.2 Cleanup) duration exists anywhere in this
+    engine. Given how frequently this exact template recurs across Magic's
+    full printed history (Oblivion Ring, Banisher Priest, Fiend Hunter, and
+    dozens more), this is a strong candidate for real investment the next
+    time it's picked up, despite being a singleton in THIS batch.
+
+43. **"Can't be countered" — real, OPEN, not built, 2 NEW real cards (this
+    exact clause was already noted, in passing, inside gap #28's own prose
+    above — `eject`/`absolute-virtue`'s own "can't be countered" text —
+    promoted here since it now has 2 more independent real cards of its
+    own).** `koma-world-eater` and `curator-of-destinies` both print "This
+    spell can't be countered." No `Keyword` value or replacement-rule
+    vocabulary represents this anywhere (confirmed: no `CantBeCountered`
+    anywhere in `card.ts`). **Flagged as real but LOW URGENCY**: this engine
+    has no Counter-a-spell mechanism or Stack-object model AT ALL (gap #28's
+    own prose already explains why — "no Counter-event/stack-object
+    machinery exists ... to intercept") — so there is currently nothing for
+    "can't be countered" to actually protect against; closing this
+    specific keyword only becomes load-bearing once/if a real counterspell
+    mechanism is ever built. Worth tracking so a future counterspell-
+    mechanism pass remembers to wire it in from day one, not worth building
+    in isolation today.
+
+44. **"Grant an arbitrary (non-keyword) activated ability to another
+    permanent" — real, OPEN, not built, 1 real card.** `fishing-pole`'s own
+    "Equipped creature has '{1}, {T}, Tap Fishing Pole: Put a bait counter
+    on Fishing Pole.'" Every existing broadcast mechanism
+    (`continuousKeywordGrants`/`continuousPTGrants`/`continuousTypeGrants`)
+    only ever grants FIXED, closed-vocabulary keyword/P&T/type values — none
+    can attach an arbitrary, ad hoc ACTIVATED ability (with its own cost and
+    effect) onto a different permanent than the one printing it. A real,
+    moderately common Equipment/Aura template across Magic's history. (Same
+    card also needs a `Trigger.on` value for "a permanent this is attached
+    to becomes untapped" — narrower, kept as a per-card note rather than its
+    own entry, but flagged here since it blocks the SAME card's second
+    ability.)
+
+45. **Extra land drop per turn (+ a dig-to-battlefield Effect variant with a
+    dynamic, board-counted threshold) — real, OPEN, not built, 1 real
+    card.** `loot-exuberant-explorer`'s own "You may play an additional land
+    on each of your turns" (no field anywhere tracks a static "extra land
+    drop(s) per turn" grant) and "Look at the top six cards of your
+    library... put it onto the battlefield... a creature card with mana
+    value less than or equal to the number of lands you control" (`kind:
+    'dig'` only ever routes a matched card to Hand or library-bottom, never
+    directly to the Battlefield, and has no dynamic per-card CMC threshold
+    keyed off a live board count). Two related, additive vocabulary gaps on
+    one real card; "extra land drop" specifically is a common, recurring
+    real Magic template (Exploration, Azusa, Lost Order of Jarkeld, etc.).
+
+46. **Opening-hand/game-setup special action — real, OPEN, not built, 1 real
+    card, but a large, recurring real-Magic cycle (Leylines).**
+    `leyline-axe`'s own "If this card is in your opening hand, you may begin
+    the game with it on the battlefield." No deck-building/game-setup
+    special-action concept exists anywhere in this engine — there is no
+    "opening hand"/game-start moment at all outside a scenario's own fixed
+    starting board. The real Leyline cycle spans dozens of cards across many
+    real sets using this exact template — worth tracking even as a current
+    singleton, given the project's own stated goal of full-MTG-history
+    coverage.
+
+47. **Cast-vs-other-arrival history gate ("if you cast it") — real, OPEN,
+    not built, 1 real card.** `nine-lives-familiar`'s own ETB counter-count
+    effect gated on "if you cast it" (distinguishing CR 601 casting from any
+    OTHER way the permanent could have reached the battlefield, CR 707/
+    zone-change effects, etc.). No field anywhere records HOW an entering
+    permanent arrived (cast vs. put onto the battlefield some other way) —
+    `putCounter`/`onEnter` fire identically regardless. A recurring real
+    Magic template (cast-triggers distinct from other-arrival triggers),
+    worth tracking as a genuine per-permanent provenance gap, adjacent to
+    (but distinct from) entry #33's "remembered chosen value" gap above —
+    this is about HOW a permanent arrived, not a value someone chose.
+
+**Deliberately left as per-card-only (no central entry) — narrow, one-off
+combinations without real recurrence, not worth central-tracking clutter:**
+`zimone-paradox-sculptor`'s own "double the number of each kind of counter
+on up to two target creatures/artifacts" (a narrow ValueRef/enumeration
+plumbing ask specific to reading-and-doubling every counter type on a bound
+target); `soulstone-sanctuary`'s own animate-with-P/T-override +
+"all creature types" wildcard (a cheap, narrow EXTENSION to the already-real
+`animate()` primitive, not a new capability — worth a quick follow-up
+whenever `soulstone-sanctuary` itself is next touched, but not central
+tracking on its own); `kellan-planar-trailblazer`'s own subtype-conditional
+type-change plus RUNTIME installation of a brand-new `Trigger` (a real,
+genuinely complex combination of two separate capability gaps, but no
+second real card needs either half yet); `quilled-greatwurm`'s own
+board-wide "creature dealt combat damage → counters on itself" watch (the
+OTHER half of that card's own 2-part gap, its additional-cost-from-graveyard
+half is folded into gap #7's own addendum above — this combat-damage watch
+half is narrow and has no second real card yet).
+
+**Two claimed gaps turned out to be false positives — real capability
+already exists, not central-tracking material, flagged back to `schema` as
+a cheap fix instead:**
+- `kykar-zephyr-awakener`'s own "Exile another target creature you control.
+  Return that card to the battlefield... at the beginning of the next end
+  step" claims "no delayed-trigger primitive exists anywhere in this
+  schema." This is incorrect — `interfaces.ts`'s real `delayUntil(phase,
+  run)` (603.4/603.7) is exactly this primitive, already exercised by a real
+  FIN card (Elrond, Moon-Reader's own identical "at the beginning of the
+  next end step" clause, via a `custom` effect calling
+  `actions.delayUntil('EndOfTurn', () => ...)`). Kykar's own modal mode
+  currently has a bare `effects: []` no-op instead of a `custom` closure
+  mirroring Elrond's own real pattern — closeable today, no new engine work
+  needed.
+- `ravenous-amulet`'s own "Activate only as a sorcery." claims "No timing/
+  speed-restriction field exists on a named `abilities[]` entry." This is
+  also incorrect — `engine.ts`'s `canActivateAbility` already has a real,
+  general (not Equipment-specific) text-pattern check,
+  `/activate only as a sorcery/i.test(cost)`, enforced against ANY named
+  ability's own `cost` string. Ravenous Amulet's own `drawAndSoul` ability
+  cost string just doesn't currently include that literal phrase — adding
+  it to the `cost` field text closes this for real, no new engine work
+  needed.
 
 ## What's already solid (don't re-litigate)
 
