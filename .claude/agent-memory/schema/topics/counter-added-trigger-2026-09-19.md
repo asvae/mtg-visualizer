@@ -237,3 +237,57 @@ Same 9 pre-existing flagged `engine`-owned `tsc` diagnostics, zero new
 in-lane. Full detail: `.claude/contracts/card-schema.md`'s new dated
 section ("`putCounter`/`PutCounterChosenTarget` unification +
 `CardDefinition.abilityType`").
+
+## Follow-up 4 (2026-09-19, even later still #3) — exemplar-of-light param-by-param audit, TWO no-gap conclusions
+
+Audit-only pass, ZERO new schema fields. Both suspects the coordinator
+flagged verified as genuinely represented already:
+
+- **`ValidPlayer$ You` on `Mode$ LifeGained` — NOT a gap.** Real
+  distribution checked fresh (do NOT assume the `ValidSource$` conclusion
+  carries to a different mode): all 104 real `Mode$ LifeGained` lines in
+  `res/cardsfolder/` = 100 `You`, 2 `Opponent` (kavu_predator,
+  punishing_fire), 1 bare `Player` (false_cure), 1 compound
+  (wedding_ring), **zero omitted** — so "omitted" has no real Forge
+  meaning for this mode at all (unlike `ValidSource$`, where omitted =
+  wildcard was real). Non-`You` values ARE real, but this schema's
+  standing convention puts the who-does-it scope in the `on` value's own
+  NAME (`'opponentLifeLost'` = `Mode$ LifeLost | ValidPlayer$ Opponent`
+  is the proof) — so a real "whenever an opponent gains life" card gets a
+  sibling `'opponentGainedLife'` value, never a `ValidPlayer$` param.
+  None of the 4 non-`You` cards is in the FDN pool, so nothing added.
+  **Reusable rule**: who-does-it axis -> new `on` value; sub-filters
+  within one occasion (counter type, source, count threshold) -> a
+  `*Match`/scalar field.
+
+- **`TriggerZones$ Battlefield` — NOT a gap for battlefield cards; a real
+  documented gap for other zones.** Forge source checked first:
+  `Trigger.java`'s ctor only calls `setActiveZone(...)` when the param is
+  PRESENT, and `TriggerReplacementBase.zonesCheck` returns true
+  unconditionally while `validHostZones == null` — i.e. **absent
+  `TriggerZones$` = active in EVERY zone**, so `TriggerZones$ Battlefield`
+  is a real restriction, not boilerplate (8980/17088 real `T:Mode$` lines
+  carry it: 8381 Battlefield, 443 Command, 127 Graveyard, 19 Exile, 11
+  multi-zone). In THIS schema it needs no field because battlefield-only
+  is structural — a `Trigger` hangs off a `CardDefinition` and every
+  auto-fire dispatch site in `engine.ts` iterates a player's `battlefield`
+  list. The unrepresentable direction (Command/Graveyard/Exile-zoned
+  triggers, e.g. Punishing Fire) is now written up on `TriggerCause`'s own
+  doc comment + a pointer from `TriggerOld`'s; would need a `zones` field
+  AND real non-battlefield engine dispatch. No FDN card needs it.
+
+- **Real stale-doc bug fixed**: exemplar-of-light's `NOTES.md` and BOTH
+  `justification.json` `reasoning` strings still said "name-only trigger
+  (no dedicated `on` value exists ... yet)" — false since the same day's
+  earlier `'lifeGained'`/`'counterAdded'` work. **Lesson: adding an `on`
+  value invalidates every per-card NOTES.md/justification reasoning string
+  that described the affected trigger as name-only — grep for the phrase
+  pool-wide after any future `on`-value addition.** (Only this card's were
+  fixed; scope forbade touching the rest of the pool — see the open item
+  in today's log.)
+
+Everything else on both real `T:` lines verified represented
+(`Mode$`/`CounterType$`/`ValidSource$`/`ValidCard$`/`ActivationLimit$`/
+`Execute$`/`Defined$`/`CounterNum$`/`DB$ Draw`). Full per-param table
+lives durably in the card's own `NOTES.md`; contract section appended to
+`.claude/contracts/card-schema.md`. Commit `ed4f1f45`.
