@@ -4,8 +4,10 @@
 // `/app/keywords/[[slug]].vue` established first (sidebar w/ search+filter+
 // list on the left, one entry's detail on the right), extracted here so
 // four tab pages share ONE copy of it instead of each re-declaring the
-// `w-[240px]` nav / `mx-auto max-w-4xl` detail-pane markup independently
-// (three of them already had, byte-for-byte, before this consolidation).
+// nav / `mx-auto max-w-4xl` detail-pane markup independently (three of
+// them already had, byte-for-byte, before this consolidation). Nav width
+// used to be a fixed `w-[240px]`; see the drag-to-resize block below for
+// why/how that became user-adjustable.
 //
 // Renders `EngineConsoleTabs` at the very top of the nav pane itself (not
 // above the whole shell) per this task's own placement call — "tabs sit at
@@ -29,7 +31,81 @@
 // only thing this claims. Bounds match whatever `canPrev`/`canNext` already
 // say (no wraparound, same as the click handlers) since this only ever
 // emits when the corresponding prop is already true.
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
+
+// Drag-to-resize nav pane — same `pointerdown`/`pointermove`/localStorage
+// pattern `CardPeekPanel.vue` already established for its own resizable
+// panel (see that component's header comment), just mirrored for a
+// LEFT-anchored pane instead of a right-anchored one (handle sits on the
+// nav's RIGHT edge here; dragging right widens it, so delta is
+// `current - start`, NOT inverted like that panel's `start - current`).
+// One shared width/storage key across all six `/app/engine/*` tabs
+// (this shell is their one common mount point) rather than per-tab —
+// "the console's sidebar width," not a per-tab preference. Kept local to
+// this component (no `useGraphStore.ts`/composable extraction) since
+// nothing outside this shell needs to read or react to it.
+const NAV_WIDTH_MIN = 180;
+const NAV_WIDTH_MAX = 480;
+const NAV_WIDTH_DEFAULT = 240; // matches the pre-resize fixed `w-[240px]`
+const NAV_WIDTH_STORAGE_KEY = 'mtg-visualizer-engine-console-nav-width';
+
+function clampNavWidth(w: number): number {
+  return Math.min(NAV_WIDTH_MAX, Math.max(NAV_WIDTH_MIN, w));
+}
+
+function loadNavWidth(): number {
+  // Per-viewer convenience, not durable state — any localStorage failure
+  // (disabled/private-mode/quota) just falls back to the default rather
+  // than surfacing an error.
+  try {
+    if (typeof localStorage === 'undefined') return NAV_WIDTH_DEFAULT;
+    const raw = Number(localStorage.getItem(NAV_WIDTH_STORAGE_KEY));
+    if (Number.isFinite(raw) && raw > 0) return clampNavWidth(raw);
+  } catch {
+    // ignore — see comment above
+  }
+  return NAV_WIDTH_DEFAULT;
+}
+
+const navWidth = ref(loadNavWidth());
+watch(navWidth, (w) => {
+  try {
+    localStorage.setItem(NAV_WIDTH_STORAGE_KEY, String(w));
+  } catch {
+    // ignore — see loadNavWidth() above
+  }
+});
+
+let resizing = false;
+let resizeStartX = 0;
+let resizeStartWidth = 0;
+
+function startResize(e: PointerEvent) {
+  // Primary button only — matches this app's other drag gestures
+  // (CardPeekPanel.vue's own resize handle, graphRenderer.ts's node drags).
+  if (e.button !== 0) return;
+  e.preventDefault();
+  resizing = true;
+  resizeStartX = e.clientX;
+  resizeStartWidth = navWidth.value;
+  // Pointer capture so a fast drag that outpaces the thin handle still
+  // keeps delivering move/up events to it.
+  (e.target as Element).setPointerCapture?.(e.pointerId);
+  document.body.style.userSelect = 'none';
+  window.addEventListener('pointermove', onResizeMove);
+  window.addEventListener('pointerup', endResize);
+}
+function onResizeMove(e: PointerEvent) {
+  if (!resizing) return;
+  const delta = e.clientX - resizeStartX;
+  navWidth.value = clampNavWidth(resizeStartWidth + delta);
+}
+function endResize() {
+  resizing = false;
+  document.body.style.userSelect = '';
+  window.removeEventListener('pointermove', onResizeMove);
+  window.removeEventListener('pointerup', endResize);
+}
 
 const props = withDefaults(
   defineProps<{
@@ -69,7 +145,12 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 onMounted(() => window.addEventListener('keydown', onKeydown));
-onUnmounted(() => window.removeEventListener('keydown', onKeydown));
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown);
+  // Defensive — shell unmounting mid-drag isn't a normal path (navigating
+  // away while holding the handle down), but cheap to guard regardless.
+  if (resizing) endResize();
+});
 </script>
 
 <template>
@@ -78,10 +159,30 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown));
     <div v-else-if="error" class="p-6 text-xs text-error">Failed to load: {{ error.message }}</div>
 
     <template v-else>
-      <nav class="flex w-[240px] min-w-[240px] flex-col overflow-y-auto border-r border-border-subtle bg-panel p-2.5">
+      <nav
+        class="flex shrink-0 flex-col overflow-y-auto bg-panel p-2.5"
+        :style="{ width: `${navWidth}px` }"
+      >
         <EngineConsoleTabs />
         <slot name="nav" />
       </nav>
+
+      <!-- Drag-to-resize handle — sits at the nav/detail boundary as its
+           own thin flex item (not an absolutely-positioned overlay like
+           CardPeekPanel.vue's, since this pane isn't anchored to a fixed
+           viewport edge) so it naturally tracks `navWidth` for free.
+           Carries the visual divider border that used to live on `<nav>`
+           itself, invisible until hover/active so it doesn't read as an
+           extra seam at rest. -->
+      <div
+        class="relative w-1.5 shrink-0 cursor-col-resize touch-none bg-transparent hover:bg-produce/40 active:bg-produce/60"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize sidebar"
+        @pointerdown="startResize"
+      >
+        <div class="absolute inset-y-0 left-0.5 w-px bg-border-subtle"></div>
+      </div>
 
       <div class="min-h-0 flex-1 overflow-y-auto p-6">
         <div class="mx-auto max-w-4xl">
