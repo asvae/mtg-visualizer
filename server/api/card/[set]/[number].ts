@@ -34,8 +34,8 @@ import { isStandardPrint } from '../../../utils/isStandardPrint';
 import type { CardStatusEntry } from '../../../../functional-model/card-status';
 import { readPipelineStatus, effectivePipelineStatus } from '../../../../functional-model/pipeline-status';
 import type { PipelineStatusFile } from '../../../../functional-model/pipeline-status';
-import { readSinkAttachment, effectiveSinkAttachmentStatus } from '../../../../functional-model/sink-attachment';
-import type { SinkAttachmentFile, SinkAttachmentStatus } from '../../../../functional-model/sink-attachment';
+import { computeCardInteractions } from '../../../../functional-model/card-interactions';
+import type { CardInteractionCategory } from '../../../../functional-model/card-interactions';
 import relationsData from '../../../../data/global_relations.json';
 import finRelationsData from '../../../../data/fin/fin_relations.json';
 import themesData from '../../../../data/global_themes.json';
@@ -279,22 +279,18 @@ interface FunctionalModelData {
   // real text to show" empty state a `fin` card's own oracle-text-less
   // face already degrades to under `FunctionalModelText.vue`.
   oracleText: string | null;
-  // **`fdn`-only, 2026-09-18, later same day** — this card's own per-card
-  // sink-ATTACHMENT file (`functional-model/fdn-cards/<slug>/sinks.json`,
-  // `functional-model/sink-attachment.ts` — see `.claude/contracts/
-  // card-schema.md`'s "Sink CATALOG..." section), served RAW/verbatim (no
-  // `status` substitution the way `pipelineStatus` above gets — this file
-  // has no such field to begin with; `sinkAttachmentStatus` right below is
-  // the drift-aware computed read). `null` when no `sinks.json` exists yet
-  // (the common case — the attachment step hasn't been performed for this
-  // card at all), or trivially for any `fin` entry.
-  sinkAttachment: SinkAttachmentFile | null;
-  // The drift-aware status a consumer should actually trust
-  // (`effectiveSinkAttachmentStatus`) — `'not-started'` when
-  // `sinkAttachment` above is `null`, same real states that function
-  // documents otherwise. Always `null` for a `fin` entry (this axis is
-  // `fdn`-only, same posture as `pipelineStatus`/`slug`/`oracleText` above).
-  sinkAttachmentStatus: SinkAttachmentStatus | null;
+  // **`fdn`-only, 2026-09-18, later still** — this card's own real
+  // interaction categories against the current FDN pool of
+  // `CardDefinition`s (`functional-model/card-interactions.ts`'s own
+  // `computeCardInteractions` — catalog-first, self-inclusive, pool-scoped
+  // not deck-scoped; see `.claude/contracts/card-schema.md`'s own dated
+  // "computeCardInteractions" + "Sink CATALOG..." sections). Always `[]`
+  // for a `fin` entry — that set still uses the top-level `interactions`
+  // field this route also serves (the older paired source+sink Fact
+  // model's own cross-card join, `loadInteractionGroups` below), a
+  // genuinely different mechanism FDN structurally has nothing to run
+  // against (no synergy.json at all).
+  cardInteractions: CardInteractionCategory[];
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -503,14 +499,15 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       reviewSnapshotAt: entry.reviewSnapshotAt ?? null,
       continuousKeywordGrants: front || back ? { front, back } : null,
       annotatedNonFactSpans: entry.annotatedNonFactSpans ?? [],
-      // `fin`-only fields never populate these five `fdn`-only fields — see
-      // `FunctionalModelData.pipelineStatus`/`.slug`/`.oracleText`/
-      // `.sinkAttachment`/`.sinkAttachmentStatus`'s own doc comments.
+      // `fin`-only fields never populate these three `fdn`-only fields — see
+      // `FunctionalModelData.pipelineStatus`/`.slug`/`.oracleText`'s own doc
+      // comments.
       pipelineStatus: null,
       slug: null,
       oracleText: null,
-      sinkAttachment: null,
-      sinkAttachmentStatus: null,
+      // `fin`-only fields never populate this `fdn`-only field either — see
+      // `FunctionalModelData.cardInteractions`'s own doc comment.
+      cardInteractions: [],
       // Precomputed at `npm run sync:fm-bundle` build time (scripts/
       // build-fm-bundle.mjs, same classifyCardStatus/computeTextCoverage
       // recipe as the dev branch below and compute-card-status.mjs) —
@@ -599,8 +596,7 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       pipelineStatus: null,
       slug: null,
       oracleText: null,
-      sinkAttachment: null,
-      sinkAttachmentStatus: null,
+      cardInteractions: [],
     };
   } catch {
     data = null;
@@ -634,6 +630,71 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
 // not-yet-started scope). Returns `null` in production, same "degrades to
 // no functional-model section rendered at all" behavior a `fin` card with
 // no functional-model directory already gets.
+// Every real `functional-model/fdn-cards/<slug>/definition.ts` currently on
+// disk, loaded as a plain `CardDefinition[]` — the "current scope" pool
+// `computeCardInteractions` (`functional-model/card-interactions.ts`) needs
+// to check a card's own derived categories against.
+//
+// **Spawns `functional-model/scripts/list-fdn-definitions.mjs` under
+// vite-node, not a plain in-process `import()`** — tried the latter first
+// (mirroring `loadCardDefinitionDev`'s own per-slug dynamic-import
+// convention just above, pointed at `fdn-cards/` instead), and it silently
+// dropped `day-of-judgment` from the pool: that card's own `definition.ts`
+// is the only one so far with a real VALUE-level (non-type-only) relative
+// import (`import { anyPlayer, destroyEach } from '../../combinator'` —
+// every other current fdn-cards file only imports `CardDefinition`/`Effect`
+// as TYPES, which get erased entirely, so this gap was invisible until a
+// card needing a real value import existed), which fails to resolve its
+// missing extension under plain Node ESM resolution the exact same way
+// `loadFunctionalModelPool`'s own header already documents for FIN's
+// `'../../tokens'` case — confirmed directly (a standalone `node -e`
+// reproduction throws `Cannot find module '.../combinator'`). `vite-node`'s
+// own resolver tolerates this (same reason `validate-card-definition.mjs`'s
+// own dynamic import has to run under vite-node too, per that script's own
+// header) — spawning it here, same "recompute fresh per request, dev-only"
+// posture `computeTracesLive`/`computeCardStatusLive` already establish for
+// this exact class of problem, is what actually gets Day of Judgment's own
+// real `program` effect (confirmed a plain, JSON-serializable combinator-DSL
+// data tree, no functions) into the pool. Cached per process with a cheap
+// stat-based signature (slug list + each definition.ts's own mtime), since
+// only ~10 real folders exist today and none of this survives a production
+// bundle anyway (this whole axis already is dev-only, see this function's
+// own caller below).
+let fdnDefinitionPoolCache: { signature: string; pool: CardDefinition[] } | null = null;
+async function loadFdnDefinitionPool(root: string): Promise<CardDefinition[]> {
+  const dir = join(root, 'functional-model', 'fdn-cards');
+  let slugs: string[];
+  try {
+    slugs = readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name);
+  } catch {
+    return [];
+  }
+  const signature = slugs
+    .map((s) => {
+      try {
+        return `${s}:${statSync(join(dir, s, 'definition.ts')).mtimeMs}`;
+      } catch {
+        return `${s}:x`;
+      }
+    })
+    .join('|');
+  if (fdnDefinitionPoolCache && fdnDefinitionPoolCache.signature === signature) return fdnDefinitionPoolCache.pool;
+
+  let pool: CardDefinition[] = [];
+  try {
+    const { stdout } = await execFileAsync(join(root, 'node_modules/.bin/vite-node'), [
+      join(root, 'functional-model/scripts/list-fdn-definitions.mjs'),
+    ]);
+    pool = JSON.parse(stdout);
+  } catch {
+    // Whole-pool failure (vite-node itself missing, etc.) degrades to an
+    // empty pool rather than a route-wide 500 — same "nothing real to
+    // compute against" fallback every other FDN axis already has.
+  }
+  fdnDefinitionPoolCache = { signature, pool };
+  return pool;
+}
+
 async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise<FunctionalModelData | null> {
   if (process.env.NODE_ENV === 'production') return null;
   const slug = slugify(name);
@@ -671,14 +732,19 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
   // of real `\n`s stays untouched; a blank line separates multiple faces
   // (see `FunctionalModelData.oracleText`'s own doc comment).
   const oracleText = faces.map((f) => f.oracleText).filter((t) => t.trim().length > 0).join('\n\n') || null;
-  // Same "no file at all" real, transparent state as `pipelineStatus` above
-  // — `readSinkAttachment` returns `undefined` for it, served as `null`.
-  // `effectiveSinkAttachmentStatus` is always computable regardless (its
-  // own `'not-started'` state covers exactly this case), unlike
-  // `effectivePipelineStatus` which needs a stored file to have anything to
-  // fold drift-detection onto.
-  const sinkAttachment = readSinkAttachment(slug, root) ?? null;
-  const sinkAttachmentStatus = effectiveSinkAttachmentStatus(slug, root);
+  // Real, catalog-first, self-inclusive interaction categories against the
+  // current FDN pool — see `FunctionalModelData.cardInteractions`'s own
+  // doc comment. `pool` already includes this card's own definition (the
+  // pool loader above reads every real fdn-cards/ folder, no self-
+  // exclusion), so a straight `.find` by name (the app's own card-identity
+  // key, not `oracle_id`) resolves it rather than a second, separate
+  // dynamic import of the same file. `[]` when this card hasn't actually
+  // entered the pipeline yet (no definition.ts at all — shouldn't happen
+  // here, `source` above already required one to exist, but stays
+  // defensive rather than assuming `.find` always succeeds).
+  const pool = await loadFdnDefinitionPool(root);
+  const definition = pool.find((d) => d.name === name);
+  const cardInteractions = definition ? computeCardInteractions(definition, pool, root) : [];
   return {
     source,
     synergy: null,
@@ -695,8 +761,7 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
     pipelineStatus,
     slug,
     oracleText,
-    sinkAttachment,
-    sinkAttachmentStatus,
+    cardInteractions,
   };
 }
 

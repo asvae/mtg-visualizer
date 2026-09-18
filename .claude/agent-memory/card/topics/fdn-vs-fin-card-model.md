@@ -34,19 +34,24 @@ incompletely. `CardDetailTabs.vue` branches on `isFdn` (`props.set ===
   Don't assume the "re-review always confirmable" pattern the FIN
   card-status buckets use (see `topics/card-status-bucket-system.md`)
   carries over here — it doesn't.
-- **Sink catalog attachment** (`functional-model/sink-model/catalog/`,
-  `functional-model/fdn-cards/<slug>/sinks.json`) is a separate completion
-  step from pipeline-status review, surfaced as its own "Sinks" tab
-  (checkbox picker over `SINK_CATALOG`, its own "Mark attachment reviewed"
-  button) — `effectivePipelineStatus` folds attachment completeness into
-  the `blue`-readiness gate at the engine layer, so `card`-side review
-  gating doesn't need its own separate check for this.
+- **No per-card sink-attachment tab/persistence exists (2026-09-18,
+  tried-then-reverted, see below).** Sinks are computed LIVE against real
+  `CardDefinition`s now — `functional-model/card-interactions.ts`'s
+  `computeCardInteractions` — never stored per-card. The FDN tab strip is
+  back to `Scenarios?`/`Card Definition` only.
 - Both `FunctionalModelData` (server) and its hand-mirrored client type
   `app/lib/cardResponse.ts` need every new FDN-only field added to both —
   see `topics/cardresponse-hand-mirror-gotcha.md`, this has been missed
-  before.
+  before (found again 2026-09-18: `reviewCaveat` was already being read off
+  `props.data` in `CardDetailTabs.vue` but was never in the hand-mirrored
+  type at all — fixed alongside the sink-attachment revert-fixup).
 
 The full authoritative shape lives in `.claude/contracts/card-schema.md`'s
-FDN sections ("FDN authoring-pipeline status", "Sink CATALOG...") — read
-those instead of `functional-model/pipeline-status.ts`/`sink-attachment.ts`
-source when only the shape is needed.
+FDN sections ("FDN authoring-pipeline status", "Sink CATALOG...",
+"computeCardInteractions") — read those instead of `functional-model/
+pipeline-status.ts` source when only the shape is needed (`sink-attachment.ts`
+itself no longer exists at all).
+
+See `topics/fdn-interactions-wiring.md` for the real, wired-up
+`computeCardInteractions` → server → `CardDetailTabs.vue` Interactions
+section (2026-09-18, follow-up to the attachment revert).

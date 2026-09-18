@@ -52,7 +52,6 @@ import {
   type PipelineReviewAction,
   type PipelineStatusFile,
 } from '../../../../functional-model/pipeline-status';
-import { isSinkAttachmentComplete } from '../../../../functional-model/sink-attachment';
 
 const execFileAsync = promisify(execFile);
 
@@ -131,30 +130,6 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 400);
     return {
       error: `"${slug}" currently fails the schema-validation gate (${gate.failureKind ?? 'unknown'}) — confirm/reject is only meaningful once the card's current definition.ts actually passes it: ${gate.reasons.join('; ')}`,
-    };
-  }
-
-  // The SECOND, genuinely separate half of "effectively blue"
-  // (functional-model/pipeline-status.ts's own `blue` redefinition,
-  // `effectivePipelineStatus`) — closes the gap that same file's own doc
-  // comment and .claude/contracts/card-schema.md's "Sink CATALOG..." section
-  // both explicitly flag: a card whose schema gate passes fresh is NOT yet
-  // reviewable if its own per-card sink-ATTACHMENT step
-  // (functional-model/fdn-cards/<slug>/sinks.json,
-  // functional-model/sink-attachment.ts) hasn't been explicitly completed —
-  // never inferred from `gate.ok` alone. Deliberately re-derives the same
-  // "schema-pass AND attachment-complete -> effectively blue" rule
-  // `effectivePipelineStatus` applies to a STORED entry, rather than calling
-  // that function directly against the stored `pipeline-status.json` —
-  // doing so would break this route's own pre-existing "reject after
-  // already-confirmed"/"confirm after already-rejected" support (a stored
-  // `yellow`/`green` entry's `effectivePipelineStatus` is never `'blue'`,
-  // even though this route's own `gate` re-run above is intentionally
-  // decoupled from that stored status for exactly that reason).
-  if (!isSinkAttachmentComplete(slug, root)) {
-    setResponseStatus(event, 400);
-    return {
-      error: `"${slug}" passes the schema-validation gate but its sink-attachment step (functional-model/fdn-cards/${slug}/sinks.json) isn't complete yet — attach this card's real catalog sinks (zero is a legitimate outcome) and mark that step reviewed via POST /api/fdn-cards/${slug}/sinks before requesting a pipeline review.`,
     };
   }
 

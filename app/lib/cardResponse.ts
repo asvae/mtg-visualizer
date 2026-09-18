@@ -15,7 +15,7 @@ import type { LogEntry, Scenario } from '../../functional-model/harness';
 import type { Fact } from '../../functional-model/synergy';
 import type { CardStatusEntry } from '../../functional-model/card-status';
 import type { PipelineStatusFile } from '../../functional-model/pipeline-status';
-import type { SinkAttachmentFile, SinkAttachmentStatus } from '../../functional-model/sink-attachment';
+import type { CardInteractionCategory } from '../../functional-model/card-interactions';
 
 export interface CardResponse {
   card: CardData;
@@ -31,6 +31,14 @@ export interface CardResponse {
     }[];
     annotatedCard: AnnotatedCard | null;
     review: 'ai' | 'human' | null;
+    // `progress.json`'s own `reviewCaveat` (2026-09-17, "Confirm (Uncertain)"
+    // UI action) — see server/api/card/[set]/[number].ts's own
+    // `FunctionalModelData.reviewCaveat` doc comment. Was missing from this
+    // hand-mirrored interface even though CardDetailTabs.vue already read it
+    // off `props.data` (the exact `cardresponse-hand-mirror-gotcha` this
+    // interface's own header warns about) — fixed in passing while removing
+    // the reverted sink-attachment fields below.
+    reviewCaveat: string | null;
     scenariosReview: 'draft' | 'reviewed';
     interactionsReview: 'draft' | 'reviewed';
     // `verified-snapshot.json`'s own `capturedAt` — see server/api/card/
@@ -61,11 +69,15 @@ export interface CardResponse {
     // `FunctionalModelData.oracleText` doc comment. Always `null` for a
     // `fin` entry (FIN already has its own richer `annotatedCard` path).
     oracleText: string | null;
-    // `fdn`-only, 2026-09-18, later same day — see server/api/card/[set]/
-    // [number].ts's own `FunctionalModelData.sinkAttachment`/
-    // `.sinkAttachmentStatus` doc comments. Always `null` for a `fin` entry.
-    sinkAttachment: SinkAttachmentFile | null;
-    sinkAttachmentStatus: SinkAttachmentStatus | null;
+    // `fdn`-only, 2026-09-18, later still — this card's own real interaction
+    // categories against the current FDN pool
+    // (`functional-model/card-interactions.ts`'s `computeCardInteractions`,
+    // catalog-first, self-inclusive — see `.claude/contracts/
+    // card-schema.md`'s own dated section). Always `[]` for a `fin` entry —
+    // that set still uses the top-level `interactions` field below (the
+    // older paired source+sink Fact model's own cross-card join), a
+    // genuinely different mechanism.
+    cardInteractions: CardInteractionCategory[];
   } | null;
   interactions: EnrichedInteractionGroup[];
 }

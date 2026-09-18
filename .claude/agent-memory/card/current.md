@@ -4,7 +4,8 @@
 - [Nitro `.mjs` import gotcha](topics/nitro-mjs-import-gotcha.md) — a dynamically-imported `.mjs` sibling breaks Nitro's dev bundler at runtime even though `tsc` passes; spawn via vite-node instead.
 - [Prod functional-model bundle](topics/prod-functional-model-bundle.md) — Netlify Functions can't touch raw `functional-model/`; prod reads a committed `fm-bundle.json` with a manual regen+commit cadence.
 - [Card page route architecture](topics/card-page-route-architecture.md) — `CardDetailTabs.vue` is the shared content hub across 3 page hosts; standalone `/app/card` and `/app/engine/cards` are deliberately separate routes (a merge was tried and reverted).
-- [FDN vs FIN card model](topics/fdn-vs-fin-card-model.md) — FDN cards have no Facts/synergy data; separate pipeline-status + sink-attachment + plain-oracle-text treatment.
+- [FDN vs FIN card model](topics/fdn-vs-fin-card-model.md) — FDN cards have no Facts/synergy data; separate pipeline-status + plain-oracle-text treatment (no sink-attachment tab anymore — reverted).
+- [FDN Interactions wiring](topics/fdn-interactions-wiring.md) — `computeCardInteractions` served/rendered live; FDN pool loader must spawn vite-node, not plain `import()`, or program-effect cards silently drop out.
 - [Card-status bucket system](topics/card-status-bucket-system.md) — FIN fact-authoring dashboard buckets, duplicated-by-convention union across 3 files, computed live per-request.
 - [`cardResponse.ts` hand-mirror gotcha](topics/cardresponse-hand-mirror-gotcha.md) — client `CardResponse` type is a hand-kept duplicate of the server route's type, not imported; new server fields get missed here.
 - [DFC / multi-face gotchas](topics/dfc-and-multiface-gotchas.md) — Scryfall never serves per-face keywords; DFC `PoolCard.name` is front-face-only; FIN's bonus/variant collector numbers.
