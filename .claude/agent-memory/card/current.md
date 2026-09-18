@@ -17,6 +17,7 @@
 - [Flex-col text-overflow gotcha](topics/flex-col-text-overflow-gotcha.md) — a `shrink-0`/unbounded flex sibling holding long freeform text can collapse `CardMedia` to 0×0 via a flexbox circular-sizing quirk; needs explicit `max-w-*`+`min-w-0`, not just `break-words` — the specific box this fixed is since removed (see fdn-vs-fin-card-model.md), lesson generalizes.
 - [EngineConsoleShell `header-extra` slot](topics/engine-console-shell-header-extra-slot.md) — generic optional slot next to "N of N"; today's only consumer is the Cards tab's FDN pipeline-status badge.
 - [PlainOracleText collapse toggle](topics/plain-oracle-text-collapse-toggle.md) — FDN-only hover-reveal Shorter/Longer button; short state = oracle text only, mana icons intact.
+- [Shared card-meta resolver](topics/shared-card-meta-resolver.md) — `server/utils/cardMeta.ts`/`scryfallFetch.ts` + `CardMatchGallery.vue`; the one correct way to render a card-name match list with real thumbnails, never a live per-card client fetch.
 
 ## Known open item (not yet fixed, flagged to orchestrator each time)
 
