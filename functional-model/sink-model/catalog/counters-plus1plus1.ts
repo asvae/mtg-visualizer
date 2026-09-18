@@ -15,8 +15,19 @@
 // definition.ts`) and hands it straight to the factory — `slug`/
 // `counterType`/`consumerTriggerNames` are all derived FROM this real
 // `CardDefinition`, not authored a second time here.
+// **2026-09-19, later still** — `CountersSink(definition)` now returns
+// `SinkInstance[]` (one instance PER DISTINCT `counterType` found on
+// `definition` — see `families/counters.ts`'s own `deriveCounterTypes` doc
+// comment for the full array/dedup rewrite writeup; live user correction:
+// "we need array handling here obviously"). Exemplar of Light itself only
+// ever grants ONE distinct counter type (`'+1/+1'`), so this destructures
+// the single real element straight out — a real, structurally-justified
+// assertion (not a guess) that stays correct unless/until a second,
+// differently-typed `putCounter`-family effect is ever added to Exemplar of
+// Light's own definition, at which point this file would need its own
+// second named export for the new sibling instance.
 import { exemplarOfLight } from '../../fdn-cards/exemplar-of-light/definition';
 import { CountersSink } from './families/counters';
 import type { SinkInstance } from './entry';
 
-export const countersPlus1Plus1: SinkInstance = CountersSink(exemplarOfLight);
+export const countersPlus1Plus1: SinkInstance = CountersSink(exemplarOfLight)[0]!;

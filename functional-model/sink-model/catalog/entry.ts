@@ -251,67 +251,78 @@ export interface SinkCatalogEntry {
 }
 
 /**
- * Real match detail an invocable `SinkInstance` (see that type's own doc
- * comment below) returns when a candidate matches — `null` otherwise.
- * Carries at least as much detail as an existing call site already
- * reads out of a match today: `producer.via`/`producer.predicateDerived`
- * mirror `sink-model/match-sink.ts`'s own `SinkMatchResult` fields 1:1 (the
- * exact detail `card-interactions.ts`'s `selfProducerMatch`/
- * `selfDirectProducerMatch` already reads out of a plain `matchSink(...)`
- * call); `consumer.via` names WHICH declared consumer-side signal matched —
- * strictly MORE detail than any consumer check returns today (
- * `matchesConsumerTriggerNames`/`matchesConsumerTriggerOn`/
- * `matchesBattlefieldPresenceConsumer` are all bare booleans, with no
- * "which one" signal at all).
- */
-export interface SinkMatchDetail {
-  /** Present iff `candidate` itself structurally PRODUCES this entry's own
-   * `query` (the same signal `matchSink(entry.query, candidate)` already
-   * computes). */
-  producer?: { via: string; predicateDerived?: boolean };
-  /** Present iff `candidate` structurally CARES ABOUT/reacts to this entry's
-   * category via one of its own declared consumer-side signals. */
-  consumer?: { via: 'triggerName' | 'triggerOn' | 'battlefieldPresence' };
-}
-
-/**
- * A `SinkCatalogEntry` that is ALSO directly callable — the real return type
- * of `BattlefieldPresenceSink`/`CountersSink` (`catalog/families/battlefield-
- * presence.ts`/`catalog/families/counters.ts`, 2026-09-18). A plain function value
- * with the entry's own data fields (`slug`/`query`/`consumerTriggerNames`/
- * ...) assigned onto it (both factories build it this way) satisfies this
- * type structurally — TypeScript doesn't distinguish "a function with these
- * properties" from "an object with these properties that also happens to
- * have a call signature." `SINK_CATALOG` itself stays typed
- * `SinkCatalogEntry[]` (a `SinkInstance` IS a `SinkCatalogEntry`, so no
- * change needed there or at any existing read site — `sink-catalog-status
- * .ts`/`card-interactions.ts`/the server API route keep reading
- * `entry.slug`/`entry.query`/etc exactly as before, completely unaffected
- * by an entry also being invocable); this narrower type only matters to a
- * caller that specifically wants to INVOKE an entry.
+ * A `SinkCatalogEntry` that is ALSO directly callable — the real return
+ * ELEMENT type of `BattlefieldPresenceSink`/`CountersSink`
+ * (`catalog/families/battlefield-presence.ts`/`catalog/families/counters.ts`,
+ * 2026-09-18). A plain function value with the entry's own data fields
+ * (`slug`/`query`/`consumerTriggerNames`/...) assigned onto it (both
+ * factories build it this way) satisfies this type structurally —
+ * TypeScript doesn't distinguish "a function with these properties" from
+ * "an object with these properties that also happens to have a call
+ * signature." `SINK_CATALOG` itself stays typed `SinkCatalogEntry[]` (a
+ * `SinkInstance` IS a `SinkCatalogEntry`, so no change needed there or at
+ * any existing read site — `sink-catalog-status.ts`/`card-interactions
+ * .ts`/the server API route keep reading `entry.slug`/`entry.query`/etc
+ * exactly as before, completely unaffected by an entry also being
+ * invocable); this narrower type only matters to a caller that specifically
+ * wants to INVOKE an entry.
  *
- * `entry(candidate)` returns real, structural match detail
- * (`SinkMatchDetail`) when `candidate` structurally satisfies this entry's
- * own producer query OR any declared consumer signal, `null` when neither
- * applies. Lets a caller run every callable entry in `SINK_CATALOG` against
- * one `CardDefinition` uniformly — `SINK_CATALOG.filter((e): e is
- * SinkInstance => typeof e === 'function').map((s) => s(candidate)).filter
- * (Boolean)` — instead of hand-checking `matchSink`/
- * `matchesConsumerTriggerNames`/`matchesConsumerTriggerOn`/
- * `matchesBattlefieldPresenceConsumer` separately per entry, per call site,
- * the way `card-interactions.ts` still does today.
+ * **`entry(candidate)` returns a plain `boolean` (2026-09-19, 3rd real
+ * design iteration on this callable contract — see `SINK_MODEL_DESIGN.md`'s
+ * own dated section for the full history: `SinkQuery`-based ->
+ * config-object-based -> `CardDefinition`-based -> boolean-return-based).**
+ * The user's own explicit target shape, verbatim: `const sinkInstance =
+ * SinkFamily(sinkDefinition); const booleanWeLookFor =
+ * sinkInstance(sourceCandidateDefinition)`. Two earlier compromises (a
+ * boolean call plus separate producer/consumer accessors; a call returning
+ * an all-boolean-fields object) were both explicitly rejected by the user
+ * ("both complete bullshit") — the call itself must return `true`/`false`,
+ * full stop.
  *
- * This is a genuine, additive capability, not a replacement for `matchSink`/
- * the consumer-check functions in `match-sink.ts` — no existing production
- * consumer (`card-interactions.ts`, the server API route) calls an entry as
- * a function today; this addition doesn't change either's own behavior at
- * all. `catalog/battlefield-presence.test.ts`/`catalog/counters.test.ts` are
- * the first real callers, asserting the null/detail contract directly
- * against the same corpus fixtures the producer/consumer-mode assertions
- * already use. A plain, non-factory-built entry (`lifegain`/
- * `graveyard-fodder`/`etb`) is a normal, non-callable object — invoking it
- * as a function is a real `TypeError`, same as calling any other
- * non-function value.
+ * **The call answers the PRODUCER question ONLY**: "does `candidate` itself
+ * structurally produce this sink's event" (e.g. a real `putCounter` effect
+ * of the matching counter type). Deliberately NOT a combined
+ * producer-or-consumer question the way the old `SinkMatchDetail`-returning
+ * contract was — the CONSUMER check was never actually routed through this
+ * callable for its own real test coverage in the first place
+ * (`counters.test.ts`'s own "SINK CANDIDATE" cases already called
+ * `matchesConsumerTriggerNames` directly), and every real production reader
+ * of the old combined return immediately reduced it to a boolean via `!!`
+ * anyway (`card-interactions.ts`'s `matchEntry`, `server/api/sink-catalog/
+ * index.get.ts`'s `instanceProducerMatched`/`instanceConsumerMatched`) — see
+ * `match-sink.ts`'s own `matchesConsumerTriggerNames`/
+ * `matchesConsumerTriggerOn`/`matchesBattlefieldPresenceConsumer` for the
+ * real, already-boolean-returning consumer checks, called directly against
+ * this entry's own data fields (`consumerTriggerNames`/`consumerTriggerOn`/
+ * `consumerBattlefieldPresence` — present on a callable entry the same as
+ * any other `SinkCatalogEntry`, since the factory `Object.assign`s them onto
+ * the function value) rather than through this callable.
+ *
+ * Lets a caller run every callable entry in `SINK_CATALOG` against one
+ * `CardDefinition` uniformly for the PRODUCER question —
+ * `SINK_CATALOG.filter((e): e is SinkInstance => typeof e ===
+ * 'function').filter((s) => s(candidate))` — instead of hand-checking
+ * `matchSink` separately per entry, per call site.
+ *
+ * A plain, non-factory-built entry (`lifegain`/`graveyard-fodder`/`etb`) is
+ * a normal, non-callable object — invoking it as a function is a real
+ * `TypeError`, same as calling any other non-function value.
+ *
+ * **`isPredicateDerived` (2026-09-19, added alongside the boolean-return
+ * rewrite)** — the one real piece of detail the old combined return carried
+ * that a bare boolean genuinely can't: whether the producer match came from
+ * a `sink-model/predicates/*.ts` sink-derivation predicate (Saga/Crew/
+ * Lifelink — an inferred/predicate-derived occurrence) rather than a direct
+ * walk of the card's own authored `effects`/`triggers`/`program` AST. Real,
+ * still-needed signal — `card-interactions.ts`'s
+ * `selfDirectProducerMatch = self.producerMatched && !self.predicateDerived`
+ * uses exactly this to distinguish "this card's own authored effect
+ * literally matches" (self-display-worthy) from "this only matched via an
+ * inferred occurrence" (not self-display-worthy) — NOT something to drop.
+ * Optional, since a family with no predicate-derived-occurrence concept at
+ * all (nothing today, but a hypothetical future family) has no real reason
+ * to implement it; a caller reads `instance.isPredicateDerived?.(candidate,
+ * root) ?? false`.
  *
  * **Terminology (2026-09-18, for a caller wiring this into the two-role
  * shape `card-interactions.ts` already computes)**: the card ASKING "who
@@ -321,27 +332,43 @@ export interface SinkMatchDetail {
  * merely existing; today's real "does `self` own this category at all"
  * derivation is `card-interactions.ts`'s own `selfDirectProducerMatch`/
  * `selfConsumerMatch`/`requireConsumerForSelfOwnership` computation, per
- * `SINK_CATALOG` entry — a natural (not-yet-built) `hasSink(self, sinkType)`/
- * `getSinks(self, sinkType)` pair sitting on top of `SinkInstance` would
- * fold that same derivation behind a per-sink-type query instead of the
- * current per-entry loop, then run each returned instance against a
- * `candidate` via this exact call signature — flagged as a real, natural
- * follow-up, not built here (no production call site invokes a
- * `SinkInstance` today — see the paragraph above).
+ * `SINK_CATALOG` entry.
  */
-export type SinkInstance = SinkCatalogEntry & ((candidate: CardDefinition, root?: string) => SinkMatchDetail | null);
+export type SinkInstance = SinkCatalogEntry &
+  ((candidate: CardDefinition, root?: string) => boolean) & {
+    /** See this type's own doc comment above — present only on a family
+     * whose producer mechanism can distinguish a predicate-derived match
+     * from a direct effect/trigger walk. */
+    isPredicateDerived?: (candidate: CardDefinition, root?: string) => boolean;
+  };
 
 /**
  * The shape of a SINK FAMILY constructor — `BattlefieldPresenceSink`/
  * `CountersSink` (`catalog/families/battlefield-presence.ts`/`catalog/
  * families/counters.ts`) are both real `SinkFamily<...>` values: a function
- * taking one real configuration and returning ONE real, fully-configured
- * `SinkInstance` for it (the Cats instance, the +1/+1 instance, ...).
- * Purely a naming/typing convenience — every real family constructor
- * already satisfies this shape structurally without needing to
+ * taking one real configuration and returning EVERY real, fully-configured
+ * `SinkInstance` it derives from it (the Cats instance, the +1/+1 instance,
+ * ...).
+ *
+ * **Returns `SinkInstance[]`, not one `SinkInstance` (2026-09-19, live
+ * correction — the user's own explicit rejection of a single-instance
+ * return: "we need array handling here obviously")** — a single driving
+ * `CardDefinition` is not guaranteed to derive only ONE distinct sink
+ * instance. `CountersSink(definition)`, concretely: a definition carrying
+ * `putCounter`-family effects of more than one distinct `counterType` (none
+ * in the pool today, but a real, honest possibility) derives one
+ * `SinkInstance` PER distinct `counterType`, not just the first one found —
+ * see `catalog/families/counters.ts`'s own `deriveCounterTypes` for the
+ * full writeup. `BattlefieldPresenceSink` has no real multi-instance-per-
+ * config case of its own today and simply returns a single-element array
+ * (`[sink]`) — a real, structural degenerate case of this same contract,
+ * not a special exception to it.
+ *
+ * Purely a naming/typing convenience otherwise — every real family
+ * constructor already satisfies this shape structurally without needing to
  * import/annotate against it; exported so a doc comment or a future family
  * constructor can reference "a `SinkFamily`" as a real, named concept
- * instead of an ad-hoc `(config) => SinkInstance` shape typed out by hand
+ * instead of an ad-hoc `(config) => SinkInstance[]` shape typed out by hand
  * each time.
  *
  * `Config` is NOT always a hand-authored config object — `BattlefieldPresenceSink`
@@ -354,4 +381,4 @@ export type SinkInstance = SinkCatalogEntry & ((candidate: CardDefinition, root?
  * see `catalog/families/counters.ts`'s own header for the full derivation
  * writeup. Both shapes satisfy this same generic type.
  */
-export type SinkFamily<Config> = (config: Config) => SinkInstance;
+export type SinkFamily<Config> = (config: Config) => SinkInstance[];

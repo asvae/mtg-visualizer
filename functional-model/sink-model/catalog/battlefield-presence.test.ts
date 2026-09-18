@@ -157,26 +157,27 @@ describe('battlefield-presence-cats sink catalog entry — corpus (mocked CardDe
 
   // -------------------------------------------------------------------------
   // CallableSink contract (2026-09-18, new with the factory refactor) — the
-  // returned `entry` is itself directly invocable: `entry(candidate)`. These
-  // 3 cases are the real first callers of that contract (see `CallableSink`'s
-  // own doc comment, `entry.ts`) — reusing the exact fixtures above, not new
-  // scenarios, so this purely proves the wrapper faithfully carries through
-  // the SAME producer/consumer verdicts already verified above, just via the
-  // new call surface.
-  it('CALLABLE: producer-only match returns real detail (producer.via set, no consumer)', () => {
+  // returned `entry` is itself directly invocable: `entry(candidate)`.
+  //
+  // **2026-09-19, boolean-return rewrite** — `entry(candidate)` now answers
+  // the PRODUCER question ONLY, as a plain `boolean` (not the old combined
+  // `SinkMatchDetail | null` — see `entry.ts`'s own `SinkInstance` doc
+  // comment for the full "3rd real design iteration" writeup); the CONSUMER
+  // question is checked directly against `entry.consumerBattlefieldPresence`
+  // via `matchesBattlefieldPresenceConsumer` (same real function the CONSUMER
+  // mode cases above already use), not through the callable at all anymore.
+  it('CALLABLE: producer-only match returns true; the same card is NOT a consumer match via the entry\'s own data field', () => {
     const card: CardDefinition = {
       name: 'Mock Cat Creature',
       manaCost: '{1}{W}',
       typeLine: 'Creature — Cat Soldier',
       pt: [2, 2],
     };
-    const result = entry(card);
-    expect(result).not.toBeNull();
-    expect(result!.producer?.via).toEqual(expect.any(String));
-    expect(result!.consumer).toBeUndefined();
+    expect(entry(card)).toBe(true);
+    expect(matchesBattlefieldPresenceConsumer(entry.consumerBattlefieldPresence, card)).toBe(false);
   });
 
-  it('CALLABLE: consumer-only match returns real detail (consumer.via set, no producer)', () => {
+  it('CALLABLE: consumer-only match returns false from the callable (producer question only) even though the entry\'s own data field DOES recognize it as a consumer', () => {
     const card: CardDefinition = {
       name: 'Mock Affinity for Cats Spell',
       manaCost: '{3}{W}{W}',
@@ -184,20 +185,29 @@ describe('battlefield-presence-cats sink catalog entry — corpus (mocked CardDe
       costReduction: { perControlled: { amountPerMatch: 1, subtype: 'Cat' } },
       effects: [{ kind: 'pumpAll', predicate: 'creatures-you-control', power: 2, toughness: 2, untilEndOfTurn: true } satisfies Effect],
     };
-    const result = entry(card);
-    expect(result).not.toBeNull();
-    expect(result!.consumer).toEqual({ via: 'battlefieldPresence' });
-    expect(result!.producer).toBeUndefined();
+    expect(entry(card)).toBe(false);
+    expect(matchesBattlefieldPresenceConsumer(entry.consumerBattlefieldPresence, card)).toBe(true);
   });
 
-  it('CALLABLE: no producer or consumer signal at all returns null', () => {
+  it('CALLABLE: no producer signal at all returns false', () => {
     const card: CardDefinition = {
       name: 'Mock Vanilla Spell',
       manaCost: '{1}{W}',
       typeLine: 'Sorcery',
       effects: [{ kind: 'drawCard' } satisfies Effect],
     };
-    expect(entry(card)).toBeNull();
+    expect(entry(card)).toBe(false);
+  });
+
+  it('isPredicateDerived: false for a direct, structural Cat creature (baseline entersBattlefield, not inferred from a sink-derivation predicate)', () => {
+    const card: CardDefinition = {
+      name: 'Mock Cat Creature',
+      manaCost: '{1}{W}',
+      typeLine: 'Creature — Cat Soldier',
+      pt: [2, 2],
+    };
+    expect(entry(card)).toBe(true);
+    expect(entry.isPredicateDerived?.(card)).toBe(false);
   });
 });
 

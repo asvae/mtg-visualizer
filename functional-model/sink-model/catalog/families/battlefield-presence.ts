@@ -56,9 +56,9 @@
 // .requireConsumerForSelfOwnership`'s own doc comment (`entry.ts`) for the
 // full reasoning; unchanged by this refactor.
 import type { CardDefinition } from '../../../card';
-import { matchesBattlefieldPresenceConsumer, matchSink } from '../../match-sink';
+import { matchSink } from '../../match-sink';
 import type { SinkQuery } from '../../sink-query';
-import type { SinkCatalogEntry, SinkFamily, SinkInstance, SinkMatchDetail } from '../entry';
+import type { SinkCatalogEntry, SinkFamily, SinkInstance } from '../entry';
 
 /** Stable SINK FAMILY key shared by every real configured instance — see
  * `SinkCatalogEntry.family`'s own doc comment (`entry.ts`) for why this
@@ -108,32 +108,46 @@ function getName(filter: BattlefieldPresenceFilter): string {
 }
 
 /**
- * The shared factory — `BattlefieldPresenceSink(config)` returns ONE real,
- * fully-configured, invocable `SinkInstance` for `config`. Every consumer
- * this project already has (`sink-catalog-status.ts`, `card-interactions
- * .ts`, the server API route) reads the returned value exactly like any
- * other `SinkCatalogEntry` — `query`/`consumerBattlefieldPresence`/
- * `requireConsumerForSelfOwnership`/`sourceFile` are real, plain data fields
- * on it, not something only reachable by calling it. Calling the returned
- * value directly (`sink(candidate)`) is the NEW capability this factory adds
- * — see `SinkInstance`'s own doc comment (`entry.ts`) for the full
- * "additive, not a replacement" reasoning. A real `SinkFamily<...>` value.
+ * The shared factory — `BattlefieldPresenceSink(config)` returns a real,
+ * fully-configured, invocable `SinkInstance` for `config`, wrapped in a
+ * single-element array (2026-09-19 — `SinkFamily<Config>`'s own return type
+ * widened to `SinkInstance[]` for `CountersSink`'s own real "one
+ * `definition` can derive more than one distinct instance" case; see
+ * `entry.ts`'s own `SinkFamily` doc comment for the full writeup — this
+ * family has no real multi-instance-per-config case of its own today, so
+ * this is a genuine, structural degenerate case of that same contract, NOT
+ * a migration of this family's own internal matching logic, which stays
+ * exactly as it was). Every consumer this project already has
+ * (`sink-catalog-status.ts`, `card-interactions.ts`, the server API route)
+ * reads the returned instance exactly like any other `SinkCatalogEntry` —
+ * `query`/`consumerBattlefieldPresence`/`requireConsumerForSelfOwnership`/
+ * `sourceFile` are real, plain data fields on it, not something only
+ * reachable by calling it.
+ *
+ * **`sink(candidate)` returns a plain `boolean` — the PRODUCER question
+ * only** (2026-09-19, conforming edit for the shared `SinkInstance`
+ * contract's own boolean-return rewrite — see `entry.ts`'s own
+ * `SinkInstance` doc comment for the full writeup; this family's own
+ * internal `SinkQuery`/`matchSink`-based matching logic is otherwise
+ * untouched, deliberately out of scope for this pass, same as the
+ * pre-existing "Counters migrated, Battlefield-presence hasn't yet"
+ * precedent `SINK_MODEL_DESIGN.md` already documents). `isPredicateDerived`
+ * is a real, non-guessed accessor — `matchSink` already computes
+ * `predicateDerived` internally, simply re-exposed here rather than
+ * invented. The CONSUMER check (`matchesBattlefieldPresenceConsumer`) is no
+ * longer called from inside this callable at all — a caller reads
+ * `entry.consumerBattlefieldPresence` (still a real, plain data field on the
+ * returned instance, unchanged) and calls that check directly, same as
+ * every other consumer-signal field on any `SinkCatalogEntry`.
  */
 export const BattlefieldPresenceSink: SinkFamily<BattlefieldPresenceSinkConfig> = (config) => {
   const { slug, query: queryWithoutCategory, filter } = config;
   const query: SinkQuery = { ...queryWithoutCategory, category: getName(filter) };
 
-  const sink = ((candidate: CardDefinition, root: string = process.cwd()): SinkMatchDetail | null => {
-    const producer = matchSink(query, candidate, root);
-    const consumerMatched = matchesBattlefieldPresenceConsumer(filter, candidate);
-    if (!producer.matched && !consumerMatched) return null;
-    const detail: SinkMatchDetail = {};
-    // `matchSink` always sets `via` alongside `matched: true` — see its own
-    // `SinkMatchResult` doc comment (`match-sink.ts`).
-    if (producer.matched) detail.producer = { via: producer.via!, predicateDerived: producer.predicateDerived };
-    if (consumerMatched) detail.consumer = { via: 'battlefieldPresence' };
-    return detail;
+  const sink = ((candidate: CardDefinition, root: string = process.cwd()): boolean => {
+    return matchSink(query, candidate, root).matched;
   }) as SinkInstance;
+  sink.isPredicateDerived = (candidate: CardDefinition, root: string = process.cwd()) => !!matchSink(query, candidate, root).predicateDerived;
 
   const data: SinkCatalogEntry = {
     slug,
@@ -143,5 +157,5 @@ export const BattlefieldPresenceSink: SinkFamily<BattlefieldPresenceSinkConfig> 
     family: FAMILY,
   };
   Object.assign(sink, data);
-  return sink;
+  return [sink];
 };

@@ -24,7 +24,7 @@ import { SINK_CATALOG } from '../../../functional-model/sink-model/catalog/index
 import type { SinkInstance } from '../../../functional-model/sink-model/catalog/entry';
 import type { SinkQuery } from '../../../functional-model/sink-model/sink-query';
 import { readFunctionalModelFile, type SourceFileResult } from '../../../functional-model/source-files';
-import { matchSink, matchesConsumerTriggerNames, matchesConsumerTriggerOn } from '../../../functional-model/sink-model/match-sink';
+import { matchSink, matchesConsumerTriggerNames, matchesConsumerTriggerOn, matchesBattlefieldPresenceConsumer } from '../../../functional-model/sink-model/match-sink';
 import { loadFdnDefinitionPool } from '../../utils/fdnDefinitionPool';
 import { resolveFunctionalModelCardMeta } from '../../utils/cardMeta';
 import type { CardDefinition } from '../../../functional-model/card';
@@ -229,11 +229,13 @@ export interface SinkCatalogPageEntry {
  * event. A real `SinkInstance` (every current `battlefield-presence-*`/
  * `counters-*` member, built by the `BattlefieldPresenceSink`/`CountersSink`
  * factories, `sink-model/catalog/entry.ts`) is directly CALLABLE and answers
- * this (plus every declared sink-candidate signal, uniformly, whatever kind
- * it is) in one real match-detail call; a plain, non-callable singleton
- * entry (`lifegain`/`graveyard-fodder`/`etb`) falls back to the bare
- * `matchSink(instance.query, ...)` check every pre-family-refactor call site
- * already used. */
+ * this with a plain `boolean` (2026-09-19 — see `SinkInstance`'s own doc
+ * comment for the full "3rd real design iteration on this callable
+ * contract" writeup: the callable answers the PRODUCER question only now,
+ * never a combined producer-or-consumer question); a plain, non-callable
+ * singleton entry (`lifegain`/`graveyard-fodder`/`etb`) falls back to the
+ * bare `matchSink(instance.query, ...)` check every pre-family-refactor call
+ * site already used. */
 function instanceProducerMatched(instance: (typeof SINK_CATALOG)[number], candidate: CardDefinition, root: string): boolean {
   // `SINK_CATALOG`'s own inferred element type collapses to the plain,
   // non-callable `SinkCatalogEntry` shape (every real `SinkInstance` IS
@@ -243,7 +245,7 @@ function instanceProducerMatched(instance: (typeof SINK_CATALOG)[number], candid
   // `counters-*` members really are callable, see `catalog/entry.ts`'s own
   // `SinkInstance` doc comment), it's only the STATIC type that needs an
   // explicit `unknown`-mediated cast to recover the call signature.
-  if (typeof instance === 'function') return !!(instance as unknown as SinkInstance)(candidate, root)?.producer;
+  if (typeof instance === 'function') return (instance as unknown as SinkInstance)(candidate, root);
   // Non-callable branch is always a plain singleton entry (`lifegain`/
   // `graveyard-fodder`/`etb`) — those always carry a real `query` (only a
   // callable `SinkInstance` — `counters-*` today — may omit it); the `!` is
@@ -267,19 +269,34 @@ function instanceHasConsumerSignal(instance: (typeof SINK_CATALOG)[number]): boo
 
 /** True iff `candidate` is a real SINK CANDIDATE for this ONE real
  * instance — it structurally satisfies the instance's own sink-candidate
- * signal, whichever kind it declares. A callable `SinkInstance` answers this
- * uniformly (including `consumerBattlefieldPresence`, which the bare
- * `matchesConsumerTriggerNames`/`matchesConsumerTriggerOn` pair below has no
- * knowledge of at all — this is also the real fix for `.claude/contracts/
- * card-schema.md`'s own previously-flagged "`computeRealMatches` doesn't yet
- * know about `consumerBattlefieldPresence`" gap, for every family member,
- * for free); a plain singleton entry falls back to the same trigger-name/
- * trigger-on checks as before. */
-function instanceConsumerMatched(instance: (typeof SINK_CATALOG)[number], candidate: CardDefinition, root: string): boolean {
-  // Same `unknown`-mediated cast as `instanceProducerMatched` above — see
-  // its own comment.
-  if (typeof instance === 'function') return !!(instance as unknown as SinkInstance)(candidate, root)?.consumer;
-  return matchesConsumerTriggerNames(instance.consumerTriggerNames, candidate) || matchesConsumerTriggerOn(instance.consumerTriggerOn, candidate);
+ * signal, whichever kind it declares.
+ *
+ * **2026-09-19, boolean-return rewrite — no longer routed through the
+ * callable at all, whether `instance` is callable or not.** The old
+ * callable contract answered a combined producer-or-consumer question
+ * (`SinkMatchDetail | null`); the new one (`SinkInstance`, see its own doc
+ * comment, `sink-model/catalog/entry.ts`) answers the PRODUCER question
+ * only, as a plain `boolean`. Every consumer-side signal
+ * (`consumerTriggerNames`/`consumerTriggerOn`/`consumerBattlefieldPresence`)
+ * is instead read directly off `instance`'s own plain DATA fields — present
+ * uniformly whether `instance` happens to be callable or not, since a
+ * family factory `Object.assign`s these fields onto the returned function
+ * value the exact same way a plain singleton entry (`lifegain`/
+ * `graveyard-fodder`/`etb`) carries them as plain object properties — so
+ * there is no real branch needed here anymore at all. Checking
+ * `matchesBattlefieldPresenceConsumer` unconditionally (not just for the
+ * former "callable" branch) is what keeps this the real fix for
+ * `.claude/contracts/card-schema.md`'s own previously-flagged
+ * "`computeRealMatches` doesn't yet know about `consumerBattlefieldPresence`"
+ * gap — a plain, non-callable entry never has that field set (`undefined`),
+ * and `matchesBattlefieldPresenceConsumer` already declines outright on
+ * `undefined`, so this is safe for every entry shape uniformly. */
+function instanceConsumerMatched(instance: (typeof SINK_CATALOG)[number], candidate: CardDefinition): boolean {
+  return (
+    matchesConsumerTriggerNames(instance.consumerTriggerNames, candidate) ||
+    matchesConsumerTriggerOn(instance.consumerTriggerOn, candidate) ||
+    matchesBattlefieldPresenceConsumer(instance.consumerBattlefieldPresence, candidate)
+  );
 }
 
 /**
@@ -315,7 +332,7 @@ async function computeRealMatches(members: (typeof SINK_CATALOG)[number][], pool
   if (members.some(instanceHasConsumerSignal)) {
     const sinkCandidateNames = new Set<string>();
     for (const candidate of pool) {
-      if (members.some((m) => instanceConsumerMatched(m, candidate, root))) sinkCandidateNames.add(candidate.name);
+      if (members.some((m) => instanceConsumerMatched(m, candidate))) sinkCandidateNames.add(candidate.name);
     }
     result.sinkCandidateMatches = await enrichMatchNames([...sinkCandidateNames].sort());
   }

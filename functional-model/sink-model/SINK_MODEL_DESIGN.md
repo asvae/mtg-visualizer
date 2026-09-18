@@ -445,6 +445,138 @@ edge cases for the `on`-field exclusion rule).
 pass (same "Counters only, one family at a time" precedent "SinkQuery
 becomes optional" above already established).
 
+### 2d / 3b. The callable contract returns a plain `boolean` (producer-only); `SinkFamily<Config>` returns `SinkInstance[]` (2026-09-19, later still)
+
+The 3rd real design iteration on the `SinkInstance` callable contract this
+week: `SinkQuery`-based -> config-object-based -> `CardDefinition`-based
+(sections 2b/2c above) -> now **boolean-return-based**. The user's own
+explicit target shape, verbatim:
+```ts
+const sinkInstance = SinkFamily(sinkDefinition)
+const booleanWeLookFor = sinkInstance(sourceCandidateDefinition)
+```
+Two earlier proposed compromises — a boolean call plus separate
+producer/consumer accessors; a call returning an all-boolean-fields object —
+were both explicitly rejected ("both complete bullshit"). Read literally:
+the call itself must return `true`/`false`, full stop.
+
+**Section 3's own "`instance(candidate, root?) => SinkMatchDetail | null`"
+is now HISTORICAL, not current** — left unedited above per this doc's own
+"keep the running history intact" convention (same treatment section 2's
+own now-stale `SinkFamily<Config> = (config) => SinkInstance` line already
+got from 2b/2c). The real, current contract is:
+
+```ts
+type SinkInstance = SinkCatalogEntry &
+  ((candidate: CardDefinition, root?: string) => boolean) & {
+    isPredicateDerived?: (candidate: CardDefinition, root?: string) => boolean;
+  };
+```
+
+**The call answers the PRODUCER question ONLY** — "does `candidate` itself
+structurally produce this sink's event" — deliberately NOT the combined
+producer-or-consumer question `SinkMatchDetail` used to answer. Verified
+against every real consumer of the old combined return before scoping this
+as a genuine simplification, not a loss of functionality:
+- The CONSUMER check already lived as a fully separate, already-
+  boolean-returning function (`matchesConsumerTriggerNames`/
+  `matchesConsumerTriggerOn`/`matchesBattlefieldPresenceConsumer`,
+  `match-sink.ts`) — never actually routed through the callable for
+  `counters.test.ts`'s own "SINK CANDIDATE" cases in the first place.
+- Every real production reader of the old combined return
+  (`card-interactions.ts`'s `matchEntry`, `server/api/sink-catalog/
+  index.get.ts`'s `instanceProducerMatched`/`instanceConsumerMatched`)
+  ALREADY reduced it to a boolean via `!!` immediately.
+- `.via` (the debug string) was read nowhere in `app/`/`server/` —
+  confirmed by grep, zero hits, safe to delete along with the rest of
+  `SinkMatchDetail` (which no longer exists as a type at all).
+
+Both real consumer-side call sites (`card-interactions.ts`'s `matchEntry`,
+`server/api/sink-catalog/index.get.ts`'s `instanceConsumerMatched`) now call
+the three consumer-check functions DIRECTLY against `entry`'s own plain data
+fields (`consumerTriggerNames`/`consumerTriggerOn`/
+`consumerBattlefieldPresence`), uniformly whether `entry` is callable or
+not — a callable `SinkInstance` carries these same fields too (assigned by
+its factory alongside `slug`/`query`/...), so there's no real distinction
+left to branch on for the consumer question at all.
+
+**`predicateDerived` survives as `SinkInstance.isPredicateDerived`, a
+separate, optional accessor** — still genuinely needed:
+`card-interactions.ts`'s `selfDirectProducerMatch = self.producerMatched &&
+!self.predicateDerived` still distinguishes "this card's own authored
+effect literally matches" from "this only matched via an inferred/
+predicate-derived occurrence" (the Healer's Hawk/Felidar Savior
+self-ownership fix, an earlier real bug fix this doc's own history already
+covers) — a bare boolean genuinely can't carry that nuance, so it moved out
+to its own small accessor rather than being dropped. `CountersSink`
+re-derives it from its own `producerPredicate`'s occurrence;
+`BattlefieldPresenceSink` re-exposes `matchSink`'s own already-computed
+`predicateDerived` field — both real, non-guessed implementations, not
+placeholder stubs.
+
+**`SinkFamily<Config>` now returns `SinkInstance[]`, not one
+`SinkInstance`** — a second, live user correction on the same design: "we
+need array handling here obviously." A single driving `CardDefinition` is
+not guaranteed to derive only ONE distinct sink instance.
+`CountersSink(definition)` concretely: a definition with `putCounter`-family
+effects of more than one distinct `counterType` derives one `SinkInstance`
+PER distinct `counterType` (`deriveCounterTypes`, plural — replaces the old
+`deriveCounterType`, singular/first-match-wins, which silently discarded any
+non-first counter type found on the same definition). Exemplar of Light
+(the only real driving definition in the pool today) has exactly one
+distinct `counterType`, so this is a single-element array in practice —
+zero real behavior change for today's pool, only a widened, honest
+contract.
+
+**The general dedup principle (stated explicitly, per live user correction,
+for whichever family migrates to this array-returning shape next)**: "we
+should not have any absolutely identical sinks (i.e. when card has 2
+locations for exactly the same effect), but any difference should create
+separate sink." Two occurrences on the same definition that would derive the
+exact SAME instance (e.g. the same `counterType` found both as a top-level
+effect and inside a trigger) collapse to ONE instance in the returned array,
+never a duplicate; a genuine difference (a different `counterType`) produces
+a separate instance. For `CountersSink` specifically, `counterType` is the
+COMPLETE identity key for an instance — every other derived field
+(`slug`/`category`/`consumerTriggerNames`) is a pure function of
+`counterType` plus the whole `definition`, never of which specific
+occurrence produced that `counterType` — so deduping on the raw
+`counterType` string (a `Set`) is the correct and COMPLETE implementation of
+this rule for this family, not an approximation of it. A future family whose
+own instance identity depends on more than one field would need its own,
+wider dedup key (whatever fields actually determine THAT family's instance
+identity), not this same single-string shortcut.
+
+`BattlefieldPresenceSink` — conforming edit only, per this pass's explicit
+scope: its own internal `SinkQuery`/`matchSink`-based matching logic is
+UNCHANGED (still not migrated to the direct-inspection shape sections
+2b/2c established for Counters). Its callable now returns a plain `boolean`
+(producer-only, via `matchSink(query, candidate, root).matched`) and gained
+its own `isPredicateDerived` accessor; its factory now wraps its one real
+instance in a single-element array (`return [sink];`) — a genuine,
+structural degenerate case of the widened `SinkFamily<Config>` contract, not
+a special exception to it. All 3 real instance files
+(`battlefield-presence-{cats,creatures,hare-apparent}.ts`) now read
+`BattlefieldPresenceSink({...})[0]!`; `catalog/counters-plus1plus1.ts` reads
+`CountersSink(exemplarOfLight)[0]!` — both real, structurally-justified
+assertions (each config's own driving definition is fixed, known content,
+not runtime-arbitrary input), not guesses.
+
+**Zero behavior regression, live-verified** (real dev server): `GET
+/api/sink-catalog` — `counters`: `blue`, 19 source-candidate / 1
+sink-candidate (Exemplar of Light), byte-identical to the pre-existing
+documented numbers; `battlefield-presence`: `blue`, 111 source-candidate / 4
+sink-candidate, byte-identical. `GET /api/card/fdn/11`
+(`functionalModel.cardInteractions`): Exemplar of Light's own `"+1/+1"` row
+still `count: 19`, self included. `GET /api/card/fdn/6` (Claws Out):
+`"Creatures"` row `count: 111`, `"Cats"` row `count: 10`. `/app/engine/
+sinks/counters`, `/app/engine/sinks/counters-plus1plus1`, `/app/engine/
+cards/fdn/11` all still resolve 200. `npx vitest run functional-model`: 120
+files, 1347 passed / 5 skipped (net +3 vs. the prior 1344/5 baseline — new
+`isPredicateDerived` coverage plus 2 new array/dedup derivation cases in
+`counters.test.ts`, zero shrink). `npm run typecheck`: unchanged
+7-diagnostic pre-existing baseline, zero new.
+
 ## Open items
 
 - No further authoring gap found while writing this doc — the four

@@ -249,41 +249,63 @@ import { isSinkCatalogEntryUsable } from './sink-catalog-status';
 
 /**
  * Real producer/consumer match detail for ONE `SINK_CATALOG` entry against
- * ONE candidate — uniform whether `entry` is a plain, non-callable
- * `SinkCatalogEntry` (`lifegain`/`graveyard-fodder`/`etb`, still matched via
- * a direct `matchSink(entry.query, ...)`/`matchesConsumerTriggerNames`/
- * `matchesConsumerTriggerOn`/`matchesBattlefieldPresenceConsumer` call, same
- * as always) or a real, invocable `SinkInstance` (every `battlefield-
- * presence-*`/`counters-*` member, built by `BattlefieldPresenceSink`/
- * `CountersSink`) — a callable entry answers both in ONE real
- * `entry(candidate, root)` call instead (mirrors `server/api/sink-catalog/
- * index.get.ts`'s own `instanceProducerMatched`/`instanceConsumerMatched`
- * pair, the same real pattern already established there for the identical
- * "SinkCatalogEntry vs. callable SinkInstance" distinction).
+ * ONE candidate.
  *
- * **Why this is now load-bearing, not just a style choice (2026-09-18,
- * `CountersSink` producer-mechanism rewrite):** `CountersSink`'s own entry no
- * longer carries a `query` at all (`SinkCatalogEntry.query` is now optional —
- * see that field's own doc comment, `sink-model/catalog/entry.ts`) — calling
+ * **PRODUCER** — uniform whether `entry` is a plain, non-callable
+ * `SinkCatalogEntry` (`lifegain`/`graveyard-fodder`/`etb`, still matched via
+ * a direct `matchSink(entry.query, ...)` call, same as always) or a real,
+ * invocable `SinkInstance` (every `battlefield-presence-*`/`counters-*`
+ * member, built by `BattlefieldPresenceSink`/`CountersSink`) — a callable
+ * entry answers the producer question with its own plain-boolean call
+ * (`entry(candidate, root)`, 2026-09-19 — see `sink-model/catalog/entry.ts`'s
+ * own `SinkInstance` doc comment for the full "3rd real design iteration on
+ * this callable contract" writeup); `predicateDerived` comes from the
+ * callable's own `isPredicateDerived` accessor for that case,
+ * `matchSink(...).predicateDerived` for the non-callable case.
+ *
+ * **Why routing through the callable is still load-bearing for the
+ * producer question specifically (2026-09-18, `CountersSink`
+ * producer-mechanism rewrite):** `CountersSink`'s own entries carry no
+ * `query` at all (`SinkCatalogEntry.query` is optional — see that field's
+ * own doc comment, `sink-model/catalog/entry.ts`) — calling
  * `matchSink(entry.query, ...)` directly for a `counters-*` entry would pass
  * `undefined` and throw. Every real `SinkInstance` (family-built, including
  * `counters-*`) is ALWAYS callable, so routing through `entry(candidate,
- * root)` for those and falling back to the old direct calls only for a
- * plain, non-callable `SinkCatalogEntry` (which still always has a real
- * `query`) is both correct today and forward-compatible with a future family
- * that drops `query` the same way.
+ * root)` for those and falling back to the old direct `matchSink` call only
+ * for a plain, non-callable `SinkCatalogEntry` (which still always has a
+ * real `query`) is both correct today and forward-compatible with a future
+ * family that drops `query` the same way.
+ *
+ * **CONSUMER (2026-09-19, boolean-return rewrite)** — no longer routed
+ * through the callable at ALL, whether `entry` is callable or not: the
+ * three consumer-check functions (`matchesConsumerTriggerNames`/
+ * `matchesConsumerTriggerOn`/`matchesBattlefieldPresenceConsumer`) are
+ * called directly against `entry`'s own plain data fields
+ * (`consumerTriggerNames`/`consumerTriggerOn`/`consumerBattlefieldPresence`)
+ * uniformly — a callable `SinkInstance` carries these same data fields too
+ * (the factory `Object.assign`s them onto the function value alongside
+ * `slug`/`query`/...), so there is no real distinction left to branch on for
+ * the consumer side at all anymore. This is the SAME real fix `server/api/
+ * sink-catalog/index.get.ts`'s own `instanceConsumerMatched` needed for the
+ * identical reason, applied here too.
  */
 function matchEntry(entry: (typeof SINK_CATALOG)[number], candidate: CardDefinition, root: string): { producerMatched: boolean; predicateDerived: boolean; consumerMatched: boolean } {
+  let producerMatched: boolean;
+  let predicateDerived: boolean;
   if (typeof entry === 'function') {
-    const detail = (entry as unknown as SinkInstance)(candidate, root);
-    return { producerMatched: !!detail?.producer, predicateDerived: !!detail?.producer?.predicateDerived, consumerMatched: !!detail?.consumer };
+    const instance = entry as unknown as SinkInstance;
+    producerMatched = instance(candidate, root);
+    predicateDerived = producerMatched && !!instance.isPredicateDerived?.(candidate, root);
+  } else {
+    const producer = matchSink(entry.query!, candidate, root);
+    producerMatched = producer.matched;
+    predicateDerived = !!producer.predicateDerived;
   }
-  const producer = matchSink(entry.query!, candidate, root);
   const consumerMatched =
     matchesConsumerTriggerNames(entry.consumerTriggerNames, candidate) ||
     matchesConsumerTriggerOn(entry.consumerTriggerOn, candidate) ||
     matchesBattlefieldPresenceConsumer(entry.consumerBattlefieldPresence, candidate);
-  return { producerMatched: producer.matched, predicateDerived: !!producer.predicateDerived, consumerMatched };
+  return { producerMatched, predicateDerived, consumerMatched };
 }
 
 export interface CardInteractionCategory {

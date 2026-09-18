@@ -138,9 +138,38 @@
 // vacuously satisfying this query. The default `selfDirectProducerMatch ||
 // selfConsumerMatch` rule (`card-interactions.ts`) is correct here
 // unmodified.
+//
+// **2026-09-19, later still — two more real corrections, same day, on top
+// of the "takes a `CardDefinition` directly" rewrite above:**
+// 1. **Boolean-return callable contract.** `CountersSink(definition)`'s own
+//    returned instances now answer `instance(candidate)` with a plain
+//    `boolean` (the PRODUCER question only), not the old combined
+//    `SinkMatchDetail | null`. `isPredicateDerived` is a new, separate
+//    accessor carrying the one real piece of nuance a bare boolean can't
+//    (see `entry.ts`'s own `SinkInstance` doc comment for the full "3rd
+//    real design iteration" writeup, and `buildCounterInstance`/
+//    `producerPredicate` below for the real implementation. The old
+//    `deriveCounterType` (singular, first-match-wins) is now
+//    `deriveCounterTypes` (plural — see next point); `withPredicates` (the
+//    old `{producer, consumer}` pair) is now just `producerPredicate` (the
+//    consumer half moved out of this file entirely — callers check
+//    `instance.consumerTriggerNames` directly via
+//    `matchesConsumerTriggerNames`, imported by THEM, not by this file
+//    anymore).
+// 2. **`CountersSink` returns `SinkInstance[]`, not one `SinkInstance`** —
+//    live user correction: "we need array handling here obviously." A
+//    driving `definition` derives one `SinkInstance` PER DISTINCT
+//    `counterType` found on it, not just the first — see
+//    `deriveCounterTypes`'s own doc comment for the full dedup-rule
+//    writeup (exact-duplicate occurrences of the SAME `counterType`
+//    collapse to one instance; a genuinely different `counterType` value
+//    gets its own). Exemplar of Light (the only real driving definition in
+//    the pool today) has exactly one distinct `counterType`, so this is a
+//    single-element array in practice today — zero real behavior change,
+//    only a widened, honest contract.
 import type { CardDefinition, Effect } from '../../../card';
-import { deriveOccurrences, matchesConsumerTriggerNames } from '../../match-sink';
-import type { SinkCatalogEntry, SinkFamily, SinkInstance, SinkMatchDetail } from '../entry';
+import { deriveOccurrences } from '../../match-sink';
+import type { SinkCatalogEntry, SinkFamily, SinkInstance } from '../entry';
 
 /** Stable SINK FAMILY key shared by every real configured instance — see
  * `SinkCatalogEntry.family`'s own doc comment (`entry.ts`) for why this
@@ -162,34 +191,65 @@ function counterTypeOfEffect(effect: Effect): string | undefined {
 }
 
 /**
- * `counterType` derivation (2026-09-19) — walks `definition.effects` AND
+ * `counterType`S derivation (2026-09-19, widened from a single-value
+ * derivation to a real array — live correction: "we need array handling
+ * here obviously" — see `entry.ts`'s own `SinkFamily` doc comment for the
+ * full "`SinkFamily(definition)` returns `SinkInstance[]`, not one
+ * `SinkInstance`" rewrite writeup). Walks `definition.effects` AND
  * `definition.triggers[].effects` (the same two real places
  * `deriveOccurrences`'s own `walkEffects` looks at runtime for an arbitrary
  * candidate, scoped down here to just the ONE driving definition this
- * factory is being configured from) for the first real
- * `putCounter`/`putCounterTarget`/`putCounterAll` effect, and returns its
- * own `counterType` string. Exemplar of Light's own `onLifeGain` trigger
+ * factory is being configured from) for EVERY real
+ * `putCounter`/`putCounterTarget`/`putCounterAll` effect, and returns every
+ * DISTINCT `counterType` string found, in first-seen order — not just the
+ * first one. Exemplar of Light's own `onLifeGain` trigger
  * (`{kind:'putCounter', counterType:'+1/+1', ...}`) is the one real hit in
- * the pool today. Throws if `definition` has no real counter-granting
- * effect at all — `CountersSink` only makes sense called with a card that
- * genuinely IS this family's own driving producer; silently returning
- * nothing would hide a real authoring mistake instead of surfacing it.
+ * the pool today, so this still resolves to the single-element `['+1/+1']`
+ * for the one real card driving this family — zero behavior change for
+ * today's real pool, only a widened contract for whenever a second,
+ * differently-typed counter-granting effect lands on the same definition.
+ *
+ * **Dedup rule (2026-09-19, live correction — user's own explicit
+ * framing)**: "we should not have any absolutely identical sinks (i.e. when
+ * card has 2 locations for exactly the same effect), but any difference
+ * should create separate sink." For THIS family, `counterType` is the
+ * complete identity key — every other derived field a `CountersSink`
+ * instance carries (`slug`/`category`/`consumerTriggerNames`) is a pure
+ * function of `counterType` plus the whole `definition` (never of WHICH
+ * specific occurrence produced that `counterType`), so two occurrences
+ * sharing the same `counterType` genuinely produce the exact same instance
+ * and must collapse to one; only a genuinely different `counterType` value
+ * is a real difference worth a second instance. Deduping on the raw string
+ * itself (a `Set`) is therefore the correct and COMPLETE implementation of
+ * that general rule for this family — not an approximation of it. A future
+ * family whose own instance identity depends on more than one field would
+ * need its own, wider dedup key (whatever fields actually determine ITS
+ * instance identity), not this same single-string shortcut.
+ *
+ * Throws if `definition` has no real counter-granting effect at all —
+ * `CountersSink` only makes sense called with a card that genuinely IS this
+ * family's own driving producer; silently returning nothing would hide a
+ * real authoring mistake instead of surfacing it.
  */
-function deriveCounterType(definition: CardDefinition): string {
+function deriveCounterTypes(definition: CardDefinition): string[] {
+  const seen = new Set<string>();
   for (const effect of definition.effects ?? []) {
     const counterType = counterTypeOfEffect(effect);
-    if (counterType) return counterType;
+    if (counterType) seen.add(counterType);
   }
   for (const trigger of definition.triggers ?? []) {
     for (const effect of trigger.effects) {
       const counterType = counterTypeOfEffect(effect);
-      if (counterType) return counterType;
+      if (counterType) seen.add(counterType);
     }
   }
-  throw new Error(
-    `CountersSink: "${definition.name}" has no real putCounter/putCounterTarget/putCounterAll effect ` +
-      `(checked definition.effects and definition.triggers[].effects) — cannot derive a counterType from it.`,
-  );
+  if (seen.size === 0) {
+    throw new Error(
+      `CountersSink: "${definition.name}" has no real putCounter/putCounterTarget/putCounterAll effect ` +
+        `(checked definition.effects and definition.triggers[].effects) — cannot derive a counterType from it.`,
+    );
+  }
+  return [...seen];
 }
 
 /**
@@ -281,76 +341,80 @@ function deriveConsumerTriggerNames(definition: CardDefinition): string[] | unde
 }
 
 /**
- * The MIDDLE step of the `Self Definition → Sink → (Predicates) →
+ * The MIDDLE step of the `Self Definition -> Sink -> (Predicates) ->
  * Candidate Definition` chain (`SINK_MODEL_DESIGN.md`), made a real, named
  * piece of code instead of anonymous matching logic buried inside the
- * sink's own callable closure (2026-09-19, per the user's own diagram:
- * `SinkFamily(sinkCandidateDefinition) -> (Predicates) -> Candidate
- * Definition`). `withPredicates(counterType, consumerTriggerNames)` closes
- * over this ONE configured instance's own derived fields and returns two
- * named predicate functions, each answering ONE real structural question
- * about an arbitrary `candidate` — `producer`/`consumer` mirror
- * `SinkMatchDetail`'s own two fields 1:1, and `CountersSink` below calls
- * both instead of inlining the checks directly in its own closure.
+ * sink's own callable closure. `producerPredicate(counterType)` closes over
+ * this ONE configured instance's own `counterType` and returns the ONE real
+ * predicate function `buildCounterInstance` below needs.
+ *
+ * **2026-09-19, later still, boolean-return rewrite** — this used to be
+ * `withPredicates(counterType, consumerTriggerNames)`, returning a
+ * `{producer, consumer}` pair (`consumer` calling `matchesConsumerTriggerNames`
+ * internally). The CONSUMER half is gone from here entirely now: the
+ * callable itself only ever answers the producer question (a plain
+ * `boolean` — see `entry.ts`'s own `SinkInstance` doc comment for the full
+ * "3rd real design iteration on this callable contract" writeup), and the
+ * consumer check is called directly, against this instance's own plain
+ * `consumerTriggerNames` DATA field (still assigned onto the returned
+ * `SinkInstance` below, unchanged), by whichever caller actually needs it
+ * (`card-interactions.ts`, `server/api/sink-catalog/index.get.ts`) — not
+ * funneled through this family's own closure at all anymore.
  */
-function withPredicates(counterType: string, consumerTriggerNames: string[] | undefined) {
-  return {
-    /** Does `candidate` itself structurally PUT a counter of `counterType`?
-     * Direct structural inspection — no `SinkQuery`/`matchSink` involved
-     * (see this file's own header for the full 2026-09-18 rewrite
-     * writeup). `deriveOccurrences` IS the real "produced from the card
-     * definition" machinery (walks `candidate`'s own effects/triggers/
-     * program AST) — reused here directly rather than reimplemented. */
-    producer(candidate: CardDefinition, root: string) {
-      return deriveOccurrences(candidate, root).find((occ) => {
-        if (occ.event !== 'putCounter' || occ.counterType !== counterType) return false;
-        // The one real constraint the old `SinkQuery{controller:'you'}` field
-        // contributed — mirrors `match-sink.ts`'s own private
-        // `effectiveController`/`sidesCompatible` helpers byte-for-byte in
-        // logic (not imported — this change must not touch `match-sink.ts`'s
-        // own exports): a `putCounter`/`putCounterTarget`/`putCounterAll`
-        // occurrence never sets `controller` directly (only a `target:'self'`
-        // self-directed `putCounter` implies `'you'`), so an occurrence with
-        // NO resolvable controller at all is compatible by construction; only
-        // an occurrence explicitly resolving to `'opp'` (a program-AST-derived
-        // broadcast over an `opponents` pool) is genuinely incompatible.
-        const controller = occ.controller ?? (occ.subject === 'self' || occ.target === 'self' ? 'you' : undefined);
-        return !controller || controller === 'you';
-      });
-    },
-    /** Does `candidate` structurally REACT to a counter being put on it —
-     * one of its own trigger names matching this instance's own derived
-     * `consumerTriggerNames` (see `deriveConsumerTriggerNames` above)? */
-    consumer(candidate: CardDefinition) {
-      return matchesConsumerTriggerNames(consumerTriggerNames, candidate);
-    },
+function producerPredicate(counterType: string) {
+  /** Does `candidate` itself structurally PUT a counter of `counterType`?
+   * Direct structural inspection — no `SinkQuery`/`matchSink` involved (see
+   * this file's own header for the full 2026-09-18 rewrite writeup).
+   * `deriveOccurrences` IS the real "produced from the card definition"
+   * machinery (walks `candidate`'s own effects/triggers/program AST) —
+   * reused here directly rather than reimplemented. */
+  return (candidate: CardDefinition, root: string) => {
+    return deriveOccurrences(candidate, root).find((occ) => {
+      if (occ.event !== 'putCounter' || occ.counterType !== counterType) return false;
+      // The one real constraint the old `SinkQuery{controller:'you'}` field
+      // contributed — mirrors `match-sink.ts`'s own private
+      // `effectiveController`/`sidesCompatible` helpers byte-for-byte in
+      // logic (not imported — this change must not touch `match-sink.ts`'s
+      // own exports): a `putCounter`/`putCounterTarget`/`putCounterAll`
+      // occurrence never sets `controller` directly (only a `target:'self'`
+      // self-directed `putCounter` implies `'you'`), so an occurrence with
+      // NO resolvable controller at all is compatible by construction; only
+      // an occurrence explicitly resolving to `'opp'` (a program-AST-derived
+      // broadcast over an `opponents` pool) is genuinely incompatible.
+      const controller = occ.controller ?? (occ.subject === 'self' || occ.target === 'self' ? 'you' : undefined);
+      return !controller || controller === 'you';
+    });
   };
 }
 
 /**
- * The shared factory — `CountersSink(definition)` derives, from
- * `definition`'s own real structural fields, and returns ONE real, fully-
- * configured, invocable `SinkInstance` for the counter type `definition`
- * itself grants (see this file's own header for the full 2026-09-19
- * "takes a real `CardDefinition`, not a config object" rewrite writeup). A
- * real `SinkFamily<CardDefinition>` value.
+ * Builds ONE real, fully-configured, invocable `SinkInstance` for exactly
+ * one `counterType` derived off `definition` (2026-09-19, split out of the
+ * factory body itself so `CountersSink` below can call this once per
+ * distinct `counterType` — see `deriveCounterTypes`'s own doc comment for
+ * the full array-of-instances rewrite writeup). `consumerTriggerNames` is
+ * computed ONCE by the caller (off `definition` as a whole, not per
+ * `counterType` — see `deriveConsumerTriggerNames`'s own doc comment for why
+ * this stays deliberately NOT counter-type-aware) and passed in rather than
+ * re-derived per instance.
  */
-export const CountersSink: SinkFamily<CardDefinition> = (definition) => {
-  const counterType = deriveCounterType(definition);
+function buildCounterInstance(definition: CardDefinition, counterType: string, consumerTriggerNames: string[] | undefined): SinkInstance {
   const slug = slugForCounterType(counterType);
-  const consumerTriggerNames = deriveConsumerTriggerNames(definition);
   const category = counterType;
-  const predicates = withPredicates(counterType, consumerTriggerNames);
+  const producer = producerPredicate(counterType);
 
-  const sink = ((candidate: CardDefinition, root: string = process.cwd()): SinkMatchDetail | null => {
-    const occurrence = predicates.producer(candidate, root);
-    const consumerMatched = predicates.consumer(candidate);
-    if (!occurrence && !consumerMatched) return null;
-    const detail: SinkMatchDetail = {};
-    if (occurrence) detail.producer = { via: occurrence.via, predicateDerived: occurrence.predicateDerived };
-    if (consumerMatched) detail.consumer = { via: 'triggerName' };
-    return detail;
+  // **2026-09-19, boolean-return rewrite** — the callable itself answers
+  // ONLY the producer question now, as a plain `boolean` (the user's own
+  // explicit target shape — see `entry.ts`'s own `SinkInstance` doc comment
+  // for the full "3rd real design iteration" writeup). `isPredicateDerived`
+  // carries the one real piece of nuance a bare boolean can't (whether the
+  // match came from a sink-derivation predicate rather than a direct
+  // effect/trigger walk) as its own small, separate accessor — `card-
+  // interactions.ts`'s `matchEntry` is the one real caller that needs it.
+  const sink = ((candidate: CardDefinition, root: string = process.cwd()): boolean => {
+    return !!producer(candidate, root);
   }) as SinkInstance;
+  sink.isPredicateDerived = (candidate: CardDefinition, root: string = process.cwd()) => !!producer(candidate, root)?.predicateDerived;
 
   const data: SinkCatalogEntry = {
     slug,
@@ -360,4 +424,24 @@ export const CountersSink: SinkFamily<CardDefinition> = (definition) => {
   };
   Object.assign(sink, data);
   return sink;
+}
+
+/**
+ * The shared factory — `CountersSink(definition)` derives, from
+ * `definition`'s own real structural fields, and returns EVERY real, fully-
+ * configured, invocable `SinkInstance` for each DISTINCT counter type
+ * `definition` itself grants (2026-09-19, widened from returning one
+ * `SinkInstance` to `SinkInstance[]` — see `deriveCounterTypes`'s own doc
+ * comment for the full array/dedup rewrite writeup, and this file's own
+ * header for the earlier 2026-09-19 "takes a real `CardDefinition`, not a
+ * config object" rewrite). Exemplar of Light (the one real driving
+ * definition in the pool today) derives exactly one distinct `counterType`
+ * (`'+1/+1'`), so this resolves to a single-element array — zero real
+ * behavior change for today's pool. A real `SinkFamily<CardDefinition>`
+ * value.
+ */
+export const CountersSink: SinkFamily<CardDefinition> = (definition) => {
+  const counterTypes = deriveCounterTypes(definition);
+  const consumerTriggerNames = deriveConsumerTriggerNames(definition);
+  return counterTypes.map((counterType) => buildCounterInstance(definition, counterType, consumerTriggerNames));
 };

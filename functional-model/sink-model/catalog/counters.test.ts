@@ -42,6 +42,27 @@
 // value" convention (2026-09-18/19 precedent — see
 // `.claude/agent-memory/schema/topics/counters-sinkquery-migration-2026-09-18.md`'s
 // own "self-contained-test follow-up" entry).
+//
+// **2026-09-19, later still — two more real rewrites, same day:**
+// 1. **Boolean-return callable contract.** `sinkInstance(card)` now returns
+//    a plain `boolean` (the PRODUCER question only), not the old combined
+//    `SinkMatchDetail | null` — see `entry.ts`'s own `SinkInstance` doc
+//    comment for the full "3rd real design iteration" writeup. The old
+//    "CALLABLE" section below (which used to pin down the full
+//    `.producer.via`/`.consumer`/`null` detail shape) is replaced by a
+//    smaller section proving the boolean call agrees with the SOURCE
+//    CANDIDATE cases above (same fixtures, same verdicts, just the new call
+//    surface) plus real `isPredicateDerived` coverage.
+// 2. **`CountersSink(definition)` returns `SinkInstance[]`, not one
+//    `SinkInstance`** — live user correction: "we need array handling here
+//    obviously." Every existing call site below destructures the one real
+//    element (`const [sinkInstance] = CountersSink(...)`) — Exemplar of
+//    Light only ever derives ONE distinct `counterType`, so this is a
+//    single-element array in every case here. A NEW "DERIVATION: two
+//    distinct counterTypes" case (bottom of this file) is the real,
+//    required proof for why the array shape exists at all — a definition
+//    with `putCounter` effects of two different `counterType`s must derive
+//    TWO independently-correct instances, not silently collapse to one.
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, Effect } from '../../card';
 import { matchesConsumerTriggerNames } from '../match-sink';
@@ -69,39 +90,42 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
       { name: 'onCounterAdded', effects: [] },
     ],
   });
-  const sinkInstance = CountersSink(mockExemplarOfLight);
+  // `CountersSink` returns `SinkInstance[]` (2026-09-19, later still — one
+  // instance per distinct `counterType`) — Exemplar of Light only ever
+  // grants ONE distinct counter type, so destructure the one real element.
+  const [sinkInstance] = CountersSink(mockExemplarOfLight);
 
   it('SOURCE CANDIDATE: matches a plain self-targeted putCounter effect with counterType "+1/+1" (the real Exemplar of Light, FDN #11, shape)', () => {
     const card = mockCard('Mock Counter Source', {
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
     });
-    expect(sinkInstance(card)?.producer).toBeDefined();
+    expect(sinkInstance(card)).toBe(true);
   });
 
   it('SOURCE CANDIDATE: matches a TRIGGERED putCounter (trigger effects are walked too, not just top-level effects)', () => {
     const card = mockCard('Mock Triggered Counter Source', {
       triggers: [{ name: 'onEnter', effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] }],
     });
-    expect(sinkInstance(card)?.producer).toBeDefined();
+    expect(sinkInstance(card)).toBe(true);
   });
 
   it('SOURCE CANDIDATE: matches a broadcast putCounterAll effect with counterType "+1/+1" (a real "put a +1/+1 counter on each creature you control" shape)', () => {
     const card = mockCard('Mock Counter Anthem Source', {
       effects: [{ kind: 'putCounterAll', predicate: 'creatures-you-control', counterType: '+1/+1', amount: 1 } satisfies Effect],
     });
-    expect(sinkInstance(card)?.producer).toBeDefined();
+    expect(sinkInstance(card)).toBe(true);
   });
 
   it('SOURCE CANDIDATE: does NOT match a DIFFERENTLY-typed counter effect (counterType "-1/-1") — real discrimination on counter type, not "any putCounter counts"', () => {
     const card = mockCard('Mock -1/-1 Counter Spell', {
       effects: [{ kind: 'putCounterTarget', validType: 'creature', counterType: '-1/-1', amount: 1 } satisfies Effect],
     });
-    expect(sinkInstance(card)).toBeNull();
+    expect(sinkInstance(card)).toBe(false);
   });
 
   it('SOURCE CANDIDATE: does NOT match a vanilla creature with no effects at all', () => {
     const card = mockCard('Mock Vanilla Creature');
-    expect(sinkInstance(card)).toBeNull();
+    expect(sinkInstance(card)).toBe(false);
   });
 
   it('SINK CANDIDATE: matches a card whose own named trigger is "onCounterAdded" (the real Exemplar of Light shape) even with no putCounter effect walked for THIS check — proves the sink-candidate signal is a genuinely separate check from the source-candidate check', () => {
@@ -133,37 +157,34 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
   });
 
   // -------------------------------------------------------------------------
-  // CallableSink contract — see `battlefield-presence.test.ts`'s own
-  // identical section header for the full "first real callers of
-  // entry(candidate)" writeup; same 3-case shape reused here, against this
-  // family's own real fixtures. Deliberately still a real, standalone
-  // assertion block (not merged into the SOURCE CANDIDATE cases above) —
-  // those already exercise `sinkInstance(candidate)` too now, but this block
-  // is the one that specifically pins down the FULL `SinkMatchDetail` shape
-  // (`.producer.via`/`.consumer`/`null`), not just presence/absence.
-  it('CALLABLE: source-candidate-only match returns real detail (producer.via set, no consumer)', () => {
-    const card = mockCard('Mock Counter Source', {
-      effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
-    });
-    const result = sinkInstance(card);
-    expect(result).not.toBeNull();
-    expect(result!.producer?.via).toEqual(expect.any(String));
-    expect(result!.consumer).toBeUndefined();
-  });
-
-  it('CALLABLE: sink-candidate-only match returns real detail (consumer.via set, no producer)', () => {
+  // CallableSink contract (2026-09-19, boolean-return rewrite) — the
+  // callable answers the PRODUCER question ONLY now, as a plain `boolean`
+  // (see `entry.ts`'s own `SinkInstance` doc comment for the full "3rd real
+  // design iteration" writeup) — the SOURCE CANDIDATE cases above already
+  // exercise this exact call surface directly (`expect(sinkInstance(card))
+  // .toBe(true/false)`), so this section is now scoped to the ONE real piece
+  // of behavior not covered there: `isPredicateDerived`, the small, separate
+  // accessor that survives from the old combined-detail contract.
+  it('CALLABLE: a sink-candidate-only card (no producer match) is correctly NOT a source candidate — proves producer/consumer stay genuinely separate checks now', () => {
     const card = mockCard('Mock Counter Sink', {
       triggers: [{ name: 'onCounterAdded', effects: [] }],
     });
-    const result = sinkInstance(card);
-    expect(result).not.toBeNull();
-    expect(result!.consumer).toEqual({ via: 'triggerName' });
-    expect(result!.producer).toBeUndefined();
+    expect(sinkInstance(card)).toBe(false);
+    expect(matchesConsumerTriggerNames(sinkInstance.consumerTriggerNames, card)).toBe(true);
   });
 
-  it('CALLABLE: no source-candidate or sink-candidate signal at all returns null', () => {
+  it('isPredicateDerived: false for a direct, authored putCounter effect (not inferred from engine automation)', () => {
+    const card = mockCard('Mock Counter Source', {
+      effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
+    });
+    expect(sinkInstance(card)).toBe(true);
+    expect(sinkInstance.isPredicateDerived?.(card)).toBe(false);
+  });
+
+  it('isPredicateDerived: false (not thrown) for a card with no producer match at all', () => {
     const card = mockCard('Mock Vanilla Creature');
-    expect(sinkInstance(card)).toBeNull();
+    expect(sinkInstance(card)).toBe(false);
+    expect(sinkInstance.isPredicateDerived?.(card)).toBe(false);
   });
 
   // -------------------------------------------------------------------------
@@ -171,7 +192,10 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
   // field off `mockExemplarOfLight` itself (`families/counters.ts`'s own
   // header for the full writeup) instead of accepting a hand-authored
   // config; this section pins down that derivation directly, not just its
-  // downstream matching behavior.
+  // downstream matching behavior. `CountersSink` returns `SinkInstance[]`
+  // (2026-09-19, later still) — every case below destructures the one real
+  // element unless it's specifically testing the array shape itself (the
+  // last case in this section).
   it('DERIVATION: derives slug/category/consumerTriggerNames off the driving definition itself', () => {
     expect(sinkInstance.slug).toBe('counters-plus1plus1');
     expect(sinkInstance.category).toBe('+1/+1');
@@ -182,7 +206,7 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
     const mockMinusOneDefinition = mockCard('Mock -1/-1 Sink-Defining Blight', {
       effects: [{ kind: 'putCounter', target: 'self', counterType: '-1/-1', amount: 1 } satisfies Effect],
     });
-    const instance = CountersSink(mockMinusOneDefinition);
+    const [instance] = CountersSink(mockMinusOneDefinition);
     expect(instance.slug).toBe('counters-minus1minus1');
     expect(instance.category).toBe('-1/-1');
   });
@@ -199,7 +223,7 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
       triggers: [{ name: 'onSomeUnrelatedThing', effects: [] }],
     });
-    const instance = CountersSink(mockDefinitionWithUnrelatedNameOnlyTrigger);
+    const [instance] = CountersSink(mockDefinitionWithUnrelatedNameOnlyTrigger);
     expect(instance.consumerTriggerNames).toBeUndefined();
   });
 
@@ -208,7 +232,46 @@ describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fi
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
       triggers: [{ name: 'onCounterAdded', on: 'enter', effects: [] }],
     });
-    const instance = CountersSink(mockDefinitionWithClaimedOnValue);
+    const [instance] = CountersSink(mockDefinitionWithClaimedOnValue);
     expect(instance.consumerTriggerNames).toBeUndefined();
+  });
+
+  // -------------------------------------------------------------------------
+  // Array-of-instances / dedup rule (2026-09-19, live user correction —
+  // "we need array handling here obviously") — the real point of
+  // `CountersSink` returning `SinkInstance[]`, not just a shape change with
+  // no case proving why it exists.
+  it('DERIVATION: a definition with TWO distinct counterTypes across its effects derives TWO independently-correct instances', () => {
+    const mockTwoCounterTypeDefinition = mockCard('Mock Two-Counter-Type Sink-Defining Card', {
+      effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
+      triggers: [{ name: 'onSomeTrigger', effects: [{ kind: 'putCounter', target: 'self', counterType: '-1/-1', amount: 1 } satisfies Effect] }],
+    });
+    const instances = CountersSink(mockTwoCounterTypeDefinition);
+    expect(instances).toHaveLength(2);
+    const [plusOne, minusOne] = instances;
+    expect(plusOne!.category).toBe('+1/+1');
+    expect(plusOne!.slug).toBe('counters-plus1plus1');
+    expect(minusOne!.category).toBe('-1/-1');
+    expect(minusOne!.slug).toBe('counters-minus1minus1');
+    // Each instance's own producer check is genuinely independent — a
+    // +1/+1-typed candidate only satisfies the +1/+1 instance, not the
+    // -1/-1 one, and vice versa (real discrimination, not "any instance
+    // from this definition matches any counterType").
+    const plusOneCard = mockCard('Mock +1/+1 Card', { effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] });
+    const minusOneCard = mockCard('Mock -1/-1 Card', { effects: [{ kind: 'putCounter', target: 'self', counterType: '-1/-1', amount: 1 } satisfies Effect] });
+    expect(plusOne!(plusOneCard)).toBe(true);
+    expect(plusOne!(minusOneCard)).toBe(false);
+    expect(minusOne!(minusOneCard)).toBe(true);
+    expect(minusOne!(plusOneCard)).toBe(false);
+  });
+
+  it('DERIVATION: two occurrences sharing the SAME counterType (one top-level effect, one trigger effect) collapse to ONE instance, not two duplicates', () => {
+    const mockDuplicateCounterTypeDefinition = mockCard('Mock Duplicate-Counter-Type Sink-Defining Card', {
+      effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
+      triggers: [{ name: 'onSomeTrigger', effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] }],
+    });
+    const instances = CountersSink(mockDuplicateCounterTypeDefinition);
+    expect(instances).toHaveLength(1);
+    expect(instances[0]!.category).toBe('+1/+1');
   });
 });

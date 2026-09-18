@@ -13,8 +13,14 @@
 import { BattlefieldPresenceSink } from './families/battlefield-presence';
 import type { SinkInstance } from './entry';
 
+// `BattlefieldPresenceSink` returns `SinkInstance[]` (2026-09-19 —
+// `SinkFamily<Config>`'s own return type widened for `CountersSink`'s real
+// multi-instance case; see `entry.ts`'s own `SinkFamily` doc comment) — this
+// family always returns exactly one real instance per config (see that
+// factory's own doc comment), so the `[0]!` below is a real, structurally-
+// justified assertion, not a guess.
 export const battlefieldPresenceCreatures: SinkInstance = BattlefieldPresenceSink({
   slug: 'battlefield-presence-creatures',
   query: { to: 'Battlefield', controller: 'you', types: { has: ['Creature'] } },
   filter: {},
-});
+})[0]!;
