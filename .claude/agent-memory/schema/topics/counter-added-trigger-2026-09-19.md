@@ -92,3 +92,50 @@ this commit.
 
 Full detail: `.claude/contracts/card-schema.md`'s own new dated section
 ("New `Trigger.on: 'counterAdded'` + `counterAddedMatch`").
+
+## Follow-up: `counterAddedMatch.source` (2026-09-19, later still)
+
+Orchestrator caught a real gap this same field left open right after
+landing: real Forge `ValidSource$` (who caused the counter to be added —
+board-wide, ANY player's effect could cause it, unlike `'enter'`/`'dies'`'s
+own unambiguous self-scope) had zero representation anywhere in `card.ts`.
+User confirmed directly: source should be present, add now.
+
+**Landed shape**: `counterAddedMatch?: { counterType?: string; source?:
+'you' }` — additive, `counterType` untouched.
+
+**Grounding**: `TriggerCounterAdded(Once|All).performTest` all gate on
+`matchesValidParam("ValidSource", runParams.get(AbilityKey.Source))`;
+`AbilityKey.Source` for this event is set from `Card.addCounterInternal`'s
+`final Player source` (a PLAYER, not a card). `matchesValidParam` treats an
+absent param as always-true → omitted = any source (same wildcard posture
+`counterType` already has). Grepped all 72 real cardsfolder scripts
+combining `Mode$ CounterAdded(Once|All)` + `ValidSource$` pool-wide: every
+one uses `You`, zero `Opponent`/other-player examples exist for this
+specific trigger mode (even though Forge's generic `Player.isValid` vocab
+supports more) — `source` typed as the literal `'you'` only, not an open
+`string`, same "required-in-practice" discipline as `counterType`. Presence
+of `ValidSource$` correlates exactly with "whenever YOU put..." phrasing
+vs. its absence correlating with source-agnostic phrasing, across the same
+sample.
+
+**Exemplar of Light**: `counterAddedMatch: { counterType: '+1/+1', source:
+'you' }`. Re-gated, unchanged `blue`. No `justification.json` change
+(span-level, not text-level).
+
+**`CountersSink` NOT touched** — confirmed by grep, only `counterType` is
+read anywhere; `source` is schema-completeness-only today, no consumer
+yet.
+
+**`counters.test.ts` left untouched** (per task instructions — user/
+orchestrator live-rebuilding it); reported the exact field shape back for
+them to apply.
+
+**No new engine-support-registry/ENGINE_GAPS.md entry** — this is a
+structural refinement of an already-tracked, already-unenforced trigger
+(`counter-added-trigger-not-enforced`), not a new capability; flagged for
+`engine`/orchestrator confirmation rather than asserted outright, same
+precedent as the original field's own unresolved engine-consult.
+
+Full detail: `.claude/contracts/card-schema.md`'s new dated section
+("`counterAddedMatch.source` — real `ValidSource$` gap closed").

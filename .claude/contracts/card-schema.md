@@ -2955,3 +2955,90 @@ change for the same underlying "no real counterType signal at all" reason;
 not a regression. `npm run typecheck` — identical pre-existing 7-diagnostic
 baseline (line numbers shifted in `card.ts` from added doc comments only,
 zero new diagnostics).
+
+## `counterAddedMatch.source` — real `ValidSource$` gap closed (2026-09-19, later still, schema agent)
+
+Orchestrator caught a real gap the same-day `counterAddedMatch` addition
+above left open: it modeled real Forge `CounterType$` (`counterType`) and
+`ValidCard$ Card.Self` (self-scope, by the same unstated convention
+`'enter'`/`'dies'` already use) but NOT real Forge `ValidSource$` at all —
+grepped `card.ts` before this change and got zero hits for `ValidSource$`
+anywhere in the file. This is a genuine, board-wide-event gap, not
+scope-implied-by-convention the way self-scope is for `'enter'`: "a counter
+was added to this permanent" is an event ANY player's own effect could
+cause (your own trigger, an opponent's removal-adjacent effect, a third
+player's effect in multiplayer) — unlike e.g. `'lifeGained'`, where there's
+no competing reading of "you" since the event itself is already defined as
+"you gained life."
+
+**New field**: `counterAddedMatch?: { counterType?: string; source?: 'you'
+}` — `source` is additive, `counterType`'s own shape/semantics untouched.
+
+**Grounding** (`tmp/mtg-forge`, real primary source):
+- `TriggerCounterAdded(Once|All).performTest` (`forge-game/.../trigger/`)
+  all three gate on `matchesValidParam("ValidSource",
+  runParams.get(AbilityKey.Source))` identically.
+- For THIS event specifically, `AbilityKey.Source` is populated from
+  `Card.addCounterInternal`'s own `final Player source` parameter
+  (`forge-game/.../card/Card.java`) — the "source" of a counter-added event
+  is a PLAYER, not a card.
+- `matchesValidParam` (`CardTraitBase.java`) returns `true` when the param
+  is absent at all — confirms "omitted = any source" (wildcard), the same
+  "omitted = wildcard" posture `counterType` already takes for its own gate
+  — NOT some other default.
+- Checked real pool-wide distribution before picking the value type: every
+  real Forge cardsfolder script combining `Mode$ CounterAdded(Once|All)`
+  with `ValidSource$` (72 files matched) — grepped all of them — uses
+  `ValidSource$ You` and ONLY `You`; zero `Opponent`/other-player examples
+  exist anywhere in this specific trigger-mode's real usage, even though
+  Forge's own generic `Player.isValid` restriction vocabulary
+  (`player/Player.java`) technically also recognizes `Opponent`/`Any`/
+  `Player` for OTHER trigger types' `ValidSource$`/`ValidPlayer$` uses. Also
+  confirmed the presence/absence of `ValidSource$` lines up exactly with
+  "whenever YOU put..." vs. source-agnostic "whenever a counter is put
+  on..." phrasing across that same 72-file sample (e.g. Fathom Mage's own
+  `ValidCard$ Card.Self`, no `ValidSource$`, triggers off ANY player adding
+  a +1/+1 counter to it, not just its own controller). `source` is
+  therefore typed as the literal `'you'` only (not a wider open `string`
+  like `counterType`) — same "required-in-practice, not speculative"
+  discipline `counterType`'s own doc comment already applies: no real card
+  anywhere in this specific trigger-mode grounds a non-`'you'` value today.
+
+**Exemplar of Light** (`fdn-cards/exemplar-of-light/definition.ts`) — real
+`ValidSource$ You` now set as `counterAddedMatch: { counterType: '+1/+1',
+source: 'you' }`. Re-gated (`gate-and-write-status.mjs exemplar-of-light`)
+— unchanged `blue`, `reasons: []`; no `justification.json` rewrite needed
+(no oracle-text span changed, only the structural match tightened).
+
+**`CountersSink` (`sink-model/catalog/families/counters.ts`) — NOT
+touched, and correctly so**: grepped every real reader of
+`counterAddedMatch` pool-wide — the family's own matching keys purely off
+`counterType` (`deriveCounterTypes`/`counterTypesFromConsumerTrigger`);
+"who caused it" has no bearing on that family's own instance identity.
+This is a schema-completeness-only addition today, with no sink-model
+consumer yet — honest per the task's own framing, not silently assumed.
+
+**`functional-model/sink-model/catalog/counters.test.ts` deliberately NOT
+touched** — a concurrent session/orchestrator pair owns it directly
+(live, pseudocode-driven rewrite in progress, per orchestrator's own
+task framing); reported back the exact new field shape
+(`counterAddedMatch?.source?: 'you'`) for that session to apply itself.
+
+**Verification**: `npx vitest run functional-model` — 120/120 files green
+(1329 passed, 5 skipped), IDENTICAL to the pre-change baseline (re-ran
+before making any change to confirm the real starting point first).
+`npm run typecheck` — identical pre-existing diagnostics, confirmed via a
+`git stash`/typecheck/`git stash pop`/typecheck A-B comparison (only
+`card.ts`'s own `endTurn` diagnostic line number shifted, 3540 → 3583,
+from the added doc comment; zero new diagnostics either file).
+
+**Still open / for `engine` to weigh in on**: the existing
+`counter-added-trigger-not-enforced` engine-support-registry entry (added
+alongside the original `counterAddedMatch` field, same day) already covers
+"schema recognizes `on: 'counterAdded'`, engine doesn't enforce it" as an
+ordinary Ward-pattern gap — this `source` field addition doesn't widen
+that gap (it's a structural refinement of an already-unenforced trigger's
+own match shape, not a new capability), so no new `ENGINE_GAPS.md` entry
+or registry entry was added for it. Flagging for confirmation rather than
+asserting it outright, per this file's own existing "flagged for the
+orchestrator to relay" precedent two sections up.

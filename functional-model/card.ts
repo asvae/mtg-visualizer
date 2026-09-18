@@ -2022,8 +2022,51 @@ export interface Trigger {
    * Required-in-practice rather than speculatively optional-and-untested for
    * that reason — every real FDN card using this `on` value states its own
    * `counterType` explicitly.
+   *
+   * **`source` (added 2026-09-19, even later still)** — real Forge
+   * `ValidSource$` param, checked against `TriggerCounterAdded(Once|All)
+   * .performTest`'s own `matchesValidParam("ValidSource",
+   * runParams.get(AbilityKey.Source))` call (all three real Forge trigger
+   * classes gate on it identically). For THIS event specifically,
+   * `AbilityKey.Source` is populated from `Card.addCounterInternal`'s own
+   * `final Player source` parameter (`forge-game/.../card/Card.java`) — i.e.
+   * "who caused this counter to be added" is a PLAYER, not the permanent
+   * that gained the counter, and — unlike `'enter'`/`'dies'`'s own
+   * self-vs-other SCOPE split — "counter added to this permanent" is a
+   * board-wide event any player's own effect could cause (your own trigger,
+   * an opponent's removal-adjacent effect, a third player's effect in
+   * multiplayer), so `ValidSource$` is a real, independent Forge filter on
+   * top of `CounterType$`, not something the bare event already implies.
+   * Omitted means "any source" (`matchesValidParam` returns `true` when the
+   * trigger has no `ValidSource` param at all — same "omitted = wildcard"
+   * posture `counterType` above already takes), mirrored directly by a real,
+   * checked pool-wide correlation: grepped every real Forge cardsfolder
+   * script combining `Mode$ CounterAdded(Once|All)` with `ValidSource$`
+   * (72 files) — its presence lines up exactly with "whenever YOU put..."
+   * phrasing, and its absence lines up exactly with source-agnostic
+   * "whenever a counter is put on..." phrasing (e.g. Fathom Mage's own
+   * `ValidCard$ Card.Self` clause with no `ValidSource$` at all triggers off
+   * ANY player adding a +1/+1 counter to it, not just its own controller).
+   * Value is the string literal `'you'` only, NOT a wider open string like
+   * `counterType` — checked Forge's own generic `Player.isValid` restriction
+   * vocabulary (`forge-game/.../player/Player.java`) and confirmed it
+   * technically also recognizes `Opponent`/`Any`/`Player`, but of the 21
+   * real FDN/FIN-pool-relevant `CounterAdded`-family cardsfolder scripts
+   * that set `ValidSource$` at all, EVERY one uses `You` — zero real
+   * `Opponent`/other-player examples exist to ground a wider type on, same
+   * "required-in-practice, not speculative" discipline as `counterType`'s
+   * own posture above. Exemplar of Light's own real `ValidSource$ You`
+   * needs `{ source: 'you' }`.
+   *
+   * **Not yet consumed by `sink-model/catalog/families/counters.ts`'s own
+   * `CountersSink`** — that family's matching keys purely off `counterType`
+   * (producer effects + this same match's own `counterType`), and "who
+   * caused it" has no bearing on that family's own instance identity; this
+   * is a schema-completeness addition only, tracked here for the day some
+   * future consumer trigger genuinely needs to distinguish "you" from "any
+   * source."
    */
-  counterAddedMatch?: { counterType?: string };
+  counterAddedMatch?: { counterType?: string; source?: 'you' };
   /**
    * Only consulted when `on === 'attackersDeclared'` — real Forge
    * `ValidAttackersAmount$ GEn` (`TriggerAttackersDeclared.performTest`,

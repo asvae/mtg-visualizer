@@ -23,7 +23,7 @@ export const exemplarOfLight: CardDefinition = {
     {
       name: 'onCounterAdded',
       on: 'counterAdded',
-      counterAddedMatch: { counterType: '+1/+1' },
+      counterAddedMatch: { counterType: '+1/+1', source: 'you' },
       activationLimit: 1,
       effects: [
         {
