@@ -136,28 +136,50 @@
 // label. No real FDN card in the 10-card pool hits this today (checked);
 // flagged rather than silently assumed impossible.
 //
+// **SUPERSEDED, 2026-09-18, later the same day — Ajani's Pridemate DOES now
+// get "Lifegain."** The paragraph immediately below (kept verbatim as a
+// historical record of the real investigation that preceded this
+// correction — nothing in its reasoning about `query` being PRODUCER-shaped
+// was wrong) concluded there was no safe way to recognize a genuine
+// consumer-side card like Ajani. The user corrected the framing, not the
+// conclusion about oracle text: `Trigger.name` IS a real, deliberately-
+// authored structural handle (`card.ts`'s own doc comment on `Trigger.name`
+// itself: "Matches a scenario's own `trigger` field" — already a genuine,
+// intentional signal used elsewhere, not decoration); the standing caution
+// against trusting it is specifically about driving ENGINE FIRING/
+// simulation behavior, a materially higher-stakes concern than using it as
+// a display/categorization signal with this catalog's own human-reviewed
+// gate as the real check on false positives. Oracle/printed text is still
+// never touched anywhere in this file or `sink-model/` — that constraint
+// stands unchanged. See `SinkCatalogEntry.consumerTriggerNames`
+// (`sink-model/catalog/entry.ts`) and `sink-model/match-sink.ts`'s
+// `matchesConsumerTriggerNames` for the real mechanism this added, and
+// `card-interactions.test.ts` for the updated, now-passing assertion.
+//
 // **Flagged, not forced — a catalog entry's query is PRODUCER-shaped, never
 // a consumer/want signal, so this does NOT make every intuitively-related
-// card land in the "right" category.** Concretely: Ajani's Pridemate's own
-// `name:'onLifeGained'` trigger does NOT make it categorize under
-// "Lifegain" here, even with a real `lifegain` catalog entry now existing —
-// confirmed live: `matchSink(lifegainQuery, ajanisPridemate)` is `false`,
+// card land in the "right" category** (superseded in part by the note
+// above — a catalog entry MAY now also declare a real, structural
+// consumer-side signal via `consumerTriggerNames`, but that's an explicit,
+// curated, per-entry opt-in, never an automatic consequence of `query`
+// alone). Concretely: Ajani's Pridemate's own `name:'onLifeGained'` trigger
+// did NOT used to make it categorize under "Lifegain" here — confirmed live
+// at the time: `matchSink(lifegainQuery, ajanisPridemate)` is `false`,
 // because Ajani's Pridemate doesn't itself have a `gainLife` effect; its
 // trigger only REACTS to some OTHER source of lifegain, a consumer-side
 // signal this file's own EARLIER investigation (below, "the real design
-// question") already found has no safe, closed-vocabulary structural
-// derivation (`Trigger.name` is free-text, `Trigger.on`'s closed enum has
-// no lifegain member, and FDN cards carry no `oracleText` to fall back on
-// the way `recognizers/lifegain-trigger-structural.ts` does for the
-// equivalent FIN cards). Making the catalog query real didn't change that
-// finding — it only gave a real, reusable label for cards that genuinely
-// ARE producers of a cataloged category (Day of Judgment's own "destroy all
-// creatures" now correctly shows "Graveyard fodder" instead of the old raw
-// "destroy" label, a real, verified win this pass). Getting a genuine
-// consumer-side card like Ajani into a category needs either (a) trusting
-// the free-text trigger name (declined, same reasoning, twice now) or (b) a
-// real `Trigger.on` vocabulary addition with actual engine wiring — neither
-// attempted here.
+// question") found has no safe, closed-vocabulary structural derivation
+// AS A PRODUCER query (`Trigger.name` is free-text, `Trigger.on`'s closed
+// enum has no lifegain member). That investigation's conclusion about
+// `query`/`Trigger.on` is unchanged; only the follow-up decision to also
+// decline `Trigger.name` entirely as a CONSUMER signal was reversed, per
+// the note above. Making the catalog query real, on its own, still only
+// gives a real, reusable label for cards that genuinely ARE producers of a
+// cataloged category (Day of Judgment's own "destroy all creatures" now
+// correctly shows "Graveyard fodder" instead of the old raw "destroy"
+// label) — reaching a genuine consumer-side card like Ajani additionally
+// needs its catalog entry to declare a real `consumerTriggerNames` list,
+// which `lifegain` now does.
 //
 // **Self-inclusion is real and unconditional** (explicit task requirement):
 // `poolDefinitions` is walked with NO exclusion of `definition` itself —
@@ -170,7 +192,7 @@
 // destroy-a-creature want) in `card-interactions.test.ts` — no synthetic
 // fixture needed for either.
 import type { CardDefinition } from './card';
-import { deriveOccurrences, matchSink } from './sink-model/match-sink';
+import { deriveOccurrences, matchesConsumerTriggerNames, matchSink } from './sink-model/match-sink';
 import type { ProducerOccurrence } from './sink-model/match-sink';
 import type { SinkQuery } from './sink-model/sink-query';
 import type { Fact } from './synergy';
@@ -248,13 +270,23 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
 
   for (const entry of SINK_CATALOG) {
     if (!isSinkCatalogEntryUsable(entry.slug, root)) continue; // not-yet-verified catalog data must never drive real matching
-    const selfMatch = matchSink(entry.query, definition, root);
-    if (!selfMatch.matched) continue;
-    if (selfMatch.via) consumedVia.add(selfMatch.via);
+    // A candidate belongs to this entry's category via EITHER recognition
+    // mode: the producer-shaped `query` (does `definition` itself cause the
+    // event), OR the consumer-shaped `consumerTriggerNames` (does
+    // `definition` carry a named trigger that REACTS to the event) — see
+    // `SinkCatalogEntry.consumerTriggerNames`'s own doc comment
+    // (`sink-model/catalog/entry.ts`) for why this is a safe, structural,
+    // oracle-text-free signal. Either is sufficient; both may hold.
+    const selfProducerMatch = matchSink(entry.query, definition, root);
+    const selfConsumerMatch = matchesConsumerTriggerNames(entry.consumerTriggerNames, definition);
+    if (!selfProducerMatch.matched && !selfConsumerMatch) continue;
+    if (selfProducerMatch.matched && selfProducerMatch.via) consumedVia.add(selfProducerMatch.via);
     const category = entry.query.category;
     const matchedNames = matchesByCategory.get(category) ?? new Set<string>();
     for (const candidate of poolDefinitions) {
-      if (matchSink(entry.query, candidate, root).matched) matchedNames.add(candidate.name);
+      if (matchSink(entry.query, candidate, root).matched || matchesConsumerTriggerNames(entry.consumerTriggerNames, candidate)) {
+        matchedNames.add(candidate.name);
+      }
     }
     matchesByCategory.set(category, matchedNames);
   }

@@ -120,8 +120,8 @@ describe('sink D — lifegain (Aerith Gainsborough, as-authored)', () => {
     expect(matchSink(lifegainSink, summonBahamut).matched).toBe(false);
   });
 
-  it('AGREES: Aerith Gainsborough’s own printed Lifelink keyword does NOT satisfy it — this project’s own Lifelink-implies-lifegain synthetic derivation is a real, existing mechanism (`synergy.ts`’s `hasPrintedLifelink`/`syntheticLifelinkFact`) but explicitly PARKED by user decision as of 2026-09-14 (`LIFELINK_SYNTHETIC_FACT_ENABLED = false`) — this matcher deliberately does not implement it either, matching production’s own current (disabled) state rather than silently reviving a parked pattern.', () => {
-    expect(matchSink(lifegainSink, aerithGainsborough).matched).toBe(false);
+  it('SUPERSEDED, 2026-09-18 — DISAGREES with production, deliberately, not a regression: Aerith Gainsborough’s own printed Lifelink keyword now DOES satisfy it. Until 2026-09-18 this asserted `false`, matching `synergy.ts`’s own PARKED `LIFELINK_SYNTHETIC_FACT_ENABLED = false` decision (2026-09-14) — that parked flag is UNCHANGED and still governs production’s own `augmentPoolCards`/`findInteractionsForCard` path (FIN’s real served Interactions/graph-links output is untouched by this file). This prototype matcher instead now derives Lifelink’s automatic lifegain via a dedicated, corpus-verified sink-derivation predicate (`sink-model/predicates/lifelink.ts`, added for Felidar Savior/FDN #12, the same real engine-automation-hidden-mechanic shape Saga/Crew already use) — a deliberate, explicit, freshly-commissioned design decision for THIS matcher specifically, not a silent revival of the parked FIN pattern. See `sink-derivation-status.ts`’s own `lifelink` entry + `lifelink.test.ts`’s real `state.dealDamage` engine-agreement corpus for the verification trail.', () => {
+    expect(matchSink(lifegainSink, aerithGainsborough).matched).toBe(true);
   });
 });
 

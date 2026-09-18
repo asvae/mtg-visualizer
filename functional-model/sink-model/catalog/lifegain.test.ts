@@ -6,10 +6,18 @@
 // MOCKED `CardDefinition` — never a real pool card — because the gate cares
 // about the STRUCTURAL SHAPE `matchSink` recognizes, not which real card
 // happens to have it.
+//
+// **2026-09-18, later the same day: consumer-side cases added.** Gates
+// `entry.consumerTriggerNames` (`matchesConsumerTriggerNames`) alongside the
+// pre-existing producer-side `query`/`matchSink` cases above — a genuinely
+// different recognition mode (does a candidate's OWN `Trigger.name` react to
+// lifegain, vs. does it cause lifegain), never oracle/printed text. Mocked
+// fixtures carry only structured `CardDefinition` fields (a `triggers[].name`
+// string), same as every other fixture in this file.
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, Effect } from '../../card';
-import { matchSink } from '../match-sink';
-import { query } from './lifegain';
+import { matchesConsumerTriggerNames, matchSink } from '../match-sink';
+import { entry, query } from './lifegain';
 
 describe('lifegain sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
   it('matches a plain effect-level gainLife (a real, direct "you gain N life" spell/permanent effect)', () => {
@@ -51,5 +59,55 @@ describe('lifegain sink catalog entry — corpus (mocked CardDefinition fixtures
       effects: [{ kind: 'drawCard' } satisfies Effect],
     };
     expect(matchSink(query, card).matched).toBe(false);
+  });
+
+  it('CONSUMER mode: matches a card whose own named trigger is "onLifeGained" (the real Ajani\'s Pridemate shape) even though it has no gainLife effect of its own — the producer query alone declines it', () => {
+    const card: CardDefinition = {
+      name: 'Mock Lifegain Reactor',
+      manaCost: '{1}{W}',
+      typeLine: 'Creature — Cat Soldier',
+      pt: [2, 2],
+      triggers: [{ name: 'onLifeGained', effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] }],
+    };
+    expect(matchSink(query, card).matched).toBe(false);
+    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(true);
+  });
+
+  it('CONSUMER mode: does NOT match a card with a DIFFERENTLY-named trigger (real discrimination, not "any trigger counts")', () => {
+    const card: CardDefinition = {
+      name: 'Mock Unrelated Reactor',
+      manaCost: '{2}{W}',
+      typeLine: 'Creature — Human',
+      pt: [1, 1],
+      triggers: [{ name: 'onAttack', effects: [{ kind: 'drawCard' } satisfies Effect] }],
+    };
+    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(false);
+  });
+
+  it('CONSUMER mode: does NOT match a card with no triggers at all', () => {
+    const card: CardDefinition = {
+      name: 'Mock Vanilla Reactor',
+      manaCost: '{2}{W}',
+      typeLine: 'Creature — Human',
+      pt: [2, 2],
+    };
+    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(false);
+  });
+
+  it('CONSUMER mode: matches via the BACK face of a transforming DFC (the same face-plurality convention deriveOccurrences itself already honors)', () => {
+    const card: CardDefinition = {
+      name: 'Mock Front Face',
+      manaCost: '{2}{W}',
+      typeLine: 'Creature — Human',
+      pt: [2, 2],
+      backFace: {
+        name: 'Mock Back Face',
+        manaCost: '',
+        typeLine: 'Creature — Human',
+        pt: [3, 3],
+        triggers: [{ name: 'onLifeGained', effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] }],
+      },
+    };
+    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(true);
   });
 });

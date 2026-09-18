@@ -32,4 +32,29 @@ export interface SinkCatalogEntry {
    * never a fixed generic metric pair).
    */
   query: SinkQuery;
+  /**
+   * Real, structural CONSUMER-side recognition mode (2026-09-18, added
+   * alongside the producer-only `query` above) — a candidate is ALSO
+   * recognized as belonging to this category when one of its own
+   * `CardDefinition.triggers[].name` values (front OR back face) appears in
+   * this list, checked via `sink-model/match-sink.ts`'s
+   * `matchesConsumerTriggerNames`. Pure structural field comparison against
+   * `Trigger.name` itself — NEVER oracle/printed text (a sink must never
+   * touch oracle text, per explicit user ruling 2026-09-18 — only
+   * `CardDefinition`'s own structured fields). `Trigger.name` is a real,
+   * deliberately-authored handle (`card.ts`'s own doc comment: "Matches a
+   * scenario's own `trigger` field" — already a genuine, intentional
+   * signal elsewhere in this codebase, not decoration); the long-standing
+   * caution against trusting it (`card.ts`'s own `authoredFacts` doc
+   * comment, `card-interactions.ts`'s own header) is specifically about
+   * using it to drive ENGINE FIRING/simulation behavior, a materially
+   * higher-stakes correctness concern than using it as a display/
+   * categorization signal here, with this catalog's own human-reviewed
+   * gate (`sink-catalog-status.ts`) as the real check on false positives.
+   * Optional — most catalog entries (anything with no real "reacts to this
+   * category" trigger-naming convention in the pool) have none. A card can
+   * satisfy an entry via the producer `query` OR this consumer signal OR
+   * both; either is sufficient.
+   */
+  consumerTriggerNames?: string[];
 }

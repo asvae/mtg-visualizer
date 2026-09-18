@@ -1,0 +1,24 @@
+{
+  "total": 3,
+  "passing": 3,
+  "cases": [
+    {
+      "case": "printed Lifelink only, no other lifegain-shaped effect",
+      "mirrors": "Felidar Savior (FDN #12) — the real motivating card",
+      "expectedVerdict": "produces-lifegain",
+      "note": "A mock creature with keywords:['Lifelink']. Verified in lifelink.test.ts via a real, direct state.dealDamage call genuinely granting its controller life (702.15e)."
+    },
+    {
+      "case": "printed Flying + Lifelink together",
+      "mirrors": "Healer's Hawk (FDN)",
+      "expectedVerdict": "produces-lifegain",
+      "note": "A mock creature with keywords:['Flying', 'Lifelink']. Verified in lifelink.test.ts via a real dealDamage call — proves the coexisting unrelated keyword doesn't interfere."
+    },
+    {
+      "case": "printed Flying + Vigilance, no Lifelink at all",
+      "mirrors": "Serra Angel (FDN) — a real, deliberate negative case",
+      "expectedVerdict": "no-lifegain",
+      "note": "A mock creature with keywords:['Flying', 'Vigilance']. Verified in lifelink.test.ts via a real dealDamage call granting zero life — proves real discrimination, not 'any keyword counts'."
+    }
+  ]
+}

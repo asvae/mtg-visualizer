@@ -2293,6 +2293,20 @@ function syntheticLifelinkFact(): Fact {
  * `syntheticEntersBattlefieldFact` and `isNormalInstantOrSorcery`/
  * `syntheticInstantSorceryGraveyardFact`) are NOT in question and stay
  * active — this flag only gates the Lifelink one.
+ *
+ * **Still parked here, 2026-09-18 — NOT un-parked by the separate
+ * `sink-model/predicates/lifelink.ts` predicate added the same day.** That
+ * predicate makes the SAME real-world claim (printed Lifelink implies a
+ * Lifegain producer) inside the sink-only/catalog PROTOTYPE matcher
+ * (`sink-model/match-sink.ts`'s `deriveOccurrences`/`matchSink`,
+ * `functional-model/card-interactions.ts`'s FDN-scoped serving path) — a
+ * genuinely separate code path from this file's own `augmentPoolCards`/
+ * `findInteractionsForCard`, which is what actually drives FIN's real,
+ * served Interactions panel and graph-links output today. This flag was
+ * deliberately left exactly as-is; if/when this OLD paired-fact mechanism
+ * itself gets un-parked, that's still its own separate decision, not
+ * something the new predicate's existence should be read as having already
+ * made.
  */
 const LIFELINK_SYNTHETIC_FACT_ENABLED = false;
 

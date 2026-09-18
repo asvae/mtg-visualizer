@@ -4,5 +4,5 @@
 - [Recognizer wiring checklist](topics/recognizer-wiring-checklist.md) — RECOGNIZER_IDS allowlist + coreKey field-completeness, both repeatedly forgotten.
 - [Sink-predicate corpus mocking policy](topics/sink-predicate-corpus-mocking-policy.md) — saga/crew predicate tests use mocked CardDefinitions, not real cards (scenarios/Cards stay real-only).
 - [Engine-status `blue` caveat](topics/engine-status-blue-caveat.md) — Features-tab blue means "cites a test file", not necessarily real scenario-verified.
-- [FDN/sink-model open items](topics/fdn-sink-model-open-items.md) — sink catalog has 2 entries, no attachment-completeness gate on FDN review yet, third predicate mechanism still gray.
+- [FDN/sink-model open items](topics/fdn-sink-model-open-items.md) — sink catalog has 2 entries (lifegain now consumer+producer), 3/5 sink-derivation predicates real (saga/crew/lifelink).
 - [combinator.ts open follow-ups](topics/combinator-dsl-open-followups.md) — no Bind/Choose/ContextEquals yet; saga recognizer can't see through program-kind custom-alikes.

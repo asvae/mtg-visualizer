@@ -14,8 +14,8 @@ import {
 describe('computeSinkDerivationStatus — seeded sink-derivation-predicate mechanism index', () => {
   const entries = computeSinkDerivationStatus();
 
-  it('has exactly the 4 real, already-identified seeded mechanisms — saga, stun-counters, finality-counters, crew', () => {
-    expect(entries.map((e) => e.slug).sort()).toEqual(['crew', 'finality-counters', 'saga', 'stun-counters']);
+  it('has exactly the 5 real, already-identified seeded mechanisms — saga, stun-counters, finality-counters, crew, lifelink (2026-09-18, added for Felidar Savior/FDN #12)', () => {
+    expect(entries.map((e) => e.slug).sort()).toEqual(['crew', 'finality-counters', 'lifelink', 'saga', 'stun-counters']);
     expect(entries.length).toBe(SINK_DERIVATION_MECHANISMS.length);
   });
 
@@ -58,6 +58,15 @@ describe('computeSinkDerivationStatus — seeded sink-derivation-predicate mecha
       expect(e.evidence.corpusTotal).toBe(0);
       expect(e.evidence.corpusPassing).toBe(0);
     }
+  });
+
+  it('lifelink is also blue (2026-09-18, added for Felidar Savior/FDN #12) — its own real predicate module + fully-agreeing corpus manifest landed alongside its seed entry, not as a later follow-up', () => {
+    const e = computeSinkDerivationStatus().find((entry) => entry.slug === 'lifelink')!;
+    expect(e.baseline).toBe('blue');
+    expect(e.evidence.predicateModuleExists).toBe(true);
+    expect(e.evidence.corpusManifestExists).toBe(true);
+    expect(e.evidence.corpusTotal).toBeGreaterThan(0);
+    expect(e.evidence.corpusPassing).toBe(e.evidence.corpusTotal);
   });
 
   it('evidence paths point at the documented functional-model/sink-model/predicates/<slug> convention', () => {

@@ -113,6 +113,11 @@ import type { SinkQuery } from './sink-query';
 // tell (see `deriveOccurrences` below).
 import { sagaChapterCompletionOccurrences } from './predicates/saga';
 import { crewTapOccurrences } from './predicates/crew';
+// Lifelink automatic lifegain (2026-09-18, added for Felidar Savior, FDN
+// #12) — see `predicates/lifelink.ts`'s own header for the full reasoning;
+// same "direct function, contributes 0 occurrences when it doesn't apply"
+// shape as `sagaChapterCompletionOccurrences`/`crewTapOccurrences` above.
+import { lifelinkProductionOccurrences } from './predicates/lifelink';
 // **2026-09-18: gated by live status.** `deriveOccurrences` below only
 // includes a sink-derivation predicate's own occurrences when
 // `isSinkDerivationMechanismUsable` reports its mechanism's LIVE status
@@ -453,6 +458,7 @@ export function deriveOccurrences(card: CardDefinition, root: string = process.c
   // silent-decline convention — never an error, never a guess.
   if (isSinkDerivationMechanismUsable('saga', root)) out.push(...sagaChapterCompletionOccurrences(card));
   if (isSinkDerivationMechanismUsable('crew', root)) out.push(...crewTapOccurrences(card));
+  if (isSinkDerivationMechanismUsable('lifelink', root)) out.push(...lifelinkProductionOccurrences(card));
   return out;
 }
 
@@ -690,4 +696,26 @@ export function countMatchesForSink(sink: SinkQuery, pool: CardDefinition[]): nu
  * other side. */
 export function countSinksSatisfiedByCard(candidate: CardDefinition, sinks: SinkQuery[]): number {
   return sinks.filter((sink) => matchSink(sink, candidate).matched).length;
+}
+
+/**
+ * Real, structural CONSUMER-side signal (2026-09-18) for a catalog entry's
+ * own `SinkCatalogEntry.consumerTriggerNames` (`catalog/entry.ts`) — does
+ * `candidate` (front OR back face) carry a named trigger whose own
+ * `Trigger.name` is one of `names`? A pure field comparison against
+ * `CardDefinition.triggers[].name`/`CardDefinition.backFace.triggers[].name`
+ * — NEVER oracle/printed text (a sink must never touch oracle text, per
+ * explicit user ruling 2026-09-18). `names` undefined or empty means the
+ * catalog entry declares no consumer-side signal at all — never matches.
+ * Deliberately a standalone function (not folded into `matchSink`, which
+ * stays scoped to `SinkQuery`-vs-`ProducerOccurrence` producer matching) so
+ * `match-sink.ts` itself never has to import the `catalog/` module —
+ * `card-interactions.ts` is the one real caller that already knows about
+ * both `SINK_CATALOG` and this function.
+ */
+export function matchesConsumerTriggerNames(names: string[] | undefined, candidate: CardDefinition): boolean {
+  if (!names || names.length === 0) return false;
+  const nameSet = new Set(names);
+  if (candidate.triggers?.some((t) => nameSet.has(t.name))) return true;
+  return candidate.backFace?.triggers?.some((t) => nameSet.has(t.name)) ?? false;
 }

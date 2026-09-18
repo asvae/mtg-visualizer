@@ -18,32 +18,49 @@ session doesn't have to rediscover it:
   gate-only. See `pipeline-status.ts`'s own header ("tried then
   reverted") and `card-schema.md`'s catalog section for the full
   writeup — don't re-propose the attachment shape.
-- **Real, live-verified finding, not a gap to "fix" casually**:
-  catalog-first matching in `card-interactions.ts` is PRODUCER-shaped
-  (checks if a candidate itself structurally causes the category's
-  event) — it does NOT recognize a consumer/want-side card (Ajani's
-  Pridemate's own `onLifeGained` trigger) as "owning" a catalog sink.
-  Confirmed: `matchSink(lifegainQuery, ajanisPridemate)` is `false`.
-  Getting a genuine consumer card into a category needs either trusting
-  the free-text `Trigger.name` (declined twice now, same reasoning both
-  times) or a real `Trigger.on` vocabulary addition with real engine
-  wiring — neither attempted. Don't silently "fix" this with a
-  trigger-name lookup table without a fresh, explicit user ruling.
-  Server-side consumers of `sink-attachment.ts` (`server/api/fdn-cards/
-  [slug]/{review,sinks}.post.ts`, `server/api/card/[set]/[number].ts`,
-  `app/lib/cardResponse.ts`, `app/components/CardDetailTabs.vue`) are now
-  broken (missing-module typecheck errors) — expected fallout, `card`
-  agent's own explicit follow-up, not fixed here.
-- **Sink catalog has only 2 real entries** (`lifegain`,
-  `graveyard-fodder`, both `blue`) — proving the mechanism, not a real
-  catalog yet. Growing it for real FDN authoring is future work.
+- **SUPERSEDED, 2026-09-18, later the same day: consumer/want-side
+  recognition IS now real, via a second, EXPLICITLY user-approved
+  mechanism — `SinkCatalogEntry.consumerTriggerNames?: string[]`**
+  (`sink-model/catalog/entry.ts`), checked via `sink-model/match-sink.ts`'s
+  `matchesConsumerTriggerNames` (pure `Trigger.name` field comparison,
+  never oracle text). The earlier "declined twice, don't fix without a
+  fresh ruling" caution below was specifically about trusting `Trigger.name`
+  to drive engine-firing/simulation; the user later drew a different,
+  narrower line: using it as a MATCHING/categorization signal is fine,
+  with the catalog's own human-reviewed corpus gate as the real check on
+  false positives. `lifegain` now declares `consumerTriggerNames:
+  ['onLifeGained']` — confirmed `ajanisPridemate` is the ONLY real FDN card
+  with that trigger name (zero false-positive risk today).
+  Historical record of the original finding, kept for context: catalog-first
+  matching is PRODUCER-shaped (`matchSink(lifegainQuery, ajanisPridemate)`
+  is still `false`, unchanged) — the consumer signal is a genuinely separate
+  second check, not a change to the producer one.
+- **Sink catalog still has only 2 real entries** (`lifegain`,
+  `graveyard-fodder`, both `blue`) — `lifegain` now has BOTH a producer
+  `query` and a consumer `consumerTriggerNames`; `graveyard-fodder` still
+  producer-only. Growing the catalog for real FDN authoring is future work.
 - **No route serves `computeSinkCatalogStatus` yet** — no `GET`/review
   `POST`, same "scaffolding only" starting point `pipeline-status.ts`/
   `sink-derivation-status.ts` both had before their own review routes
   landed.
-- **Third sink-derivation mechanism (Stun counters, Finality counters)
-  still has no real predicate module** — stays `gray`. Only `saga`/`crew`
-  are real (`blue`).
+- **5 sink-derivation mechanisms now seeded, 3 real (`saga`/`crew`/
+  `lifelink`, all `blue`)** — `stun-counters`/`finality-counters` still have
+  no real predicate module, stay `gray`. `lifelink`
+  (`sink-model/predicates/lifelink.ts`, 2026-09-18) is the newest — a bare
+  `CardDefinition.keywords.includes('Lifelink')` structural read (front AND
+  back face independently), real-engine-verified via direct `state.ts`
+  `dealDamage` calls (not a scripted scenario), added for `felidar-savior`
+  (FDN #12, the second real card with printed Lifelink after
+  `healer-s-hawk`). Deliberately does NOT un-park `synergy.ts`'s own
+  `LIFELINK_SYNTHETIC_FACT_ENABLED = false` (2026-09-14) — that flag still
+  governs FIN's real, served Interactions/graph-links pipeline, completely
+  untouched; the new predicate lives only in the separate sink-only/catalog
+  prototype matcher (FDN-scoped in production serving today). See
+  `card-schema.md`'s "Full chain worked example" section for the full
+  writeup, including the one existing test (`match-sink.test.ts`'s "sink D",
+  a FIN-pool cross-check corpus, never served output) whose own assertion
+  flipped as a deliberate, documented consequence — flagged there for
+  anyone surprised by it, not silently changed.
 - **`fdn-cards/` "siblings" search in `prep-card-context.mjs`** matches
   any existing `functional-model/cards/*/definition.ts` whose card name
   also happens to appear in the fdn set (not specifically cards authored

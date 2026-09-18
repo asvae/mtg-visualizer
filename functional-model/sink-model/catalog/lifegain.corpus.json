@@ -1,6 +1,6 @@
 {
-  "total": 4,
-  "passing": 4,
+  "total": 8,
+  "passing": 8,
   "cases": [
     {
       "case": "plain effect-level gainLife",
@@ -25,6 +25,30 @@
       "mirrors": "any real card-draw spell with no lifegain clause",
       "expectedVerdict": "no-match",
       "note": "Mocked Sorcery with effects:[{kind:'drawCard'}] only. Verified in lifegain.test.ts via matchSink."
+    },
+    {
+      "case": "CONSUMER mode: named trigger 'onLifeGained', no gainLife effect of its own",
+      "mirrors": "the real Ajani's Pridemate (FDN) shape",
+      "expectedVerdict": "matches (consumer mode only — producer query alone declines it)",
+      "note": "Mocked creature whose only trigger is named 'onLifeGained'. Verified in lifegain.test.ts via matchesConsumerTriggerNames (matchSink itself still returns false, asserted explicitly)."
+    },
+    {
+      "case": "CONSUMER mode: differently-named trigger",
+      "mirrors": "any real card whose trigger reacts to something else entirely",
+      "expectedVerdict": "no-match",
+      "note": "Mocked creature with a trigger named 'onAttack'. Verified in lifegain.test.ts via matchesConsumerTriggerNames."
+    },
+    {
+      "case": "CONSUMER mode: no triggers at all",
+      "mirrors": "Serra Angel (FDN) again, for the consumer recognition mode specifically",
+      "expectedVerdict": "no-match",
+      "note": "Mocked vanilla creature. Verified in lifegain.test.ts via matchesConsumerTriggerNames."
+    },
+    {
+      "case": "CONSUMER mode: named trigger on the BACK face of a transforming DFC",
+      "mirrors": "a transforming DFC whose back face carries the reactive trigger",
+      "expectedVerdict": "matches",
+      "note": "Mocked front/back face pair; the 'onLifeGained' trigger lives only on backFace.triggers. Verified in lifegain.test.ts via matchesConsumerTriggerNames."
     }
   ]
 }

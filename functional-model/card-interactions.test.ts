@@ -11,6 +11,16 @@
 // today; Healer's Hawk's Lifelink is a KEYWORD, not an Effect, and
 // `deriveOccurrences` deliberately doesn't walk `keywords` — see
 // `sink-model/match-sink.ts`'s own scope note).
+//
+// **2026-09-18, later the same day**: the `lifegain` catalog entry
+// (`sink-model/catalog/lifegain.ts`) now also declares a real
+// `consumerTriggerNames: ['onLifeGained']` — Ajani's Pridemate's own real,
+// checked-in trigger name — so the first test below was rewritten from
+// asserting Ajani does NOT get "Lifegain" to asserting it now DOES, via
+// the new consumer-side signal (`matchesConsumerTriggerNames`, a pure
+// `Trigger.name` field comparison, never oracle text). See
+// `card-interactions.ts`'s own "SUPERSEDED" header note for the full
+// correction writeup.
 import { describe, expect, it } from 'vitest';
 import type { CardDefinition, Effect } from './card';
 import { computeCardInteractions } from './card-interactions';
@@ -34,12 +44,26 @@ const blankLandMock: CardDefinition = {
 };
 
 describe('computeCardInteractions', () => {
-  it("Ajani's Pridemate does NOT get a 'Lifegain' category, even with the real catalog entry now checked first (per this file's own (a)/(b) writeup AND its later CATALOG-FIRST CATEGORIZATION section: a catalog query is PRODUCER-shaped, and Ajani's Pridemate doesn't itself have a gainLife effect — its trigger only REACTS to lifegain, a consumer-side signal with no safe structural derivation) — its own real categories stay 'enters the battlefield' (baseline creature) and 'counters' (its own putCounter effect)", () => {
+  it("Ajani's Pridemate now DOES get a 'Lifegain' category, via the new consumer-side signal: its own real onLifeGained trigger name is in the lifegain catalog entry's consumerTriggerNames, even though it has no gainLife effect of its own (a pure Trigger.name field comparison, never oracle text — see entry.ts's own doc comment) — self-inclusive alongside a real producer (the mock) already in the pool; its baseline 'enters the battlefield' and 'counters' categories are unaffected", () => {
     const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate, lifegainMock]);
-    const categories = result.map((r) => r.category);
-    expect(categories).not.toContain('Lifegain');
+    const categories = result.map((r) => r.category).sort();
+    expect(categories).toEqual(['Lifegain', 'counters', 'enters the battlefield']);
     expect(categories).not.toContain('life gain');
-    expect(categories.sort()).toEqual(['counters', 'enters the battlefield']);
+    const lifegain = result.find((r) => r.category === 'Lifegain');
+    expect(lifegain!.matchingCardNames).toEqual(["Ajani's Pridemate", 'Test Lifegain Producer']);
+  });
+
+  it("self-inclusion for the consumer-only case: Ajani's Pridemate alone in the pool (no other lifegain producer at all) still gets 'Lifegain', containing only itself", () => {
+    const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate]);
+    const lifegain = result.find((r) => r.category === 'Lifegain');
+    expect(lifegain).toBeDefined();
+    expect(lifegain!.matchingCardNames).toEqual(["Ajani's Pridemate"]);
+    expect(lifegain!.count).toBe(1);
+  });
+
+  it("a card with no consumerTriggerNames match at all (Serra Angel, no triggers) never gets 'Lifegain' even when checked against a real producer", () => {
+    const result = computeCardInteractions(serraAngel, [serraAngel, lifegainMock]);
+    expect(result.find((r) => r.category === 'Lifegain')).toBeUndefined();
   });
 
   it("self-inclusion: Ajani's Pridemate's own 'counters' category includes Ajani's Pridemate itself (it puts a +1/+1 counter on itself, satisfying its own bare 'counters' want)", () => {

@@ -36,13 +36,22 @@
 // `engine-status.ts` parses `ENGINE_GAPS.md`'s own "Real gaps —
 // prioritized" numbered list as its base index precisely because that list
 // already exists, hand-curated, for a DIFFERENT question ("does the engine
-// support this mechanic at all"). The 4 mechanisms tracked here (Saga,
-// Stun counters, Finality counters, Crew) already have entries in
+// support this mechanic at all"). The first 4 mechanisms tracked here
+// (Saga, Stun counters, Finality counters, Crew) already have entries in
 // `ENGINE_GAPS.md`'s OTHER section ("## FIN-specific mechanics closed") —
 // but as fully-CLOSED engine capabilities, not as "does a sink-derivation
 // predicate exist for this yet" (a narrower, newer, currently-all-`gray`
-// question this file tracks instead). Reusing that doc's parser here would
-// either misreport all 4 as "closed" (wrong axis) or require inventing a
+// question this file tracks instead). A 5th, `lifelink` (2026-09-18, added
+// alongside its own real predicate module — see `SINK_DERIVATION_MECHANISMS`
+// below), is genuinely different in kind: printed Lifelink is a normal,
+// real, uncontroversial `Keyword` this pool already models fine on its own
+// terms (no `ENGINE_GAPS.md` entry needed for the keyword itself) — the
+// GAP this predicate closes is narrower, specific to the sink-only matcher:
+// `deriveOccurrences` had no way to see Lifelink's automatic lifegain at all
+// (Felidar Savior, FDN #12, the real motivating card). Reusing that doc's
+// parser here would either misreport all of these as "closed" (wrong axis,
+// and wrong for `lifelink`, which has no `ENGINE_GAPS.md` entry to parse in
+// the first place) or require inventing a
 // second, unrelated meaning for its `CLOSED` marker. This axis is
 // deliberately its own small, hand-seeded index instead — see
 // `SINK_DERIVATION_MECHANISMS` below — mirroring how `engine-status.ts`
@@ -79,9 +88,12 @@
 //     against real traces) recording how many of the mechanism's real
 //     corpus scenarios the predicate agrees with.
 //
-// Neither file exists for any of the 4 seeded mechanisms yet — every entry
-// therefore starts `gray`, which is the correct, real, computed state right
-// now (not a hardcoded placeholder value).
+// Neither file existed for any seeded mechanism at first — every entry
+// started `gray`, the correct, real, computed state at the time (not a
+// hardcoded placeholder value). `saga`/`crew` have both since grown a real
+// predicate module + corpus manifest (now `blue`); `stun-counters`/
+// `finality-counters` still have neither (still `gray`); `lifelink`
+// (2026-09-18) landed with both from the start.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -148,8 +160,11 @@ export interface SinkDerivationEntry {
 }
 
 /**
- * The real, already-identified seed list — exactly the 4 mechanisms found
- * during the sink-model sanity check (see this file's own header). Do NOT
+ * The real, already-identified seed list — the 4 mechanisms found during
+ * the sink-model sanity check (see this file's own header) plus `lifelink`
+ * (2026-09-18, a genuinely different real gap the same axis still fits —
+ * see the header's own note on why it's tracked here despite having no
+ * `ENGINE_GAPS.md` entry of its own). Do NOT
  * speculatively add mechanisms here that haven't actually surfaced a real
  * card gap yet — same "organic growth, not a-priori enumeration" posture
  * `engine-status.ts` established for its own index.
@@ -236,6 +251,26 @@ export const SINK_DERIVATION_MECHANISMS: SinkDerivationMechanism[] = [
       },
     ],
   },
+  {
+    slug: 'lifelink',
+    label: 'Lifelink automatic lifegain',
+    motivation:
+      "A permanent's printed Lifelink keyword causes its controller to gain life on damage through state.ts's " +
+      "own dealDamage chokepoint (real 702.15e), not through any gainLife Effect the card's own definition " +
+      "declares — found on Felidar Savior (FDN #12), whose own printed Lifelink otherwise gives the sink-only " +
+      "matcher (sink-model/match-sink.ts) no way to recognize it as a real Lifegain producer at all (deriveOccurrences " +
+      "deliberately doesn't walk CardDefinition.keywords for any other purpose today).",
+    expectedSinkShapes: [
+      {
+        event: 'lifegain',
+        note:
+          "A sink wanting 'this card causes its controller to gain life' (the shared lifegain catalog entry, " +
+          "sink-model/catalog/lifegain.ts) has nothing to match against a printed-Lifelink-only permanent's own " +
+          "structured effects/triggers — the lifegain is automatic engine consequence of dealing damage, never a " +
+          "gainLife Effect node.",
+      },
+    ],
+  },
 ];
 
 function loadCorpusManifest(path: string): SinkDerivationCorpusManifest {
@@ -257,9 +292,10 @@ function loadCorpusManifest(path: string): SinkDerivationCorpusManifest {
  * `process.cwd()` (the repo root — true both inside a Nuxt server route and
  * via a standalone script), matching `computeEngineStatus`'s own contract.
  *
- * No mechanism has a predicate module yet, so every entry currently
- * computes `gray` — that's the real, correct state today, not a
- * placeholder.
+ * Each mechanism's own real gray/purple/blue baseline depends purely on
+ * whether its predicate module + corpus manifest exist on disk today — see
+ * this file's own header for which of the 5 seeded mechanisms currently
+ * have either.
  */
 export function computeSinkDerivationStatus(root: string = process.cwd()): SinkDerivationEntry[] {
   const predicatesDir = join('functional-model', 'sink-model', 'predicates');
