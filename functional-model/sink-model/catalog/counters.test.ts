@@ -10,9 +10,10 @@
 // **2026-09-18: rewritten for the `SinkQuery`-free producer mechanism.**
 // `CountersSink`'s own producer check no longer builds a `SinkQuery`/calls
 // `matchSink` at all (`families/counters.ts`'s own header) — there is no
-// `entry.query` anymore to hand to `matchSink` directly. Every case that used
-// to assert `matchSink(entry.query, card).matched` instead calls the entry's
-// own real `CallableSink` contract (`entry(card)`) — the SAME real interface
+// `sinkInstance.query` anymore to hand to `matchSink` directly. Every case
+// that used to assert `matchSink(sinkInstance.query, card).matched` instead
+// calls the sink instance's own real `CallableSink` contract
+// (`sinkInstance(card)`) — the SAME real interface
 // `card-interactions.ts`/`server/api/sink-catalog/index.get.ts` actually use
 // in production — and asserts on `result?.producer` presence. This is a
 // STRICTER, more real test than before (it exercises the actual production
@@ -31,7 +32,7 @@ import type { CardDefinition, Effect } from '../../card';
 import { matchesConsumerTriggerNames } from '../match-sink';
 import { CountersSink } from './families/counters';
 
-describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefinition fixtures)', () => {
+describe('counters-plus1plus1 sink instance — corpus (mocked CardDefinition fixtures)', () => {
   // Built directly via the real `CountersSink` family factory rather than
   // importing the pre-built production singleton (`counters-plus1plus1.ts`'s
   // own `countersPlus1Plus1` export) — this test constructs its own instance
@@ -39,7 +40,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
   // file. This config literal MUST match `counters-plus1plus1.ts`'s own
   // real production config byte-for-byte, or this test silently stops
   // testing the real production configuration.
-  const entry = CountersSink({
+  const sinkInstance = CountersSink({
     slug: 'counters-plus1plus1',
     counterType: '+1/+1',
     consumerTriggerNames: ['onCounterAdded'],
@@ -53,7 +54,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       pt: [2, 2],
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
     };
-    expect(entry(card)?.producer).toBeDefined();
+    expect(sinkInstance(card)?.producer).toBeDefined();
   });
 
   it('SOURCE CANDIDATE: matches a TRIGGERED putCounter (trigger effects are walked too, not just top-level effects)', () => {
@@ -64,7 +65,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       pt: [1, 1],
       triggers: [{ name: 'onEnter', on: 'enter', effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect] }],
     };
-    expect(entry(card)?.producer).toBeDefined();
+    expect(sinkInstance(card)?.producer).toBeDefined();
   });
 
   it('SOURCE CANDIDATE: matches a broadcast putCounterAll effect with counterType "+1/+1" (a real "put a +1/+1 counter on each creature you control" shape)', () => {
@@ -74,7 +75,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       typeLine: 'Sorcery',
       effects: [{ kind: 'putCounterAll', predicate: 'creatures-you-control', counterType: '+1/+1', amount: 1 } satisfies Effect],
     };
-    expect(entry(card)?.producer).toBeDefined();
+    expect(sinkInstance(card)?.producer).toBeDefined();
   });
 
   it('SOURCE CANDIDATE: does NOT match a DIFFERENTLY-typed counter effect (counterType "-1/-1") — real discrimination on counter type, not "any putCounter counts"', () => {
@@ -84,7 +85,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       typeLine: 'Sorcery',
       effects: [{ kind: 'putCounterTarget', validType: 'creature', counterType: '-1/-1', amount: 1 } satisfies Effect],
     };
-    expect(entry(card)).toBeNull();
+    expect(sinkInstance(card)).toBeNull();
   });
 
   it('SOURCE CANDIDATE: does NOT match a vanilla creature with no effects at all', () => {
@@ -94,7 +95,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       typeLine: 'Creature — Human',
       pt: [2, 2],
     };
-    expect(entry(card)).toBeNull();
+    expect(sinkInstance(card)).toBeNull();
   });
 
   it('SINK CANDIDATE: matches a card whose own named trigger is "onCounterAdded" (the real Exemplar of Light shape) even with no putCounter effect walked for THIS check — proves the sink-candidate signal is a genuinely separate check from the source-candidate check', () => {
@@ -105,7 +106,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       pt: [1, 1],
       triggers: [{ name: 'onCounterAdded', effects: [{ kind: 'drawCard', amount: 1 } satisfies Effect] }],
     };
-    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(true);
+    expect(matchesConsumerTriggerNames(sinkInstance.consumerTriggerNames, card)).toBe(true);
   });
 
   it('SINK CANDIDATE: does NOT match a card with a DIFFERENTLY-named trigger (real discrimination, not "any trigger counts")', () => {
@@ -116,7 +117,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       pt: [1, 1],
       triggers: [{ name: 'onAttack', effects: [{ kind: 'drawCard' } satisfies Effect] }],
     };
-    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(false);
+    expect(matchesConsumerTriggerNames(sinkInstance.consumerTriggerNames, card)).toBe(false);
   });
 
   it('SINK CANDIDATE: does NOT match a card with no triggers at all', () => {
@@ -126,7 +127,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       typeLine: 'Creature — Human',
       pt: [2, 2],
     };
-    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(false);
+    expect(matchesConsumerTriggerNames(sinkInstance.consumerTriggerNames, card)).toBe(false);
   });
 
   it('SINK CANDIDATE: matches via the BACK face of a transforming DFC (same face-plurality convention every other sink-candidate signal already honors)', () => {
@@ -143,7 +144,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
         triggers: [{ name: 'onCounterAdded', effects: [{ kind: 'drawCard', amount: 1 } satisfies Effect] }],
       },
     };
-    expect(matchesConsumerTriggerNames(entry.consumerTriggerNames, card)).toBe(true);
+    expect(matchesConsumerTriggerNames(sinkInstance.consumerTriggerNames, card)).toBe(true);
   });
 
   // -------------------------------------------------------------------------
@@ -152,8 +153,8 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
   // entry(candidate)" writeup; same 3-case shape reused here, against this
   // family's own real fixtures. Deliberately still a real, standalone
   // assertion block (not merged into the SOURCE CANDIDATE cases above) —
-  // those already exercise `entry(candidate)` too now, but this block is the
-  // one that specifically pins down the FULL `SinkMatchDetail` shape
+  // those already exercise `sinkInstance(candidate)` too now, but this block
+  // is the one that specifically pins down the FULL `SinkMatchDetail` shape
   // (`.producer.via`/`.consumer`/`null`), not just presence/absence.
   it('CALLABLE: source-candidate-only match returns real detail (producer.via set, no consumer)', () => {
     const card: CardDefinition = {
@@ -163,7 +164,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       pt: [2, 2],
       effects: [{ kind: 'putCounter', target: 'self', counterType: '+1/+1', amount: 1 } satisfies Effect],
     };
-    const result = entry(card);
+    const result = sinkInstance(card);
     expect(result).not.toBeNull();
     expect(result!.producer?.via).toEqual(expect.any(String));
     expect(result!.consumer).toBeUndefined();
@@ -177,7 +178,7 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       pt: [1, 1],
       triggers: [{ name: 'onCounterAdded', effects: [{ kind: 'drawCard', amount: 1 } satisfies Effect] }],
     };
-    const result = entry(card);
+    const result = sinkInstance(card);
     expect(result).not.toBeNull();
     expect(result!.consumer).toEqual({ via: 'triggerName' });
     expect(result!.producer).toBeUndefined();
@@ -190,6 +191,6 @@ describe('counters-plus1plus1 sink catalog entry — corpus (mocked CardDefiniti
       typeLine: 'Creature — Human',
       pt: [2, 2],
     };
-    expect(entry(card)).toBeNull();
+    expect(sinkInstance(card)).toBeNull();
   });
 });
