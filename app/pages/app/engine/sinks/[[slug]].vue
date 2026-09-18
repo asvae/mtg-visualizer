@@ -80,8 +80,19 @@ function statusMeta(color: StatusColor) {
 // manifest panel already uses, reused here for a value that was never a
 // file on disk (the query is a plain in-memory object, not read off
 // `sourceFiles`) via a synthetic `SourceFileResult`-shaped object.
+//
+// **`null` for an entry with no real `query` at all** (2026-09-18,
+// `CountersSink`'s own no-`query` entries — `SinkCatalogPageEntry.query`'s
+// own doc comment, `server/api/sink-catalog/index.get.ts`) — the template
+// below renders the whole "Curated SinkQuery" panel conditionally on this,
+// rather than showing an empty/`undefined` block. Per the user's own
+// explicit correction: no synthesized display-only query object either —
+// "just put these mock definitions somewhere within test" — the real
+// answer for "what does this sink look for" lives in the family's own
+// corpus test (`counters.test.ts`), shown below via "Corpus test", not a
+// fabricated query.
 const queryResult = computed(() =>
-  selectedEntry.value
+  selectedEntry.value?.query
     ? { path: 'query', exists: true, content: JSON.stringify(selectedEntry.value.query, null, 2), truncated: false }
     : null,
 );
@@ -262,7 +273,7 @@ async function submitReject() {
           </div>
         </div>
 
-        <div class="mt-3 border-t border-border-subtle pt-3">
+        <div v-if="queryResult" class="mt-3 border-t border-border-subtle pt-3">
           <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Query</div>
           <div class="mt-1.5">
             <EngineConsoleCodeSection title="Curated SinkQuery" language="json" :result="queryResult" default-open />
@@ -272,11 +283,11 @@ async function submitReject() {
         <!-- Matches (2026-09-18) — genuinely different question from the
              mocked-fixture corpus manifest above (does the entry BEHAVE
              correctly against a hand-picked fixture set) vs. this (who in
-             the ACTUAL dev pool matches it today). CONSUMER matches only —
-             who genuinely owns/reacts to this category, per
+             the ACTUAL dev pool matches it today). SINK CANDIDATE matches
+             only — who genuinely owns/reacts to this category, per
              `functional-model/sink-model/SINK_MODEL_DESIGN.md`'s own
-             thesis that consumer-side curation is the one place real
-             judgment concentrates in this pipeline. The producer/source
+             thesis that sink-candidate curation is the one place real
+             judgment concentrates in this pipeline. The source-candidate
              side is deliberately NOT shown here: for a broad family like
              Battlefield presence it's essentially "every creature" (111
              real FDN pool cards for Cats alone) — real, but not
@@ -295,38 +306,43 @@ async function submitReject() {
           <p v-if="!selectedEntry.realMatches" class="mt-1.5 text-[11px] text-muted italic">
             Not computed — dev-only FDN pool unavailable (production build, or the pool failed to load).
           </p>
-          <p v-else-if="!selectedEntry.realMatches.consumerMatches" class="mt-1.5 text-[11px] text-muted italic">
-            This entry declares no consumer-side signal to match against.
+          <p v-else-if="!selectedEntry.realMatches.sinkCandidateMatches" class="mt-1.5 text-[11px] text-muted italic">
+            This entry declares no sink-candidate signal to match against.
           </p>
           <details v-else class="mt-1.5 rounded-md border border-border-subtle bg-surface/40 px-2.5 py-1.5 text-[11px] text-text">
             <summary class="flex cursor-pointer items-center gap-1.5">
               <UIcon name="i-lucide-log-in" class="h-3.5 w-3.5 shrink-0 text-consume" />
               Matches
               <span class="ml-auto shrink-0 rounded-full bg-bg px-2 py-px text-[10px] font-bold text-muted">
-                {{ selectedEntry.realMatches.consumerMatches.length }} card{{ selectedEntry.realMatches.consumerMatches.length === 1 ? '' : 's' }}
+                {{ selectedEntry.realMatches.sinkCandidateMatches.length }} card{{ selectedEntry.realMatches.sinkCandidateMatches.length === 1 ? '' : 's' }}
               </span>
             </summary>
-            <div v-if="selectedEntry.realMatches.consumerMatches.length" class="mt-1.5">
-              <CardMatchGallery :matches="selectedEntry.realMatches.consumerMatches" />
+            <div v-if="selectedEntry.realMatches.sinkCandidateMatches.length" class="mt-1.5">
+              <CardMatchGallery :matches="selectedEntry.realMatches.sinkCandidateMatches" />
             </div>
-            <p v-else class="mt-1.5 text-muted italic">No real FDN pool card carries this entry's consumer-side signal today.</p>
+            <p v-else class="mt-1.5 text-muted italic">No real FDN pool card carries this entry's sink-candidate signal today.</p>
           </details>
         </div>
 
+        <!-- Source — real evidence (2026-09-18, narrowed to exactly 2 real,
+             read-worthy files — no raw corpus.json JSON dump, no thin
+             per-instance config file): "Sink source" is the file the
+             entry's own real matching LOGIC lives in (the shared
+             `families/<slug>.ts` factory for a real multi-instance family
+             like Counters, or the singleton's own `<slug>.ts` otherwise —
+             `SinkCatalogSourceFiles.entry`'s own doc comment,
+             `server/api/sink-catalog/index.get.ts`); "Corpus test" is the
+             real `.test.ts` file itself, per the user's own "I'll read
+             tests directly" — the tests already read the corpus.json cases
+             for you. -->
         <div class="mt-3 border-t border-border-subtle pt-3">
           <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Source — real evidence</div>
           <div class="mt-1.5 flex flex-col gap-1">
             <EngineConsoleCodeSection
-              title="Catalog entry source"
+              title="Sink source"
               language="ts"
               :result="selectedEntry.sourceFiles.entry"
-              not-found-label="No catalog entry module yet."
-            />
-            <EngineConsoleCodeSection
-              title="Corpus manifest"
-              language="json"
-              :result="selectedEntry.sourceFiles.corpusManifest"
-              not-found-label="No corpus manifest yet."
+              not-found-label="No sink source module yet."
             />
             <EngineConsoleCodeSection
               title="Corpus test"

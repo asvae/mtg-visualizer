@@ -118,9 +118,11 @@ separates `producer` (this card structurally causes the event) from
 checking whether `self` OWNS a category enough to display it on its own
 page, `card-interactions.ts`'s `computeCardInteractions` computes
 `selfDirectProducerMatch`/`selfConsumerMatch` by calling the exact same
-`matchSink(entry.query, self, root)` check it runs against every other
-candidate, then FILTERS on which side of the returned detail is
-considered "good enough" for self-display. For most entries,
+per-entry match (`matchEntry`, a small local helper added 2026-09-18 when
+`CountersSink` stopped always carrying a `query` — see "SinkQuery becomes
+optional" below) it runs against every other candidate, then FILTERS on
+which side of the returned detail is considered "good enough" for
+self-display. For most entries,
 `selfDirectProducerMatch || selfConsumerMatch` (either side alone is
 enough). For the Battlefield-presence family specifically, the
 `requireConsumerForSelfOwnership` flag (a plain config field on
@@ -166,6 +168,62 @@ true}` is a hardcoded special case) to the category instead, so there's
 no parallel `category` field that could drift out of sync with the rest
 of a configuration.
 
+### 2b. SinkQuery becomes optional, `CountersSink` migrates off it (2026-09-18)
+
+Until this pass, EVERY family instance's own producer-matching mechanism
+was the same two-step indirection: build a `SinkQuery` (a reified,
+curated object — `{category, event, counterType, controller, ...}`),
+then hand it to `sink-model/match-sink.ts`'s generic `matchSink`/
+`occurrenceSatisfiesSink` comparator, which walks `deriveOccurrences`
+output and compares each occurrence against the query's own fields. Per
+the user's own explicit correction — "Sink family should produce sink
+out of card definition. Not out of magical query... each sink family's
+matcher function should directly inspect the candidate... written as
+real code in the function body, not built as a standalone object handed
+to a generic comparator" — `CountersSink` (`catalog/families/
+counters.ts`) now skips the `SinkQuery` step entirely for its own
+producer check: it still calls `deriveOccurrences(candidate, root)` (the
+real, structural, `CardDefinition`-derived occurrence walk — genuinely
+reused, not reimplemented; this IS "produce sink out of card
+definition"), but the MATCHING condition itself is real, inline code in
+the factory's own function body (`occ.event === 'putCounter' &&
+occ.counterType === counterType`, plus a small inline controller-
+compatibility check mirroring `match-sink.ts`'s own private
+`effectiveController`/`sidesCompatible` helpers) — no `SinkQuery` object
+constructed, no generic comparator invoked.
+
+**Real, mechanical consequences, not just an internal refactor**:
+- `SinkCatalogEntry.query` (`catalog/entry.ts`) is now OPTIONAL — a
+  `CountersSink` instance has none at all (`undefined`, never a
+  synthesized display-only stand-in — the user explicitly rejected that:
+  "just put these mock definitions somewhere within test," i.e. the
+  family's own corpus test (`counters.test.ts`) IS the real "what does
+  this sink look for" documentation now, not a serialized query object).
+  A new `SinkCatalogEntry.category?: string` field covers the one real
+  purpose `query.category` used to serve for a query-less entry — see
+  "UI naming" above for the full `entry.category ?? entry.query?.category`
+  read pattern every consumer now uses.
+- Every consumer that used to read `entry.query` unconditionally had to
+  learn to tolerate `undefined`: `card-interactions.ts` (a new local
+  `matchEntry` helper — routes a callable `SinkInstance` through its own
+  `entry(candidate, root)` call, falls back to direct `matchSink(entry
+  .query!, ...)` only for a plain non-callable entry, which always still
+  has a real query), `server/api/sink-catalog/index.get.ts` (serves
+  `query: members[0]?.query` — genuinely `undefined` for Counters, not a
+  fallback object — and the review page conditionally renders the
+  "Curated SinkQuery" panel only when present), `sink-catalog-status.ts`
+  (`category` fallback, above).
+- **`BattlefieldPresenceSink` has NOT migrated** — still builds a real
+  `SinkQuery` and calls `matchSink` for its own producer check
+  (`catalog/families/battlefield-presence.ts`, unchanged). This was a
+  deliberate, scoped-down first step ("scoped to Counters only... a
+  deliberate, incremental first step") to validate the pattern before
+  touching the second family. Confirmed zero behavior regression for
+  Counters: the real FDN pool's own producer/consumer match sets (19
+  source candidates, 1 sink candidate — Exemplar of Light) are
+  byte-identical before and after, verified live against a running dev
+  server both ways.
+
 ### 3. "The instance sink is applicable to Candidate" — the callable contract
 
 This is the `SinkInstance` callable contract itself:
@@ -188,17 +246,25 @@ applicable to this candidate" as a single, first-class operation.
 
 **Already true for the surface that matters most (a card's own
 Interactions/Sinks list) — verified directly against the running code,
-not assumed.** `SinkCatalogEntry.query.category` is the real, per-INSTANCE
-display label, authored once per configuration: `'Cats'`, `'Creatures'`,
-`'Same-name copies'`, `'+1/+1'` — never the generic family
-name `'battlefield-presence'`/`'counters'`. `card-interactions.ts`'s
-`computeCardInteractions` groups its output by `entry.query.category`
-(line: `const category = entry.query.category;`), so a card matching the
-Cats configuration shows a row literally labeled "Cats," never "Battlefield
-Presence." This is not a coincidental byproduct of the factory refactor —
-`BattlefieldPresenceSinkConfig`/`CountersSinkConfig` both require the
-caller to author a real, specific `category`/`query.category` per
-configuration precisely so this label exists per instance, not per family.
+not assumed.** The real, per-INSTANCE display label — authored once per
+configuration: `'Cats'`, `'Creatures'`, `'Same-name copies'`, `'+1/+1'` —
+never the generic family name `'battlefield-presence'`/`'counters'`.
+Until 2026-09-18 this always lived at `SinkCatalogEntry.query.category`;
+since `CountersSink`'s own instances dropped `query` entirely (see
+"SinkQuery becomes optional, `CountersSink` migrates off it" below), the
+real read is `entry.category ?? entry.query?.category` — `CountersSink`
+sets the new top-level `category` field directly (still `'+1/+1'`,
+identical label, just no longer nested under a query object);
+`BattlefieldPresenceSink` (unmigrated) still sets only `query.category`,
+so the `?? entry.query?.category` fallback is what still resolves 'Cats'/
+'Creatures'/'Same-name copies' for it. `card-interactions.ts`'s
+`computeCardInteractions` groups its output by this same resolved value
+(`const category = entry.category ?? entry.query!.category;`), so a card
+matching the Cats configuration shows a row literally labeled "Cats,"
+never "Battlefield Presence." This is not a coincidental byproduct of the
+factory refactor — `BattlefieldPresenceSinkConfig`/`CountersSinkConfig`
+both require the caller to author a real, specific per-configuration
+category precisely so this label exists per instance, not per family.
 
 **The one place the GENERIC family name legitimately does surface** is the
 review-status dashboard (`sink-catalog-status.ts`'s `FAMILY_LABELS`,
@@ -230,8 +296,8 @@ confirmed true in the current code, not just asserted:
   at this layer.
 - `card-interactions.ts`'s `computeCardInteractions` iterates
   `SINK_CATALOG` directly (`for (const entry of SINK_CATALOG)`) and keys
-  its output map by `entry.query.category` — i.e., by INSTANCE, not
-  family. It imports only `isSinkCatalogEntryUsable` from
+  its output map by `entry.category ?? entry.query!.category` — i.e., by
+  INSTANCE, not family. It imports only `isSinkCatalogEntryUsable` from
   `sink-catalog-status.ts` (the blue/usable gate) — it never imports or
   calls `computeSinkCatalogStatus`/`computeSinkCatalogColor` (the
   family-grouping functions), so nothing in the card-page code path ever
@@ -290,3 +356,13 @@ call to get right in the first place.
   as of this writing (not touched here) — nothing in this doc depends on
   that fix; the family-grouping behavior it serves was read, not edited,
   to write the section above.
+- **`BattlefieldPresenceSink` still hasn't migrated off `SinkQuery`/
+  `matchSink`** (see "SinkQuery becomes optional" above) — a real,
+  deliberately-deferred follow-up, not forgotten. Once it does, `matchSink`/
+  `SinkQuery`/`occurrenceSatisfiesSink` (`match-sink.ts`/`sink-query.ts`)
+  would have zero remaining callers inside `sink-model/catalog/` itself
+  (only `lifegain`/`graveyard-fodder`/`etb`, plain singleton entries,
+  would still use them directly) — worth a real look at whether those
+  three singletons should also migrate to the same direct-inspection
+  shape at that point, or whether `matchSink` stays legitimately in use
+  for them long-term. Not decided here.

@@ -244,7 +244,47 @@
 import type { CardDefinition } from './card';
 import { matchesBattlefieldPresenceConsumer, matchesConsumerTriggerNames, matchesConsumerTriggerOn, matchSink } from './sink-model/match-sink';
 import { SINK_CATALOG } from './sink-model/catalog/index';
+import type { SinkInstance } from './sink-model/catalog/entry';
 import { isSinkCatalogEntryUsable } from './sink-catalog-status';
+
+/**
+ * Real producer/consumer match detail for ONE `SINK_CATALOG` entry against
+ * ONE candidate — uniform whether `entry` is a plain, non-callable
+ * `SinkCatalogEntry` (`lifegain`/`graveyard-fodder`/`etb`, still matched via
+ * a direct `matchSink(entry.query, ...)`/`matchesConsumerTriggerNames`/
+ * `matchesConsumerTriggerOn`/`matchesBattlefieldPresenceConsumer` call, same
+ * as always) or a real, invocable `SinkInstance` (every `battlefield-
+ * presence-*`/`counters-*` member, built by `BattlefieldPresenceSink`/
+ * `CountersSink`) — a callable entry answers both in ONE real
+ * `entry(candidate, root)` call instead (mirrors `server/api/sink-catalog/
+ * index.get.ts`'s own `instanceProducerMatched`/`instanceConsumerMatched`
+ * pair, the same real pattern already established there for the identical
+ * "SinkCatalogEntry vs. callable SinkInstance" distinction).
+ *
+ * **Why this is now load-bearing, not just a style choice (2026-09-18,
+ * `CountersSink` producer-mechanism rewrite):** `CountersSink`'s own entry no
+ * longer carries a `query` at all (`SinkCatalogEntry.query` is now optional —
+ * see that field's own doc comment, `sink-model/catalog/entry.ts`) — calling
+ * `matchSink(entry.query, ...)` directly for a `counters-*` entry would pass
+ * `undefined` and throw. Every real `SinkInstance` (family-built, including
+ * `counters-*`) is ALWAYS callable, so routing through `entry(candidate,
+ * root)` for those and falling back to the old direct calls only for a
+ * plain, non-callable `SinkCatalogEntry` (which still always has a real
+ * `query`) is both correct today and forward-compatible with a future family
+ * that drops `query` the same way.
+ */
+function matchEntry(entry: (typeof SINK_CATALOG)[number], candidate: CardDefinition, root: string): { producerMatched: boolean; predicateDerived: boolean; consumerMatched: boolean } {
+  if (typeof entry === 'function') {
+    const detail = (entry as unknown as SinkInstance)(candidate, root);
+    return { producerMatched: !!detail?.producer, predicateDerived: !!detail?.producer?.predicateDerived, consumerMatched: !!detail?.consumer };
+  }
+  const producer = matchSink(entry.query!, candidate, root);
+  const consumerMatched =
+    matchesConsumerTriggerNames(entry.consumerTriggerNames, candidate) ||
+    matchesConsumerTriggerOn(entry.consumerTriggerOn, candidate) ||
+    matchesBattlefieldPresenceConsumer(entry.consumerBattlefieldPresence, candidate);
+  return { producerMatched: producer.matched, predicateDerived: !!producer.predicateDerived, consumerMatched };
+}
 
 export interface CardInteractionCategory {
   /** Human-readable label, reused verbatim from `synergy.ts`'s own
@@ -294,7 +334,7 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
     // `SinkCatalogEntry.consumerTriggerNames`'s own doc comment
     // (`sink-model/catalog/entry.ts`) for why this is a safe, structural,
     // oracle-text-free signal. Either is sufficient; both may hold.
-    const selfProducerMatch = matchSink(entry.query, definition, root);
+    const self = matchEntry(entry, definition, root);
     // A predicate-derived producer match (Lifelink's automatic lifegain,
     // Saga chapter-completion death, Crew's tap activation — see
     // `ProducerOccurrence.predicateDerived`'s own doc comment) is real
@@ -308,7 +348,7 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
     // added for the real Healer's Hawk/Felidar Savior bug: both used to
     // self-display "Lifegain" purely off their own Lifelink keyword, with
     // no `gainLife` effect anywhere on either card.
-    const selfDirectProducerMatch = selfProducerMatch.matched && !selfProducerMatch.predicateDerived;
+    const selfDirectProducerMatch = self.producerMatched && !self.predicateDerived;
     // Three independent consumer-side signals — a candidate may declare any
     // combination (`etb`'s own `consumerTriggerOn: ['enter']`, `lifegain`'s
     // own `consumerTriggerNames: ['onLifeGained']`, the `battlefield-
@@ -319,11 +359,10 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
     // why `Trigger.on` (closed enum), `Trigger.name` (free text), and
     // `CostReduction.perControlled`/`pumpAll`/`putCounterAll` (a genuinely
     // different, non-trigger-based structural shape) each needed their own
-    // check.
-    const selfConsumerMatch =
-      matchesConsumerTriggerNames(entry.consumerTriggerNames, definition) ||
-      matchesConsumerTriggerOn(entry.consumerTriggerOn, definition) ||
-      matchesBattlefieldPresenceConsumer(entry.consumerBattlefieldPresence, definition);
+    // check — all folded uniformly into `matchEntry` above (including, for a
+    // callable `SinkInstance`, `CountersSink`'s own `consumerTriggerNames`
+    // check).
+    const selfConsumerMatch = self.consumerMatched;
     // Real bug fix (2026-09-18, found live: Helpful Hunter — a genuine,
     // printed Cat — self-displayed "Cats" on its OWN page purely for BEING
     // a Cat, no cost-reduction/anthem effect of its own at all). Every
@@ -345,7 +384,12 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
     // appears in Claws Out's own "Cats" `matchingCardNames`.
     const selfOwnsCategory = entry.requireConsumerForSelfOwnership ? selfConsumerMatch : selfDirectProducerMatch || selfConsumerMatch;
     if (!selfOwnsCategory) continue;
-    const category = entry.query.category;
+    // `entry.category` — a real, top-level display label (2026-09-18, added
+    // for `CountersSink`'s own no-`query`-at-all entries; see that field's
+    // own doc comment, `sink-model/catalog/entry.ts`) — takes precedence
+    // when present; every entry that still has a real `query` (every
+    // non-Counters entry today) falls back to `query.category`, unchanged.
+    const category = entry.category ?? entry.query!.category;
     const matchedNames = matchesByCategory.get(category) ?? new Set<string>();
     // Only PRODUCER matches ever count as a match here — consumer mode
     // above decides whether `definition` owns/cares about this category at
@@ -357,7 +401,7 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
     // always conditioned on the card genuinely being a SOURCE/producer of
     // its own category, never unconditional self-inclusion.
     for (const candidate of poolDefinitions) {
-      if (matchSink(entry.query, candidate, root).matched) {
+      if (matchEntry(entry, candidate, root).producerMatched) {
         matchedNames.add(candidate.name);
       }
     }

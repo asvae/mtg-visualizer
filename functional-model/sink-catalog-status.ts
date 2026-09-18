@@ -279,7 +279,15 @@ export function computeSinkCatalogStatus(root: string = process.cwd()): SinkCata
 
     return {
       slug: group.key,
-      category: group.isFamily ? (FAMILY_LABELS[group.key] ?? group.key) : group.members[0]!.query.category,
+      // `.query!` — a non-family (singleton) group's one real member always
+      // has a real `query` (only a real multi-instance FAMILY member —
+      // `counters-*` today — may omit it, per `SinkCatalogEntry.query`'s own
+      // doc comment; this branch is unreachable for those, since
+      // `group.isFamily` is checked first). `category` also falls back to
+      // `entry.category` first (2026-09-18, same field), for forward
+      // compatibility with a future singleton that also drops `query` —
+      // none does today, so this is a real but currently-inert fallback.
+      category: group.isFamily ? (FAMILY_LABELS[group.key] ?? group.key) : (group.members[0]!.category ?? group.members[0]!.query!.category),
       baseline,
       evidence: { corpusManifestPath: members[0]!.corpusManifestPath, corpusManifestExists, corpusTotal, corpusPassing, members },
       ...(group.isFamily ? { instanceSlugs: group.members.map((e) => e.slug) } : {}),

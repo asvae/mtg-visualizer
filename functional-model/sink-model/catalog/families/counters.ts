@@ -18,17 +18,48 @@
 //     card" — Counters CONSUMER (this configuration's own
 //     `consumerTriggerNames`).
 //
-// **Producer** (`query`) — reuses the EXISTING generic `putCounter`
-// `ProducerOccurrence` `match-sink.ts`'s `walkEffects` already derives for
-// EVERY `putCounter`/`putCounterTarget`/`putCounterAll` effect (each
-// already carries its own real `counterType` on the occurrence, and
-// `occurrenceSatisfiesSink`'s event-vs-event branch already compares
-// `p.counterType`/`w.counterType` by plain equality) — no new occurrence or
-// matcher code needed at all, ever, for a new counter type; a future
+// **Producer** — reuses the EXISTING generic `putCounter` `ProducerOccurrence`
+// `match-sink.ts`'s `walkEffects` already derives for EVERY `putCounter`/
+// `putCounterTarget`/`putCounterAll` effect (each already carries its own
+// real `counterType` on the occurrence) — no new occurrence-DERIVATION code
+// needed at all, ever, for a new counter type; a future
 // `CountersSink({counterType:'-1/-1', ...})`/`CountersSink({counterType:
 // 'loyalty', ...})` configuration is the exact same shape, zero new code in
 // `match-sink.ts` — this factory is exactly the generalization this
 // family's own original header comment already anticipated.
+//
+// **2026-09-18, later still — producer MATCHING no longer goes through a
+// `SinkQuery`/`matchSink` at all.** Per the user's own explicit correction
+// — "Sink family should produce sink out of card definition. Not out of
+// magical query... each sink family's matcher function should directly
+// inspect the candidate... written as real code in the function body, not
+// built as a standalone object handed to a generic comparator" — this
+// factory no longer builds a `SinkQuery` object at all. Instead it calls
+// `deriveOccurrences(candidate, root)` (the same real, structural,
+// `CardDefinition`-derived occurrence walk `matchSink` itself was always
+// built on top of — genuinely reused, not reimplemented) and inspects the
+// result directly, inline, in its own function body: does ANY derived
+// occurrence have `event === 'putCounter'` and `counterType === counterType`,
+// with a controller compatible with `'you'` (the one real constraint the old
+// `SinkQuery{controller:'you'}` field contributed — replicated here as a
+// direct inline check on `occ.controller`/`occ.target`, mirroring
+// `match-sink.ts`'s own private `effectiveController`/`sidesCompatible`
+// helpers byte-for-byte in logic, not imported, since this file must not
+// modify `match-sink.ts`'s own exports for this narrowly-scoped change).
+// Confirmed, by direct derivation against every real `walkEffects` putCounter
+// case (`putCounter`/`putCounterTarget`/`putCounterAll`/the AST-derived
+// `program:putCounter` case), that this inline check accepts and rejects the
+// exact same occurrences `occurrenceSatisfiesSink` used to for this specific
+// query shape — see this task's own final report for the full case-by-case
+// derivation. The entry built by this factory therefore has NO `query`
+// field at all anymore (`SinkCatalogEntry.query` is now optional — see that
+// field's own doc comment, `entry.ts`) — `category` (below) is set as its
+// own top-level field instead, since there's no `query.category` left to
+// carry it. `BattlefieldPresenceSink` (`families/battlefield-presence.ts`)
+// has NOT migrated to this shape yet — still builds and matches via a real
+// `SinkQuery`/`matchSink` call, deliberately out of scope for this pass (see
+// `SINK_MODEL_DESIGN.md`'s own updated section for the "Counters migrated,
+// Battlefield-presence hasn't yet" status).
 //
 // **Consumer** (`consumerTriggerNames`, optional per configuration) — same
 // gap as `etb.ts`'s own Dazzling Angel fix: "whenever one or more counters
@@ -56,8 +87,7 @@
 // selfConsumerMatch` rule (`card-interactions.ts`) is correct here
 // unmodified.
 import type { CardDefinition } from '../../../card';
-import { matchesConsumerTriggerNames, matchSink } from '../../match-sink';
-import type { SinkQuery } from '../../sink-query';
+import { deriveOccurrences, matchesConsumerTriggerNames } from '../../match-sink';
 import type { SinkCatalogEntry, SinkFamily, SinkInstance, SinkMatchDetail } from '../entry';
 
 /** Stable SINK FAMILY key shared by every real configured instance — see
@@ -108,21 +138,41 @@ function getName(config: CountersSinkConfig): string {
 export const CountersSink: SinkFamily<CountersSinkConfig> = (config) => {
   const { slug, counterType, consumerTriggerNames } = config;
   const category = getName(config);
-  const query: SinkQuery = { category, event: 'putCounter', counterType, controller: 'you' };
 
   const sink = ((candidate: CardDefinition, root: string = process.cwd()): SinkMatchDetail | null => {
-    const producer = matchSink(query, candidate, root);
+    // Direct structural inspection of `candidate` — no `SinkQuery`/`matchSink`
+    // involved (see this file's own header for the full 2026-09-18 rewrite
+    // writeup). `deriveOccurrences` IS the real "produced from the card
+    // definition" machinery (walks `candidate`'s own effects/triggers/
+    // program AST) — reused here directly rather than reimplemented; only
+    // the MATCHING condition itself is now inline, real code instead of a
+    // reified query object handed to a generic comparator.
+    const occurrence = deriveOccurrences(candidate, root).find((occ) => {
+      if (occ.event !== 'putCounter' || occ.counterType !== counterType) return false;
+      // The one real constraint the old `SinkQuery{controller:'you'}` field
+      // contributed — mirrors `match-sink.ts`'s own private
+      // `effectiveController`/`sidesCompatible` helpers byte-for-byte in
+      // logic (not imported — this change must not touch `match-sink.ts`'s
+      // own exports): a `putCounter`/`putCounterTarget`/`putCounterAll`
+      // occurrence never sets `controller` directly (only a `target:'self'`
+      // self-directed `putCounter` implies `'you'`), so an occurrence with
+      // NO resolvable controller at all is compatible by construction; only
+      // an occurrence explicitly resolving to `'opp'` (a program-AST-derived
+      // broadcast over an `opponents` pool) is genuinely incompatible.
+      const controller = occ.controller ?? (occ.subject === 'self' || occ.target === 'self' ? 'you' : undefined);
+      return !controller || controller === 'you';
+    });
     const consumerMatched = matchesConsumerTriggerNames(consumerTriggerNames, candidate);
-    if (!producer.matched && !consumerMatched) return null;
+    if (!occurrence && !consumerMatched) return null;
     const detail: SinkMatchDetail = {};
-    if (producer.matched) detail.producer = { via: producer.via!, predicateDerived: producer.predicateDerived };
+    if (occurrence) detail.producer = { via: occurrence.via, predicateDerived: occurrence.predicateDerived };
     if (consumerMatched) detail.consumer = { via: 'triggerName' };
     return detail;
   }) as SinkInstance;
 
   const data: SinkCatalogEntry = {
     slug,
-    query,
+    category,
     ...(consumerTriggerNames ? { consumerTriggerNames } : {}),
     family: FAMILY,
   };

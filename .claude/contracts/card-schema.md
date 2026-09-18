@@ -2493,3 +2493,108 @@ file this task touched.
 prior redesign's own POC)**: the other 95 real FDN cards' own manifests —
 a full-pool retrofit remains a separate, larger, later pass, same
 incremental discipline the whole FDN pipeline already follows.
+
+### 11. `CountersSink` producer check migrates off `SinkQuery`/`matchSink` — `SinkCatalogEntry.query` becomes optional (2026-09-18, `schema`-owned)
+
+Real architecture change, scoped narrowly to `CountersSink`
+(`sink-model/catalog/families/counters.ts`) — `BattlefieldPresenceSink`/
+`lifegain`/`graveyard-fodder`/`etb` deliberately UNCHANGED, still build and
+match via a real `SinkQuery`/`matchSink` call. Per the user's own explicit
+correction — "Sink family should produce sink out of card definition. Not
+out of magical query... each sink family's matcher function should
+directly inspect the candidate... written as real code in the function
+body, not built as a standalone object handed to a generic comparator" —
+`CountersSink`'s own producer check no longer constructs a `SinkQuery` at
+all. It still calls `deriveOccurrences(candidate, root)` (`match-sink.ts`)
+— the real, structural, `CardDefinition`-derived occurrence walk, genuinely
+reused, not reimplemented — but the matching condition itself is now
+real, inline code in the factory's own function body (`occ.event ===
+'putCounter' && occ.counterType === counterType`, plus a small inline
+controller-compatibility check mirroring `match-sink.ts`'s own private
+`effectiveController`/`sidesCompatible` helpers). Full design writeup:
+`sink-model/SINK_MODEL_DESIGN.md`'s new "SinkQuery becomes optional"
+section.
+
+**Real, mechanical consequences a `card`-agent reader needs to know**:
+- `SinkCatalogEntry.query` (`catalog/entry.ts`) is now OPTIONAL.
+  `CountersSink` instances have NONE at all — genuinely `undefined`, never
+  a synthesized display-only stand-in (the user explicitly rejected
+  building one purely to keep a review-page panel populated: "just put
+  these mock definitions somewhere within test"). A new
+  `SinkCatalogEntry.category?: string` top-level field covers the one real
+  purpose `query.category` used to serve for a now-query-less entry.
+- `card-interactions.ts`'s `computeCardInteractions` — the function this
+  contract's own section 3 documents (`computeCardInteractions(definition,
+  poolDefinitions, root?)`) — gained a small local `matchEntry` helper: a
+  callable `SinkInstance` (every `battlefield-presence-*`/`counters-*`
+  member) is matched via its own `entry(candidate, root)` call; a plain
+  non-callable entry (`lifegain`/`graveyard-fodder`/`etb`, which always
+  still has a real `query`) falls back to the pre-existing direct
+  `matchSink(entry.query!, ...)` call. The category label read site is now
+  `entry.category ?? entry.query!.category`. **Behavior is unchanged for
+  every entry** — this is purely a null-safety/dispatch fix forced by
+  `query` becoming optional on ONE family, not a matching-logic change;
+  confirmed via `card-interactions.test.ts` (unmodified, still green) and a
+  live `GET /api/card/fdn/11` check (Exemplar of Light's own
+  `functionalModel.cardInteractions` "+1/+1" row: still 19 matches,
+  self-included, byte-identical names before/after).
+- `server/api/sink-catalog/index.get.ts` (the `/app/engine/sinks` review
+  route this contract's earlier sections document) now serves
+  `query: members[0]?.query` (genuinely `undefined` for the `counters`
+  group, not a synthesized fallback object — the earlier `?? {category}`
+  stand-in was removed) and `SinkCatalogRealMatches`'s two fields were
+  renamed `producerMatches`/`consumerMatches` → `sourceCandidateMatches`/
+  `sinkCandidateMatches` (a real, user-directed terminology change scoped to
+  this route + the sinks review page — "Source Candidate"/"Sink Candidate,"
+  chosen specifically to avoid colliding with FIN's own `Fact.role`
+  `'source'`/`'sink'` labels in `CardDetailTabs.vue`'s FIN panel; the
+  broader `producer`/`consumer` vocabulary elsewhere — `ProducerOccurrence`,
+  `matchesConsumerTriggerNames`, `SinkMatchDetail.producer`/`.consumer`,
+  `card-interactions.ts`'s own internal variable names — is explicitly
+  UNCHANGED, a deliberately narrower rename than a full propagation). The
+  route's own `SinkCatalogSourceFiles` dropped its `corpusManifest` field
+  outright (the sinks review page no longer shows a raw `.corpus.json`
+  JSON dump — "I'll read tests directly"), and its `entry` field now
+  resolves to the FAMILY's own shared factory file (`families/counters
+  .ts`) for a real multi-instance family group, not the thin per-instance
+  config file (`counters-plus1plus1.ts` — config only, no real matching
+  logic worth showing a reviewer) — singleton entries (`lifegain`/etc.)
+  are unaffected, same file as before.
+- `app/pages/app/engine/sinks/[[slug]].vue` (owned by `card`/`ui` per the
+  usual page-ownership split, edited here only as the direct, small,
+  mechanical UI consequence of the above, per explicit orchestrator
+  instruction) — the "Curated SinkQuery" panel now renders conditionally
+  on `selectedEntry.query` being present (never a fake query for
+  Counters); the "Source — real evidence" section now shows exactly 2 code
+  blocks ("Sink source" — the family file; "Corpus test" — the real
+  `.test.ts` file), no `.corpus.json` JSON dump, no thin per-instance file.
+
+**Zero regression, verified**: `counters.test.ts` (rewritten to call the
+entry's own callable contract, `entry(card)`, instead of
+`matchSink(entry.query, card)` — there is no `entry.query` left to pass;
+"SOURCE CANDIDATE"/"SINK CANDIDATE" case-label terminology, matching the
+UI rename above) + `counters-plus1plus1.corpus.json` (12/12, same
+case count, relabeled) both green. Full `functional-model` suite: 120
+files, 1339 passed / 5 skipped (unchanged file/pass counts from before this
+task). `npm run typecheck`: identical 7-diagnostic pre-existing baseline
+(`CardDetailTabs.vue` x3, `card-status.ts:263`, `card.ts`'s `endTurn` line,
+`mana.ts:275`, `server/api/tokens/by-key.ts:32`) — one transient new
+diagnostic surfaced mid-task at `sink-catalog-status.ts:282` (a
+`.query.category` read no longer statically safe once `query` became
+optional) and was fixed in the same pass (`.category ?? .query!.category`),
+confirmed back to exactly 7 before finishing. Live-verified via a real dev
+server both BEFORE (temporarily `git stash`'d back to the pre-change code)
+and AFTER: `GET /api/sink-catalog`'s `counters` entry's real FDN-pool match
+set is byte-identical (19 source-candidate names, 1 sink-candidate name —
+Exemplar of Light — in both runs).
+
+**Deliberately NOT done this task, flagged as open**: `BattlefieldPresenceSink`
+has not migrated to this same direct-inspection shape — a deliberate,
+incremental first step, per explicit task scope ("scoped to Counters only
+for now... deliberate, incremental first step"). Once/if it does,
+`matchSink`/`SinkQuery`/`occurrenceSatisfiesSink` (`match-sink.ts`/
+`sink-query.ts`) would have zero remaining callers inside `sink-model/
+catalog/` besides the 3 plain singletons (`lifegain`/`graveyard-fodder`/
+`etb`) — whether those should also migrate, or whether `matchSink` stays
+legitimately in use for them long-term, is a real open question, not
+decided here.

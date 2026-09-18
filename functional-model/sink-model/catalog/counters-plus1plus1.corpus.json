@@ -3,76 +3,76 @@
   "passing": 12,
   "cases": [
     {
-      "case": "PRODUCER: plain self-targeted putCounter, counterType '+1/+1'",
+      "case": "SOURCE CANDIDATE: plain self-targeted putCounter, counterType '+1/+1'",
       "mirrors": "Exemplar of Light (FDN #11) — real \"put a +1/+1 counter on this creature\" effect",
       "expectedVerdict": "matches",
-      "note": "Mocked Creature with effects:[{kind:'putCounter', target:'self', counterType:'+1/+1', amount:1}]. Verified in counters-plus1plus1.test.ts via matchSink."
+      "note": "Mocked Creature with effects:[{kind:'putCounter', target:'self', counterType:'+1/+1', amount:1}]. Verified in counters.test.ts via the entry's own CallableSink contract (entry(card)), which now inspects deriveOccurrences directly — no SinkQuery involved."
     },
     {
-      "case": "PRODUCER: triggered putCounter",
+      "case": "SOURCE CANDIDATE: triggered putCounter",
       "mirrors": "a real \"when this enters, put a +1/+1 counter on it\" permanent",
       "expectedVerdict": "matches",
-      "note": "Mocked creature whose onEnter trigger's own effects contain kind:'putCounter', counterType:'+1/+1' — proves trigger effects are walked, not just top-level effects. Verified via matchSink."
+      "note": "Mocked creature whose onEnter trigger's own effects contain kind:'putCounter', counterType:'+1/+1' — proves trigger effects are walked, not just top-level effects. Verified via entry(card)."
     },
     {
-      "case": "PRODUCER: broadcast putCounterAll, counterType '+1/+1'",
+      "case": "SOURCE CANDIDATE: broadcast putCounterAll, counterType '+1/+1'",
       "mirrors": "a real \"put a +1/+1 counter on each creature you control\" effect",
       "expectedVerdict": "matches",
-      "note": "Mocked Sorcery with effects:[{kind:'putCounterAll', predicate:'creatures-you-control', counterType:'+1/+1', amount:1}]. Verified via matchSink."
+      "note": "Mocked Sorcery with effects:[{kind:'putCounterAll', predicate:'creatures-you-control', counterType:'+1/+1', amount:1}]. Verified via entry(card)."
     },
     {
-      "case": "PRODUCER: differently-typed counter effect (counterType '-1/-1')",
+      "case": "SOURCE CANDIDATE: differently-typed counter effect (counterType '-1/-1')",
       "mirrors": "any real card that puts a -1/-1 counter instead — a genuinely different mechanic",
       "expectedVerdict": "no-match",
-      "note": "Mocked Sorcery with effects:[{kind:'putCounterTarget', validType:'creature', counterType:'-1/-1', amount:1}]. Proves real discrimination on counter type, not 'any putCounter counts'. Verified via matchSink."
+      "note": "Mocked Sorcery with effects:[{kind:'putCounterTarget', validType:'creature', counterType:'-1/-1', amount:1}]. Proves real discrimination on counter type, not 'any putCounter counts'. Verified via entry(card)."
     },
     {
-      "case": "PRODUCER: vanilla creature, no effects at all",
+      "case": "SOURCE CANDIDATE: vanilla creature, no effects at all",
       "mirrors": "Serra Angel (FDN) — a real, deliberate no-sink case",
       "expectedVerdict": "no-match",
-      "note": "Mocked vanilla creature. Verified via matchSink."
+      "note": "Mocked vanilla creature. Verified via entry(card)."
     },
     {
-      "case": "CONSUMER: named trigger 'onCounterAdded', checked standalone from the producer query",
+      "case": "SINK CANDIDATE: named trigger 'onCounterAdded', checked standalone from the source-candidate check",
       "mirrors": "the real Exemplar of Light (FDN #11) shape — \"whenever one or more counters are put on this creature, draw a card\"",
-      "expectedVerdict": "matches (consumer mode)",
-      "note": "Mocked creature whose only trigger is named 'onCounterAdded'. Verified in counters-plus1plus1.test.ts via matchesConsumerTriggerNames."
+      "expectedVerdict": "matches (sink candidate)",
+      "note": "Mocked creature whose only trigger is named 'onCounterAdded'. Verified in counters.test.ts via matchesConsumerTriggerNames."
     },
     {
-      "case": "CONSUMER: differently-named trigger",
+      "case": "SINK CANDIDATE: differently-named trigger",
       "mirrors": "any real card whose trigger reacts to something else entirely",
       "expectedVerdict": "no-match",
       "note": "Mocked creature with a trigger named 'onAttack'. Verified via matchesConsumerTriggerNames."
     },
     {
-      "case": "CONSUMER: no triggers at all",
-      "mirrors": "Serra Angel (FDN) again, for the consumer recognition mode specifically",
+      "case": "SINK CANDIDATE: no triggers at all",
+      "mirrors": "Serra Angel (FDN) again, for the sink-candidate recognition mode specifically",
       "expectedVerdict": "no-match",
       "note": "Mocked vanilla creature. Verified via matchesConsumerTriggerNames."
     },
     {
-      "case": "CONSUMER: named trigger on the BACK face of a transforming DFC",
+      "case": "SINK CANDIDATE: named trigger on the BACK face of a transforming DFC",
       "mirrors": "a transforming DFC whose back face carries the reactive trigger",
       "expectedVerdict": "matches",
       "note": "Mocked front/back face pair; the 'onCounterAdded' trigger lives only on backFace.triggers. Verified via matchesConsumerTriggerNames."
     },
     {
-      "case": "CALLABLE: producer-only match returns real detail",
-      "mirrors": "the real plain self-targeted putCounter PRODUCER case above, exercised via the new CallableSink contract instead of matchSink directly",
+      "case": "CALLABLE: source-candidate-only match returns real detail",
+      "mirrors": "the real plain self-targeted putCounter SOURCE CANDIDATE case above, exercised via the CallableSink contract",
       "expectedVerdict": "matches (producer.via set, no consumer)",
-      "note": "2026-09-18 factory refactor — proves entry(candidate) faithfully carries through matchSink's own verdict. Verified in counters.test.ts."
+      "note": "Proves entry(candidate) faithfully reflects the direct deriveOccurrences-based producer check. Verified in counters.test.ts."
     },
     {
-      "case": "CALLABLE: consumer-only match returns real detail",
-      "mirrors": "the real 'onCounterAdded' CONSUMER case above, exercised via the new CallableSink contract instead of matchesConsumerTriggerNames directly",
+      "case": "CALLABLE: sink-candidate-only match returns real detail",
+      "mirrors": "the real 'onCounterAdded' SINK CANDIDATE case above, exercised via the CallableSink contract instead of matchesConsumerTriggerNames directly",
       "expectedVerdict": "matches (consumer.via:'triggerName' set, no producer)",
-      "note": "2026-09-18 factory refactor — proves entry(candidate) faithfully carries through matchesConsumerTriggerNames's own verdict. Verified in counters.test.ts."
+      "note": "Proves entry(candidate) faithfully carries through matchesConsumerTriggerNames's own verdict. Verified in counters.test.ts."
     },
     {
-      "case": "CALLABLE: no producer or consumer signal returns null",
-      "mirrors": "the real vanilla-creature no-match case above, exercised via the new CallableSink contract",
+      "case": "CALLABLE: no source-candidate or sink-candidate signal returns null",
+      "mirrors": "the real vanilla-creature no-match case above, exercised via the CallableSink contract",
       "expectedVerdict": "no-match (null)",
-      "note": "2026-09-18 factory refactor — proves entry(candidate) returns null, not a falsy match object, when neither signal fires. Verified in counters.test.ts."
+      "note": "Proves entry(candidate) returns null, not a falsy match object, when neither signal fires. Verified in counters.test.ts."
     }
   ]
 }

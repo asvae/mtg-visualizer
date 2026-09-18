@@ -31,8 +31,48 @@ export interface SinkCatalogEntry {
    * `sink-model/sink-query.ts`), plus its own real mechanic category label
    * (`query.category` — "Retrigger", "Lifegain", "Graveyard fodder", ...;
    * never a fixed generic metric pair).
+   *
+   * **Optional as of the 2026-09-18 `CountersSink` producer-mechanism
+   * rewrite** (`catalog/families/counters.ts`) — a `SinkQuery` was, until
+   * then, unconditionally both (a) the entry's own PRODUCER-matching
+   * mechanism (handed to `sink-model/match-sink.ts`'s generic
+   * `matchSink`/`occurrenceSatisfiesSink` comparator) and (b) the review
+   * page's inspectable "Curated SinkQuery" debug panel. Per the user's own
+   * explicit correction — "Sink family should produce sink out of card
+   * definition. Not out of magical query" / "just put these mock
+   * definitions somewhere within test" (i.e. a mocked `CardDefinition` in
+   * the family's own corpus test IS the real "what does this sink look
+   * for" documentation; a synthesized, unused `SinkQuery` object just to
+   * keep a display panel populated is exactly the "magical query"
+   * indirection being removed, not a legitimate display-only survivor) —
+   * `CountersSink`'s own producer check now inspects `deriveOccurrences`
+   * output directly, inline, in its own function body, with NO `SinkQuery`
+   * constructed at all; its entry therefore has NO `query` field (`undefined`,
+   * not a synthesized stand-in). `BattlefieldPresenceSink`/`lifegain`/
+   * `graveyard-fodder`/`etb` are UNCHANGED — still build and rely on a real
+   * `SinkQuery` for their own producer matching, still always set `query`.
+   * A caller reading `entry.query` must handle `undefined` (`card-
+   * interactions.ts`'s per-entry loop and `server/api/sink-catalog/
+   * index.get.ts`'s served `SinkCatalogPageEntry.query` both do, as of the
+   * same pass) — see `category` immediately below for the field an entry
+   * without a `query` uses instead for its own display label.
    */
-  query: SinkQuery;
+  query?: SinkQuery;
+  /**
+   * Real, top-level display category label (2026-09-18, added alongside
+   * `query` becoming optional) — the field an entry WITHOUT a `query`
+   * (today, only `CountersSink`'s own instances) uses for its own display
+   * category instead of `query.category`. Every entry that still has a real
+   * `query` leaves this unset; a reader wanting "the" display category for
+   * ANY entry should read `entry.category ?? entry.query?.category` (both
+   * `card-interactions.ts` and `sink-catalog-status.ts`'s own family-scoped
+   * grouping already do the equivalent — see each file's own comment at its
+   * read site). Not a general-purpose duplicate of `query.category` for
+   * every entry — deliberately narrow, single real purpose: cover the one
+   * real case where `query` itself no longer exists to carry a category at
+   * all.
+   */
+  category?: string;
   /**
    * Real, structural CONSUMER-side recognition mode (2026-09-18, added
    * alongside the producer-only `query` above) — a candidate is ALSO
