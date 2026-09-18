@@ -47,3 +47,57 @@ etc.) was cheap-tier-transcribed, not independently re-checked against
 same, already-known, separate open item this whole authoring pipeline
 already carries (see `fdn-cheap-tier-vocabulary-mistakes.md`), not
 something this gate change newly introduces or resolves.
+
+## Two more silent-gap classes found (2026-09-18, later same day)
+
+**Ward's cost payload has no schema home at all.** `Keyword` is a bare
+string union — zero cost-payload field for Ward or any other keyword.
+`sire-of-seven-deaths` ("Ward—Pay 7 life") and `zul-ashur-lich-lord`
+("Ward—Pay 2 life") had this real non-default cost sitting only in a
+code comment (gate-invisible) — fixed the same way as Inspiring Paladin,
+via a `staticAbilities` entry naming the specific cost text (reuses the
+existing rule above, zero new gate code). Both `blue`→`purple`. Swept
+the full 100-card pool against real cached Scryfall oracle text
+(`functional-model/.fdn-scratch/<slug>/scryfall.json`) for other
+cost-bearing keywords (Equip/Cycling/Kicker/Ninjutsu/Boast/etc.) — Ward
+was the only real instance; Flashback already has a proper structured
+home (`alternateCosts`/`flashback()`) so it's not affected.
+
+**Arahbo, the First Fang: a real, validly-typed value with under-scoped
+real coverage.** "Whenever Arahbo or another nontoken Cat you control
+enters" was modeled as `on:'enter'`, which is genuinely correct for
+"Arahbo enters" but structurally CANNOT fire for "another Cat enters" —
+`on:'enter'` fires per-registration on the permanent itself, not as a
+board-wide predicate scan. Not a wrong value, a real value covering only
+part of the printed clause. Fixed the same way (a `staticAbilities`
+entry for the uncovered half). This is a genuinely different failure
+shape than Ward's — see below.
+
+**Is a general oracle-text-vs-definition coverage check feasible?
+No, not as one deterministic gate**, and these two bugs are the concrete
+evidence why — they're different failure shapes:
+- Ward-class ("a value is silently missing"): the gate only ever sees
+  the imported runtime object, never real oracle text — a bare
+  `keywords:['Ward']` is structurally identical whether it correctly
+  captures a default cost or silently drops a real one. Gate-catchable
+  today with **zero new code**, but only once an author writes the gap
+  down in `staticAbilities` — there's no way to derive it from the
+  object shape alone. A narrow *future* gate is plausible though: flag
+  (warn, don't fail) any card whose cached oracle text matches a fixed
+  cost-suffix pattern (`Ward—`, `Equip {`, `Cycling {`, ...) with no
+  structural reference to that cost anywhere (`keywords`/
+  `staticAbilities`/`alternateCosts`/`abilities[].cost`) — proposed, not
+  built.
+- Arahbo-class ("a real value's scope is narrower than the real
+  clause"): requires judging what the English text actually means vs.
+  what the code covers — genuinely not gate-scriptable. Recommended as a
+  **smart-tier review checklist item** instead ("does every real clause
+  have some functional counterpart, even partial — and if partial, is
+  the gap flagged rather than silent?"), never a script.
+
+**Also flagged, not fixed**: `divine-resilience`'s `keywords:['Kicker']`
+is a live `tsc` type error (`Kicker` isn't a real `Keyword` union member)
+currently MASKED because the gate short-circuits on an earlier capacity
+gap before reaching the type-check step — harmless while that other gap
+stands, but will surface the moment it's ever closed first. Not urgent,
+just don't be surprised by it later.
