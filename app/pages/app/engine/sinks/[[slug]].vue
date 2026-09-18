@@ -301,7 +301,7 @@ async function submitReject() {
           <details v-else class="mt-1.5 rounded-md border border-border-subtle bg-surface/40 px-2.5 py-1.5 text-[11px] text-text">
             <summary class="flex cursor-pointer items-center gap-1.5">
               <UIcon name="i-lucide-log-in" class="h-3.5 w-3.5 shrink-0 text-consume" />
-              Who owns/reacts to this event
+              Matches
               <span class="ml-auto shrink-0 rounded-full bg-bg px-2 py-px text-[10px] font-bold text-muted">
                 {{ selectedEntry.realMatches.consumerMatches.length }} card{{ selectedEntry.realMatches.consumerMatches.length === 1 ? '' : 's' }}
               </span>
