@@ -59,7 +59,12 @@ export interface ForgeScriptUnavailable {
 }
 export type ForgeScriptResult = ForgeScriptFound | ForgeScriptNotFound | ForgeScriptUnavailable;
 
-function slugify(name: string): string {
+// Exported (2026-09-19) so `server/utils/forgeJsonMapper.ts` — a sibling
+// reader for the separate forge-json-mapper experiment's own output, which
+// needs this exact same Forge-filename convention to resolve a card's own
+// output file — can import it directly rather than re-deriving a second
+// copy that could silently drift from this one.
+export function slugify(name: string): string {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')

@@ -28,6 +28,7 @@ import type { AnnotatedCard } from '../../../../app/types';
 import type { Scenario, TraceResult } from '../../../../functional-model/harness';
 import type { CardDefinition } from '../../../../functional-model/card';
 import { loadCardSynergy, loadFunctionalModelPool } from '../../../utils/functionalModelPool';
+import { loadForgeJsonMapperOutput } from '../../../utils/forgeJsonMapper';
 import { fmBundle } from '../../../utils/fmBundle';
 import { cardsDb, resolveFunctionalModelCardMeta } from '../../../utils/cardMeta';
 import { scryfallFetch } from '../../../utils/scryfallFetch';
@@ -325,6 +326,20 @@ interface FunctionalModelData {
   // optional per-card file on this route already takes
   // (progress.json/verified-snapshot.json/pipeline-status.json).
   notes: string | null;
+  // **`fdn`-only in practice, 2026-09-19** — pretty-printed JSON from the
+  // separate `functional-model/scripts/experiments/forge-json-mapper/`
+  // experiment's own output (see `loadForgeJsonMapperOutput`'s own doc
+  // comment for the full "what this is" writeup), when a matching
+  // `<slug>.json` exists for this card. That experiment covers exactly 20
+  // real cards today (FDN collector numbers 1-20), so this is `null` for
+  // every `fin` card and every `fdn` card outside that set — expected,
+  // unremarkable absence, same posture `notes` above already takes. Unlike
+  // `notes`/`pipelineStatus`/`cardInteractions` above, this ISN'T
+  // structurally fdn-only (the lookup itself is name-keyed, not gated on
+  // `isFdn` anywhere) — it's just that the experiment has only ever run
+  // against fdn cards so far; a future run against fin cards would populate
+  // this on that branch too, with no code change needed here.
+  forgeJsonMapper: string | null;
 }
 // Cached per slug, invalidated by that card's own folder — a stat-only
 // signature (mtimeMs of its own files) is cheap enough to check on every
@@ -546,6 +561,10 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       // `FunctionalModelData.notes`'s own doc comment (no NOTES.md
       // convention exists for `fin` cards at all).
       notes: null,
+      // Name-keyed, not fdn-gated (see `FunctionalModelData.forgeJsonMapper`'s
+      // own doc comment) — cheap enough to call unconditionally even on this
+      // production/bundled path.
+      forgeJsonMapper: loadForgeJsonMapperOutput(name),
       // Precomputed at `npm run sync:fm-bundle` build time (scripts/
       // build-fm-bundle.mjs, same classifyCardStatus/computeTextCoverage
       // recipe as the dev branch below and compute-card-status.mjs) —
@@ -636,6 +655,7 @@ async function loadFunctionalModel(name: string, collectorNumber: string, faces:
       oracleText: null,
       cardInteractions: [],
       notes: null,
+      forgeJsonMapper: loadForgeJsonMapperOutput(name),
     };
   } catch {
     data = null;
@@ -811,6 +831,7 @@ async function loadFdnFunctionalModel(name: string, faces: FaceInput[]): Promise
     oracleText,
     cardInteractions,
     notes,
+    forgeJsonMapper: loadForgeJsonMapperOutput(name),
   };
 }
 

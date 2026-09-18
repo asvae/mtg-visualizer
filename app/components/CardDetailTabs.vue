@@ -1212,9 +1212,28 @@ const forgeScriptAvailable = computed(() => import.meta.dev && !!forgeScriptResu
 // nothing isn't a real affordance.
 const notesAvailable = computed(() => !!props.data.functionalModel?.notes);
 
+// Forge JSON tab (2026-09-19) — the separate `functional-model/scripts/
+// experiments/forge-json-mapper/` experiment's own pretty-printed JSON
+// transcription of this card's real Forge card-script (see
+// `FunctionalModelData.forgeJsonMapper`'s own doc comment,
+// server/api/card/[set]/[number].ts). Distinct from the Forge Script tab
+// just above (that tab shows the raw Forge `.txt` DSL text itself; this one
+// shows that same experiment's structurally-Forge-faithful JSON
+// transcription of it) — genuinely different content, not a duplicate view.
+// A normal `props.data`-derived computed (no separate `$fetch`/loading state
+// of its own), same as `notesAvailable` just above — the server route
+// already read this file synchronously alongside everything else, and it's
+// NOT dev-only/NODE_ENV-gated the way `forgeScriptAvailable` is (see that
+// field's own doc comment server-side for why — this reads a small,
+// self-contained, normal project file, not the huge gitignored
+// `tmp/mtg-forge/` checkout). Gates the TAB'S OWN EXISTENCE the same
+// "absent = no tab" call every other optional tab here already makes — only
+// 20 real cards (FDN collector numbers 1-20) will ever match today.
+const forgeJsonMapperAvailable = computed(() => !!props.data.functionalModel?.forgeJsonMapper);
+
 interface FunctionalModelTabItem {
   label: string;
-  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript';
+  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript' | 'forgeJson';
   badge?: number;
 }
 const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
@@ -1224,6 +1243,7 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
         { label: 'Card Definition', value: 'definition' as const },
         ...(notesAvailable.value ? [{ label: 'Notes', value: 'notes' as const }] : []),
         ...(forgeScriptAvailable.value ? [{ label: 'Forge Script', value: 'forgeScript' as const }] : []),
+        ...(forgeJsonMapperAvailable.value ? [{ label: 'Forge JSON', value: 'forgeJson' as const }] : []),
       ]
     : [
         { label: 'Facts', value: 'facts' as const, badge: factsCount.value || undefined },
@@ -1233,6 +1253,7 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
         { label: 'Card Definition', value: 'definition' as const },
         ...(notesAvailable.value ? [{ label: 'Notes', value: 'notes' as const }] : []),
         ...(forgeScriptAvailable.value ? [{ label: 'Forge Script', value: 'forgeScript' as const }] : []),
+        ...(forgeJsonMapperAvailable.value ? [{ label: 'Forge JSON', value: 'forgeJson' as const }] : []),
       ],
 );
 // The active tab VALUE, wrapping the shared `store.functionalModelTab` (see
@@ -1266,17 +1287,17 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
 // own sensible default (`'definition'` for `isFdn`, `'facts'` otherwise) —
 // read-only, never written back, so a user who genuinely prefers Scenarios
 // still resumes there the next time they land on a card that has some.
-const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript'>({
+const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript' | 'forgeJson'>({
   get: () => {
     const stored = store.functionalModelTab.value;
     // `'forgeScript'` widened in alongside `'scenarios'` (2026-09-19), then
-    // `'notes'` widened in the same day, later still — all three are real
-    // tabs `functionalModelTabs` can offer for an `fdn` card (see that
-    // computed's own `isFdn` branch above), so a stored value of any of
-    // them must survive this fallback the same way `'scenarios'` already
-    // does, rather than being forced back to `'definition'` every time an
-    // FDN card loads.
-    if (isFdn.value && stored !== 'scenarios' && stored !== 'forgeScript' && stored !== 'notes') return 'definition';
+    // `'notes'` widened in the same day, later still, then `'forgeJson'`
+    // widened in the same day, later still — all four are real tabs
+    // `functionalModelTabs` can offer for an `fdn` card (see that computed's
+    // own `isFdn` branch above), so a stored value of any of them must
+    // survive this fallback the same way `'scenarios'` already does, rather
+    // than being forced back to `'definition'` every time an FDN card loads.
+    if (isFdn.value && stored !== 'scenarios' && stored !== 'forgeScript' && stored !== 'notes' && stored !== 'forgeJson') return 'definition';
     if (stored === 'scenarios' && scenariosCount.value === 0) return isFdn.value ? 'definition' : 'facts';
     // A stored `'forgeScript'` value is only meaningful while the CURRENT
     // card's own tab strip actually offers it (`forgeScriptAvailable`) —
@@ -1288,6 +1309,10 @@ const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJ
     // Same guard, sibling case, for a stored `'notes'` value on a card with
     // no NOTES.md of its own — see `notesAvailable`'s own doc comment.
     if (stored === 'notes' && !notesAvailable.value) return isFdn.value ? 'definition' : 'facts';
+    // Same guard, third sibling case, for a stored `'forgeJson'` value on a
+    // card with no forge-json-mapper output of its own — see
+    // `forgeJsonMapperAvailable`'s own doc comment.
+    if (stored === 'forgeJson' && !forgeJsonMapperAvailable.value) return isFdn.value ? 'definition' : 'facts';
     return stored;
   },
   set: (v) => {
@@ -2122,6 +2147,22 @@ watch(
         <div v-if="forgeScriptResult.path" class="mt-1 text-[10px] text-muted">{{ forgeScriptResult.path }}</div>
       </template>
       <div v-else class="text-xs text-muted italic">No Forge script found for this card in the local tmp/mtg-forge/ checkout.</div>
+    </template>
+
+    <!-- Forge JSON — the separate forge-json-mapper experiment's own JSON
+         transcription of this card's real Forge script (see
+         `forgeJsonMapperAvailable`'s own doc comment above). Highlighted the
+         same way as the Facts/Card Json tabs above (`JsonHighlight`) since
+         this really is JSON, unlike Forge Script's raw DSL text just above.
+         Only ever reachable when `forgeJsonMapperAvailable` is true, so
+         `data.functionalModel.forgeJsonMapper` is guaranteed non-null here —
+         the `?? ''` fallback stays anyway as cheap insurance, same
+         convention the Notes tab above already follows. -->
+    <template v-else-if="functionalModelTabValue === 'forgeJson'">
+      <JsonHighlight
+        :json="data.functionalModel.forgeJsonMapper ?? ''"
+        class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-2"
+      />
     </template>
 
     <template v-else>

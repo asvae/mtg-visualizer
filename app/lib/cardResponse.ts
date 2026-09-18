@@ -87,6 +87,13 @@ export interface CardResponse {
     // hasn't gotten one yet) — absence is the common, expected case, not
     // an error.
     notes: string | null;
+    // Pretty-printed JSON from the separate `functional-model/scripts/
+    // experiments/forge-json-mapper/` experiment's own output, when a
+    // matching file exists for this card. See server/api/card/[set]/
+    // [number].ts's own `FunctionalModelData.forgeJsonMapper` doc comment —
+    // covers exactly 20 real cards today (FDN collector numbers 1-20), so
+    // `null` for everything else.
+    forgeJsonMapper: string | null;
   } | null;
   interactions: EnrichedInteractionGroup[];
 }
