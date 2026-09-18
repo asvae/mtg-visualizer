@@ -58,6 +58,34 @@
 // for a still-in-progress card, same bucket as an unknown-kind
 // placeholder).
 //
+// ## A name-only `Trigger` (no real `on` value) is ALSO an automatic
+// capacity-gap, FDN-only (2026-09-18, later same day again)
+//
+// Fourth instance of this same silent-gap family, same blunt/deterministic
+// shape as the `staticAbilities` rule above: `Trigger.on` (`card.ts`, real
+// closed union `'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' |
+// 'attacks' | 'equippedAttacks'`) is the ONLY thing that makes a trigger
+// auto-fire inside `engine.ts` — a `Trigger` with no `on` at all is, per
+// that field's own doc comment, meant to be "picked manually per scenario
+// via `harness.ts`'s own `Scenario.trigger`" instead. That's a real,
+// legitimate, already-exercised convention for the FIN pool (205 live
+// instances, each backed by a real `scenarios.ts`) — but categorically
+// NOT for an FDN card, which has no `scenarios.ts` at all by design (see
+// `.claude/contracts/card-schema.md`'s "FDN authoring-pipeline status"
+// section) — so a name-only trigger there has zero path to ever execute,
+// manual or automatic, and is a genuine capacity gap on its own terms.
+// `findNameOnlyTriggerGapReasons` below is the deterministic
+// implementation, walking both faces exactly like
+// `findStaticAbilityGapReasons` — see that function's own doc comment for
+// the full reasoning and the real cards this closed (`armasaur-guide`,
+// `dazzling-angel`, `exemplar-of-light`, `courageous-goblin`). This rule
+// is safe to be unconditional (no separate "is this an FDN candidate"
+// check needed) because this whole file is only ever imported by
+// `gate-and-write-status.mjs`, which only ever walks
+// `functional-model/fdn-cards/` — never `functional-model/cards/` (FIN),
+// so the 205 legitimate FIN instances are structurally never seen by this
+// gate at all.
+//
 // ## Two independent checks, in a specific, deliberate order
 //
 // 1. **The vocabulary walk, run FIRST** — reuses REAL, already-exhaustive
@@ -244,6 +272,67 @@ export function findStaticAbilityGapReasons(definition) {
 }
 
 /**
+ * The blunt, deterministic "name-only trigger" rule (2026-09-18, fourth
+ * silent-gap class in this same family — see this file's own header for
+ * the "why"; real bugs found: `armasaur-guide`, `dazzling-angel`,
+ * `exemplar-of-light`, and — the cleanest case, since it has no OTHER
+ * gap masking it — `courageous-goblin`, which was still `blue` with zero
+ * reasons despite having a whole real trigger that can never fire).
+ * `Trigger.on` (`card.ts` line ~1641) is the ONLY thing that makes a
+ * trigger auto-fire for real inside `engine.ts` — a real, closed union of
+ * `'enter' | 'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks' |
+ * 'equippedAttacks'`; every other named `Trigger` (no `on` at all) is,
+ * per that same field's own doc comment, "picked manually per scenario
+ * via `harness.ts`'s own `Scenario.trigger`/`sequence` fields instead."
+ * That's a genuinely legitimate, real, exercised convention for the FIN
+ * pool (205 real instances confirmed live across `functional-model/
+ * cards/`, each backed by a real `scenarios.ts` that names the trigger
+ * explicitly and gets verified via `verify-synergy.mjs`'s real trace
+ * evidence) — this rule deliberately does NOT apply there, and can't
+ * (this file is only ever imported by `gate-and-write-status.mjs`, which
+ * only ever walks `functional-model/fdn-cards/`, never `cards/`).
+ *
+ * It's a real, different story for the FDN sink-only-synergy-model
+ * pool specifically: an FDN card has ONLY `definition.ts` +
+ * `pipeline-status.json` by design (no `scenarios.ts`, no Facts, no
+ * `synergy.json` — see `.claude/contracts/card-schema.md`'s "FDN
+ * authoring-pipeline status" section) — there is no scenario file for
+ * ANY FDN card, so a name-only trigger there has categorically zero path
+ * to ever execute, manually or automatically, inside this pipeline. Every
+ * comment in this pool citing "manual scenario invocation" as the
+ * mitigating story for a missing `on` value is simply false for an FDN
+ * card as things stand today. No exception category was found among the
+ * real 28 current FDN name-only-trigger instances (checked individually,
+ * 2026-09-18) — every one is the same real shape: a trigger condition
+ * this schema has no `on` value for yet, silently unreachable rather than
+ * flagged. Walks both faces (same convention as
+ * `findStaticAbilityGapReasons` above); quotes the trigger's own `name`
+ * plus its `description`/`describe` field when present (a few real
+ * candidates carry one even though neither is part of the real `Trigger`
+ * type — read defensively off the plain runtime object, same "transpile-
+ * only import" reality this whole gate already works around for the
+ * vocabulary walk).
+ */
+export function findNameOnlyTriggerGapReasons(definition) {
+  const reasons = [];
+  const walk = (def, faceLabel) => {
+    for (const trigger of def.triggers ?? []) {
+      if (trigger.on) continue;
+      const label = typeof trigger.name === 'string' && trigger.name.length > 0 ? trigger.name : '(unnamed trigger)';
+      const detail = trigger.description ?? trigger.describe;
+      reasons.push(
+        `name-only trigger with no real \`on\` value (cannot auto-fire, and this FDN pool has no scenarios.ts to manually invoke it either)${faceLabel}: "${label}"${
+          typeof detail === 'string' && detail.length > 0 ? ` — ${detail}` : ''
+        }`,
+      );
+    }
+    if (def.backFace) walk(def.backFace, ' [back face]');
+  };
+  walk(definition, '');
+  return reasons;
+}
+
+/**
  * Real, scoped `tsc --noEmit` against just `absDefinitionPath` — see this
  * file's own header, part 2, for the config shape and why `.nuxt/tsconfig
  * .server.json` (not the bare root `tsconfig.json`) is the real base.
@@ -359,7 +448,8 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
   // header) — combined with any real vocabulary-walk reasons above into
   // ONE capacity-gap result, never a separate/competing classification.
   const staticAbilityReasons = findStaticAbilityGapReasons(definition);
-  const combinedGapReasons = [...(vocabGapReasons ?? []), ...staticAbilityReasons];
+  const nameOnlyTriggerReasons = findNameOnlyTriggerGapReasons(definition);
+  const combinedGapReasons = [...(vocabGapReasons ?? []), ...staticAbilityReasons, ...nameOnlyTriggerReasons];
   if (combinedGapReasons.length > 0) {
     const engineStatus = computeEngineStatus(root);
     return {

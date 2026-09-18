@@ -2,7 +2,8 @@
   "status": "purple",
   "reasons": [
     "documented unsupported construct (kind:'custom' no-op placeholder): Exile discarded card from opponent graveyard with a stash counter.",
-    "non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart): \"During your turn, you may play cards you don't own with stash counters on them from exile, and mana of any type can be spent to cast those spells.\""
+    "non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart): \"During your turn, you may play cards you don't own with stash counters on them from exile, and mana of any type can be spent to cast those spells.\"",
+    "name-only trigger with no real `on` value (cannot auto-fire, and this FDN pool has no scenarios.ts to manually invoke it either): \"(unnamed trigger)\" — Whenever an opponent discards a card, exile it from their graveyard with a stash counter on it."
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -29,5 +30,5 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T13:18:42.657Z"
+  "computedAt": "2026-09-18T13:44:33.368Z"
 }

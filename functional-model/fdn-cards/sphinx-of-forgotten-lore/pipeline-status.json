@@ -1,7 +1,8 @@
 {
   "status": "purple",
   "reasons": [
-    "documented unsupported construct (kind:'custom' no-op placeholder): Grant flashback to target instant or sorcery in graveyard until end of turn (flashback grant mechanic not yet modeled)"
+    "documented unsupported construct (kind:'custom' no-op placeholder): Grant flashback to target instant or sorcery in graveyard until end of turn (flashback grant mechanic not yet modeled)",
+    "name-only trigger with no real `on` value (cannot auto-fire, and this FDN pool has no scenarios.ts to manually invoke it either): \"AttackFlashback\" — Whenever this creature attacks, target instant or sorcery card in your graveyard gains flashback until end of turn. The flashback cost is equal to that card's mana cost."
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -28,5 +29,5 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T13:18:41.231Z"
+  "computedAt": "2026-09-18T13:44:31.942Z"
 }

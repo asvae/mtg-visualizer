@@ -1,7 +1,8 @@
 {
   "status": "purple",
   "reasons": [
-    "non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart): \"Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\""
+    "non-empty staticAbilities entry (inert free text, no guaranteed executable counterpart): \"Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\"",
+    "name-only trigger with no real `on` value (cannot auto-fire, and this FDN pool has no scenarios.ts to manually invoke it either): \"onCombatDamageToPlayer\""
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -28,5 +29,5 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T13:18:21.847Z"
+  "computedAt": "2026-09-18T13:44:17.278Z"
 }

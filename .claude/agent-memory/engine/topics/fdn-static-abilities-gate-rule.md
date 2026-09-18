@@ -101,3 +101,66 @@ currently MASKED because the gate short-circuits on an earlier capacity
 gap before reaching the type-check step — harmless while that other gap
 stands, but will surface the moment it's ever closed first. Not urgent,
 just don't be surprised by it later.
+
+## Fourth silent-gap class: name-only `Trigger` (no real `on` value) — FDN-only rule (2026-09-18, later same day again)
+
+A `Trigger` with no `on` field (`card.ts`'s real closed union: `'enter' |
+'upkeep' | 'endStep' | 'tapLandForMana' | 'attacks' | 'equippedAttacks'`
+is the ONLY thing that makes a trigger auto-fire inside `engine.ts`) is a
+real, pervasive, and — critically — **legitimate** convention across the
+FIN pool: 205 live instances confirmed across `functional-model/cards/`,
+each backed by a real `scenarios.ts` that names the trigger explicitly via
+`harness.ts`'s own `Scenario.trigger`/`sequence` fields and gets verified
+through real trace evidence. `Trigger.on`'s own doc comment says this
+outright ("picked manually per scenario... unaffected by this"). **Not**
+flagged, and shouldn't be — this rule only ever runs against
+`functional-model/fdn-cards/` (this whole gate file is only ever imported
+by `gate-and-write-status.mjs`, which never walks `cards/`).
+
+The FDN pool is categorically different: an FDN card has ONLY
+`definition.ts` + `pipeline-status.json` by design — **no `scenarios.ts`
+exists for any FDN card**, so a name-only trigger there has zero path to
+ever execute, manual or automatic. Every "modeled as a named trigger for
+manual scenario invocation" code comment across the FDN pool is simply
+false as things stand — there is no scenario file to invoke it manually
+with. Checked all 28 real current FDN name-only-trigger instances
+individually — no legitimate exception category found (a few carry
+harmless extra `description`/`describe` fields not part of the real
+`Trigger` type, already masked-type-error territory like the Kicker case
+above, not itself part of this rule).
+
+**Fix shipped**: `findNameOnlyTriggerGapReasons` (same file, same
+`findStaticAbilityGapReasons`-shaped export/dual-face walk, unit-tested in
+`validate-card-definition.test.ts`) — any `Trigger` with no `on` on either
+face is one more `capacity-gap` reason, folded into the same combined
+result. Quotes the trigger's own `name` (falls back to `"(unnamed
+trigger)"` — `tinybones-bauble-burglar`'s own trigger is missing `name`
+entirely, a separate pre-existing masked type bug, not fixed here) plus
+its `description`/`describe` field when present.
+
+**Pool-wide effect** (`gate-and-write-status.mjs`, run against 99 of the
+100 real FDN slugs — `hare-apparent` deliberately excluded/deferred, see
+below): 21 more cards flipped `blue` -> `purple`: `ajani-s-pridemate`,
+`archmage-of-runes`, `armasaur-guide`, `battlesong-berserker`,
+`bloodthirsty-conqueror`, `cat-collector`, `clinquant-skymage`,
+`courageous-goblin`, `crackling-cyclops`, `dazzling-angel`,
+`erudite-wizard`, `exemplar-of-light`, `grappling-kraken`,
+`high-society-hunter`, `infernal-vessel`, `infestation-sage`,
+`mischievous-mystic`, `nine-lives-familiar`, `valkyrie-s-call`,
+`vanguard-seraph`, `vengeful-bloodwitch` — `courageous-goblin` is the
+cleanest real bug of the batch (no OTHER gap masking it: real
+`pumpSelf`/`grantKeywordSelf` effects, zero `staticAbilities`, yet the
+whole trigger can never fire). New totals across those 99 slugs: 45 blue /
+54 purple (was 66/33). A handful of already-`purple` cards
+(`drake-hatcher`, `homunculus-horde`, `kaito-cunning-infiltrator`,
+`skyship-buccaneer`, `sphinx-of-forgotten-lore`,
+`tinybones-bauble-burglar`) gained one more reason without changing
+status.
+
+**`hare-apparent` deliberately NOT re-gated this pass** — a concurrent
+`engine` agent session was mid-edit on its `definition.ts`/
+`pipeline-status.json` (and `sink-model/*`/`combinator.ts`/`card.ts`,
+confirmed via `git status` both before starting and immediately before
+the batch gate run) at the time of this task. Re-run
+`gate-and-write-status.mjs hare-apparent` once that other work lands, to
+pick up both this new rule and whatever that session's own edit changed.

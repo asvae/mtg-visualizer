@@ -1,7 +1,8 @@
 {
   "status": "purple",
   "reasons": [
-    "documented unsupported construct (kind:'custom' no-op placeholder): create a token that's a copy of this creature (vocabulary gap: no copy effect)"
+    "documented unsupported construct (kind:'custom' no-op placeholder): create a token that's a copy of this creature (vocabulary gap: no copy effect)",
+    "name-only trigger with no real `on` value (cannot auto-fire, and this FDN pool has no scenarios.ts to manually invoke it either): \"onSecondDraw\""
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -28,5 +29,5 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T13:18:30.327Z"
+  "computedAt": "2026-09-18T13:44:23.428Z"
 }

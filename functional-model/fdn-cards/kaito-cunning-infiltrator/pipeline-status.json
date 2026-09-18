@@ -1,7 +1,8 @@
 {
   "status": "purple",
   "reasons": [
-    "documented unsupported construct (kind:'custom' no-op placeholder): you get an emblem with \"Whenever a player casts a spell, you create a 2/1 blue Ninja creature token.\" (no emblem mechanic exists anywhere in this engine)"
+    "documented unsupported construct (kind:'custom' no-op placeholder): you get an emblem with \"Whenever a player casts a spell, you create a 2/1 blue Ninja creature token.\" (no emblem mechanic exists anywhere in this engine)",
+    "name-only trigger with no real `on` value (cannot auto-fire, and this FDN pool has no scenarios.ts to manually invoke it either): \"onCombatDamageToPlayer\""
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -28,5 +29,5 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T13:18:33.610Z"
+  "computedAt": "2026-09-18T13:44:25.798Z"
 }

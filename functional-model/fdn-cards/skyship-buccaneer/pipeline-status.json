@@ -1,7 +1,8 @@
 {
   "status": "purple",
   "reasons": [
-    "documented unsupported construct (kind:'custom' no-op placeholder): If you attacked this turn, draw a card (Raid mechanic with turn-state check)"
+    "documented unsupported construct (kind:'custom' no-op placeholder): If you attacked this turn, draw a card (Raid mechanic with turn-state check)",
+    "name-only trigger with no real `on` value (cannot auto-fire, and this FDN pool has no scenarios.ts to manually invoke it either): \"RaidETB\" — Raid — When this creature enters, if you attacked this turn, draw a card."
   ],
   "failureKind": "capacity-gap",
   "engineGapsContext": {
@@ -28,5 +29,5 @@
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T13:18:40.748Z"
+  "computedAt": "2026-09-18T13:44:31.455Z"
 }
