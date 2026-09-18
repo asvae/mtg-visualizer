@@ -52,21 +52,22 @@ const blankLandMock: CardDefinition = {
 };
 
 describe('computeCardInteractions', () => {
-  it("Ajani's Pridemate now DOES get a 'Lifegain' category, via the new consumer-side signal: its own real onLifeGained trigger name is in the lifegain catalog entry's consumerTriggerNames, even though it has no gainLife effect of its own (a pure Trigger.name field comparison, never oracle text — see entry.ts's own doc comment) — self-inclusive alongside a real producer (the mock) already in the pool; catalog-only means its baseline 'enters the battlefield'/'counters' raw categories no longer appear at all", () => {
+  it("Ajani's Pridemate gets a 'Lifegain' category (owns it via consumerTriggerNames — its real onLifeGained trigger name), but is NEVER itself among the matches: it has no gainLife effect of its own, it's purely a consumer ('whenever you gain life') — only the real producer (the mock) is a match; catalog-only means its baseline 'enters the battlefield'/'counters' raw categories no longer appear at all", () => {
     const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate, lifegainMock]);
     const categories = result.map((r) => r.category).sort();
     expect(categories).toEqual(['Lifegain']);
     expect(categories).not.toContain('life gain');
     const lifegain = result.find((r) => r.category === 'Lifegain');
-    expect(lifegain!.matchingCardNames).toEqual(["Ajani's Pridemate", 'Test Lifegain Producer']);
+    expect(lifegain!.matchingCardNames).toEqual(['Test Lifegain Producer']);
+    expect(lifegain!.matchingCardNames).not.toContain("Ajani's Pridemate");
   });
 
-  it("self-inclusion for the consumer-only case: Ajani's Pridemate alone in the pool (no other lifegain producer at all) still gets 'Lifegain', containing only itself", () => {
+  it("consumer-only ownership without self-inclusion: Ajani's Pridemate alone in the pool (no producer at all) still gets a 'Lifegain' row (it owns/cares about the category), but with zero matches — it is never counted as its own match", () => {
     const result = computeCardInteractions(ajanisPridemate, [ajanisPridemate]);
     const lifegain = result.find((r) => r.category === 'Lifegain');
     expect(lifegain).toBeDefined();
-    expect(lifegain!.matchingCardNames).toEqual(["Ajani's Pridemate"]);
-    expect(lifegain!.count).toBe(1);
+    expect(lifegain!.matchingCardNames).toEqual([]);
+    expect(lifegain!.count).toBe(0);
   });
 
   it("a card with no consumerTriggerNames match at all (Serra Angel, no triggers) never gets 'Lifegain' even when checked against a real producer", () => {

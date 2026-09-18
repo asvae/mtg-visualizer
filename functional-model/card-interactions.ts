@@ -219,6 +219,27 @@
 // accident. `deriveOccurrences`/`matchSink`'s own sink-only-model machinery
 // is untouched — this file is still the same thin aggregation layer over
 // it, just catalog-entries-only now.
+//
+// **SUPERSEDED, 2026-09-18, later still — a card's own CONSUMER match no
+// longer makes it a MATCH in its own (or anyone else's) `matchingCardNames`.**
+// A real bug in the very first `consumerTriggerNames` cut (immediately
+// above): the inner per-candidate loop counted a candidate as a match via
+// EITHER `matchSink` (producer) OR `matchesConsumerTriggerNames` (consumer)
+// — so Ajani's Pridemate showed up inside its own `"Lifegain"` category's
+// `matchingCardNames`, even though it has no `gainLife` effect of its own.
+// The user's own correction: "It doesn't [have lifegain] — it's purely a
+// sink 'whenever you gain life'." Consumer mode now does exactly ONE job —
+// deciding whether `definition` OWNS/cares about a category at all (so it
+// appears in `definition`'s own output) — never whether a candidate counts
+// as a match. Matches are PRODUCER-only, always. This is the original
+// "self-source" rule taken literally: a card appears among its own matches
+// only when it genuinely IS the source of its own category, never merely
+// because it asks the question. Ajani's Pridemate now returns a real
+// `"Lifegain"` row (it owns the category) whose `matchingCardNames`
+// contains real producers only (Felidar Savior, Healer's Hawk) and never
+// itself; a pool with no producer at all still yields the row, with
+// `count: 0`/`matchingCardNames: []` — an honest "you care about this, but
+// nothing in scope produces it yet," not a hidden/omitted row.
 // ---------------------------------------------------------------------------
 import type { CardDefinition } from './card';
 import { matchesConsumerTriggerNames, matchSink } from './sink-model/match-sink';
@@ -278,8 +299,17 @@ export function computeCardInteractions(definition: CardDefinition, poolDefiniti
     if (!selfProducerMatch.matched && !selfConsumerMatch) continue;
     const category = entry.query.category;
     const matchedNames = matchesByCategory.get(category) ?? new Set<string>();
+    // Only PRODUCER matches ever count as a match here — consumer mode
+    // above decides whether `definition` owns/cares about this category at
+    // all (so it appears in its own output), never whether a candidate
+    // (including `definition` itself) counts as one of the matches. A
+    // consumer-only card (Ajani's Pridemate: reacts to lifegain, produces
+    // none) has no lifegain interaction of its own and must not appear in
+    // its own "Lifegain" matches — the original "self-source" rule was
+    // always conditioned on the card genuinely being a SOURCE/producer of
+    // its own category, never unconditional self-inclusion.
     for (const candidate of poolDefinitions) {
-      if (matchSink(entry.query, candidate, root).matched || matchesConsumerTriggerNames(entry.consumerTriggerNames, candidate)) {
+      if (matchSink(entry.query, candidate, root).matched) {
         matchedNames.add(candidate.name);
       }
     }
