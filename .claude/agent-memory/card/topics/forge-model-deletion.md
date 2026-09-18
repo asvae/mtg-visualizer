@@ -21,3 +21,13 @@ with the orchestrator first, not just re-add the file.
 `forge-model`/`forgeTranslate.ts`/`forgeScript.ts` — that file is
 `engine`'s, not fixed as part of this deletion (flagged to orchestrator at
 the time, routing to `engine`).
+
+**2026-09-19 update**: a real Forge-script tab WAS revived, deliberately —
+see `topics/forge-script-dev-tab.md`. Flagged to the orchestrator first
+(per this file's own closing note above) before building anything; the
+user confirmed directly ("could live in gitignored tmp folder") once the
+design was shown to be structurally different from what got deleted here
+(nothing committed/bundled this time — live-read from the gitignored local
+`tmp/mtg-forge/` checkout only, dev-only gated). This entry stays as the
+historical record of the ORIGINAL deletion and its reasoning; read the new
+topic file for the current, live feature.

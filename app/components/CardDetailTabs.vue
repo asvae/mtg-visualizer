@@ -1130,9 +1130,76 @@ const scenariosCount = computed(() => props.data.functionalModel?.traces?.length
 // (both `undefined`-only members already tolerated this via
 // `item.badge || undefined`), so one shared interface covers every real
 // item any branch below produces.
+// Forge Script tab (2026-09-19) — dev-only "real Forge card script next to
+// our own CardDefinition" reviewer tool, see `server/utils/forgeScript.ts`'s
+// own header for the full dev-only/GPL-safety posture (nothing committed or
+// bundled — live-read from the gitignored local `tmp/mtg-forge/` checkout
+// only; confirmed with the user directly before building, per the
+// orchestrator relay, given this reopens the `forge-model/`/
+// `ForgeCardScript.vue` GPL-exposure deletion — `.claude/agent-memory/card/
+// topics/forge-model-deletion.md`). Fetched via a plain `$fetch`, not
+// `useFetch` — this tab is optional/best-effort (a card with no Forge match
+// is an expected, common outcome, not a page-load failure) and shouldn't
+// block or complicate the rest of this component's own client-only fetch
+// lifecycle. Keyed by the card's OWN NAME (not set/number) — that's what
+// `GET /api/forge-script` actually resolves against — and cached per name in
+// a plain module-scope-adjacent `Map` (same convention as
+// `recognizerSourceCache` above) so flipping Previous/Next back to an
+// already-seen card doesn't re-fetch. Gated on `import.meta.dev` directly
+// (not the `isDev` const — that's declared further down this file, after
+// where this block needs to sit so `functionalModelTabs` below can already
+// reference `forgeScriptAvailable`) rather than fetching at all outside dev,
+// even though the server route itself also refuses in production — no
+// point issuing a request that can only ever 200 with `available: false`.
+//
+// `forgeScriptResult.available` (`GET /api/forge-script`'s own discriminated
+// response, `server/utils/forgeScript.ts`'s `ForgeScriptResult`) is a
+// GENERAL "is a local checkout even present, in dev" signal, deliberately
+// separate from `forgeScriptResult.found` (THIS card's own match) —
+// `forgeScriptAvailable` below (which gates the TAB'S OWN EXISTENCE in
+// `functionalModelTabs`) reads only the former, so a checkout that exists
+// but has no match for the currently-viewed card still shows the tab, with
+// its own inline "no Forge script found" state, rather than hiding the tab
+// entirely and looking like the feature is broken.
+interface ForgeScriptResponse {
+  available: boolean;
+  reason?: 'dev-only' | 'no-checkout';
+  found?: boolean;
+  content?: string;
+  path?: string;
+}
+const forgeScriptCache = new Map<string, ForgeScriptResponse>();
+const forgeScriptResult = ref<ForgeScriptResponse | null>(null);
+const forgeScriptLoading = ref(false);
+async function loadForgeScriptTab(name: string) {
+  const cached = forgeScriptCache.get(name);
+  if (cached) {
+    forgeScriptResult.value = cached;
+    return;
+  }
+  forgeScriptResult.value = null;
+  forgeScriptLoading.value = true;
+  try {
+    const res = await $fetch<ForgeScriptResponse>('/api/forge-script', { query: { name } });
+    forgeScriptCache.set(name, res);
+    forgeScriptResult.value = res;
+  } catch {
+    // Network-level failure only (the route itself never throws for a
+    // no-match — see its own header) — degrade to "unavailable" rather than
+    // leaving the tab stuck on a spinner forever.
+    forgeScriptResult.value = { available: false, reason: 'no-checkout' };
+  } finally {
+    forgeScriptLoading.value = false;
+  }
+}
+if (import.meta.dev) {
+  watch(() => card.value.name, (name) => loadForgeScriptTab(name), { immediate: true });
+}
+const forgeScriptAvailable = computed(() => import.meta.dev && !!forgeScriptResult.value?.available);
+
 interface FunctionalModelTabItem {
   label: string;
-  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition';
+  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'forgeScript';
   badge?: number;
 }
 const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
@@ -1140,6 +1207,7 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
     ? [
         ...(scenariosCount.value > 0 ? [{ label: 'Scenarios', value: 'scenarios' as const, badge: scenariosCount.value || undefined }] : []),
         { label: 'Card Definition', value: 'definition' as const },
+        ...(forgeScriptAvailable.value ? [{ label: 'Forge Script', value: 'forgeScript' as const }] : []),
       ]
     : [
         { label: 'Facts', value: 'facts' as const, badge: factsCount.value || undefined },
@@ -1147,6 +1215,7 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
         { label: 'Facts Json', value: 'json' as const },
         { label: 'Card Json', value: 'cardJson' as const },
         { label: 'Card Definition', value: 'definition' as const },
+        ...(forgeScriptAvailable.value ? [{ label: 'Forge Script', value: 'forgeScript' as const }] : []),
       ],
 );
 // The active tab VALUE, wrapping the shared `store.functionalModelTab` (see
@@ -1180,11 +1249,24 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
 // own sensible default (`'definition'` for `isFdn`, `'facts'` otherwise) —
 // read-only, never written back, so a user who genuinely prefers Scenarios
 // still resumes there the next time they land on a card that has some.
-const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition'>({
+const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'forgeScript'>({
   get: () => {
     const stored = store.functionalModelTab.value;
-    if (isFdn.value && stored !== 'scenarios') return 'definition';
+    // `'forgeScript'` widened in alongside `'scenarios'` (2026-09-19) — both
+    // are real tabs `functionalModelTabs` can offer for an `fdn` card (see
+    // that computed's own `isFdn` branch above), so a stored `'forgeScript'`
+    // value must survive this fallback the same way `'scenarios'` already
+    // does, rather than being forced back to `'definition'` every time an
+    // FDN card loads.
+    if (isFdn.value && stored !== 'scenarios' && stored !== 'forgeScript') return 'definition';
     if (stored === 'scenarios' && scenariosCount.value === 0) return isFdn.value ? 'definition' : 'facts';
+    // A stored `'forgeScript'` value is only meaningful while the CURRENT
+    // card's own tab strip actually offers it (`forgeScriptAvailable`) —
+    // same "stale stored value from a different card" guard as the
+    // `'scenarios'`/zero-traces case just above, so navigating from a card
+    // with a Forge match to one without doesn't land on an empty `v-else-if`
+    // branch with no visible tab selected.
+    if (stored === 'forgeScript' && !forgeScriptAvailable.value) return isFdn.value ? 'definition' : 'facts';
     return stored;
   },
   set: (v) => {
@@ -1991,6 +2073,19 @@ watch(
         :json="cardJson ?? ''"
         class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-2"
       />
+    </template>
+
+    <!-- Forge Script — real Forge DSL source, not our own schema/TypeScript
+         (see `forgeScriptResult`'s own doc comment above), so a plain `<pre>`
+         block is deliberate here, not `FunctionalModelScript` (which
+         hljs-highlights TypeScript specifically — wrong grammar for this). -->
+    <template v-else-if="functionalModelTabValue === 'forgeScript'">
+      <div v-if="forgeScriptLoading" class="text-xs text-muted italic">Loading Forge script…</div>
+      <template v-else-if="forgeScriptResult?.found && forgeScriptResult.content">
+        <pre class="max-h-[32rem] overflow-auto rounded border border-border bg-panel p-2 font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-text/80">{{ forgeScriptResult.content }}</pre>
+        <div v-if="forgeScriptResult.path" class="mt-1 text-[10px] text-muted">{{ forgeScriptResult.path }}</div>
+      </template>
+      <div v-else class="text-xs text-muted italic">No Forge script found for this card in the local tmp/mtg-forge/ checkout.</div>
     </template>
 
     <template v-else>

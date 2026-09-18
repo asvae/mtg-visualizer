@@ -955,7 +955,12 @@ export function useGraphStore() {
   // `'cardJson'` too; an FDN card only ever offers `'scenarios'`/
   // `'definition'` (CardDetailTabs.vue's own `isFdn` tab strip) — this list
   // is a flat superset across both card kinds, not a per-kind union.
-  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition'] as const;
+  // `'forgeScript'` (2026-09-19) — dev-only "real Forge card script" tab,
+  // offered for either card kind whenever `GET /api/forge-script` reports a
+  // local checkout is present (CardDetailTabs.vue's own `forgeScriptAvailable`
+  // gate); see `server/utils/forgeScript.ts`'s own header for the dev-only/
+  // GPL-safety posture.
+  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition', 'forgeScript'] as const;
   type FunctionalModelTab = (typeof FUNCTIONAL_MODEL_TABS)[number];
   let savedFunctionalModelTab: FunctionalModelTab = 'facts';
   try {

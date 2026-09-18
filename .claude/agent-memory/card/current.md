@@ -12,7 +12,8 @@
 - [Fact-provenance icon history](topics/fact-provenance-icon-history.md) — meaning has flipped repeatedly; verify current template before assuming which icon means what.
 - [`factConditions.ts` design principle](topics/fact-conditions-design-principle.md) — exclusion-list not allow-list; over-showing is the safe direction to be wrong.
 - [Card-lookup duplication precedent](topics/card-lookup-duplication-precedent.md) — several routes deliberately hand-roll their own card lookup; revisit only at a 4th consumer.
-- [Forge-model deletion](topics/forge-model-deletion.md) — `forge-model/`/`ForgeCardScript.vue` deleted 2026-09-11 for GPL-3.0 exposure; why it's gone from this agent's domain list.
+- [Forge-model deletion](topics/forge-model-deletion.md) — `forge-model/`/`ForgeCardScript.vue` deleted 2026-09-11 for GPL-3.0 exposure; why it's gone from this agent's domain list; see forge-script-dev-tab.md for the 2026-09-19 confirmed revival.
+- [Forge Script dev tab](topics/forge-script-dev-tab.md) — 2026-09-19 revival, dev-only live-read from gitignored `tmp/mtg-forge/`, never committed/bundled; slug algorithm + pieces + a dev-server-restart gotcha hit while verifying.
 - [Facts-tab display ordering invariants](topics/facts-display-ordering-invariants.md) — toggles must filter, never re-sort; multi-fact-per-segment hover must highlight all of them.
 - [Flex-col text-overflow gotcha](topics/flex-col-text-overflow-gotcha.md) — a `shrink-0`/unbounded flex sibling holding long freeform text can collapse `CardMedia` to 0×0 via a flexbox circular-sizing quirk; needs explicit `max-w-*`+`min-w-0`, not just `break-words` — the specific box this fixed is since removed (see fdn-vs-fin-card-model.md), lesson generalizes.
 - [EngineConsoleShell `header-extra` slot](topics/engine-console-shell-header-extra-slot.md) — generic optional slot next to "N of N"; today's only consumer is the Cards tab's FDN pipeline-status badge.
