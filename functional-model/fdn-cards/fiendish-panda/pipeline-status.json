@@ -1,0 +1,7 @@
+{
+  "status": "gray",
+  "reasons": [
+    "missing/empty justification manifest — every FDN card needs a real, span-verified functional-model/fdn-cards/<slug>/justification.json (see coverage-justification.ts's own CoverageJustificationEntry doc comment)"
+  ],
+  "computedAt": "2026-09-18T16:51:20.537Z"
+}
