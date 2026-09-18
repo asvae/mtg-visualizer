@@ -61,9 +61,4 @@ import type { SinkCatalogEntry } from './entry';
 
 export const query: SinkQuery = { category: 'Counters (+1/+1)', event: 'putCounter', counterType: '+1/+1', controller: 'you' };
 
-export const entry: SinkCatalogEntry = {
-  slug: 'counters-plus1plus1',
-  query,
-  consumerTriggerNames: ['onCounterAdded'],
-  family: { slug: 'counters', label: 'Counters', variant: '+1/+1' },
-};
+export const entry: SinkCatalogEntry = { slug: 'counters-plus1plus1', query, consumerTriggerNames: ['onCounterAdded'] };

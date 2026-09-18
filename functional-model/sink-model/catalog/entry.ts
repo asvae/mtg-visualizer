@@ -158,46 +158,4 @@ export interface SinkCatalogEntry {
    * `lifegain`/`graveyard-fodder`/`etb`.
    */
   requireConsumerForSelfOwnership?: boolean;
-  /**
-   * Presentational/grouping metadata ONLY (2026-09-18) — surfaces a
-   * relationship several catalog entries' own header comments already
-   * document in prose ("the same shape... zero new code needed" for a
-   * hypothetical future sibling) as a real, explicit data field, so a
-   * future review-page UI can render several entries as one named sink
-   * with multiple configurations/variants instead of N unrelated peer
-   * rows. Does NOT touch `slug`/`query`/matching behavior/review-status
-   * computation in any way — `match-sink.ts`, `card-interactions.ts`
-   * (which groups matches by `query.category`, not by this field), and
-   * `sink-catalog-status.ts` (which keys review status off `slug`) are
-   * all completely untouched by this field's presence; each entry stays
-   * its own fully independent `SinkCatalogEntry` module with its own
-   * `query`, corpus, and review status. Only ever compare/group entries
-   * by `family.slug`, never by `family.label`/`family.variant` (display
-   * strings, not identity).
-   *
-   * Omitted entirely for a catalog entry that stands alone (no real
-   * sibling entries sharing its underlying mechanic/matcher shape) — the
-   * `lifegain`/`graveyard-fodder`/`etb` entries have no `family` today.
-   */
-  family?: {
-    /** Stable identity key for the family, e.g. `'battlefield-presence'`/
-     * `'counters'` — analogous to `slug` above but scoped to the family
-     * rather than one entry; shared verbatim across every sibling entry in
-     * the same family. Never reuse a retired family slug for a different
-     * grouping. */
-    slug: string;
-    /** The family's own display name, e.g. `'Battlefield presence'`/
-     * `'Counters'` — what a future grouped-view UI would show as the one
-     * top-level sink name for every entry sharing this `family.slug`. */
-    label: string;
-    /** THIS entry's own configuration/variant label within the family,
-     * e.g. `'Cats'`/`'Creatures'`/`'Same-name copies'` (battlefield
-     * presence) or `'+1/+1'` (counters, anticipating future `-1/-1`/
-     * loyalty siblings). Distinct from `query.category`, which stays each
-     * entry's own full display category today (e.g. `'Counters
-     * (+1/+1)'`) — `variant` is the shorter label meant for use ALONGSIDE
-     * `family.label` once a grouped view exists, not a replacement for
-     * `query.category`. */
-    variant: string;
-  };
 }
