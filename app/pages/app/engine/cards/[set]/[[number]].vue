@@ -368,6 +368,20 @@ function statusMeta(color: CardStatusPageEntry['color']) {
   return STATUS_OPTIONS.find((o) => o.value === color)!;
 }
 
+// Second, FDN-only nav-row swatch — engine-support signal, independent of
+// (and always rendered alongside) the pipeline-status dot above. Same
+// on/off colors as `ENGINE_SUPPORT_FILTER_OPTIONS` above, kept literal here
+// rather than looked up by value since 'all' has no per-row meaning. A
+// `gray`/never-gated entry (undefined `engineSupport`, the common case —
+// 134/150 fdn cards as of writing) renders NEUTRAL (transparent fill, faint
+// outline) rather than defaulting to a fabricated color — this is a real
+// "not evaluated" state, not a false negative.
+function engineSupportSwatchStyle(support: CardStatusPageEntry['engineSupport']) {
+  if (support === 'on') return { background: '#22c55e' };
+  if (support === 'off') return { background: '#ef4444' };
+  return { background: 'transparent', border: '1px solid rgba(148, 163, 184, 0.35)' };
+}
+
 // This card's own real name for the tab title — `selectedEntry` (the
 // corpus-mode path) in the normal case, the directly-fetched `cardData`
 // (below) in `genericMode`, where there IS no `selectedEntry` at all.
@@ -635,7 +649,14 @@ const engineSupportHeaderBadge = computed(() => {
           @select="pickEntry"
         >
           <template #row="{ entry }">
-            <span class="h-1.5 w-1.5 shrink-0 rounded-full" :style="{ background: statusMeta(entry.color).color }" />
+            <span class="flex shrink-0 items-center gap-1">
+              <span class="h-[9px] w-[9px] shrink-0 rounded-full" :style="{ background: statusMeta(entry.color).color }" />
+              <span
+                v-if="IS_FDN"
+                class="h-1.5 w-1.5 shrink-0 rounded-full"
+                :style="engineSupportSwatchStyle(entry.engineSupport)"
+              />
+            </span>
             <span class="shrink-0 text-[10px] tabular-nums text-muted/70">#{{ entry.number }}</span>
             <span class="truncate">{{ entry.name }}</span>
           </template>

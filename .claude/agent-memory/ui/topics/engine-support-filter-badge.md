@@ -74,3 +74,35 @@ Verified live via Playwright against real cards: `sire-of-seven-deaths`
 (fdn/1) and `zul-ashur-lich-lord` (fdn/77) both show "Engine gap"; a clean
 gated card (`claws-out`, fdn/6) shows "Engine OK"; a `gray` card (fdn/188)
 shows neither (only "Not started").
+
+## Nav-row second swatch (2026-09-18, later same day)
+
+Same page's sidebar row template (`EngineConsoleEntryListPanel`'s `#row`
+slot, this file ~line 637) gained a SECOND small color dot next to the
+existing pipeline-status one — literally every row simultaneously, not
+just the selected card (that's what the header badge above already covers;
+this is the per-row list analog). Both dots live inside one `flex
+items-center gap-1` wrapper span, first child unchanged in kind but
+enlarged 50% (`h-1.5 w-1.5` → `h-[9px] w-[9px]`, Tailwind's spacing scale
+has no 2.25 step so an arbitrary-value class was needed), second child new,
+sized at the FIRST dot's OLD size (`h-1.5 w-1.5`) so the pair reads as
+"one bigger primary + one smaller secondary," not two equal blobs.
+
+- Second dot gated `v-if="IS_FDN"` at the OUTER wrapper's per-swatch
+  level (not a page-level branch) — `fin` rows keep exactly their old
+  single-dot markup/width, confirmed live via Playwright DOM inspection
+  (5 sampled fin rows all had `wrapperCount 1 / innerCount 1`).
+- Color logic lives in a new `engineSupportSwatchStyle(support)` helper
+  (mirrors the existing `statusMeta()` pattern): `'on'` → `#22c55e`,
+  `'off'` → `#ef4444` (same literal hex values `ENGINE_SUPPORT_FILTER_
+  OPTIONS` already uses, not re-derived), `undefined` (the common
+  never-gated case, 134/150 fdn cards) → `background: transparent; border:
+  1px solid rgba(148,163,184,0.35)` — a real neutral/empty state, not a
+  fabricated color. Verified live: `sire-of-seven-deaths` (blue+red),
+  `zul-ashur-lich-lord` (purple+red), `claws-out` (blue+green), 3 sampled
+  gray/`Not started` cards (Armasaur Guide, Cat Collector, Celestial
+  Armor — gray+neutral-outline, confirmed via `getAttribute('style')`
+  containing `transparent`).
+- No layout overflow — both dots are a few px each inside the row's
+  existing `gap-1.5` flex row; screenshot-verified at 1400px viewport,
+  rows stay single-line/dense, no wrap.
