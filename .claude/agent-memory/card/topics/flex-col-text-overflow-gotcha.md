@@ -1,5 +1,15 @@
 # Flex-column long-text overflow collapses a flex sibling (2026-09-18)
 
+**Update, same day, later**: the specific pipeline-status box this entry
+fixed no longer exists — it was removed outright (badge moved to the
+`EngineConsoleShell` header, `reasons`/`reviewNote`/text dropped from the UI
+per explicit user call) rather than kept-and-shrunk; see
+`topics/fdn-vs-fin-card-model.md`'s newest bullet. Keeping this entry for
+its **general lesson** below (still real, still applies to any future
+`flex-col`/`flex-row` pairing of a fixed-size image with an unbounded-text
+sibling in this codebase), not because the original box is still there to
+look at.
+
 **Real bug, fixed**: `/app/engine/cards/fdn/2` (Arahbo) and other `purple`
 FDN cards showed no card image. NOT a data/API bug (`GET /api/card/fdn/2`
 was always correct, `CardMedia.vue` unconditional, `card.images` always

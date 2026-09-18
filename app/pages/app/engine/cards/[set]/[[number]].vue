@@ -125,6 +125,8 @@ import type { StatusFilterOption } from '../../../../../composables/useStatusFil
 import { useSetOrder, neighborsInSetOrder, type SetOrderData } from '../../../../../composables/useSetOrder';
 import type { CardResponse } from '../../../../../lib/cardResponse';
 import type { CardStatusPageEntry } from '../../../../../../server/api/card-status/[set].get';
+import { PIPELINE_STATUS_META } from '../../../../../lib/pipelineStatus';
+import { statusBadgeStyle } from '../../../../../lib/badgeColor';
 
 const route = useRoute();
 // Keys this whole page component on `:set` — see this file's own header,
@@ -433,6 +435,27 @@ watch(
 // the exact same source (plus real pipeline-status + Confirm/Reject) as
 // part of the SAME request every card on this tab already makes; no
 // second source-fetch mechanism needed.
+
+// --- Pipeline-status badge, `EngineConsoleShell`'s `header-extra` slot
+// (2026-09-18, later still) — moved here from a bordered box
+// `CardDetailTabs.vue` used to render next to `CardMedia` (explicit user
+// call: "Move it to the header (near N of N) and just use badge. I don't
+// need this text"). Computed independently off `cardData` here rather than
+// reading it back out of `CardDetailTabs.vue` (which owns no header/slot
+// concept of its own to reach upward through) — same "display metadata
+// computed fresh at each real consumer" posture `PIPELINE_STATUS_META`
+// itself already documents as its own reason for existing as a standalone
+// module. `IS_FDN`-only: FIN cards on this same tab have a different
+// review-status concept entirely (the fact-authoring status square next to
+// the Facts tab label inside `CardDetailTabs.vue`, unrelated to this axis),
+// not a pipeline-status badge. `genericMode` (a live-query card whose `:set`
+// isn't tracked here at all) is implicitly excluded too — `IS_FDN` can only
+// ever be true for the real, tracked `fdn` corpus.
+const pipelineHeaderBadge = computed(() => {
+  if (!IS_FDN || !cardData.value) return null;
+  const status = cardData.value.functionalModel?.pipelineStatus?.status ?? 'gray';
+  return PIPELINE_STATUS_META[status];
+});
 </script>
 
 <template>
@@ -445,6 +468,10 @@ watch(
     @prev="genericMode ? goGenericPrev() : goPrev()"
     @next="genericMode ? goGenericNext() : goNext()"
   >
+    <template v-if="pipelineHeaderBadge" #header-extra>
+      <UBadge :style="statusBadgeStyle(pipelineHeaderBadge.color)" size="sm" variant="solid">{{ pipelineHeaderBadge.label }}</UBadge>
+    </template>
+
     <template #nav>
       <template v-if="genericMode">
         <!-- This card's `:set` isn't one of this tab's own tracked-corpus

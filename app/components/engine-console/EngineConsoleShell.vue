@@ -186,8 +186,16 @@ onUnmounted(() => {
 
       <div class="min-h-0 flex-1 overflow-y-auto p-6">
         <div class="mx-auto max-w-4xl">
-          <div v-if="!hideNav && (positionLabel || canPrev || canNext)" class="mb-2 flex items-center justify-between">
-            <span class="text-[11px] tabular-nums text-muted">{{ positionLabel }}</span>
+          <div v-if="!hideNav && (positionLabel || canPrev || canNext || $slots['header-extra'])" class="mb-2 flex items-center justify-between">
+            <div class="flex min-w-0 items-center gap-2">
+              <span class="text-[11px] tabular-nums text-muted">{{ positionLabel }}</span>
+              <!-- Plain optional slot, deliberately generic — not FDN-
+                   specific. Only the Cards tab's `[set]/[[number]].vue` page
+                   currently feeds this (a pipeline-status badge for `fdn`
+                   cards); the other five `/app/engine/*` tabs never pass it,
+                   so this renders nothing extra for them. -->
+              <slot name="header-extra" />
+            </div>
             <div class="flex items-center gap-1">
               <UButton
                 icon="i-lucide-chevron-left"

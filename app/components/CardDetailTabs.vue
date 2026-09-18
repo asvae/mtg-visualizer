@@ -41,8 +41,6 @@ import { CARD_STATUS_META } from '../lib/cardStatus';
 import type { CardStatusBucket } from '../lib/cardStatus';
 import { cardStatusBaseline } from '../../functional-model/card-status';
 import { emitReviewStatusChanged } from '../composables/useReviewStatusBus';
-import { PIPELINE_STATUS_META } from '../lib/pipelineStatus';
-import { statusBadgeStyle } from '../lib/badgeColor';
 import type { PipelineStatusFile } from '../../functional-model/pipeline-status';
 
 // Debug column showing each row's raw `Fact` JSON, so it's inspectable
@@ -101,10 +99,19 @@ const isFdn = computed(() => props.set === 'fdn');
 // callback fires, a real `ReferenceError` confirmed the hard way while
 // building this. See the fuller doc comment on the rest of this axis
 // (`canReviewPipeline`/`submitPipelineReview`/...) further down this file.
+// The badge itself (color+label) moved OUT of this component 2026-09-18 —
+// now rendered by the page-level caller in the shared `EngineConsoleShell`
+// header, next to "N of N" (see `app/pages/app/engine/cards/[set]/
+// [[number]].vue`'s own `header-extra` slot usage), not here. This
+// component keeps only `pipelineStatusColor` (still needed for
+// `canReviewPipeline` below) — `pipelineStatusEntry`'s `reasons`/
+// `reviewNote`/`reviewedAt` fields are no longer displayed anywhere in this
+// component at all (explicit user call: "I don't need this text - I'll
+// just read card definition if I have some questions" — not a display gap,
+// a deliberate drop).
 const pipelineStatusOverride = ref<PipelineStatusFile | null>(null);
 const pipelineStatusEntry = computed<PipelineStatusFile | null>(() => pipelineStatusOverride.value ?? props.data.functionalModel?.pipelineStatus ?? null);
 const pipelineStatusColor = computed(() => pipelineStatusEntry.value?.status ?? 'gray');
-const pipelineStatusMeta = computed(() => PIPELINE_STATUS_META[pipelineStatusColor.value]);
 
 // Per-card (not per-face) fact-authoring status badge — LIVE, computed
 // fresh per request by the API route itself (server/api/card/[set]/
@@ -1609,55 +1616,34 @@ watch(
     </div>
 
     <!-- FDN's own real, genuinely different review axis (`functional-model/
-         pipeline-status.ts` — see `isFdn`'s own doc comment above): no
-         Facts/Scenarios/Interactions to review at all, so this isn't the
-         same table above with different labels — it's the card's own
-         authoring-PIPELINE-STAGE status plus a Confirm/"Reject…" action,
-         pattern copied from `app/pages/app/engine/predicates/[[slug]].vue`'s
-         own established Confirm/Reject shape (same button labels, same
-         reject-note-modal shape). No "Unconfirm"/"Clear review" affordance
-         — see `submitPipelineReview`'s own doc comment for why that's a
-         real, confirmed mismatch against `pipeline-status.ts`'s own
-         `applyPipelineReview` (a pure one-way `blue -> yellow|green`
-         transition), not an oversight. -->
-    <div v-else class="mt-2 min-w-0 max-w-xl rounded-md border border-border-subtle bg-panel p-3">
-      <div class="flex items-center gap-2">
-        <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Pipeline status</span>
-        <UBadge :style="statusBadgeStyle(pipelineStatusMeta.color)" size="sm" variant="solid">{{ pipelineStatusMeta.label }}</UBadge>
-      </div>
-      <!-- `min-w-0` (this div, dropped from `shrink-0`) + `max-w-xl` above are
-           load-bearing, not cosmetic: a real gate `reasons` string can now run
-           several hundred characters (e.g. Arahbo's own quoted-clause
-           `missingSchemaFunctionality` reason) with no natural short-word
-           break early on. Without a hard width cap somewhere in this chain,
-           this `<ul>`'s `flex flex-direction:column` (cross-axis defaults to
-           `align-items:stretch`) computes its own shrink-to-fit width from
-           each `<li>`'s UNWRAPPED max-content size during that stretch
-           calculation — a well-known flexbox circular-sizing quirk — so the
-           box silently grew to ~3200px instead of wrapping, and (this box
-           used to be `shrink-0`, refusing to give any of that width back)
-           took 100% of the negative space from its `CardMedia` flex sibling
-           in the row above, collapsing the card image to a real 0×0 box
-           (image data still loaded fine — no console error, nothing wrong
-           with `CardMedia`/the API response, purely a layout collapse).
-           `max-w-xl` breaks the circular estimation (gives the `<ul>` a real
-           width to wrap against); `min-w-0` (replacing `shrink-0`) lets this
-           box shrink further than that if the row is narrower still, rather
-           than refusing to shrink at all like before. -->
-      <ul v-if="pipelineStatusEntry?.reasons?.length" class="mt-1.5 flex flex-col gap-1">
-        <li v-for="(r, i) in pipelineStatusEntry.reasons" :key="i" class="text-[11px] leading-relaxed break-words text-muted">{{ r }}</li>
-      </ul>
-      <p v-else-if="!data?.functionalModel" class="mt-1.5 text-[11px] text-muted italic">
-        No functional-model/fdn-cards/&lt;slug&gt;/ folder for this card yet.
-      </p>
-      <p v-if="pipelineStatusEntry?.reviewNote" class="mt-1.5 text-[11px] leading-relaxed text-muted">{{ pipelineStatusEntry.reviewNote }}</p>
-      <p v-if="pipelineStatusEntry?.reviewedAt" class="mt-1.5 text-[11px] text-muted">Confirmed {{ pipelineStatusEntry.reviewedAt }}</p>
-      <div v-if="canReviewPipeline" class="mt-2 flex items-center gap-2">
-        <UButton size="xs" color="success" variant="subtle" :disabled="pipelineReviewSaving" :loading="pipelineReviewSaving" @click="confirmPipeline">
-          Confirm
-        </UButton>
-        <UButton size="xs" color="warning" variant="subtle" :disabled="pipelineReviewSaving" @click="openPipelineReject">Reject…</UButton>
-      </div>
+         pipeline-status.ts` — see `isFdn`'s own doc comment above). Used to
+         be a bordered "Pipeline status" box here (badge + `reasons` list +
+         reviewNote/reviewedAt text + empty-state copy) sitting next to
+         `CardMedia` in the row above — REMOVED 2026-09-18, explicit user
+         call ("Move it to the header (near N of N) and just use badge. I
+         don't need this text - I'll just read card definition if I have
+         some questions"): the passive color+label badge itself now renders
+         in the page-level `EngineConsoleShell` header instead (see
+         `app/pages/app/engine/cards/[set]/[[number]].vue`'s own
+         `header-extra` slot usage), and the `reasons`/`reviewNote`/
+         `reviewedAt` text is dropped from the UI entirely, not relocated —
+         a deliberate drop per that direction, not an oversight. What's
+         LEFT here is only the real Confirm/"Reject…" ACTION (not display
+         text) — pattern copied from `app/pages/app/engine/predicates/
+         [[slug]].vue`'s own established Confirm/Reject shape (same button
+         labels, same reject-note-modal shape further down this file). No
+         "Unconfirm"/"Clear review" affordance — see `submitPipelineReview`'s
+         own doc comment for why that's a real, confirmed mismatch against
+         `pipeline-status.ts`'s own `applyPipelineReview` (a pure one-way
+         `blue -> yellow|green` transition), not an oversight. Renders
+         NOTHING (no sibling at all next to `CardMedia`) once
+         `canReviewPipeline` is false — the common case for a card that
+         isn't currently sitting in the reviewable `blue` stage. -->
+    <div v-else-if="canReviewPipeline" class="mt-2 flex items-center gap-2">
+      <UButton size="xs" color="success" variant="subtle" :disabled="pipelineReviewSaving" :loading="pipelineReviewSaving" @click="confirmPipeline">
+        Confirm
+      </UButton>
+      <UButton size="xs" color="warning" variant="subtle" :disabled="pipelineReviewSaving" @click="openPipelineReject">Reject…</UButton>
     </div>
   </div>
 

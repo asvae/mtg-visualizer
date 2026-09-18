@@ -27,6 +27,28 @@ incompletely. `CardDetailTabs.vue` branches on `isFdn` (`props.set ===
   affordance on this axis (unlike every other review axis in the app) —
   don't add one without confirming the server route actually supports a
   reverse transition first.
+- **The pipeline-status BADGE itself no longer lives in `CardDetailTabs.vue`
+  at all (2026-09-18, later still)** — it moved to the `EngineConsoleShell`
+  header, next to "N of N" (via a new generic `header-extra` slot that shell
+  now exposes), fed by `app/pages/app/engine/cards/[set]/[[number]].vue`'s
+  own `pipelineHeaderBadge` computed (`IS_FDN`-gated, reads
+  `cardData.functionalModel.pipelineStatus` independently — does NOT reach
+  into `CardDetailTabs.vue` for it, that component owns no header/slot
+  concept to reach through). Explicit user call: "I don't need this text -
+  I'll just read card definition if I have some questions" — the old
+  `reasons`/`reviewNote`/`reviewedAt` text and the "no folder yet" empty
+  state are DROPPED from the UI entirely, not relocated anywhere. What's
+  LEFT in `CardDetailTabs.vue`'s own main content area (next to `CardMedia`)
+  is ONLY the real Confirm/"Reject…" action buttons, gated on
+  `canReviewPipeline` (so nothing renders there at all for a
+  gray/purple/yellow/green card — only a `blue` one shows the compact
+  action row). `CardPeekPanel.vue` was deliberately left untouched — FDN
+  cards are never reachable through it in practice (it's only mounted from
+  the main FIN/live-query graph page, which has no path to an `fdn`-set
+  card), and it has no "N of N" header concept to hang a badge on anyway;
+  if that ever changes, the Confirm/Reject action would still work there
+  (self-contained in `CardDetailTabs.vue`), just with no passive badge
+  shown since that lives only in the page-level header slot now.
 - Confirm/Reject gates on effective status `=== 'blue'` **only**, not
   `blue`-or-`re-review` — a drifted `re-review` card must go back through
   the authoring pipeline to become fresh `blue` again before it can be
