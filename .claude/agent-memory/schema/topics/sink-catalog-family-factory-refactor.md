@@ -89,24 +89,26 @@ validation now 404s on an old instance-level slug automatically. Live
 rows, all `blue`, `battlefield-presence.corpusTotal:31` (14+10+7 summed),
 `counters.corpusTotal:12`.
 
-## Known, flagged gaps (not fixed here — API route out of scope this task)
+## Known gaps — FIXED, 2026-09-18, later still (real regression, worse than flagged)
 
-- `server/api/sink-catalog/index.get.ts`'s `SINK_CATALOG.find((e) => e.slug
-  === entry.slug)` / `loadSourceFiles(slug, evidence)` still assume 1 row
-  per real instance slug — for the 2 family rows this degrades to
-  `catalogEntry: undefined` (graceful `query` fallback, no crash) and wrong/
-  incomplete `sourceFiles.entry`/`corpusTest` content (reads
-  `${familyKey}.ts`/`.test.ts`, which DO happen to exist for real now —
-  `battlefield-presence.ts`/`.test.ts`, `counters.ts`/`.test.ts` — but
-  `sourceFiles.corpusManifest` reads `evidence.corpusManifestPath`, which
-  `sink-catalog-status.ts` only sets to the FIRST member's own path as a
-  compatibility shim, not the real combined picture). `review.post.ts`
-  needs no fix for validation (see above) but its `computeSinkCatalogFingerprint(entry.slug,
-  root)` call already correctly resolves through `resolveGroupKey`.
-  Exact fix needed: thread `evidence.members`/`instanceSlugs` through
-  `loadSourceFiles` instead of the single legacy path fields.
-- `SinkCatalogEntry.family` doc comment (`catalog/entry.ts`) spells out both
-  gaps above in full for whoever picks this up.
+`server/api/sink-catalog/index.get.ts`'s `SINK_CATALOG.find((e) => e.slug
+=== entry.slug)` didn't just degrade gracefully — it silently killed the
+ENTIRE `realMatches` section (not just `sourceFiles.corpusManifest`'s
+first-member slice) for both family rows, `catalogEntry` always came back
+`undefined` since no real `SINK_CATALOG` member's own `.slug` equals a
+family key. Fixed: look up every real member via `entry.evidence.members[]
+.slug` (already the right per-instance list, no need for a separate
+`instanceSlugs`-driven lookup); `computeRealMatches` now takes an array of
+members and unions/dedupes producer+consumer matches across all of them
+via a callable `SinkInstance`'s own uniform match-detail check (which also
+fixes the `consumerBattlefieldPresence` gap for free — a callable instance
+already answers every consumer signal uniformly). `loadSourceFiles`'s
+`corpusManifest` combines every real member's own corpus content into one
+valid JSON object instead of just the first member's. Full writeup + live
+numbers: `.claude/contracts/card-schema.md`'s "Family/instance slug
+regression fix" section. `review.post.ts` needed no fix (confirmed correct
+already — see above, it validates against `computeSinkCatalogStatus()`'s
+own `.slug` directly, never a separate `SINK_CATALOG.find`).
 
 ## Not done (flagged, not built — explicit user permission to defer)
 
