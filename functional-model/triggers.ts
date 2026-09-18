@@ -30,7 +30,7 @@
 // doc comment and `state.ts`'s own `shouldDoubleTrigger` for the full writeup.
 
 import type { CardDefinition, EffectContext, Actions } from './card';
-import { resolveCard } from './card';
+import { resolveCard, triggerActivationLimit } from './card';
 import { shouldDoubleTrigger, type GameState, type TriggerCause } from './state';
 
 /**
@@ -82,8 +82,9 @@ import { shouldDoubleTrigger, type GameState, type TriggerCause } from './state'
 export function fireTrigger(state: GameState, card: CardDefinition, ctx: EffectContext, actions: Actions, triggerName: string, cause?: TriggerCause, onDoubled?: () => void): boolean {
   const source = state.cards.get(ctx.self.getId());
   const trigger = card.triggers?.find((t) => t.name === triggerName);
-  if (trigger?.activationLimit !== undefined && source) {
-    if (state.triggerActivationsSoFar(source.id, triggerName) >= trigger.activationLimit) return false;
+  const activationLimit = trigger ? triggerActivationLimit(trigger) : undefined;
+  if (activationLimit !== undefined && source) {
+    if (state.triggerActivationsSoFar(source.id, triggerName) >= activationLimit) return false;
     state.recordTriggerActivation(source.id, triggerName);
   }
   resolveCard(card, ctx, actions, triggerName);

@@ -130,6 +130,7 @@
 //    are supplied by the caller, never simulated here.
 
 import type { CardDefinition, EffectContext, Actions, AlternateCost, ActivationCostReduction } from './card';
+import { triggerOn, triggerTapLandForManaColor } from './card';
 import type { GameState, RealCard, RealPlayer } from './state';
 import { effectivePT, effectiveTypes, effectiveKeywords, isLethallyDamaged, activeSpellCostDiscount, isActivationLocked, hasCounterConditionalAbilityLoss, wrapCard } from './state';
 import { Stack, type StackObject } from './stack';
@@ -579,7 +580,7 @@ export function playLand(engine: GameEngine, caster: RealPlayer, cardReal: RealC
   // checks for, so this stays consistent rather than a silent asymmetry.
   cardReal.triggerDoubling = card.triggerDoubling;
   caster.landsPlayedThisTurn = (caster.landsPlayedThisTurn ?? 0) + 1;
-  const enterTrigger = card.triggers?.find((t) => t.on === 'enter');
+  const enterTrigger = card.triggers?.find((t) => triggerOn(t) === 'enter');
   // Real "entersBattlefield" cause (ENGINE_GAPS.md gap #13, Traveling
   // Chocobo's own "a land ... entering causes a triggered ability ... to
   // trigger" gate) — `cardReal` is both the entering permanent AND (when it
@@ -1111,7 +1112,7 @@ export function resolveTop(engine: GameEngine): StackObject | undefined {
       // Real 714.2b: a Saga enters with no lore counters, then immediately
       // gets its first (see saga.ts's own header for the full 714 writeup).
       advanceSaga(engine, real, engine.resolvedPermanents.get(real.id)!);
-      const enterTrigger = resolved.card.triggers?.find((t) => t.on === 'enter');
+      const enterTrigger = resolved.card.triggers?.find((t) => triggerOn(t) === 'enter');
       // Real "entersBattlefield" cause (ENGINE_GAPS.md gap #13) — `real` is
       // both the entering permanent AND (when it has one) the trigger's own
       // source, same reasoning `playLand`'s own identical fix above uses.
@@ -1151,7 +1152,7 @@ function fireOnPhaseEnterTriggers(engine: GameEngine): void {
   for (const real of active.battlefield) {
     const registered = engine.resolvedPermanents.get(real.id);
     if (!registered) continue;
-    const trigger = registered.card.triggers?.find((t) => t.on === on);
+    const trigger = registered.card.triggers?.find((t) => triggerOn(t) === on);
     if (!trigger) continue;
     // Real "if it's the first end step of the turn" (ENGINE_GAPS.md gap
     // #17) — Y'shtola Rhul's own real card needs this fact set BEFORE its
@@ -1201,7 +1202,7 @@ function fireOnTapLandForManaTriggers(engine: GameEngine, controller: RealPlayer
     for (const real of controller.battlefield) {
       const registered = engine.resolvedPermanents.get(real.id);
       if (!registered) continue;
-      const trigger = registered.card.triggers?.find((t) => t.on === 'tapLandForMana' && (t.tapLandForManaColor === undefined || colors.includes(t.tapLandForManaColor)));
+      const trigger = registered.card.triggers?.find((t) => triggerOn(t) === 'tapLandForMana' && (triggerTapLandForManaColor(t) === undefined || colors.includes(triggerTapLandForManaColor(t)!)));
       if (!trigger) continue;
       fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name, { kind: 'tapLandForMana', colors });
     }
@@ -1246,14 +1247,14 @@ function fireOnAttackTriggers(engine: GameEngine, attackers: RealCard[]): void {
   for (const attacker of attackers) {
     const registered = engine.resolvedPermanents.get(attacker.id);
     if (registered) {
-      const trigger = registered.card.triggers?.find((t) => t.on === 'attacks');
+      const trigger = registered.card.triggers?.find((t) => triggerOn(t) === 'attacks');
       if (trigger) fireTrigger(engine.state, registered.card, registered.ctx, registered.actions, trigger.name);
     }
     for (const real of engine.state.cards.values()) {
       if (real.attachedToId !== attacker.id) continue;
       const equipRegistered = engine.resolvedPermanents.get(real.id);
       if (!equipRegistered) continue;
-      const equipTrigger = equipRegistered.card.triggers?.find((t) => t.on === 'equippedAttacks');
+      const equipTrigger = equipRegistered.card.triggers?.find((t) => triggerOn(t) === 'equippedAttacks');
       if (!equipTrigger) continue;
       fireTrigger(engine.state, equipRegistered.card, equipRegistered.ctx, equipRegistered.actions, equipTrigger.name);
     }
