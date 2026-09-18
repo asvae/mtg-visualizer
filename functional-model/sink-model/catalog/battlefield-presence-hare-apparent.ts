@@ -73,4 +73,5 @@ export const entry: SinkCatalogEntry = {
   query,
   consumerBattlefieldPresence: { sameNameAsSelf: true },
   requireConsumerForSelfOwnership: true,
+  family: { slug: 'battlefield-presence', label: 'Battlefield presence', variant: 'Same-name copies' },
 };

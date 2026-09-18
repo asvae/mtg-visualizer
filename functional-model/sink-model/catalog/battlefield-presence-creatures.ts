@@ -55,4 +55,5 @@ export const entry: SinkCatalogEntry = {
   query,
   consumerBattlefieldPresence: {},
   requireConsumerForSelfOwnership: true,
+  family: { slug: 'battlefield-presence', label: 'Battlefield presence', variant: 'Creatures' },
 };
