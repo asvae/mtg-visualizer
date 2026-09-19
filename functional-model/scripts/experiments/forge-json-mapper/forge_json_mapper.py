@@ -2,42 +2,48 @@
 """
 forge_json_mapper.py
 
-Standalone experiment: converts real Forge MTG card-script .txt files (Forge's
-own line-based DSL, see tmp/mtg-forge/docs/Card-scripting-API/) into JSON that
-mirrors Forge's own on-disk representation as directly as possible.
+Converts real Forge MTG card-script .txt files (Forge's own line-based DSL,
+see tmp/mtg-forge/docs/Card-scripting-API/) into JSON that mirrors Forge's
+own on-disk representation as directly as possible.
 
 This is a *blank-slate* mapper. It does not import, reference, or borrow
 vocabulary from this repo's own functional-model/card.ts schema (CardDefinition
 /Effect/Trigger types) or any other in-repo card representation. It only reads
 raw .txt files from the local (gitignored) tmp/mtg-forge/ Forge checkout.
 
-Scope: this parser is deliberately NOT a general Forge-file parser. It only
-needs to correctly and losslessly handle the specific line shapes that appear
-across the full Foundations (FDN) card pool - the 517 distinct card names in
-this repo's own data/cards.db for set_code='fdn' (771 rows there, but that
-includes duplicate reprints across FDN's bonus/showcase sheets - e.g.
-Exemplar of Light alone has 5 collector numbers for the identical card
-script; deduped by name to one entry per unique card). Every prefix and
-every param$value shape it relies on was verified by hand against real FDN
-.txt files before/while writing this script (see README.md for the
-verification notes, including the "Scaling to 100 cards" and "Scaling to
-full FDN (517 cards)" sections documenting exactly what widening the sample
-did and didn't need to change here).
+Scope: parse_card_file() below is now verified against Forge's ENTIRE real
+cardsfolder tree - all 33,798 .txt files under
+tmp/mtg-forge/forge-gui/res/cardsfolder/ (every letter dir, plus rebalanced/
+and upcoming/), not just Foundations (FDN). A full-corpus stress-test run
+(see README.md's "Full-corpus stress test" and its follow-up "fix the
+remainder" section) found and fixed every real shape needed to reach a clean
+parse across that whole corpus (with one specific, deliberate, still-loudly-
+documented exception - see README.md). It is still not guaranteed to handle
+every conceivable Forge file that might be added in the future - an
+unhandled shape still raises loudly rather than silently dropping data -
+but "not a general parser" no longer describes it accurately.
+
+resolve_fdn_cards() (and the rest of the "517-card list resolution" section
+below) is one convenience/focused entry point on top of the general
+parser: it scopes a run down to just Foundations' 517 distinct card names
+(by querying this repo's own data/cards.db), for the FDN-specific work this
+experiment started from. The core parser itself (parse_card_file, and
+everything below "Line/face parsing") makes no FDN-specific assumptions at
+all and is exercised directly against the full corpus - see
+tmp/forge-json-mapper-full-run/ (gitignored, not part of this repo) for the
+full-corpus driver used to verify that.
 If a line shape doesn't match what this script expects, it raises loudly
-instead of silently dropping data - that's intentional: for this experiment,
-an unhandled shape is a bug to fix, not a line to skip.
+instead of silently dropping data - that's intentional: an unhandled shape
+is a bug to fix, not a line to skip.
 
-The 517-card list itself is NOT hand-typed (that stopped being practical
-past the first 100). Instead this script queries data/cards.db for the
-distinct FDN names at runtime, then resolves each one to a real file under
-tmp/mtg-forge/forge-gui/res/cardsfolder/ by enumerating that directory
-(never by blindly trusting a derived filename slug) - see
-resolve_fdn_cards() below.
-
-Mapping rules (see README.md for more detail):
+Mapping rules (see README.md for more detail; the multi-face and duplicate-
+name rules below were verified against Forge's own Java source under
+tmp/mtg-forge/ - forge-core/src/main/java/forge/card/CardRules.java,
+CardFace.java, and forge-core/src/main/java/forge/util/FileSection.java -
+not guessed from the .txt shape alone):
   - Name / ManaCost / Types / PT / Loyalty / Oracle / DeckHas / DeckHints /
-    DeckNeeds / AI / ... (any line whose prefix isn't K/T/S/R/A/SVar, and
-    isn't a "#" comment line) -> top-level scalar JSON field, keyed by
+    DeckNeeds / AI / ... (any line whose prefix isn't K/T/S/R/A/SVar/Variant,
+    and isn't a "#" comment line) -> top-level scalar JSON field, keyed by
     Forge's own literal prefix, value = the raw text after the prefix's
     colon, completely unmodified (no re-splitting, no escape interpretation
     - e.g. Oracle's literal "\n" stays as the two characters backslash+n,
@@ -55,8 +61,13 @@ Mapping rules (see README.md for more detail):
     with <AB/SP/DB/ST> as the first key - this also uniformly covers
     planeswalker loyalty abilities, whose "Cost" value is just
     "AddCounter<N/LOYALTY>" / "SubCounter<N/LOYALTY>" text with no further
-    splitting needed). Every Param$Value pair from the source line becomes
-    one key in the resulting JSON object, in source order.
+    splitting needed). A segment with no "$" at all becomes a key mapped to
+    an empty string - verified against Forge's own real parser
+    (FileSection.parseToMap: `result.put(v[0].trim(), v.length > 1 ?
+    v[1].trim() : "")` - a $-less segment's whole text becomes the key, with
+    "" as the value; this is Forge's genuine, always-applied behavior, not
+    an error case it guards against). Every Param$Value pair from the source
+    line becomes one key in the resulting JSON object, in source order.
   - SVar:<Name>:<Value> -> merged into a top-level "SVar" object keyed by
     <Name>. If <Value> contains at least one "$" it is parsed the same way
     as a T/S/R/A line (Forge SVars frequently hold a DB$/AB$ sub-ability, or
@@ -65,27 +76,80 @@ Mapping rules (see README.md for more detail):
     string, verbatim.
   - A line starting with "#" is a full-line developer comment (undocumented
     in Card-scripting-API.md/AbilityFactory.md but real - e.g. Exsanguinate
-    and Mystical Teachings both have one). Kept verbatim, including the "#"
-    itself, in a top-level "#" array - reusing the literal marker character
-    as the JSON key, the same way "K" mirrors "K:", rather than inventing a
-    "comment"/"_comment" field name.
-  - Multi-faced cards (transform/MDFC - per Card-scripting-API.md: "If a
-    card has two faces, use AlternateMode:{CardStateName} in the front face
-    and separate both by a new line with the text ALTERNATE"): the file is
-    split on the literal 3-line separator (blank line, "ALTERNATE", blank
-    line) into face blocks. The FIRST block is parsed into the top-level
-    card object exactly as a single-faced card would be (so single-faced
-    cards - the vast majority - are completely unaffected: no "ALTERNATE"
-    key appears on them at all). Each subsequent block is parsed the same
-    way and appended to a top-level "ALTERNATE" array, reusing Forge's own
-    literal separator token as the JSON key rather than inventing
-    "backFace"/"faces"/etc. None of the 517 real FDN cards actually has an
-    ALTERNATE block (verified three independent ways - see README.md - FDN
-    turns out to have zero transform/MDFC/split/adventure cards), so this
-    path is implemented and tested against real non-FDN Forge examples
-    (Arlinn, the Pack's Hope // Arlinn, the Moon's Fury;
-    Delver of Secrets // Insectile Aberration; Emeria's Call // Emeria,
-    Shattered Skyclave) but not exercised by this script's actual output.
+    and Mystical Teachings both have one; also, verified against
+    CardRules.java's Reader.readCard(), the exact line Forge's own real
+    parser skips as a no-op: `if (line.isEmpty() || line.charAt(0) == '#')
+    continue;` - Forge's engine never sees this line at all, but this
+    mapper's job is a lossless mirror of the file text, not a
+    reimplementation of what Forge's engine uses, so it's still captured).
+    Kept verbatim, including the "#" itself, in a top-level "#" array -
+    reusing the literal marker character as the JSON key, the same way "K"
+    mirrors "K:", rather than inventing a "comment"/"_comment" field name.
+  - A repeated name/key (a second SVar:<Name> with a name already used on
+    this face, or a second T:/S:/R:/A:-line segment repeating a Param$ key,
+    or a second top-level scalar line repeating the same prefix) does NOT
+    overwrite the earlier occurrence in this mapper's output, even though
+    Forge's own real runtime *does* silently overwrite on a repeat (verified:
+    CardFace.java's addSVar() does `this.variables.put(key, value)` into a
+    plain TreeMap; FileSection.java's parseToMap() likewise does
+    `result.put(v[0].trim(), ...)` into a plain TreeMap for a line's
+    Key$Value segments - both are ordinary last-write-wins Java Maps).
+    Instead, every occurrence is preserved, in source order, as a list under
+    that one name/key. This is a deliberate divergence from Forge's actual
+    name-resolution behavior: this mapper's job is a complete, lossless
+    mirror of the literal script text, and dropping an earlier occurrence to
+    match Forge's runtime overwrite would violate that - a repeated name is
+    real, valid content Forge's own file format allows (e.g.
+    false_floor.txt legitimately reuses the SVar name "ETBTapped" for two
+    different replacement effects), not a malformed shape.
+  - Multi-faced cards - verified against CardRules.java's Reader.parseLine()/
+    readCard(), which processes a card script as a flat stream of lines
+    while tracking a "current face" index (0 by default) that certain
+    directive lines switch:
+      - A line that is exactly "ALTERNATE" (no colon, no value) switches to
+        face slot 1 - Forge's real transform/MDFC/split/adventure back face.
+        All lines from that point on (until any further face-switching
+        directive) belong to that face. Represented as a top-level
+        "ALTERNATE" array holding that one face object (reusing Forge's own
+        literal directive token as the JSON key, rather than inventing
+        "backFace"/"faces"/etc.) - kept as an array for continuity with
+        earlier passes of this experiment, even though in practice exactly
+        one such face exists per card.
+      - A line "SPECIALIZE:<COLOR>" (Bloomburrow's Specialize mechanic,
+        <COLOR> being WHITE/BLUE/BLACK/RED/GREEN - the complete, exhaustive
+        set of values seen across all 33,798 files) switches to one of 5
+        further fixed face slots, one per color (e.g. Alora, Rogue
+        Companion has 6 total faces: the base card plus one Specialize face
+        per color). Represented as a top-level "SPECIALIZE" object keyed by
+        the literal color name, in the order the colors first appear in the
+        file, so the color identity of each face is preserved rather than
+        discarded.
+      - Blank lines carry no face-switching meaning at all (verified: Forge
+        just skips them, exactly like "#" comments, per the readCard() line
+        above) - unlike an earlier version of this mapper, which incorrectly
+        required a blank/ALTERNATE/blank 3-line pattern and would raise on
+        any other blank line. A blank line has no content of its own to
+        preserve, so silently skipping it isn't a "nothing dropped"
+        violation the way skipping a real Prefix:Value line would be.
+      - None of Foundations' 517 real cards uses either ALTERNATE or
+        SPECIALIZE (verified three independent ways for ALTERNATE - see
+        README.md), so this logic is exercised directly against real non-FDN
+        Forge files (both in this repo's own full-corpus stress test and,
+        for ALTERNATE specifically, against 3 hand-picked examples - see
+        README.md).
+  - Variant:<Name>:<Rest> -> merged into a top-level "Variant" object keyed
+    by <Name>, whose value is <Rest> parsed the same way any single line
+    would be (recursively, via the same dispatch this whole list describes -
+    verified against CardRules.java's own Variant handling, which
+    literally recurses into `this.parseLine(variantLine, varFace)` on a
+    fresh per-variant CardFace). Two real, unrelated Forge mechanics reuse
+    this exact same generic line shape: Unfinity's cosmetic Attraction-deck
+    "Lights" print variants (e.g. `Variant:A:Lights:2 6`, alongside a
+    `# --- VARIANTS ---` comment header that falls into the "#" rule above)
+    and cross-set "UniversesWithin" flavor-name/type/ability overrides (e.g.
+    `Variant:UniversesWithin:FlavorName:Qoneus, Horizon Splicer`) - neither
+    is specific to either mechanic, both just decompose through the same
+    recursive rule.
 
 Run: python3 forge_json_mapper.py
 Output: one JSON file per card under ./output/<slug>.json
@@ -112,10 +176,10 @@ ABILITY_LINE_PREFIXES = {"T", "S", "R", "A"}
 
 
 class UnhandledShapeError(RuntimeError):
-    """Raised when a line's shape doesn't match this parser's (hand-verified)
-    assumptions for the full 517-card FDN set. Intentionally fatal - see
-    module docstring: an unhandled shape is a bug to fix, not a line to
-    skip."""
+    """Raised when a line's shape doesn't match this parser's (verified
+    against Forge's own Java source and stress-tested against all 33,798
+    real cardsfolder files) assumptions. Intentionally fatal - see module
+    docstring: an unhandled shape is a bug to fix, not a line to skip."""
 
 
 class ResolutionError(RuntimeError):
@@ -239,32 +303,53 @@ def resolve_fdn_cards() -> list[tuple[str, str]]:
 # Line/face parsing
 # --------------------------------------------------------------------------
 
+# Bloomburrow's Specialize mechanic: a "SPECIALIZE:<COLOR>" directive line
+# switches the "current face" to a fixed slot per color. Order and the set
+# of colors verified against CardRules.java's own if/else chain, and
+# confirmed exhaustive by grepping every "^SPECIALIZE:" line's value across
+# all 33,798 real cardsfolder files (only ever these 5, spelled exactly
+# this way).
+SPECIALIZE_COLORS = ("WHITE", "BLUE", "BLACK", "RED", "GREEN")
+
+
+def _put_preserving_duplicates(mapping: dict, key: str, value: object) -> None:
+    """Assign mapping[key] = value, but if key is already present, keep BOTH
+    the earlier and the new value (as a list, in source order) rather than
+    overwriting. See the module docstring's "A repeated name/key ..." rule:
+    Forge's own real runtime genuinely does overwrite silently on a repeat
+    (plain Java Maps in CardFace.addSVar/FileSection.parseToMap), but this
+    mapper mirrors the literal script text losslessly rather than
+    replicating that runtime resolution, so an earlier occurrence is never
+    dropped."""
+    if key in mapping:
+        existing = mapping[key]
+        if isinstance(existing, list):
+            existing.append(value)
+        else:
+            mapping[key] = [existing, value]
+    else:
+        mapping[key] = value
+
 
 def parse_keyvalue_line(rest: str, *, context: str) -> dict:
     """Parse a T:/S:/R:/A: line body (or an SVar body that itself holds an
     ability/count expression) into an ordered dict of Param -> Value pairs,
-    splitting on ' | ' then on the first '$' in each segment."""
+    splitting on ' | ' then on the first '$' in each segment. A segment with
+    no '$' becomes a key mapped to "" - this is Forge's own real, always-
+    applied behavior (verified against FileSection.parseToMap: a $-less
+    segment's whole text becomes the map key, with "" as the value), not an
+    error case - e.g. volatile_rift.txt's "TriggeredCardLKICopy" segment
+    (almost certainly meant to be "Defined$ TriggeredCardLKICopy", missing
+    its "Defined$" - every other real use of "TriggeredCardLKICopy" across
+    the whole corpus is as a Defined$ value - but Forge's parser doesn't
+    error on the typo, so this mapper doesn't either)."""
     segments = [seg.strip() for seg in rest.split(" | ")]
     result: dict[str, object] = {}
     for seg in segments:
-        if "$" not in seg:
-            raise UnhandledShapeError(
-                f"{context}: segment has no '$' key/value delimiter: {seg!r}"
-            )
-        key, _, value = seg.partition("$")
+        key, sep, value = seg.partition("$")
         key = key.strip()
-        value = value.strip()
-        if key in result:
-            # Guard against silently losing a repeated key within one line.
-            # Not observed across the 517 cards, but fail-safe rather than
-            # fail-silent.
-            existing = result[key]
-            if isinstance(existing, list):
-                existing.append(value)
-            else:
-                result[key] = [existing, value]
-        else:
-            result[key] = value
+        value = value.strip() if sep else ""
+        _put_preserving_duplicates(result, key, value)
     return result
 
 
@@ -274,112 +359,86 @@ def parse_svar_value(name: str, value: str) -> object:
     return value
 
 
-def split_face_blocks(lines: list[str]) -> list[list[tuple[int, str]]]:
-    """Split a card file's lines into face blocks on Forge's documented
-    multi-face separator (Card-scripting-API.md: "separate both by a new
-    line with the text ALTERNATE") - i.e. a blank line, then a line that is
-    exactly "ALTERNATE", then another blank line. Returns a list of blocks,
-    each a list of (1-indexed original line number, line text) pairs, so
-    error messages from downstream parsing still point at the real line in
-    the source file. A single-faced card (the overwhelming majority) simply
-    yields one block containing every line."""
-    indexed = list(enumerate(lines, start=1))
-    blocks: list[list[tuple[int, str]]] = []
-    current: list[tuple[int, str]] = []
-    i = 0
-    n = len(indexed)
-    while i < n:
-        lineno, line = indexed[i]
-        if (
-            line == ""
-            and i + 2 < n
-            and indexed[i + 1][1] == "ALTERNATE"
-            and indexed[i + 2][1] == ""
-        ):
-            blocks.append(current)
-            current = []
-            i += 3
-            continue
-        current.append((lineno, line))
-        i += 1
-    blocks.append(current)
-    return blocks
+def apply_line(target: dict, line: str, lineno: int, path: Path) -> None:
+    """Apply one already-blank/face-directive-filtered line's content to
+    `target` (either the top-level card dict for whichever face is
+    "current", or a nested per-Variant-name dict - see the Variant rule
+    below, which calls back into this same function recursively, mirroring
+    CardRules.java's own Variant handling literally recursing into
+    parseLine())."""
+    if line.startswith("#"):
+        # Undocumented but real: a full-line developer comment (e.g.
+        # Exsanguinate's "# AFLifeLost will be set by LoseLife", Mystical
+        # Teachings' "# TODO: ...", or an Attraction card's
+        # "# --- VARIANTS ---" header). Forge's own real parser skips these
+        # entirely (readCard(): `if (line.isEmpty() || line.charAt(0) ==
+        # '#') continue;`) but this mapper still captures them verbatim,
+        # "#" included, in a top-level "#" array - the literal marker
+        # character as the JSON key, mirroring how "K" mirrors "K:".
+        target.setdefault("#", []).append(line)  # type: ignore[union-attr]
+        return
 
+    prefix, sep, rest = line.partition(":")
+    if not sep:
+        raise UnhandledShapeError(
+            f"{path}:{lineno}: line has no top-level 'Prefix:' delimiter "
+            f"and isn't a recognized bare directive: {line!r}"
+        )
 
-def parse_face_lines(block: list[tuple[int, str]], path: Path) -> dict:
-    """Parse one face's worth of lines (see split_face_blocks) into a card/
-    face JSON object. Used both for single-faced cards' one-and-only block
-    and for each block of a multi-faced card."""
-    card: dict[str, object] = {}
+    if prefix == "K":
+        target.setdefault("K", []).append(rest)  # type: ignore[union-attr]
 
-    for lineno, line in block:
-        if line == "":
+    elif prefix in ABILITY_LINE_PREFIXES:
+        parsed = parse_keyvalue_line(rest, context=f"{path}:{lineno} ({prefix}:)")
+        target.setdefault(prefix, []).append(parsed)  # type: ignore[union-attr]
+
+    elif prefix == "SVar":
+        name, sep2, value = rest.partition(":")
+        if not sep2:
             raise UnhandledShapeError(
-                f"{path}:{lineno}: unexpected blank line outside a "
-                f"well-formed blank/ALTERNATE/blank face separator"
+                f"{path}:{lineno}: SVar line missing 'Name:Value' shape: {line!r}"
             )
-        if line == "ALTERNATE":
+        svar_map = target.setdefault("SVar", {})
+        _put_preserving_duplicates(svar_map, name, parse_svar_value(name, value))  # type: ignore[arg-type]
+
+    elif prefix == "Variant":
+        # Forge's own generic "functional variant" mechanism (verified
+        # against CardRules.java: `getOrCreateFunctionalVariant(variantName)`
+        # + a literal recursive `this.parseLine(variantLine, varFace)` call).
+        # Two unrelated real mechanics reuse this same line shape: Unfinity's
+        # cosmetic Attraction "Lights" print variants
+        # (Variant:A:Lights:2 6) and cross-set "UniversesWithin" flavor
+        # overrides (Variant:UniversesWithin:FlavorName:...) - neither is
+        # special-cased here, both just recurse through this same dispatch.
+        variant_name, sep2, variant_line = rest.partition(":")
+        if not sep2:
             raise UnhandledShapeError(
-                f"{path}:{lineno}: stray 'ALTERNATE' line not part of a "
-                f"well-formed blank/ALTERNATE/blank separator (missing a "
-                f"surrounding blank line?)"
+                f"{path}:{lineno}: Variant line missing its own "
+                f"'Name:Line' shape: {line!r}"
             )
-        if line.startswith("#"):
-            # Undocumented but real: a full-line developer comment (e.g.
-            # Exsanguinate's "# AFLifeLost will be set by LoseLife",
-            # Mystical Teachings' "# TODO: ..."). Kept verbatim, "#"
-            # included, under a top-level "#" array - the literal marker
-            # character as the JSON key, mirroring how "K" mirrors "K:".
-            card.setdefault("#", []).append(line)  # type: ignore[union-attr]
-            continue
+        variant_map = target.setdefault("Variant", {})
+        variant_face = variant_map.setdefault(variant_name, {})  # type: ignore[union-attr]
+        apply_line(variant_face, variant_line, lineno, path)
 
-        prefix, sep, rest = line.partition(":")
-        if not sep:
-            raise UnhandledShapeError(
-                f"{path}:{lineno}: line has no top-level 'Prefix:' delimiter: {line!r}"
-            )
-
-        if prefix == "K":
-            card.setdefault("K", []).append(rest)  # type: ignore[union-attr]
-
-        elif prefix in ABILITY_LINE_PREFIXES:
-            parsed = parse_keyvalue_line(rest, context=f"{path}:{lineno} ({prefix}:)")
-            card.setdefault(prefix, []).append(parsed)  # type: ignore[union-attr]
-
-        elif prefix == "SVar":
-            name, sep2, value = rest.partition(":")
-            if not sep2:
-                raise UnhandledShapeError(
-                    f"{path}:{lineno}: SVar line missing 'Name:Value' shape: {line!r}"
-                )
-            svar_map = card.setdefault("SVar", {})
-            if name in svar_map:  # type: ignore[operator]
-                raise UnhandledShapeError(
-                    f"{path}:{lineno}: duplicate SVar name {name!r} within "
-                    f"one face - none of the 517 target cards should hit this"
-                )
-            svar_map[name] = parse_svar_value(name, value)  # type: ignore[index]
-
-        else:
-            # Generic top-level scalar (Name, ManaCost, Types, PT, Loyalty,
-            # Oracle, DeckHas, DeckHints, DeckNeeds, AI, AlternateMode,
-            # Colors, ...). Keep the raw text completely verbatim - no
-            # re-splitting, no escape processing, no touching any further
-            # ":" in the value (e.g. AI:RemoveDeck:Random keeps its own
-            # embedded colon).
-            if prefix in card:
-                existing = card[prefix]
-                if isinstance(existing, list):
-                    existing.append(rest)
-                else:
-                    card[prefix] = [existing, rest]
-            else:
-                card[prefix] = rest
-
-    return card
+    else:
+        # Generic top-level scalar (Name, ManaCost, Types, PT, Loyalty,
+        # Oracle, DeckHas, DeckHints, DeckNeeds, AI, AlternateMode,
+        # Colors, ...). Keep the raw text completely verbatim - no
+        # re-splitting, no escape processing, no touching any further
+        # ":" in the value (e.g. AI:RemoveDeck:Random keeps its own
+        # embedded colon).
+        _put_preserving_duplicates(target, prefix, rest)
 
 
 def parse_card_file(path: Path) -> dict:
+    """Parse one Forge card-script file into JSON, faithfully replicating
+    CardRules.java's Reader.readCard()/parseLine() line-by-line dispatch:
+    blank lines are skipped (no face-switch, no content - Forge just
+    ignores them outright), a bare "ALTERNATE" line switches to face slot 1,
+    a "SPECIALIZE:<COLOR>" line switches to one of 5 further fixed slots,
+    and every other line is applied (via apply_line) to whichever face is
+    currently active. Verified against all 33,798 real cardsfolder files,
+    not just Foundations - see module docstring and README.md."""
     text = path.read_text(encoding="utf-8")
     lines = text.split("\n")
     # Drop a single trailing empty string produced by a final newline; do not
@@ -387,16 +446,52 @@ def parse_card_file(path: Path) -> dict:
     if lines and lines[-1] == "":
         lines = lines[:-1]
 
-    blocks = split_face_blocks(lines)
-    primary_block, *alternate_blocks = blocks
+    faces: dict[int, dict] = {}
+    face_order: list[int] = []
+    cur_face = 0
 
-    card = parse_face_lines(primary_block, path)
-    if alternate_blocks:
-        # Reuse Forge's own literal separator token as the JSON key, rather
-        # than inventing "backFace"/"faces"/etc. Each entry is a full face
-        # object in the same shape as the top-level card (its own Name,
-        # ManaCost, Types, K, T, S, R, A, SVar, ...).
-        card["ALTERNATE"] = [parse_face_lines(b, path) for b in alternate_blocks]
+    def get_face(idx: int) -> dict:
+        if idx not in faces:
+            faces[idx] = {}
+            face_order.append(idx)
+        return faces[idx]
+
+    for lineno, line in enumerate(lines, start=1):
+        if line == "":
+            continue  # Forge: line.isEmpty() -> skipped, no effect at all
+        if line == "ALTERNATE":
+            cur_face = 1
+            continue
+        if line.startswith("SPECIALIZE:"):
+            _, _, color = line.partition(":")
+            if color not in SPECIALIZE_COLORS:
+                raise UnhandledShapeError(
+                    f"{path}:{lineno}: unrecognized SPECIALIZE color "
+                    f"{color!r} (expected one of {SPECIALIZE_COLORS})"
+                )
+            cur_face = 2 + SPECIALIZE_COLORS.index(color)
+            continue
+        apply_line(get_face(cur_face), line, lineno, path)
+
+    card = get_face(0)
+
+    if 1 in faces:
+        # Reuse Forge's own literal directive token as the JSON key, rather
+        # than inventing "backFace"/"faces"/etc. Kept as an array (of
+        # exactly one face in practice) for continuity with earlier passes
+        # of this experiment.
+        card["ALTERNATE"] = [faces[1]]
+
+    specialize_colors_seen = [
+        SPECIALIZE_COLORS[idx - 2] for idx in face_order if idx >= 2
+    ]
+    if specialize_colors_seen:
+        # Keyed by the literal color name (in first-appearance order) so the
+        # color identity of each face is preserved, not discarded.
+        card["SPECIALIZE"] = {
+            color: faces[2 + SPECIALIZE_COLORS.index(color)]
+            for color in specialize_colors_seen
+        }
 
     return card
 
