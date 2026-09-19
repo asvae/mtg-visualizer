@@ -1,86 +1,62 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { CardDefinition, Effect } from '../../card';
-import { exemplarOfLight } from '../../fdn-cards/exemplar-of-light/definition';
+import type { CardDefinition } from '../../card';
 import { CountersSink } from './families/counters';
 import { compileForgeCard, type ForgeJsonCard } from '../../scripts/experiments/forge-json-compiler/compile-forge-card';
 
-// shape taken from Fleeting Flight (FDN #13, Instant): "Put a +1/+1 counter
-// on target creature."
-const source: CardDefinition = {
-  name: '',
-  manaCost: '',
-  typeLine: '',
-  effects: [
-    {
-      kind: 'putCounterTarget',
-      validType: 'creature',
-      counterType: '+1/+1',
-      amount: 1,
-    } satisfies Effect,
-  ],
-};
+/** Compiles a real card's verbatim Forge JSON (`functional-model/scripts/
+ * experiments/forge-json-mapper`'s own output) into a real `CardDefinition`
+ * via `functional-model/scripts/experiments/forge-json-compiler`'s
+ * deterministic compiler. No hand-authored mock `CardDefinition`s in this
+ * file below (Test2 is the one deliberate exception — see its own header) —
+ * every case exercises real compiled data, run through the real
+ * `CountersSink`. */
+function loadCompiled(forgeFile: string): CardDefinition {
+  const path = resolve(__dirname, '../../scripts/experiments/forge-json-mapper/output', forgeFile);
+  const forgeJson = JSON.parse(readFileSync(path, 'utf8')) as ForgeJsonCard;
+  return compileForgeCard(forgeJson);
+}
 
-// shape taken from Exemplar of Light (FDN #11): "Whenever you gain life, put
-// a +1/+1 counter on this creature. Whenever you put one or more +1/+1
-// counters on this creature, draw a card."
-const sink: CardDefinition = {
-  name: '',
-  manaCost: '',
-  typeLine: 'Creature',
-  triggers: [
-    {
-      name: 'onCounterAdded',
-      on: 'counterAdded',
-      counterAddedMatch: { counterType: '+1/+1' },
-      activationLimit: 1,
-      effects: [
-        {
-          kind: 'drawCard',
-          amount: 1,
-        } satisfies Effect,
-      ],
-    },
-  ],
-};
-
-// a card that ONLY puts a +1/+1 counter on itself - unlike Fleeting Flight
-// above, it has no ability that can ever put a counter on a DIFFERENT card.
-const selfOnlyProducer: CardDefinition = {
-  name: 'Self-Only Counter Bot',
-  manaCost: '',
-  typeLine: 'Creature',
-  effects: [
-    {
-      kind: 'putCounter',
-      target: 'self',
-      counterType: '+1/+1',
-      amount: 1,
-    } satisfies Effect,
-  ],
-};
+// Compiled once, reused by every case below (not re-parsed/re-compiled per
+// test).
+//
+// Fleeting Flight (Instant): "Put a +1/+1 counter on target creature. ..." —
+// a real CHOSEN-target producer, structurally able to reach any creature,
+// including a different card.
+const fleetingFlight = loadCompiled('fleeting_flight.json');
+// Exemplar of Light (Creature): "Whenever you gain life, put a +1/+1
+// counter on this creature. Whenever you put one or more +1/+1 counters on
+// this creature, draw a card." — a real SELF-only producer (its only
+// counter-granting effect targets itself) plus a real consumer trigger.
+const exemplarOfLight = loadCompiled('exemplar_of_light.json');
 
 describe('CountersSink', () => {
-  it('Test1', () => {
-    const [sinkInstance] = CountersSink(sink);
-    const result = sinkInstance(source);
+  it('Test1 - a real chosen-target producer satisfies another card\'s counters sink', () => {
+    const [sinkInstance] = CountersSink(exemplarOfLight);
+    const result = sinkInstance(fleetingFlight);
     expect(result).toBe(true);
   });
 
-  it('a self-only producer does not satisfy a different card\'s counters sink', () => {
-    // regression test: `target: 'self'` can only ever land a counter on the
-    // card that owns the effect, so a self-only producer must never satisfy
-    // any OTHER card's counters sink, even when counterType/controller match.
-    const [sinkInstance] = CountersSink(sink);
-    const result = sinkInstance(selfOnlyProducer);
+  it('a self-only producer does not satisfy a DIFFERENT card\'s counters sink', () => {
+    // Regression test for the real bug this fix closes: `CountersSink
+    // (fleetingFlight)` builds a real sink instance off Fleeting Flight's
+    // own +1/+1-granting producer effect (a consumer trigger isn't required
+    // to derive a counterType — the producer effect alone is enough).
+    // Checking Exemplar of Light against THAT sink must fail: its only
+    // counter-producing effect targets `'self'`, which can only ever land
+    // the counter on the card that owns the effect — since Exemplar of
+    // Light is a different card than Fleeting Flight, it can never satisfy
+    // Fleeting Flight's sink, even though both share the same counterType.
+    const [sinkInstance] = CountersSink(fleetingFlight);
+    const result = sinkInstance(exemplarOfLight);
     expect(result).toBe(false);
   });
 
   it('Exemplar of Light still satisfies its own counters sink via its own self-targeted trigger', () => {
-    // the real, load-bearing self-loop the fix above must not break: a card
-    // genuinely IS its own producer when the self-targeted effect belongs to
-    // the same card the sink is being checked against.
+    // The real, load-bearing self-loop the fix above must not break: a card
+    // genuinely IS its own producer when the self-targeted effect belongs
+    // to the same card the sink is being checked against.
     const [sinkInstance] = CountersSink(exemplarOfLight);
     const result = sinkInstance(exemplarOfLight);
     expect(result).toBe(true);
@@ -89,12 +65,15 @@ describe('CountersSink', () => {
   // Test2 - experiment: same question (does Exemplar of Light's
   // counter-added trigger recognize Fleeting Flight's counter-producing
   // ability?), but against raw Forge JSON (functional-model/scripts/
-  // experiments/forge-json-mapper's real, verbatim output for FDN #13/#11)
-  // instead of our own CardDefinition schema. No shared sink-model code is
-  // used here on purpose - every bit of Forge-DSL interpretation needed to
-  // answer the question is written inline, right here, so the comparison
-  // against Test1 is honest about what raw-Forge-JSON matching actually
-  // costs without a semantic schema layer in between.
+  // experiments/forge-json-mapper's real, verbatim output for Fleeting
+  // Flight/Exemplar of Light) instead of our own CardDefinition schema. No
+  // shared sink-model code is used here on purpose - every bit of Forge-DSL
+  // interpretation needed to answer the question is written inline, right
+  // here, so the comparison against Test1 is honest about what raw-Forge-
+  // JSON matching actually costs without a semantic schema layer in
+  // between. Deliberately hand-authored (not `loadCompiled`) for this
+  // reason - unlike every other case in this file, this one is NOT
+  // matching via our own schema at all.
   it('Test2 - forge json', () => {
     // verbatim copy of functional-model/scripts/experiments/
     // forge-json-mapper/output/fleeting_flight.json
@@ -195,29 +174,14 @@ describe('CountersSink', () => {
     expect(result).toBe(true);
   });
 
-  // Test3 - same question again, but against CardDefinitions produced by
-  // functional-model/scripts/experiments/forge-json-compiler's deterministic
-  // Forge-JSON -> CardDefinition compiler (a separate, uncommitted
-  // experiment), run through the REAL CountersSink - not a diff against the
-  // hand-authored definitions, an actual integration check that compiled
+  // Test3 - same question again, but against the module-scope `compileForgeCard`
+  // output above, run through the REAL CountersSink - not a diff against a
+  // hand-authored definition, an actual integration check that compiled
   // output is usable by production matching code, not just JSON that
   // happens to look right.
   it('Test3 - compiled from forge json', () => {
-    const loadCompiled = (forgeFile: string): CardDefinition => {
-      const path = resolve(
-        __dirname,
-        '../../scripts/experiments/forge-json-mapper/output',
-        forgeFile,
-      );
-      const forgeJson = JSON.parse(readFileSync(path, 'utf8')) as ForgeJsonCard;
-      return compileForgeCard(forgeJson);
-    };
-
-    const compiledSource = loadCompiled('fleeting_flight.json');
-    const compiledSink = loadCompiled('exemplar_of_light.json');
-
-    const [sinkInstance] = CountersSink(compiledSink);
-    const result = sinkInstance(compiledSource);
+    const [sinkInstance] = CountersSink(exemplarOfLight);
+    const result = sinkInstance(fleetingFlight);
     expect(result).toBe(true);
   });
 });
