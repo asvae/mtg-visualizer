@@ -30,6 +30,36 @@ const fleetingFlight = loadCompiled('fleeting_flight.json');
 // this creature, draw a card." — a real SELF-only producer (its only
 // counter-granting effect targets itself) plus a real consumer trigger.
 const exemplarOfLight = loadCompiled('exemplar_of_light.json');
+// Tigra, Feline Fury (Creature, not an FDN card - found via a full-corpus
+// search for a real, DIFFERENT card sharing Exemplar of Light's exact
+// self-only-producer shape): "Whenever you gain life, put a +1/+1 counter
+// on Tigra." No targeting, no other counter-granting effect anywhere on the
+// card - a genuine real-world case of a producer that can never place a
+// counter on a card other than itself. Embedded verbatim (not `loadCompiled`
+// - this card isn't part of the committed FDN-scoped mapper output) rather
+// than depending on the separate, gitignored full-corpus experiment output.
+const tigraFelineFury = compileForgeCard({
+  Name: 'Tigra, Feline Fury',
+  ManaCost: '1 G',
+  Types: 'Legendary Creature Cat Human Hero',
+  PT: '2/1',
+  K: ['Flash', 'Trample'],
+  T: [
+    {
+      Mode: 'LifeGained',
+      ValidPlayer: 'You',
+      TriggerZones: 'Battlefield',
+      Execute: 'TrigPutCounter',
+      TriggerDescription: 'Whenever you gain life, put a +1/+1 counter on NICKNAME.',
+    },
+  ],
+  SVar: {
+    TrigPutCounter: { DB: 'PutCounter', Defined: 'Self', CounterType: 'P1P1', CounterNum: '1' },
+  },
+  DeckHas: 'Ability$Counters',
+  DeckHints: 'Ability$LifeGain',
+  Oracle: 'Flash\\nTrample\\nWhenever you gain life, put a +1/+1 counter on Tigra.',
+});
 
 describe('CountersSink', () => {
   it('Test1 - a real chosen-target producer satisfies another card\'s counters sink', () => {
@@ -39,17 +69,13 @@ describe('CountersSink', () => {
   });
 
   it('a self-only producer does not satisfy a DIFFERENT card\'s counters sink', () => {
-    // Regression test for the real bug this fix closes: `CountersSink
-    // (fleetingFlight)` builds a real sink instance off Fleeting Flight's
-    // own +1/+1-granting producer effect (a consumer trigger isn't required
-    // to derive a counterType — the producer effect alone is enough).
-    // Checking Exemplar of Light against THAT sink must fail: its only
-    // counter-producing effect targets `'self'`, which can only ever land
-    // the counter on the card that owns the effect — since Exemplar of
-    // Light is a different card than Fleeting Flight, it can never satisfy
-    // Fleeting Flight's sink, even though both share the same counterType.
-    const [sinkInstance] = CountersSink(fleetingFlight);
-    const result = sinkInstance(exemplarOfLight);
+    // Regression test for the real bug this fix closes, using a real card
+    // (Tigra, Feline Fury) whose only counter-granting effect targets
+    // `'self'` — it can never land a counter on a DIFFERENT card, so it must
+    // not satisfy Exemplar of Light's sink even though both share the same
+    // counterType.
+    const [sinkInstance] = CountersSink(exemplarOfLight);
+    const result = sinkInstance(tigraFelineFury);
     expect(result).toBe(false);
   });
 
