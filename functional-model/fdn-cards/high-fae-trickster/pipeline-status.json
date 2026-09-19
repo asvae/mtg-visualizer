@@ -6,9 +6,27 @@
   "failureKind": "capacity-gap",
   "engineGapsContext": {
     "gray": [
-      "No \"copy a permanent, with overrides\" mechanic — real, OPEN, documented (not built), singleton",
+      "No \"copy a permanent, with overrides\" mechanic — real, OPEN, documented (not built)",
       "Meld (`AlternateMode:Meld`/`MeldPair`) — entirely unmodeled, real, OPEN, documented (not built)",
-      "Spell-copy + event-keyed (\"next time X happens\") delayed trigger — entirely unmodeled, real, OPEN, documented (not built) — `ether` (fin/53)"
+      "Spell-copy + event-keyed (\"next time X happens\") delayed trigger — entirely unmodeled, real, OPEN, documented (not built) — `ether` (fin/53)",
+      "Morbid (\"did a creature die this turn\") — real, OPEN, not built, 5 real cards",
+      "No player-decision engine — an optional choice whose OUTCOME conditionally gates a later effect (\"if you do\"), or a \"lose N life UNLESS you pay an alternate cost.\"",
+      "`BoardStateCondition` needs more variants — real, OPEN, not built, 3 real cards",
+      "No per-permanent \"chosen value\" memory for a runtime choice — real, OPEN, not built. Promoted from a FIN-only documented limitation (`ENGINE_GAPS.md`'s own \"Static-ability audit\" section, \"Genuinely unclosable\" bullet list) to central numbered tracking now that FDN hits it too — 4 real cards total",
+      "MayPlay / standing permission to cast a specific card from a non-hand zone — real, OPEN, not built, 2 real cards",
+      "Emblem mechanic (CR 701.42) — real, OPEN, not built, 1 real card so far; already documented (not newly discovered) as a permanent sub-gap of gap #13's own closure above",
+      "CR 614.2 \"if it would die this turn, exile it instead\" replacement — real, OPEN, not built, 1 real card, but cheap given precedent",
+      "Caster-side casting-TIMING permission grant (\"you may cast spells as though they had flash\") — real, OPEN, not built, 1 real card",
+      "Unbounded \"any number of target creatures\" primitive — real, OPEN, not built, 1 real card",
+      "Combat-role target filter (\"target attacking or blocking creature\") — real, OPEN, not built, 1 real card",
+      "CR 614.12-family ETB-replacement effects targeting ANOTHER permanent — real, OPEN, not built, 2 real cards",
+      "Recipient/scope-filter vocabulary needs widening: opponent-controlled, and counter-presence-qualified — real, OPEN, not built, 2 real cards, two different fields, same underlying theme",
+      "CR 603.6e linked-duration primitive (\"until [this permanent] leaves the battlefield\") — real, OPEN, not built, 1 real card, but a very common real-Magic template (the \"O-Ring effect\" — exile/removal-aura permanents whose own effect is undone specifically when THEY leave)",
+      "\"Can't be countered\" — real, OPEN, not built, 2 NEW real cards (this exact clause was already noted, in passing, inside gap #28's own prose above — `eject`/`absolute-virtue`'s own \"can't be countered\" text — promoted here since it now has 2 more independent real cards of its own)",
+      "\"Grant an arbitrary (non-keyword) activated ability to another permanent\" — real, OPEN, not built, 1 real card",
+      "Extra land drop per turn (+ a dig-to-battlefield Effect variant with a dynamic, board-counted threshold) — real, OPEN, not built, 1 real card",
+      "Opening-hand/game-setup special action — real, OPEN, not built, 1 real card, but a large, recurring real-Magic cycle (Leylines)",
+      "Cast-vs-other-arrival history gate (\"if you cast it\") — real, OPEN, not built, 1 real card"
     ],
     "purple": [
       "Combat: blockers, damage, first/double strike, trample",
@@ -24,10 +42,11 @@
       "No \"play a card from the top of your library\" primitive, and no persistent \"attacked this turn\" condition",
       "\"Insert one more of this same step before the turn moves on\" — a real, still-OPEN gap affecting multiple real FIN cards, structurally distinct from extra turns (500.7, gap #3)",
       "A static effect locking a DIFFERENT permanent's own activated-ability activation — real, still OPEN",
+      "`combinator.ts`'s `SelectUpTo` had no `ctx.declaredTargets`/ `ctx.preferTarget` consultation at all — CLOSED (2026-09-16)",
       "`grantKeywordAll` had no `'attacking-creatures'` predicate — CLOSED (2026-09-16)",
       "No \"end the turn\" primitive (721.1a) — no Stack-exile mechanism, no mid-turn jump to Cleanup"
     ]
   },
-  "computedAt": "2026-09-18T17:49:53.722Z",
+  "computedAt": "2026-09-19T06:10:21.425Z",
   "engineSupport": "on"
 }

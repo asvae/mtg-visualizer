@@ -75,6 +75,46 @@ else (140 of 144 in-scope expansion/core sets) not started.
   newer `colors` constraint shape for consistency, though both shapes
   coexist fine as-is (see `functional-model/synergy.ts`'s `colorSetOf`).
 
+- **Forge-json-compiler: extend past FDN 1-50, 25/50 still gray.** Promoted
+  today from a scratch experiment (`scripts/experiments/`) to a real pipeline
+  tool at `functional-model/scripts/forge-json-compiler/` — compiles a card's
+  real Forge JSON straight into a schema-valid `CardDefinition`, no oracle-
+  text reading/AI transcription involved (`CardDefinition.provenance:
+  'forge-json-compiler'` marks these, exempting them from the normal
+  `justification.json` requirement — that manifest exists to catch an AI's
+  own misreading of oracle text, which doesn't apply to a deterministic
+  Forge-JSON parse). 25 of FDN's first 50 collector-number cards now compile
+  and their real `fdn-cards/<slug>/definition.ts` were replaced with the
+  compiler's own output (25 blue in `functional-model/scripts/forge-json-
+  compiler/fdn-1-50-cases.ts`'s own table). Remaining 25 gray break down as:
+  ~11 static/replacement-effect cards (`S:`/`R:` Forge lines — categorically
+  out of this compiler's scope, would need continuous-effect/layer semantics
+  built out first), a handful of already-known individual gaps (activated
+  costs beyond what's built, planeswalker loyalty abilities, modal `Charm`,
+  `CopyPermanent`, comma OR-union targets, dynamic `Count$` formula amounts),
+  plus two specific real design decisions still open:
+  - **Valkyrie's Call** needs genuinely new schema vocabulary — an instance-
+    scoped ("this exact returned object," not a board-wide predicate)
+    continuous type/keyword grant, plus a counter-bearing `ChangeZone`
+    effect. Not attempted; needs an `engine` consult before building.
+  - **Crystal Barricade** (player-level hexproof grant + "prevent noncombat
+    damage to others" replacement effect) and **Herald of Eternal Dawn**
+    (Platinum Angel-style "can't lose/win the game" replacement pair) have
+    zero structural precedent anywhere in this schema/pool — both already
+    self-documented via their own `missingSchemaFunctionality` entries.
+  Extending to FDN cards past #50 (221 more real cards, only ~130 of which
+  have been authored into the pipeline at all) hasn't been attempted yet.
+  Full per-pass writeups in `.claude/agent-memory/schema/topics/forge-json-
+  compiler-*-2026-09-19.md`.
+- **Standing pipeline-status freshness policy** (new 2026-09-19): before
+  reporting any FDN card/batch as ready for review, verify `pipeline-
+  status.json`'s `computedAt` is fresh relative to current `definition.ts`
+  content — re-run `npx vite-node functional-model/scripts/gate-and-write-
+  status.mjs --all` if in doubt. Also applies after any `ENGINE_GAPS.md`
+  edit alone (a card's embedded `engineGapsContext` snapshot can go stale
+  even when the card's own file never changed). See `.claude/agent-memory/
+  schema/topics/pipeline-status-freshness-policy.md`.
+
 ## Known issues
 
 - **Stale Vite HMR on `functional-model/` shared files can freeze the

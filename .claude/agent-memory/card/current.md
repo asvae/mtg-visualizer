@@ -21,6 +21,7 @@
 - [Shared card-meta resolver](topics/shared-card-meta-resolver.md) — `server/utils/cardMeta.ts`/`scryfallFetch.ts` + `CardMatchGallery.vue`; the one correct way to render a card-name match list with real thumbnails, never a live per-card client fetch.
 - [Notes tab + MarkdownView](topics/notes-tab-and-markdown-view.md) — FDN NOTES.md rendering; adding a tab value touches 3 places, `useGraphStore.ts`'s `FUNCTIONAL_MODEL_TABS` is the easy one to miss.
 - [Forge JSON tab](topics/forge-json-mapper-tab.md) — forge-json-mapper experiment output (20 FDN cards), not dev-gated, reuses forgeScript.ts's slugify; mapper's own output dir still uncommitted.
+- [Forge Compiler tab](topics/forge-compiler-tab.md) — live-computed (not precomputed) dev tab for the forge-json-compiler experiment (now 23 cards, gray/blue/green/yellow cross-check badge); follows Forge Script's fetch/availability pattern, not Forge JSON Mapper's.
 
 ## Known open item (not yet fixed, flagged to orchestrator each time)
 

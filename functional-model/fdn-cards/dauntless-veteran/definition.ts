@@ -2,15 +2,16 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const dauntlessVeteran: CardDefinition = {
   name: 'Dauntless Veteran',
+  provenance: 'forge-json-compiler',
   manaCost: '{1}{W}{W}',
   typeLine: 'Creature — Human Soldier',
   pt: [2, 2],
-
-  // Whenever this creature attacks, creatures you control get +1/+1 until end of turn.
   triggers: [
     {
-      name: 'onAttack',
-      on: 'attacks',
+      name: 'onAttacks',
+      cause: {
+        on: 'attacks',
+      },
       effects: [
         {
           kind: 'pumpAll',

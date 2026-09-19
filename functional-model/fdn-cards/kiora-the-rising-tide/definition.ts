@@ -2,22 +2,37 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const kioraTheRisingTide: CardDefinition = {
   name: 'Kiora, the Rising Tide',
+  provenance: 'forge-json-compiler',
   manaCost: '{2}{U}',
   typeLine: 'Legendary Creature — Merfolk Noble',
   pt: [3, 2],
   triggers: [
     {
-      name: 'onEnter',
-      on: 'enter',
+      name: 'onChangesZone',
+      cause: {
+        on: 'enter',
+      },
       effects: [
-        { kind: 'drawCard', amount: 2 } satisfies Effect,
-        { kind: 'discard', owner: 'you', qty: 2 } satisfies Effect,
+        {
+          kind: 'drawCard',
+          amount: 2,
+        } satisfies Effect,
+        {
+          kind: 'discard',
+          owner: 'you',
+          qty: 2,
+        } satisfies Effect,
       ],
     },
     {
-      name: 'onAttack',
-      on: 'attacks',
-      condition: { kind: 'graveyardCountAtLeast', min: 7 },
+      name: 'onAttacks',
+      cause: {
+        on: 'attacks',
+        condition: {
+          kind: 'graveyardCountAtLeast',
+          min: 7,
+        },
+      },
       effects: [
         {
           kind: 'createToken',

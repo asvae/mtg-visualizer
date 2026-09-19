@@ -12,9 +12,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onEnter"
+        "name": "onChangesZone"
       }
     ],
-    "reasoning": "This card's own onEnter trigger (on:'enter') with a real move effect (owner:'opponents', from:'Battlefield', to:'Hand', qty:1, validType:'creature', target:true) is the exact real structure this sentence describes."
+    "reasoning": "This card's own onChangesZone trigger (on:'enter') with a real move effect (owner:'opponents', from:'Battlefield', to:'Hand', qty:1, validType:'creature', target:true) is the exact real structure this sentence describes."
   }
 ]

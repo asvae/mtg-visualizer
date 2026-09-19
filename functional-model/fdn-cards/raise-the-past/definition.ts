@@ -2,18 +2,19 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const raiseThePast: CardDefinition = {
   name: 'Raise the Past',
+  provenance: 'forge-json-compiler',
   manaCost: '{2}{W}{W}',
   typeLine: 'Sorcery',
-
+  abilityType: 'spell',
   effects: [
     {
       kind: 'move',
-      owner: 'you',
       from: 'Graveyard',
       to: 'Battlefield',
-      validType: 'creature',
-      maxCmc: 2,
       qty: 100,
+      validType: 'creature',
+      owner: 'you',
+      maxCmc: 2,
     } satisfies Effect,
   ],
 };

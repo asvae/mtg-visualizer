@@ -331,7 +331,7 @@ type EngineSupportFilterValue = 'all' | 'on' | 'off';
 const ENGINE_SUPPORT_FILTER_OPTIONS: { value: EngineSupportFilterValue; label: string; color: string; description: string }[] = [
   { value: 'all', label: '–', color: '#6b7280', description: 'Show every card regardless of the engine-support signal (includes cards with no signal at all — not yet gated, or fin).' },
   { value: 'on', label: 'On', color: '#22c55e', description: 'Only cards where nothing on the small known-engine-unsupported vocabulary list was touched (e.g. no Ward). Not a claim of full engine verification — just "nothing known-bad detected."' },
-  { value: 'off', label: 'Off', color: '#ef4444', description: 'Only cards that touch something on the small, deliberately-honest known-engine-unsupported vocabulary list (today: Ward — recognized/typed but not enforced by the real engine yet).' },
+  { value: 'off', label: 'Off', color: '#eab308', description: 'Only cards that touch something on the small, deliberately-honest known-engine-unsupported vocabulary list (today: Ward — recognized/typed but not enforced by the real engine yet).' },
 ];
 const engineSupportFilter = ref<EngineSupportFilterValue>('all');
 const engineSupportFilteredEntries = computed<CardStatusPageEntry[]>(() =>
@@ -378,7 +378,7 @@ function statusMeta(color: CardStatusPageEntry['color']) {
 // "not evaluated" state, not a false negative.
 function engineSupportSwatchStyle(support: CardStatusPageEntry['engineSupport']) {
   if (support === 'on') return { background: '#22c55e' };
-  if (support === 'off') return { background: '#ef4444' };
+  if (support === 'off') return { background: '#eab308' };
   return { background: 'transparent', border: '1px solid rgba(148, 163, 184, 0.35)' };
 }
 
@@ -531,7 +531,7 @@ const engineSupportHeaderBadge = computed(() => {
   if (!engineSupport) return null;
   return engineSupport === 'on'
     ? { label: 'Engine OK', color: '#22c55e', title: 'Nothing on the known-engine-unsupported vocabulary list was touched by this card (not a claim of full engine verification).' }
-    : { label: 'Engine gap', color: '#ef4444', title: 'This card touches something on the small, known-engine-unsupported vocabulary list (e.g. Ward — recognized/typed but not enforced by the real engine yet).' };
+    : { label: 'Engine gap', color: '#eab308', title: 'This card touches something on the small, known-engine-unsupported vocabulary list (e.g. Ward — recognized/typed but not enforced by the real engine yet).' };
 });
 </script>
 

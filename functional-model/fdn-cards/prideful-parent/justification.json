@@ -42,9 +42,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onEnter"
+        "name": "onChangesZone"
       }
     ],
-    "reasoning": "This card's own onEnter trigger (on:'enter', a real self-only ETB auto-fire) runs a createToken effect building the exact 1/1 Cat token this clause describes (the token's own 'white' color is real but unrepresentable \u2014 TokenInfo has no colors field anywhere in this schema, same accepted pool-wide limitation as every other colored-token clause, e.g. arahbo-the-first-fang's own blue justification.json)."
+    "reasoning": "This card's own onChangesZone trigger (on:'enter', a real self-only ETB auto-fire) runs a createToken effect building the exact 1/1 Cat token this clause describes (the token's own 'white' color is real but unrepresentable \u2014 TokenInfo has no colors field anywhere in this schema, same accepted pool-wide limitation as every other colored-token clause, e.g. arahbo-the-first-fang's own blue justification.json)."
   }
 ]

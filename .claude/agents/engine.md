@@ -39,7 +39,7 @@ for current design/known gaps.
   `CardDefinition`/`Effect`/`Trigger`/`Keyword` type surface),
   `combinator.ts`, the FDN authoring pipeline (`fdn-cards/*`,
   `pipeline-status.ts`, `coverage-justification.ts`, the gate scripts),
-  `sink-model/*` → `schema` agent. They'll consult you before declaring a
+  `matcher-model/*`/`sink-derivation-predicates/*` → `schema` agent. They'll consult you before declaring a
   gap "real" vs attributable to an existing `ENGINE_GAPS.md` entry — help
   them attribute or flag a new one, don't just answer "not mine."
 - Card page components, review flow, card-serving API → `card` agent.

@@ -2,15 +2,17 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const guardedHeir: CardDefinition = {
   name: 'Guarded Heir',
+  provenance: 'forge-json-compiler',
   manaCost: '{5}{W}',
   typeLine: 'Creature — Human Noble',
   pt: [1, 1],
   keywords: ['Lifelink'],
-
   triggers: [
     {
-      name: 'onEnter',
-      on: 'enter',
+      name: 'onChangesZone',
+      cause: {
+        on: 'enter',
+      },
       effects: [
         {
           kind: 'createToken',

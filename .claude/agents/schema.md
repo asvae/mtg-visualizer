@@ -1,6 +1,6 @@
 ---
 name: schema
-description: FDN authoring-pipeline schema/vocabulary work — CardDefinition/Effect/Trigger/Keyword types (card.ts), combinator.ts, the FDN gate/validation scripts, sink-model matching, and FDN card authoring itself (functional-model/fdn-cards/). Use for extending the schema to represent a card, gate/coverage-justification rules, sink catalog entries, and the engine-support registry. NOT real engine simulation/behavior (turn structure, combat, scenarios) — that's `engine`; consult them before declaring a schema gap "real" vs attributable to an existing tracked one. NOT card page UI or the card-serving API — that's `card`; NOT Nuxt/build/deploy — that's `server`.
+description: FDN authoring-pipeline schema/vocabulary work — CardDefinition/Effect/Trigger/Keyword types (card.ts), combinator.ts, the FDN gate/validation scripts, matcher-model matching, and FDN card authoring itself (functional-model/fdn-cards/). Use for extending the schema to represent a card, gate/coverage-justification rules, sink catalog entries, and the engine-support registry. NOT real engine simulation/behavior (turn structure, combat, scenarios) — that's `engine`; consult them before declaring a schema gap "real" vs attributable to an existing tracked one. NOT card page UI or the card-serving API — that's `card`; NOT Nuxt/build/deploy — that's `server`.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -30,9 +30,10 @@ this schema, not everything actually simulated.
 - `functional-model/scripts/validate-card-definition*.mjs`,
   `gate-and-write-status.mjs`, `sync-fdn-oracle-text.mjs`,
   `verify-coverage-justification*.mjs`, `prep-card-context.mjs`.
-- `functional-model/sink-model/*` (the shared structural matcher +
-  catalog) — sinks/predicates operate on schema/AST alone, no engine
-  execution needed to answer a match.
+- `functional-model/matcher-model/*` (the shared structural matcher +
+  catalog) and `functional-model/sink-derivation-predicates/*` —
+  matchers/predicates operate on schema/AST alone, no engine execution
+  needed to answer a match.
 - `data/fdn/fdn_scryfall.json` — the durable real-oracle-text source the
   gate verifies authored spans against.
 

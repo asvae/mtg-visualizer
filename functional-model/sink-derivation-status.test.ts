@@ -69,10 +69,10 @@ describe('computeSinkDerivationStatus — seeded sink-derivation-predicate mecha
     expect(e.evidence.corpusPassing).toBe(e.evidence.corpusTotal);
   });
 
-  it('evidence paths point at the documented functional-model/sink-model/predicates/<slug> convention', () => {
+  it('evidence paths point at the documented functional-model/sink-derivation-predicates/<slug> convention', () => {
     for (const e of entries) {
-      expect(e.evidence.predicateModulePath).toBe(`functional-model/sink-model/predicates/${e.slug}.ts`);
-      expect(e.evidence.corpusManifestPath).toBe(`functional-model/sink-model/predicates/${e.slug}.corpus.json`);
+      expect(e.evidence.predicateModulePath).toBe(`functional-model/sink-derivation-predicates/${e.slug}.ts`);
+      expect(e.evidence.corpusManifestPath).toBe(`functional-model/sink-derivation-predicates/${e.slug}.corpus.json`);
     }
   });
 
@@ -83,7 +83,7 @@ describe('computeSinkDerivationStatus — seeded sink-derivation-predicate mecha
 
     const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-status-test-'));
     try {
-      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-derivation-predicates');
       mkdirSync(predicatesDir, { recursive: true });
       writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate, not yet checked\n');
 
@@ -138,7 +138,7 @@ describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the r
   it('purple (predicate module exists, no fully-agreeing corpus manifest) is NOT usable', () => {
     const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
     try {
-      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-derivation-predicates');
       mkdirSync(predicatesDir, { recursive: true });
       writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate, not yet checked\n');
 
@@ -152,7 +152,7 @@ describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the r
   it('blue (predicate module + fully-agreeing corpus manifest) IS usable', () => {
     const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
     try {
-      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-derivation-predicates');
       mkdirSync(predicatesDir, { recursive: true });
       writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate\n');
       writeFileSync(join(predicatesDir, 'saga.corpus.json'), JSON.stringify({ total: 2, passing: 2 }));
@@ -167,7 +167,7 @@ describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the r
   it('a human "reject" review verdict overlays gray/purple/blue to yellow -> still NOT usable (yellow means a human found a real disagreement)', () => {
     const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
     try {
-      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-derivation-predicates');
       mkdirSync(predicatesDir, { recursive: true });
       writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate\n');
       writeFileSync(join(predicatesDir, 'saga.corpus.json'), JSON.stringify({ total: 2, passing: 2 }));
@@ -186,7 +186,7 @@ describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the r
   it('a human "confirm" review verdict sitting on a NOT-yet-blue (gray/purple) baseline is IGNORED, not carried forward as green (2026-09-18) — confirm/reject is only ever meaningful once a mechanism has actually reached the blue/corpus-verified baseline; `./review.post.ts` now refuses to write this in the first place, but this is the read-time defense-in-depth half (a stale/hand-authored review record must never be trusted)', () => {
     const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
     try {
-      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-derivation-predicates');
       mkdirSync(predicatesDir, { recursive: true });
       writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate, not corpus-verified\n');
       writeFileSync(
@@ -209,7 +209,7 @@ describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the r
   it('a stale confirm on a blue baseline whose predicate/corpus content has since changed reads back as re-review, not green (drift detection)', () => {
     const fakeRoot = mkdtempSync(join(tmpdir(), 'sink-derivation-color-test-'));
     try {
-      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-derivation-predicates');
       mkdirSync(predicatesDir, { recursive: true });
       writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate v1\n');
       writeFileSync(join(predicatesDir, 'saga.corpus.json'), JSON.stringify({ total: 2, passing: 2 }));
@@ -270,7 +270,7 @@ describe('computeSinkDerivationColor / isSinkDerivationMechanismUsable — the r
       // cache first. A naive uncached read would flip to true immediately;
       // the cache must keep serving the stale (but real, previously computed)
       // gray/false verdict.
-      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-model', 'predicates');
+      const predicatesDir = join(fakeRoot, 'functional-model', 'sink-derivation-predicates');
       mkdirSync(predicatesDir, { recursive: true });
       writeFileSync(join(predicatesDir, 'saga.ts'), '// stub predicate\n');
       writeFileSync(join(predicatesDir, 'saga.corpus.json'), JSON.stringify({ total: 1, passing: 1 }));

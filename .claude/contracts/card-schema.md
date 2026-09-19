@@ -3351,3 +3351,98 @@ same pre-existing diagnostics as the baseline taken immediately before
 this pass (4 `functional-model`/`server` ones plus 3 `CardDetailTabs.vue`
 ones from the `card` agent's concurrent Forge-tab work), zero new. Re-gated
 `exemplar-of-light` — still `blue`, `reasons: []`.
+
+### 14. "Sink" → "Matcher" rename across the catalog-matcher layer (2026-09-19, `schema`-owned)
+
+Pure rename, no behavior change — closes a real naming overload: "Sink"
+used to name BOTH the per-family catalog-matcher machinery documented in
+sections 1–13 above AND the unrelated per-card `Fact.role: 'sink'/'source'`
+label. The role label, the "Source Candidate"/"Sink Candidate" UI
+vocabulary (`server/api/sink-catalog/index.get.ts`'s own
+`sourceCandidateMatches`/`sinkCandidateMatches`), and the entirely separate
+sink-derivation-PREDICATE subsystem (`sink-derivation-status.ts`,
+`.claude/contracts/sink-derivation-status-schema.md`, the
+`*-sink-structural.ts` recognizers) are the concept this rename
+disambiguates FROM — all deliberately UNTOUCHED, still spelled "sink"/
+"source" everywhere.
+
+**Directory/file moves** (every earlier section above describing a
+`sink-model/...` or `sink-catalog-status.ts` path now refers to the moved
+location — not rewritten in place, per this doc's own "additive dated
+sections, don't rewrite history" convention):
+- `functional-model/sink-model/` → `functional-model/matcher-model/`
+  (`catalog/**` moved verbatim; `SINK_MODEL_DESIGN.md` →
+  `MATCHER_MODEL_DESIGN.md`; `match-sink.ts`/`.test.ts` →
+  `match-query.ts`/`.test.ts`; `sink-query.ts` → `matcher-query.ts`).
+- `functional-model/sink-model/predicates/` did **NOT** move into
+  `matcher-model/` — it's the sink-derivation-predicate subsystem's own
+  files (`crew.ts`/`saga.ts`/`lifelink.ts` + tests/corpus), a different,
+  explicitly-untouched concept that only happened to live physically
+  nested under the old `sink-model/` directory. Relocated instead to its
+  own top-level home, `functional-model/sink-derivation-predicates/` —
+  the ONLY edits inside that untouched subsystem (including
+  `sink-derivation-status.ts`/`.test.ts`, otherwise fully off-limits per
+  this task's own scope) were the resulting one-line physical path-string
+  fixes (`predicatesDir`, hardcoded test assertions), zero identifier/
+  vocabulary renames.
+- `functional-model/sink-catalog-status.ts`/`.test.ts` →
+  `matcher-catalog-status.ts`/`.test.ts` (confirmed in-scope before moving
+  — this file's own header already says it tracks the CATALOG, "genuinely
+  different from... `sink-derivation-status.ts`"). `sink-catalog-reviews
+  .json` → `matcher-catalog-reviews.json`.
+- `functional-model/tsconfig.json`'s `include` glob updated
+  (`sink-model/**/*.ts` → `matcher-model/**/*.ts`, plus a new
+  `sink-derivation-predicates/**/*.ts` entry so the relocated predicates
+  keep getting typechecked at all).
+
+**Identifier map** (exact, mechanical — every renamed symbol keeps its
+prior signature/semantics):
+`SinkCatalogEntry`→`MatcherCatalogEntry`, `SinkInstance`→`Matcher` (the
+user's own framing: "Matcher basically would be a thing that sits between
+cards"), `SinkFamily`→`MatcherFamily`, `SinkQuery`→`MatcherQuery`,
+`SinkMatchResult`→`MatchResult`, `SINK_CATALOG`→`MATCHER_CATALOG`,
+`CountersSink`→`CountersMatcher`,
+`BattlefieldPresenceSink`→`BattlefieldPresenceMatcher`,
+`matchSink`→`matchQuery` (param `sink`→`query`),
+`countMatchesForSink`→`countMatchesForQuery`,
+`countSinksSatisfiedByCard`→`countQueriesSatisfiedByCard` (param
+`sinks`→`queries`), `occurrenceSatisfiesSink`→`occurrenceSatisfiesQuery`
+(private), plus the parallel `SinkCatalog*` status-axis family
+(`SinkCatalogBaseline`/`Color`/`Evidence`/`Review`/`RealMatch(es)`/
+`PageEntry`/`SourceFiles`/`StatusEntry`/`CorpusManifest`/
+`MemberEvidence`, `computeSinkCatalogStatus`/`Color`/`Fingerprint`,
+`isSinkCatalogEntryUsable`, `resetSinkCatalogColorCacheForTests`) — all
+`Sink`→`Matcher` verbatim. A handful of local test-fixture variable names
+ending in `...Sink` (e.g. `lifegainSink`, `graveyardCreatureSink`) were
+renamed to `...Query` for the same reason. Historical dead-type name
+`SinkMatchDetail` (already deleted, per section 13 above) was left
+exactly as-is everywhere it's mentioned — same "keep history intact"
+convention `MATCHER_MODEL_DESIGN.md`'s own stale-prose precedent already
+established; it names a bygone design iteration, not a live symbol.
+
+**Cross-references fixed as an unavoidable consequence** (imports/paths
+only, no further identifier changes): `functional-model/card-interactions
+.ts`/`.test.ts` (real imports — `engine`-owned file, touched here as a
+pure, behavior-identical mechanical rename since the alternative was a
+non-compiling tree; flagged to `engine` for review), `card.ts`/
+`combinator.ts`/`engine-support-registry.ts`/`source-files.ts`/
+`recognizers/program-ast-walker.ts` (comment-only path citations),
+`fdn-cards/{felidar-savior,hare-apparent}/NOTES.md` (comment-only path
+citations), `server/api/sink-catalog/index.get.ts`/`review.post.ts`
+(mechanical import/type rename only — directory name and served route
+path `GET /api/sink-catalog` deliberately left UNCHANGED, to avoid
+silently breaking the `ui`-owned review page's fetch calls; a route-path
+rename, if wanted, is a separate follow-up needing `ui`/`card`
+coordination).
+
+**Left stale, deliberately, by explicit scope instruction** (real, minor,
+accepted documentation debt): `.claude/contracts/sink-derivation-status-
+schema.md`'s own literal path citations to `functional-model/sink-model/
+match-sink.ts` and `.../predicates/<slug>.ts` are now wrong (both moved)
+— that contract file is the sink-derivation subsystem's own, explicitly
+out of this rename's scope, not touched. `functional-model/SYNERGY_DESIGN
+.md`/`synergy.ts` (one-line stale citations each, `engine`-owned, flagged
+not edited) and `app/pages/app/engine/sinks/[[slug]].vue` (still calls
+`counters.test.ts` a "corpus test" from an earlier pass, plus now stale
+`sink-model` path comments — `ui`-owned, flagged not edited) are the same
+treatment.

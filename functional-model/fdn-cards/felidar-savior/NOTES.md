@@ -13,7 +13,7 @@ union already has `'Lifelink'`) — mechanically enforced by `state.ts`'s
 own `dealDamage` (real 702.15e chokepoint, not something this card's own
 `definition.ts` needs to spell out as an `Effect`). This is the second
 real FDN card with printed Lifelink (`healer-s-hawk` is the first) — the
-real motivating card for `sink-model/predicates/lifelink.ts`, which reads
+real motivating card for `sink-derivation-predicates/lifelink.ts`, which reads
 this exact `keywords` field to derive the implicit `gainLife` production
 `deriveOccurrences` otherwise has no way to see (Lifelink's lifegain has
 no corresponding `gainLife` `Effect` node on any card, since it's purely

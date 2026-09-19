@@ -1,8 +1,8 @@
-// Writes functional-model/sink-catalog-reviews.json's own human-review
+// Writes functional-model/matcher-catalog-reviews.json's own human-review
 // overlay for ONE catalog entry — the yellow/green half of
 // GET /api/sink-catalog's 6-state axis (gray/purple/blue computed fresh off
 // real corpus-manifest filesystem presence, see ./index.get.ts +
-// functional-model/sink-catalog-status.ts; this endpoint only ever writes a
+// functional-model/matcher-catalog-status.ts; this endpoint only ever writes a
 // review verdict ON TOP of that computed baseline, never the baseline
 // itself). Same dev-only/no-audit-trail posture, and same flat
 // identity-keyed shape, as server/api/sink-derivations/review.post.ts.
@@ -13,18 +13,18 @@
 // Clear a review (fall back to the computed baseline again) by posting the
 // same slug with `verdict: null`.
 //
-// `slug` is validated against a FRESH `computeSinkCatalogStatus()` call (not
+// `slug` is validated against a FRESH `computeMatcherCatalogStatus()` call (not
 // a hand-kept id list — same "a rename/removal there can't silently leave a
 // stale review orphaned without at least being checkable" rationale
 // `server/api/sink-derivations/review.post.ts` already documents).
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { computeSinkCatalogStatus, computeSinkCatalogFingerprint } from '../../../functional-model/sink-catalog-status';
-import type { SinkCatalogReview } from './index.get';
+import { computeMatcherCatalogStatus, computeMatcherCatalogFingerprint } from '../../../functional-model/matcher-catalog-status';
+import type { MatcherCatalogReview } from './index.get';
 
-const STORE_PATH = join(process.cwd(), 'functional-model', 'sink-catalog-reviews.json');
+const STORE_PATH = join(process.cwd(), 'functional-model', 'matcher-catalog-reviews.json');
 
-function loadReviews(): Record<string, SinkCatalogReview> {
+function loadReviews(): Record<string, MatcherCatalogReview> {
   if (!existsSync(STORE_PATH)) return {};
   try {
     return JSON.parse(readFileSync(STORE_PATH, 'utf8'));
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
   const reviewedBy: string | undefined = body?.reviewedBy;
 
   const root = process.cwd();
-  const entries = computeSinkCatalogStatus(root);
+  const entries = computeMatcherCatalogStatus(root);
   const entry = entries.find((e) => e.slug === slug);
   if (!slug || !entry) {
     setResponseStatus(event, 404);
@@ -79,7 +79,7 @@ export default defineEventHandler(async (event) => {
       note: note?.trim() || undefined,
       reviewedAt: new Date().toISOString().slice(0, 10),
       reviewedBy,
-      fingerprint: computeSinkCatalogFingerprint(entry.slug, root) ?? undefined,
+      fingerprint: computeMatcherCatalogFingerprint(entry.slug, root) ?? undefined,
     };
   } else if (verdict === 'reject') {
     reviews[slug] = { verdict, note: note?.trim() || undefined, reviewedAt: new Date().toISOString().slice(0, 10), reviewedBy };

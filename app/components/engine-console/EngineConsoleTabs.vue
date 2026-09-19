@@ -35,6 +35,12 @@
 // primary tab row per that same "day-to-day primary row stays lean"
 // rationale. Appended AFTER Keywords in the overflow list per this
 // header's own convention of appending new overflow entries at the end.
+//
+// 2026-09-19: added "Schema (Forge)" (`/app/engine/schema-forge`) to the
+// same overflow, appended after "Schema" — a sibling static reference page
+// (real Forge-corpus field/param/keyword vocabulary, Markdown-rendered)
+// rather than the TS-source one, labeled distinctly since both live in the
+// same overflow group.
 import { computed } from 'vue';
 
 const route = useRoute();
@@ -43,13 +49,14 @@ const TABS = [
   { label: 'Cards', to: '/app/engine/cards', match: '/app/engine/cards' },
   { label: 'Predicates', to: '/app/engine/predicates', match: '/app/engine/predicates' },
   { label: 'Features', to: '/app/engine/features', match: '/app/engine/features' },
-  { label: 'Sinks', to: '/app/engine/sinks', match: '/app/engine/sinks' },
+  { label: 'Matchers', to: '/app/engine/sinks', match: '/app/engine/sinks' },
 ];
 
 const activeTo = computed(() => TABS.find((t) => route.path.startsWith(t.match))?.to);
 const onKeywords = computed(() => route.path.startsWith('/app/engine/keywords'));
-const onSchema = computed(() => route.path.startsWith('/app/engine/schema'));
-const overflowActive = computed(() => onKeywords.value || onSchema.value);
+const onSchema = computed(() => route.path === '/app/engine/schema' || route.path.startsWith('/app/engine/schema/'));
+const onSchemaForge = computed(() => route.path.startsWith('/app/engine/schema-forge'));
+const overflowActive = computed(() => onKeywords.value || onSchema.value || onSchemaForge.value);
 </script>
 
 <template>
@@ -87,6 +94,13 @@ const overflowActive = computed(() => onKeywords.value || onSchema.value);
             :class="onSchema ? 'bg-surface text-text' : 'text-muted hover:bg-surface hover:text-text'"
           >
             Schema
+          </NuxtLink>
+          <NuxtLink
+            to="/app/engine/schema-forge"
+            class="block rounded px-2 py-1 text-[11px] font-medium whitespace-nowrap"
+            :class="onSchemaForge ? 'bg-surface text-text' : 'text-muted hover:bg-surface hover:text-text'"
+          >
+            Schema (Forge)
           </NuxtLink>
         </div>
       </template>

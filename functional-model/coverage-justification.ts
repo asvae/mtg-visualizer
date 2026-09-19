@@ -63,6 +63,19 @@
 // for the whole entry — keeps the exact-match check unambiguous: each span
 // verifies independently against its own claimed range).
 //
+// ## Exemption: a compiler-sourced `definition.ts` needs no manifest at all
+// (2026-09-19)
+//
+// This module's own `validateCoverageJustification` has no opinion on this —
+// the exemption is enforced entirely by `functional-model/scripts/
+// validate-card-definition.mjs` (Part 1.5, its own real caller), which skips
+// calling into this file's own verification path at all for a
+// `CardDefinition` carrying `provenance: 'forge-json-compiler'` (see that
+// field's own doc comment on `CardDefinition`, `card.ts`, for the full
+// reasoning). Documented here too so a reader of THIS file's own header
+// isn't left assuming every real FDN card unconditionally needs a
+// `justification.json`.
+//
 // ## Full-text coverage is enforced for `oracle_text` ONLY, not `type_line`
 //
 // A real printed type line ("Legendary Creature — Cat Avatar") is

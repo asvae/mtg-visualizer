@@ -12,10 +12,10 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onEnter"
+        "name": "onChangesZone"
       }
     ],
-    "reasoning": "This card's own onEnter trigger (on:'enter', a real self-only ETB auto-fire) runs the exact drawCard(2) then discard(2) sequence this sentence describes."
+    "reasoning": "This card's own onChangesZone trigger (on:'enter', a real self-only ETB auto-fire) runs the exact drawCard(2) then discard(2) sequence this sentence describes."
   },
   {
     "type": "definition",
@@ -30,7 +30,7 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onAttack"
+        "name": "onAttacks"
       }
     ],
     "reasoning": "This ability's own template label, fully expressed by this same trigger's condition field ({kind:'graveyardCountAtLeast', min:7}) \u2014 not a separate keyword or clause of its own."
@@ -48,10 +48,10 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onAttack"
+        "name": "onAttacks"
       }
     ],
-    "reasoning": "This card's own onAttack trigger (on:'attacks') is the real self-attack auto-fire this clause names (real Forge Mode$ Attacks | ValidCard$ Card.Self)."
+    "reasoning": "This card's own onAttacks trigger (on:'attacks') is the real self-attack auto-fire this clause names (real Forge Mode$ Attacks | ValidCard$ Card.Self)."
   },
   {
     "type": "definition",
@@ -66,7 +66,7 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onAttack"
+        "name": "onAttacks"
       }
     ],
     "reasoning": "This same trigger's condition field ({kind:'graveyardCountAtLeast', min:7}, BoardStateCondition) is the exact real Threshold gate this clause names \u2014 declaratively real but not yet engine-enforced (resolveCard has no live GameState to check it against, Ward pattern \u2014 see engine-support-registry.ts's own board-state-condition-not-enforced entry), same established convention crypt-feaster's own identical Threshold clause already documents."
@@ -84,7 +84,7 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onAttack"
+        "name": "onAttacks"
       }
     ],
     "reasoning": "This same trigger's createToken effect builds the exact legendary 8/8 Octopus token this clause describes (the token's own 'blue' color is real but unrepresentable \u2014 TokenInfo has no colors field anywhere in this schema, same accepted pool-wide limitation as every other colored-token clause). The 'you may' optionality is likewise unmodeled \u2014 no player-decision engine exists anywhere in this model, so a legal creation always happens, same convention every other optional clause in this pool already documents."

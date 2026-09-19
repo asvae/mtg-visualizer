@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// Sink CATALOG entry status — one of the `/app/engine/*` console tabs (see
+// Matcher CATALOG entry status — one of the `/app/engine/*` console tabs (see
 // EngineConsoleTabs.vue's own header for the tab list). Genuinely different
 // axis from Predicates (`/app/engine/predicates`, sink-derivation
 // PREDICATE mechanisms — engine-automation gameplay consequences like
 // Saga/Crew) — this tracks the shared, reviewed sink CATALOG itself
-// (`functional-model/sink-model/catalog/<slug>.ts`), the QUESTION side of
+// (`functional-model/matcher-model/catalog/<slug>.ts`), the QUESTION side of
 // the sink-only synergy experiment. Same underlying data/endpoint shape as
 // Predicates (`GET /api/sink-catalog` + its own `./review` sibling) and the
 // exact same review/reject-with-note/clear-review capability that page
@@ -17,12 +17,12 @@
 import { computed, ref, watch } from 'vue';
 import { useStatusFilterList } from '../../../../composables/useStatusFilterList';
 import type { StatusFilterOption } from '../../../../composables/useStatusFilterList';
-import type { SinkCatalogPageEntry } from '../../../../../server/api/sink-catalog/index.get';
+import type { MatcherCatalogPageEntry } from '../../../../../server/api/sink-catalog/index.get';
 import { statusBadgeStyle } from '../../../../lib/badgeColor';
 
 definePageMeta({ layout: 'graph' });
 
-const { data, pending, error } = useFetch<SinkCatalogPageEntry[]>('/api/sink-catalog');
+const { data, pending, error } = useFetch<MatcherCatalogPageEntry[]>('/api/sink-catalog');
 const toast = useToast();
 
 // `import.meta.dev` can't be used directly inside a template expression —
@@ -55,7 +55,7 @@ const STATUS_OPTIONS: StatusFilterOption<StatusColor>[] = [
 ];
 
 const items = computed(() => data.value ?? []);
-const list = useStatusFilterList<SinkCatalogPageEntry, StatusColor>({
+const list = useStatusFilterList<MatcherCatalogPageEntry, StatusColor>({
   items,
   keyOf: (e) => e.slug,
   statusOf: (e) => e.color,
@@ -82,15 +82,16 @@ function statusMeta(color: StatusColor) {
 // `sourceFiles`) via a synthetic `SourceFileResult`-shaped object.
 //
 // **`null` for an entry with no real `query` at all** (2026-09-18,
-// `CountersSink`'s own no-`query` entries — `SinkCatalogPageEntry.query`'s
+// `CountersMatcher`'s own no-`query` entries — `MatcherCatalogPageEntry.query`'s
 // own doc comment, `server/api/sink-catalog/index.get.ts`) — the template
-// below renders the whole "Curated SinkQuery" panel conditionally on this,
+// below renders the whole "Curated MatcherQuery" panel conditionally on this,
 // rather than showing an empty/`undefined` block. Per the user's own
 // explicit correction: no synthesized display-only query object either —
 // "just put these mock definitions somewhere within test" — the real
 // answer for "what does this sink look for" lives in the family's own
-// corpus test (`counters.test.ts`), shown below via "Corpus test", not a
-// fabricated query.
+// unit test (`counters.test.ts`, rewritten 2026-09-19 to run real compiled
+// Forge cards rather than mocked corpus.json fixtures), shown below via
+// "Unit test" for this query-less case, not a fabricated query.
 const queryResult = computed(() =>
   selectedEntry.value?.query
     ? { path: 'query', exists: true, content: JSON.stringify(selectedEntry.value.query, null, 2), truncated: false }
@@ -99,7 +100,7 @@ const queryResult = computed(() =>
 
 // Dynamic tab title, same `Engine | <Tab> | <selected entry>` format
 // Predicates/Features/Cards also use.
-useHead({ title: computed(() => (selectedEntry.value ? `Engine | Sinks | ${selectedEntry.value.category}` : 'Engine | Sinks')) });
+useHead({ title: computed(() => (selectedEntry.value ? `Engine | Matchers | ${selectedEntry.value.category}` : 'Engine | Matchers')) });
 
 // --- URL deep-linking (route <-> selection sync), same convention
 // Predicates/Features/Cards/Keywords already established.
@@ -115,7 +116,7 @@ watch(
   { immediate: true },
 );
 
-function pickEntry(entry: SinkCatalogPageEntry) {
+function pickEntry(entry: MatcherCatalogPageEntry) {
   navigateTo(`/app/engine/sinks/${entry.slug}`);
 }
 function goPrev() {
@@ -131,15 +132,15 @@ function goNext() {
 const pendingKey = ref<string | null>(null);
 
 const rejectOpen = ref(false);
-const rejectTarget = ref<SinkCatalogPageEntry | null>(null);
+const rejectTarget = ref<MatcherCatalogPageEntry | null>(null);
 const rejectNote = ref('');
-function openReject(entry: SinkCatalogPageEntry) {
+function openReject(entry: MatcherCatalogPageEntry) {
   rejectTarget.value = entry;
   rejectNote.value = entry.review?.verdict === 'reject' ? (entry.review.note ?? '') : '';
   rejectOpen.value = true;
 }
 
-async function submitReview(entry: SinkCatalogPageEntry, verdict: 'confirm' | 'reject' | null, note?: string) {
+async function submitReview(entry: MatcherCatalogPageEntry, verdict: 'confirm' | 'reject' | null, note?: string) {
   pendingKey.value = entry.slug;
   try {
     const res = await $fetch<{ slug: string; color: 'yellow' | 'green' | null }>('/api/sink-catalog/review', {
@@ -165,10 +166,10 @@ async function submitReview(entry: SinkCatalogPageEntry, verdict: 'confirm' | 'r
   }
 }
 
-function confirmEntry(entry: SinkCatalogPageEntry) {
+function confirmEntry(entry: MatcherCatalogPageEntry) {
   submitReview(entry, 'confirm');
 }
-function clearReview(entry: SinkCatalogPageEntry) {
+function clearReview(entry: MatcherCatalogPageEntry) {
   submitReview(entry, null);
 }
 async function submitReject() {
@@ -189,9 +190,9 @@ async function submitReject() {
     @next="goNext"
   >
     <template #nav>
-      <h1 class="mb-1 px-1.5 text-sm font-semibold text-text">Sink catalog status</h1>
+      <h1 class="mb-1 px-1.5 text-sm font-semibold text-text">Matcher catalog status</h1>
       <p class="mb-3 px-1.5 text-[11px] leading-relaxed text-muted">
-        One row per shared, reviewed sink catalog entry — the QUESTION side of the sink-only synergy experiment, a
+        One row per shared, reviewed matcher catalog entry — the QUESTION side of the sink-only synergy experiment, a
         different axis from
         <NuxtLink to="/app/engine/predicates" class="text-text underline">Predicate status</NuxtLink>.
       </p>
@@ -215,7 +216,7 @@ async function submitReject() {
 
       <EngineConsoleEntryListPanel
         :entries="list.visible.value"
-        :key-of="(e: SinkCatalogPageEntry) => e.slug"
+        :key-of="(e: MatcherCatalogPageEntry) => e.slug"
         :selected-key="list.selectedKey.value"
         empty-message="No catalog entries match the current search/filters."
         @select="pickEntry"
@@ -276,7 +277,7 @@ async function submitReject() {
         <div v-if="queryResult" class="mt-3 border-t border-border-subtle pt-3">
           <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Query</div>
           <div class="mt-1.5">
-            <EngineConsoleCodeSection title="Curated SinkQuery" language="json" :result="queryResult" default-open />
+            <EngineConsoleCodeSection title="Curated MatcherQuery" language="json" :result="queryResult" default-open />
           </div>
         </div>
 
@@ -285,7 +286,7 @@ async function submitReject() {
              correctly against a hand-picked fixture set) vs. this (who in
              the ACTUAL dev pool matches it today). SINK CANDIDATE matches
              only — who genuinely owns/reacts to this category, per
-             `functional-model/sink-model/SINK_MODEL_DESIGN.md`'s own
+             `functional-model/matcher-model/MATCHER_MODEL_DESIGN.md`'s own
              thesis that sink-candidate curation is the one place real
              judgment concentrates in this pipeline. The source-candidate
              side is deliberately NOT shown here: for a broad family like
@@ -330,25 +331,29 @@ async function submitReject() {
              entry's own real matching LOGIC lives in (the shared
              `families/<slug>.ts` factory for a real multi-instance family
              like Counters, or the singleton's own `<slug>.ts` otherwise —
-             `SinkCatalogSourceFiles.entry`'s own doc comment,
+             `MatcherCatalogSourceFiles.entry`'s own doc comment,
              `server/api/sink-catalog/index.get.ts`); "Corpus test" is the
              real `.test.ts` file itself, per the user's own "I'll read
              tests directly" — the tests already read the corpus.json cases
-             for you. -->
+             for you. `CountersMatcher`'s own `counters.test.ts` is the one
+             exception (2026-09-19 rewrite — real compiled Forge cards, no
+             mocked corpus.json fixtures), so it's labeled "Unit test"
+             below instead, reusing the same query-less check
+             (`!queryResult`) `CountersMatcher` entries already use above. -->
         <div class="mt-3 border-t border-border-subtle pt-3">
           <div class="text-[10px] font-semibold tracking-wide text-muted uppercase">Source — real evidence</div>
           <div class="mt-1.5 flex flex-col gap-1">
             <EngineConsoleCodeSection
-              title="Sink source"
+              title="Matcher source"
               language="ts"
               :result="selectedEntry.sourceFiles.entry"
-              not-found-label="No sink source module yet."
+              not-found-label="No matcher source module yet."
             />
             <EngineConsoleCodeSection
-              title="Corpus test"
+              :title="queryResult ? 'Corpus test' : 'Unit test'"
               language="ts"
               :result="selectedEntry.sourceFiles.corpusTest"
-              not-found-label="No corpus test yet."
+              :not-found-label="queryResult ? 'No corpus test yet.' : 'No unit test yet.'"
             />
           </div>
         </div>

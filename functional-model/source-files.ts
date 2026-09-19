@@ -76,7 +76,7 @@ export function findFunctionalModelFilesByBasename(root: string, basename: strin
 /**
  * Reads one real file, hard-scoped to `functional-model/` under `root`.
  * `relPath` is repo-root-relative (e.g. `"functional-model/engine.test.ts"`
- * or `"functional-model/sink-model/predicates/saga.ts"`). Never throws —
+ * or `"functional-model/sink-derivation-predicates/saga.ts"`). Never throws —
  * an out-of-scope path, a missing file, or a non-file target all come back
  * as `{exists: false}` rather than an exception, since a caller (a review
  * dashboard) should be able to render "not found" for a real citation to a

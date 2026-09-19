@@ -14,7 +14,7 @@ directly against `CardDefinition`s at read time). That model's own
 conceptual design — the Self/Sink/Predicates/Candidate chain, why
 `CardDefinition` is "compressed," and why the sink catalog is the one
 place genuine curation judgment concentrates in that pipeline — is
-written up in `functional-model/sink-model/SINK_MODEL_DESIGN.md`.
+written up in `functional-model/matcher-model/MATCHER_MODEL_DESIGN.md`.
 
 ## What changed, in one paragraph
 

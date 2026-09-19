@@ -1231,9 +1231,108 @@ const notesAvailable = computed(() => !!props.data.functionalModel?.notes);
 // 20 real cards (FDN collector numbers 1-20) will ever match today.
 const forgeJsonMapperAvailable = computed(() => !!props.data.functionalModel?.forgeJsonMapper);
 
+// Forge Compiler tab (2026-09-19) — the standalone `functional-model/
+// scripts/forge-json-compiler/` tool's own result (promoted out of
+// `scripts/experiments/` into a real FDN authoring-pipeline step the same
+// day; see `server/utils/forgeJsonCompiler.ts`'s own header for the full
+// design): compiles the sibling forge-json-mapper experiment's real Forge
+// JSON into this repo's own `CardDefinition` shape via a fixed, rule-based
+// translation table. That compiler is a deliberately NARROW, allowlisted-
+// card tool (started as Exemplar of Light, FDN #11, only; widened the same
+// day to 24 cards — see `server/utils/forgeJsonCompiler.ts`'s own
+// `SUPPORTED_CARDS` doc comment) — every OTHER card still gets this tab
+// (dev-only availability, same general/per-card split as
+// `forgeScriptAvailable`/`forgeScriptResult.found` just above), just with an
+// inline "not available for this card" state rather than hiding the tab
+// outright, so the tab strip doesn't shuffle per card the way the
+// data-driven Notes/Forge JSON tabs do. Fetched via a plain `$fetch` (same
+// caching/lifecycle posture as Forge Script — optional/best-effort, keyed by
+// card name, dev-gated) rather than baked into `props.data`, since (unlike
+// every other functional-model field on this component) there's no
+// precomputed file to read: `GET /api/forge-json-compiler` actually RUNS the
+// compiler at request time.
+//
+// Deliberately does NOT diff the compiled output against the real
+// hand-authored `fdn-cards/<slug>/definition.ts` reference (2026-09-19
+// correction, mid-task — an earlier pass of this same task did diff against
+// that reference; dropped per explicit user direction: "don't care about
+// diffing against the pipeline-authored reference at all, just
+// compiled-or-not"). `ForgeJsonCompilerResponse` therefore carries no
+// `diffLines`/`exactMatch` fields.
+interface ForgeJsonCompilerResponse {
+  available: boolean;
+  reason?: 'dev-only';
+  supported?: boolean;
+  compiledJson?: string;
+  error?: string;
+}
+const forgeCompilerCache = new Map<string, ForgeJsonCompilerResponse>();
+const forgeCompilerResult = ref<ForgeJsonCompilerResponse | null>(null);
+const forgeCompilerLoading = ref(false);
+async function loadForgeCompilerTab(name: string) {
+  const cached = forgeCompilerCache.get(name);
+  if (cached) {
+    forgeCompilerResult.value = cached;
+    return;
+  }
+  forgeCompilerResult.value = null;
+  forgeCompilerLoading.value = true;
+  try {
+    const res = await $fetch<ForgeJsonCompilerResponse>('/api/forge-json-compiler', { query: { name } });
+    forgeCompilerCache.set(name, res);
+    forgeCompilerResult.value = res;
+  } catch {
+    // Network-level failure only (the route itself never throws for an
+    // unsupported card or a compile error — see its own header) — degrade to
+    // "unavailable" rather than leaving the tab stuck on a spinner forever.
+    forgeCompilerResult.value = { available: false, reason: 'dev-only' };
+  } finally {
+    forgeCompilerLoading.value = false;
+  }
+}
+if (import.meta.dev) {
+  watch(() => card.value.name, (name) => loadForgeCompilerTab(name), { immediate: true });
+}
+const forgeCompilerAvailable = computed(() => import.meta.dev && !!forgeCompilerResult.value?.available);
+
+// "Compiler cross-check" badge (2026-09-19, same day as the 23-card
+// allowlist widening; simplified to 2 states later the same day per user
+// correction) — a SEPARATE signal from the real pipeline-status axis
+// (`pipelineStatusColor`/`pipelineHeaderBadge`, "Transcribed/Rejected/
+// Confirmed"): this one reflects ONLY whether the standalone forge-json-
+// compiler EXPERIMENT compiled THIS card's real Forge JSON into a
+// schema-valid `CardDefinition` at all — never the human-reviewed pipeline
+// state, and (per that correction) never a diff-against-the-authored-
+// reference outcome either, since that comparison is explicitly out of
+// scope for this badge. Reuses that axis's gray/blue naming (gray=nothing
+// usable, blue=compiled clean) but DELIBERATELY NOT the identical hex
+// values `STATUS_OPTIONS_FDN` (`app/pages/app/engine/cards/[set]/
+// [[number]].vue`) uses for the real pipeline badge — that badge renders in
+// this same page's header and stays on screen while this tab is open, so an
+// identical-hex second badge would read as the same signal at a glance.
+// Each shade below is one Tailwind hue step off its pipeline-badge
+// counterpart (slate vs gray, sky vs blue) — same family, visibly distinct
+// side by side.
+type CompilerCrossCheckStatus = 'gray' | 'blue';
+const COMPILER_CROSS_CHECK_META: Record<CompilerCrossCheckStatus, { label: string; color: string }> = {
+  gray: { label: 'Does not compile', color: '#94a3b8' },
+  blue: { label: 'Compiles clean', color: '#0ea5e9' },
+};
+// `null` (not `forgeCompilerAvailable`, still loading) hides the badge
+// entirely rather than flashing a wrong state. Otherwise: unsupported card,
+// a genuine compile error, or a missing `compiledJson` all collapse to
+// `gray` — "doesn't compile," same posture `fdn-1-50-cases.ts`'s own
+// gray/`UnsupportedForgeShape` state documents. Anything that actually
+// compiled (`supported && compiledJson`) is `blue`.
+const forgeCompilerCrossCheckStatus = computed<CompilerCrossCheckStatus | null>(() => {
+  if (!forgeCompilerAvailable.value || forgeCompilerLoading.value) return null;
+  const r = forgeCompilerResult.value;
+  return r?.supported && r.compiledJson ? 'blue' : 'gray';
+});
+
 interface FunctionalModelTabItem {
   label: string;
-  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript' | 'forgeJson';
+  value: 'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript' | 'forgeJson' | 'forgeCompiler';
   badge?: number;
 }
 const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
@@ -1244,6 +1343,7 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
         ...(notesAvailable.value ? [{ label: 'Notes', value: 'notes' as const }] : []),
         ...(forgeScriptAvailable.value ? [{ label: 'Forge Script', value: 'forgeScript' as const }] : []),
         ...(forgeJsonMapperAvailable.value ? [{ label: 'Forge JSON', value: 'forgeJson' as const }] : []),
+        ...(forgeCompilerAvailable.value ? [{ label: 'Forge Compiler', value: 'forgeCompiler' as const }] : []),
       ]
     : [
         { label: 'Facts', value: 'facts' as const, badge: factsCount.value || undefined },
@@ -1254,6 +1354,7 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
         ...(notesAvailable.value ? [{ label: 'Notes', value: 'notes' as const }] : []),
         ...(forgeScriptAvailable.value ? [{ label: 'Forge Script', value: 'forgeScript' as const }] : []),
         ...(forgeJsonMapperAvailable.value ? [{ label: 'Forge JSON', value: 'forgeJson' as const }] : []),
+        ...(forgeCompilerAvailable.value ? [{ label: 'Forge Compiler', value: 'forgeCompiler' as const }] : []),
       ],
 );
 // The active tab VALUE, wrapping the shared `store.functionalModelTab` (see
@@ -1287,17 +1388,18 @@ const functionalModelTabs = computed<FunctionalModelTabItem[]>(() =>
 // own sensible default (`'definition'` for `isFdn`, `'facts'` otherwise) —
 // read-only, never written back, so a user who genuinely prefers Scenarios
 // still resumes there the next time they land on a card that has some.
-const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript' | 'forgeJson'>({
+const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJson' | 'definition' | 'notes' | 'forgeScript' | 'forgeJson' | 'forgeCompiler'>({
   get: () => {
     const stored = store.functionalModelTab.value;
     // `'forgeScript'` widened in alongside `'scenarios'` (2026-09-19), then
     // `'notes'` widened in the same day, later still, then `'forgeJson'`
-    // widened in the same day, later still — all four are real tabs
+    // widened in the same day, later still, then `'forgeCompiler'` widened
+    // in the same day, later still — all five are real tabs
     // `functionalModelTabs` can offer for an `fdn` card (see that computed's
     // own `isFdn` branch above), so a stored value of any of them must
     // survive this fallback the same way `'scenarios'` already does, rather
     // than being forced back to `'definition'` every time an FDN card loads.
-    if (isFdn.value && stored !== 'scenarios' && stored !== 'forgeScript' && stored !== 'notes' && stored !== 'forgeJson') return 'definition';
+    if (isFdn.value && stored !== 'scenarios' && stored !== 'forgeScript' && stored !== 'notes' && stored !== 'forgeJson' && stored !== 'forgeCompiler') return 'definition';
     if (stored === 'scenarios' && scenariosCount.value === 0) return isFdn.value ? 'definition' : 'facts';
     // A stored `'forgeScript'` value is only meaningful while the CURRENT
     // card's own tab strip actually offers it (`forgeScriptAvailable`) —
@@ -1313,6 +1415,16 @@ const functionalModelTabValue = computed<'facts' | 'scenarios' | 'json' | 'cardJ
     // card with no forge-json-mapper output of its own — see
     // `forgeJsonMapperAvailable`'s own doc comment.
     if (stored === 'forgeJson' && !forgeJsonMapperAvailable.value) return isFdn.value ? 'definition' : 'facts';
+    // Same guard, fourth sibling case, for a stored `'forgeCompiler'` value
+    // while dev mode/the compiler endpoint itself isn't available — see
+    // `forgeCompilerAvailable`'s own doc comment. Note this gate is the
+    // GENERAL dev-only signal, not per-card `supported` — same
+    // `available`/`found`-style split `forgeScriptAvailable` already makes,
+    // so the tab itself still renders its own inline "not available for this
+    // card" state for any card outside the fixed allowlist (see
+    // `server/utils/forgeJsonCompiler.ts`'s own `SUPPORTED_CARDS`), rather
+    // than this fallback firing on every unsupported card.
+    if (stored === 'forgeCompiler' && !forgeCompilerAvailable.value) return isFdn.value ? 'definition' : 'facts';
     return stored;
   },
   set: (v) => {
@@ -2165,6 +2277,45 @@ watch(
       />
     </template>
 
+    <!-- Forge Compiler — the standalone forge-json-compiler experiment's own
+         compiled CardDefinition (see `forgeCompilerResult`'s own doc comment
+         above) — compiled-or-not only, deliberately no diff against the
+         hand-authored definition.ts (dropped mid-task per user correction).
+         That experiment ONLY supports a fixed allowlist of FDN cards (see
+         `server/utils/forgeJsonCompiler.ts`'s own `SUPPORTED_CARDS`) — every
+         other card (or dev mode itself being off) renders the inline "not
+         available" state below rather than hiding this tab per-card, same
+         "general availability vs this card's own match" split Forge
+         Script's `found`/`available` already models. The small dot+label row
+         at top is the "Compiler cross-check" badge (see
+         `forgeCompilerCrossCheckStatus`'s own doc comment above) — a
+         DIFFERENT signal than the real pipeline-status badge in this page's
+         own header, deliberately not the same colors as that badge. -->
+    <template v-else-if="functionalModelTabValue === 'forgeCompiler'">
+      <div
+        v-if="forgeCompilerCrossCheckStatus"
+        class="mb-2 flex items-center gap-1.5 text-xs"
+        title="Result of the standalone forge-json-compiler EXPERIMENT only — not the real pipeline-authoring status shown in this page's header."
+      >
+        <span class="h-2 w-2 shrink-0 rounded-full" :style="{ background: COMPILER_CROSS_CHECK_META[forgeCompilerCrossCheckStatus].color }" />
+        <span class="text-muted">Compiler cross-check:</span>
+        <span class="font-medium">{{ COMPILER_CROSS_CHECK_META[forgeCompilerCrossCheckStatus].label }}</span>
+      </div>
+      <div v-if="forgeCompilerLoading" class="text-xs text-muted italic">Compiling…</div>
+      <template v-else-if="forgeCompilerResult?.supported && forgeCompilerResult.compiledJson">
+        <JsonHighlight
+          :json="forgeCompilerResult.compiledJson"
+          class="max-h-[24rem] overflow-auto rounded border border-border bg-panel p-2"
+        />
+      </template>
+      <div v-else-if="forgeCompilerResult?.supported && forgeCompilerResult.error" class="text-xs text-muted italic">
+        Forge compiler experiment error: {{ forgeCompilerResult.error }}
+      </div>
+      <div v-else class="text-xs text-muted italic">
+        Not available for this card — the forge-json-compiler experiment only supports a fixed allowlist of FDN cards (Exemplar of Light plus the 22 cards the FDN 1-50 coverage push proved compile cleanly).
+      </div>
+    </template>
+
     <template v-else>
       <FunctionalModelScript :code="data.functionalModel.source" />
     </template>
@@ -2251,7 +2402,7 @@ watch(
        the extraction. -->
   <div v-if="isFdn && fdnInteractions.length" class="mt-4 w-full max-w-full">
     <div class="mb-1 flex items-center gap-2">
-      <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Sinks</span>
+      <span class="text-[10px] font-semibold tracking-wide text-muted uppercase">Matchers</span>
     </div>
     <ul class="flex flex-col gap-1.5">
       <li v-for="cat in fdnInteractions" :key="cat.category" class="rounded-md border border-border bg-panel px-2.5 py-1.5 text-xs text-text">

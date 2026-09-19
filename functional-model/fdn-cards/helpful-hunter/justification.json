@@ -12,9 +12,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onEnter"
+        "name": "onChangesZone"
       }
     ],
-    "reasoning": "This card's own `onEnter` trigger (`on:'enter'`) runs a `drawCard` effect — the exact real card draw this sentence describes."
+    "reasoning": "This card's own `onChangesZone` trigger (`cause.on:'enter'`) runs a `drawCard` effect — the exact real card draw this sentence describes."
   }
 ]

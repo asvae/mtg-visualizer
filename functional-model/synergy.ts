@@ -2295,10 +2295,10 @@ function syntheticLifelinkFact(): Fact {
  * active — this flag only gates the Lifelink one.
  *
  * **Still parked here, 2026-09-18 — NOT un-parked by the separate
- * `sink-model/predicates/lifelink.ts` predicate added the same day.** That
- * predicate makes the SAME real-world claim (printed Lifelink implies a
+ * `sink-derivation-predicates/lifelink.ts` predicate added the same day.**
+ * That predicate makes the SAME real-world claim (printed Lifelink implies a
  * Lifegain producer) inside the sink-only/catalog PROTOTYPE matcher
- * (`sink-model/match-sink.ts`'s `deriveOccurrences`/`matchSink`,
+ * (`matcher-model/match-query.ts`'s `deriveOccurrences`/`matchQuery`,
  * `functional-model/card-interactions.ts`'s FDN-scoped serving path) — a
  * genuinely separate code path from this file's own `augmentPoolCards`/
  * `findInteractionsForCard`, which is what actually drives FIN's real,

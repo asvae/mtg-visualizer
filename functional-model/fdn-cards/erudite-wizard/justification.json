@@ -12,9 +12,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onSecondDraw"
+        "name": "onDrawn"
       }
     ],
-    "reasoning": "This card's own `onSecondDraw` name-only trigger (no dedicated `on` value exists for \"draw your second card each turn\" — real per-turn draw-count tracking this event would need doesn't exist anywhere in this engine, same recognized-but-inert convention drake-hatcher's own trigger already establishes) runs a `putCounter` effect (`target:'self', counterType:'+1/+1', amount:1)` — the exact real counter this sentence describes."
+    "reasoning": "This card's own `onDrawn` trigger (`cause.on:'drawNthCardThisTurn', drawNthCardThisTurnNumber:2` — a real, dedicated dispatch value for \"draw your second card each turn,\" not a name-only trigger) runs a `putCounter` effect (`target:'self', counterType:'+1/+1', amount:1)` — the exact real counter this sentence describes."
   }
 ]

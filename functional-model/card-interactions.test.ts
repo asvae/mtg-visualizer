@@ -10,10 +10,10 @@
 // 10-card pool has zero cards with an actual `kind: 'gainLife'` effect
 // today; Healer's Hawk's Lifelink is a KEYWORD, not an Effect, and
 // `deriveOccurrences` deliberately doesn't walk `keywords` — see
-// `sink-model/match-sink.ts`'s own scope note).
+// `matcher-model/match-query.ts`'s own scope note).
 //
 // **2026-09-18, later the same day**: the `lifegain` catalog entry
-// (`sink-model/catalog/lifegain.ts`) now also declares a real
+// (`matcher-model/catalog/lifegain.ts`) now also declares a real
 // `consumerTriggerNames: ['onLifeGained']` — Ajani's Pridemate's own real,
 // checked-in trigger name — so the first test below was rewritten from
 // asserting Ajani does NOT get "Lifegain" to asserting it now DOES, via

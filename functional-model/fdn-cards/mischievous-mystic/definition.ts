@@ -1,17 +1,19 @@
 import type { CardDefinition, Effect } from '../../card';
 
-export const mischiefousMystic: CardDefinition = {
+export const mischievousMystic: CardDefinition = {
   name: 'Mischievous Mystic',
+  provenance: 'forge-json-compiler',
   manaCost: '{1}{U}',
   typeLine: 'Creature — Human Wizard',
   pt: [2, 1],
   keywords: ['Flying'],
-
   triggers: [
     {
-      name: 'onSecondDraw',
-      on: 'drawNthCardThisTurn',
-      drawNthCardThisTurnNumber: 2,
+      name: 'onDrawn',
+      cause: {
+        on: 'drawNthCardThisTurn',
+        drawNthCardThisTurnNumber: 2,
+      },
       effects: [
         {
           kind: 'createToken',

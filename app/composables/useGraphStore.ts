@@ -965,7 +965,7 @@ export function useGraphStore() {
   // gate) — a NORMAL project file, not dev-only/GPL-gated like Forge Script,
   // but still absent for most cards today (every `fin` card, plus any `fdn`
   // card that hasn't gotten one yet), same "offered conditionally" shape.
-  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition', 'notes', 'forgeScript', 'forgeJson'] as const;
+  const FUNCTIONAL_MODEL_TABS = ['facts', 'scenarios', 'json', 'cardJson', 'definition', 'notes', 'forgeScript', 'forgeJson', 'forgeCompiler'] as const;
   type FunctionalModelTab = (typeof FUNCTIONAL_MODEL_TABS)[number];
   let savedFunctionalModelTab: FunctionalModelTab = 'facts';
   try {

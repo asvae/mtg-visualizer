@@ -134,6 +134,29 @@
 // classification below — a card can't reach `purple` OR `blue` without a
 // real manifest, regardless of whether it also has capacity gaps.
 //
+// ## Exemption: a compiler-sourced `definition.ts` needs no manifest at all
+// (2026-09-19)
+//
+// `justification.json`'s whole purpose is catching an AI's own MISREADING
+// of printed oracle text while hand/AI-transcribing a card into schema —
+// a risk category that categorically doesn't apply to a card whose
+// `definition.ts` was produced wholesale by `forge-json-compiler`
+// (`functional-model/scripts/forge-json-compiler/compile-forge-card.ts`'s
+// `compileForgeCard`): that's a deterministic STRUCTURAL parse of Forge's
+// own already-tested real implementation, not a free-text reading of
+// oracle text at all. `CardDefinition.provenance === 'forge-json-compiler'`
+// (`card.ts`'s own doc comment on that field has the full writeup) is the
+// real, checkable signal — set ONLY by `compileForgeCard` itself, never
+// hand-authored — this gate reads directly off the already-resolved
+// `definition` object below to skip the `verifyCoverageJustificationForPath`
+// call entirely for such a card. Every OTHER part of this gate (the
+// vocabulary walk, the name-only-trigger/`missingSchemaFunctionality`
+// capacity-gap checks, the scoped `tsc` type-check) still runs unchanged —
+// this exemption narrows only the manifest requirement, nothing else. The
+// known residual risk (a recognized-but-subtly-mistranslated Forge param)
+// is accepted as low and expected to be caught by ordinary test coverage as
+// the compiler's own corpus expands, not by a per-card manifest.
+//
 // ## Original `staticAbilities`-presence rule (RETIRED for FDN, kept here
 // as the historical record of the reasoning this redesign supersedes)
 //
@@ -617,9 +640,18 @@ export async function validateCardDefinition(definitionPath, root = process.cwd(
   // `verify-coverage-justification.mjs`'s own header for where the real
   // ground-truth oracle text this now verifies against actually comes
   // from), regardless of whether it also has declared capacity gaps.
-  const manifestResult = await verifyCoverageJustificationForPath(definition, absPath, root);
-  if (!manifestResult.ok) {
-    return { ok: false, failureKind: 'incomplete-authoring', reasons: manifestResult.reasons };
+  //
+  // EXEMPTION (2026-09-19, see this file's own header, "Exemption: a
+  // compiler-sourced definition.ts needs no manifest at all") — a
+  // `forge-json-compiler`-produced `CardDefinition` skips this requirement
+  // entirely, gating purely on the vocabulary walk + scoped type-check
+  // below instead.
+  const isCompilerSourced = definition.provenance === 'forge-json-compiler';
+  if (!isCompilerSourced) {
+    const manifestResult = await verifyCoverageJustificationForPath(definition, absPath, root);
+    if (!manifestResult.ok) {
+      return { ok: false, failureKind: 'incomplete-authoring', reasons: manifestResult.reasons };
+    }
   }
 
   if (combinedGapReasons.length > 0) {

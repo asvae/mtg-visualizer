@@ -12,9 +12,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onAttack"
+        "name": "onAttacks"
       }
     ],
-    "reasoning": "This card's own onAttack trigger (on:'attacks', real auto-fire) with a real pumpAll effect (predicate:'creatures-you-control', +1/+1, untilEndOfTurn) is the exact real structure this sentence describes."
+    "reasoning": "This card's own onAttacks trigger (on:'attacks', real auto-fire) with a real pumpAll effect (predicate:'creatures-you-control', +1/+1, untilEndOfTurn) is the exact real structure this sentence describes."
   }
 ]

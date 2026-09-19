@@ -42,7 +42,17 @@ describe('computeEngineSupport', () => {
     expect(computeEngineSupport(definition)).toBe('on');
   });
 
-  it('the registry is seeded with exactly the real, confirmed entries (Ward + the 2026-09-18 schema-completeness cluster + the same-day trigger-dispatch-cluster pass + the 2026-09-19 counter-added-trigger entry)', () => {
+  it("returns 'off' for a card with a `dig` effect declaring `powerLE` (Squad Rallier's own real shape)", () => {
+    const definition = mockDefinition({ effects: [{ kind: 'dig', qty: 4, take: 1, validType: 'creature', powerLE: 2, optional: true }] });
+    expect(computeEngineSupport(definition)).toBe('off');
+  });
+
+  it("returns 'on' for a card with a `dig` effect that does NOT declare `powerLE`", () => {
+    const definition = mockDefinition({ effects: [{ kind: 'dig', qty: 4, take: 1, validType: 'creature-or-artifact', optional: true }] });
+    expect(computeEngineSupport(definition)).toBe('on');
+  });
+
+  it('the registry is seeded with exactly the real, confirmed entries (Ward + the 2026-09-18 schema-completeness cluster + the same-day trigger-dispatch-cluster pass + the 2026-09-19 counter-added-trigger + dig-power-filter entries)', () => {
     expect(ENGINE_SUPPORT_REGISTRY.map((e) => e.id)).toEqual([
       'ward-not-enforced',
       'kicker-not-enforced',
@@ -53,6 +63,7 @@ describe('computeEngineSupport', () => {
       'fdn-trigger-cluster-not-enforced',
       'spell-cost-reduction-card-type-gate-not-enforced',
       'counter-added-trigger-not-enforced',
+      'dig-power-filter-not-enforced',
     ]);
   });
 

@@ -2,16 +2,18 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const armasaurGuide: CardDefinition = {
   name: 'Armasaur Guide',
+  provenance: 'forge-json-compiler',
   manaCost: '{4}{W}',
   typeLine: 'Creature — Dinosaur',
   pt: [4, 4],
   keywords: ['Vigilance'],
-
   triggers: [
     {
-      name: 'onMassAttack',
-      on: 'attackersDeclared',
-      attackersDeclaredMinCount: 3,
+      name: 'onAttackersDeclared',
+      cause: {
+        on: 'attackersDeclared',
+        attackersDeclaredMinCount: 3,
+      },
       effects: [
         {
           kind: 'putCounterTarget',

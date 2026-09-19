@@ -2,12 +2,16 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const clawsOut: CardDefinition = {
   name: 'Claws Out',
+  provenance: 'forge-json-compiler',
   manaCost: '{3}{W}{W}',
   typeLine: 'Instant',
-
-  costReduction: { perControlled: { amountPerMatch: 1, subtype: 'Cat' } },
-
-  // "Creatures you control get +2/+2 until end of turn."
+  abilityType: 'spell',
+  costReduction: {
+    perControlled: {
+      amountPerMatch: 1,
+      subtype: 'Cat',
+    },
+  },
   effects: [
     {
       kind: 'pumpAll',

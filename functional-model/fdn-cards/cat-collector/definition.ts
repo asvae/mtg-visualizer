@@ -1,33 +1,37 @@
 import type { CardDefinition, Effect } from '../../card';
-import { TOKENS } from '../../tokens';
 
 export const catCollector: CardDefinition = {
   name: 'Cat Collector',
+  provenance: 'forge-json-compiler',
   manaCost: '{2}{W}',
   typeLine: 'Creature — Human Citizen',
   pt: [3, 2],
-
   triggers: [
     {
-      name: 'onEnter',
-      on: 'enter',
+      name: 'onChangesZone',
+      cause: {
+        on: 'enter',
+      },
       effects: [
         {
           kind: 'createToken',
-          token: TOKENS.c_a_food_sac,
+          token: {
+            name: 'Food',
+            manaCost: '0',
+            types: ['Artifact', 'Food'],
+            basePower: 0,
+            baseToughness: 0,
+          },
           amount: 1,
         } satisfies Effect,
       ],
     },
     {
-      name: 'onGainLifeFirst',
-      on: 'lifeGained',
-      // Real Forge FirstTime$ True | PlayerTurn$ True ("...for the first time
-      // during each of your turns") — same per-turn-reset outcome as the
-      // pre-existing activationLimit field's own ActivationLimit$ 1 (see
-      // Trigger.activationLimit's own doc comment), reused here rather than
-      // adding a second, narrower "first time" field for the same effect.
-      activationLimit: 1,
+      name: 'onLifeGained',
+      cause: {
+        on: 'lifeGained',
+        activationLimit: 1,
+      },
       effects: [
         {
           kind: 'createToken',

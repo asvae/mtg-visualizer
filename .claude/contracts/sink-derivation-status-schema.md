@@ -16,7 +16,7 @@ predicates** — a different axis from both `functional-model/engine-status.ts`
 `functional-model/synergy.ts`'s per-card `Fact` model.
 
 Background: the sink-only-synergy matcher
-(`functional-model/sink-model/match-sink.ts`) derives what a card produces
+(`functional-model/matcher-model/match-query.ts`) derives what a card produces
 by walking its `CardDefinition` (effects/triggers/program nodes). A sanity
 check against real FIN cards found a real, named gap: some mechanics
 produce real gameplay consequences that are **not visible via
@@ -151,9 +151,9 @@ interface SinkDerivationExpectedShape {
 }
 
 interface SinkDerivationEvidence {
-  predicateModulePath: string;    // repo-root-relative path checked, e.g. "functional-model/sink-model/predicates/saga.ts"
+  predicateModulePath: string;    // repo-root-relative path checked, e.g. "functional-model/sink-derivation-predicates/saga.ts"
   predicateModuleExists: boolean;
-  corpusManifestPath: string;     // e.g. "functional-model/sink-model/predicates/saga.corpus.json"
+  corpusManifestPath: string;     // e.g. "functional-model/sink-derivation-predicates/saga.corpus.json"
   corpusManifestExists: boolean;
   corpusTotal: number;            // from the manifest, if present/parseable; 0 otherwise
   corpusPassing: number;
@@ -190,9 +190,9 @@ interface SinkDerivationEntry {
 
 ```ts
 interface SinkDerivationSourceFiles {
-  predicate: SourceFileResult;       // functional-model/sink-model/predicates/<slug>.ts
-  corpusManifest: SourceFileResult;  // functional-model/sink-model/predicates/<slug>.corpus.json — RAW file content, including the real per-case `cases` array, not just the {total,passing} summary evidence already carries
-  corpusTest: SourceFileResult;      // functional-model/sink-model/predicates/<slug>.test.ts
+  predicate: SourceFileResult;       // functional-model/sink-derivation-predicates/<slug>.ts
+  corpusManifest: SourceFileResult;  // functional-model/sink-derivation-predicates/<slug>.corpus.json — RAW file content, including the real per-case `cases` array, not just the {total,passing} summary evidence already carries
+  corpusTest: SourceFileResult;      // functional-model/sink-derivation-predicates/<slug>.test.ts
 }
 
 interface SourceFileResult {
@@ -299,7 +299,7 @@ append one object to the `SINK_DERIVATION_MECHANISMS` array (the file's own
 top-level exported const) with `slug`, `label`, `motivation`, and
 `expectedSinkShapes`. Nothing else needs to change — `computeSinkDerivationStatus()`
 derives that mechanism's `predicateModulePath`/`corpusManifestPath` from its
-`slug` automatically (the `functional-model/sink-model/predicates/<slug>.ts`
+`slug` automatically (the `functional-model/sink-derivation-predicates/<slug>.ts`
 / `<slug>.corpus.json` convention), and both API routes and this contract's
 served shape stay the same. The new entry starts `gray` automatically (no
 predicate module will exist for it yet) — no baseline needs to be set by
@@ -337,7 +337,7 @@ real, already-identified work items, not a wishlist.
 - `SinkDerivationEntry.key`'s value (`slug`) must stay stable once a
   mechanism is seeded — a review overlay is keyed on it; renaming a slug
   silently orphans any existing review for that mechanism.
-- The `functional-model/sink-model/predicates/<slug>.ts` /
+- The `functional-model/sink-derivation-predicates/<slug>.ts` /
   `<slug>.corpus.json` path convention `computeSinkDerivationStatus()`
   derives from each mechanism's `slug` is load-bearing for
   `functional-model/sink-derivation-status.test.ts` — changing it without

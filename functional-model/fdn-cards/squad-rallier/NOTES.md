@@ -7,11 +7,16 @@ You may reveal a creature card with power 2 or less from among them and
 put it into your hand. Put the rest on the bottom of your library in a
 random order."
 
-GAP: The `dig` effect does not support power-based filtering (power <=
-2). Current vocabulary: `validType` can be
-'artifact'/'any'/'creature-or-artifact' but no numeric power constraint.
+This card's `definition.ts` is now `forge-json-compiler`-sourced
+(2026-09-19, later still — the compiler's FDN 1-50 coverage push closed
+its own real `AB$`/`Cost$` and `Dig` gaps). The power-based filter gap
+this file used to document is CLOSED: `Effect.kind:'dig'` gained a real
+`validType: 'creature'` option and a `powerLE` field (`card.ts`, real
+Forge `ChangeValid$ Creature.powerLE2` / `CardProperty.java`'s own generic
+`power<comparator><N>` shape) instead of the old `'creature-or-artifact'`
+approximation this file used to flag as undeclared.
 
-(Flagged during the 2026-09-18 comment-cleanup sweep: this power-filter
-gap is only documented as prose, with no `missingSchemaFunctionality`
-entry declaring it; worth a follow-up authoring pass, out of scope for a
-comment-relocation-only sweep.)
+`powerLE` is declaratively real but NOT YET engine-enforced — see
+`engine-support-registry.ts`'s own `dig-power-filter-not-enforced` entry
+(this card is the one that seeded it; its `pipeline-status.json` carries
+`engineSupport: 'off'` for exactly this reason).

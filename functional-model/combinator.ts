@@ -255,10 +255,10 @@ export type CardTypeWord = 'creature' | 'artifact' | 'land' | 'enchantment';
  * requiring a separately-composed `'excludeSelf'` filter: counting "other
  * copies of this same card" is one single real concept ("this card cares
  * about the board-state COUNT of a filtered set of permanents you
- * control," the same family `sink-model/catalog/battlefield-presence-cats
+ * control," the same family `matcher-model/catalog/battlefield-presence-cats
  * .ts`/`-creatures.ts` already name, just filtered on same-NAME instead of
  * same-SUBTYPE/-type — see that pair's own header and
- * `sink-model/catalog/battlefield-presence-hare-apparent.ts`'s own header
+ * `matcher-model/catalog/battlefield-presence-hare-apparent.ts`'s own header
  * for the full "third filter variant" writeup), not two independently
  * composable predicates that happen to always appear together for this
  * shape. This was the SPECIFIC gap that used to force Hare Apparent's own

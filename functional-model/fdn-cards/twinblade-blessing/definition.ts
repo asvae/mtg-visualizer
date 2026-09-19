@@ -2,24 +2,16 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const twinbladeBlessing: CardDefinition = {
   name: 'Twinblade Blessing',
+  provenance: 'forge-json-compiler',
   manaCost: '{1}{W}{W}',
   typeLine: 'Enchantment — Aura',
   keywords: ['Flash'],
-
-  // "Enchant creature. Enchanted creature has double strike."
-  continuousKeywordGrants: [
-    {
-      keywords: ['DoubleStrike'],
-      includeSelf: false,
-      equippedBySelf: true,
-    },
-  ],
-
-  // "Enchant creature" — the ETB attach.
   triggers: [
     {
       name: 'onEnter',
-      on: 'enter',
+      cause: {
+        on: 'enter',
+      },
       effects: [
         {
           kind: 'custom',
@@ -37,6 +29,13 @@ export const twinbladeBlessing: CardDefinition = {
           },
         } satisfies Effect,
       ],
+    },
+  ],
+  continuousKeywordGrants: [
+    {
+      keywords: ['DoubleStrike'],
+      includeSelf: false,
+      equippedBySelf: true,
     },
   ],
 };

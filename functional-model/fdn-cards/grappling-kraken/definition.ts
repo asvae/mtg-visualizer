@@ -2,15 +2,20 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const grapplingKraken: CardDefinition = {
   name: 'Grappling Kraken',
+  provenance: 'forge-json-compiler',
   manaCost: '{4}{U}{U}',
   typeLine: 'Creature — Kraken',
   pt: [5, 6],
-
   triggers: [
     {
-      name: 'onLandfall',
-      on: 'otherPermanentEnters',
-      otherPermanentEntersMatch: { isLand: true, sameController: true },
+      name: 'onChangesZone',
+      cause: {
+        on: 'otherPermanentEnters',
+        otherPermanentEntersMatch: {
+          isLand: true,
+          sameController: true,
+        },
+      },
       effects: [
         {
           kind: 'tapTarget',

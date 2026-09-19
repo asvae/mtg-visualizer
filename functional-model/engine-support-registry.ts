@@ -27,7 +27,7 @@
 // `engineSupport` is a wholly separate, additive field wired into
 // `PipelineStatusFile` by `pipeline-status.ts` itself (see that file for
 // the wiring — this module only owns the registry + the pure classifier).
-import type { CardDefinition } from './card';
+import type { CardDefinition, Effect } from './card';
 import { triggerCondition, triggerOn } from './card';
 
 export interface EngineSupportGapEntry {
@@ -54,7 +54,7 @@ export interface EngineSupportGapEntry {
 
 /**
  * Real, current catalog — grows on demand as more real per-card engine-
- * support gaps are found, same discipline `sink-model`'s own catalog and
+ * support gaps are found, same discipline `matcher-model`'s own catalog and
  * `engine-status.ts`'s own gap list already follow. Never a hypothetical/
  * speculative entry — each one must cite a real, checked source (a code
  * comment, `ENGINE_GAPS.md`, or `keywords/registry.ts`'s own `gapNote`).
@@ -120,8 +120,8 @@ export const ENGINE_SUPPORT_REGISTRY: EngineSupportGapEntry[] = [
     matches: (def) => hasSpellCostReductionCardTypeGate(def) || (def.backFace ? hasSpellCostReductionCardTypeGate(def.backFace) : false),
   },
   {
-    // 2026-09-19, sink-model pass (schema agent) — closes the real gap
-    // sink-model/catalog/families/counters.ts's own header comment flagged
+    // 2026-09-19, matcher-model pass (schema agent) — closes the real gap
+    // matcher-model/catalog/families/counters.ts's own header comment flagged
     // (its prior citation of this as an ENGINE_GAPS.md entry was checked and
     // found wrong — no such entry ever existed there; corrected in that
     // file's own comment alongside this registry entry, not tracked as a
@@ -132,6 +132,15 @@ export const ENGINE_SUPPORT_REGISTRY: EngineSupportGapEntry[] = [
     description:
       "Trigger.on:'counterAdded' + counterAddedMatch.counterType (added 2026-09-19 — Exemplar of Light's own real \"Whenever you put one or more +1/+1 counters on this creature, draw a card\" second ability, res/cardsfolder/e/exemplar_of_light.txt) is declaratively real but engine.ts dispatches no real Forge TriggerCounterAdded/TriggerCounterAddedOnce-equivalent sweep for it — same Ward pattern as every other Trigger.on value in this registry.",
     matches: (def) => hasCounterAddedTrigger(def) || (def.backFace ? hasCounterAddedTrigger(def.backFace) : false),
+  },
+  {
+    // 2026-09-19, later still — forge-json-compiler FDN 1-50 coverage push
+    // (schema agent). Squad Rallier's own real activated ability, `res/
+    // cardsfolder/s/squad_rallier.txt`'s own `ChangeValid$ Creature.powerLE2`.
+    id: 'dig-power-filter-not-enforced',
+    description:
+      "Effect.kind:'dig'.powerLE (added 2026-09-19, later still — Squad Rallier's own real \"reveal a creature card with power 2 or less\") is declaratively real but Actions.dig (interfaces.ts, engine-owned) has no power-ceiling parameter at all — state.ts's own dig implementation takes only a validType filter, so a real card using this field currently lets ANY matching card through regardless of power.",
+    matches: (def) => hasDigPowerFilter(def) || (def.backFace ? hasDigPowerFilter(def.backFace) : false),
   },
 ];
 
@@ -182,6 +191,14 @@ function hasSpellCostReductionCardTypeGate(def: CardDefinition): boolean {
  * this ONE face uses the new (2026-09-19) `on: 'counterAdded'` value. */
 function hasCounterAddedTrigger(def: CardDefinition): boolean {
   return (def.triggers ?? []).some((t) => triggerOn(t) === 'counterAdded');
+}
+
+/** Shared by `dig-power-filter-not-enforced` — true if any top-level
+ * `effects` entry (or `abilities[]` entry's own `effects`) on this ONE face
+ * is a `dig` with `powerLE` set. */
+function hasDigPowerFilter(def: CardDefinition): boolean {
+  const effectArrays: (Effect[] | undefined)[] = [def.effects, ...(def.abilities ?? []).map((a) => a.effects)];
+  return effectArrays.some((effects) => (effects ?? []).some((e) => e.kind === 'dig' && e.powerLE !== undefined));
 }
 
 /**

@@ -28,6 +28,15 @@ deno.lock
 # Scratch/regenerable downloads (e.g. Scryfall bulk-data dumps), not source.
 tmp/
 
+# forge-json-mapper (experiment) output, consumed by forge-json-compiler
+# (a real FDN authoring-pipeline tool as of 2026-09-19, promoted out of
+# scripts/experiments/): local-only per explicit user decision (2026-09-19)
+# — Forge-corpus JSON output stays off-repo for now. counters.test.ts/
+# fdn-1-50.test.ts's loadCompiled() reads these locally-generated files; a
+# fresh clone/CI run has none of them and those tests will ENOENT there
+# until this is revisited.
+functional-model/scripts/experiments/forge-json-mapper/output/
+
 # Local card database + its Scryfall bulk-data cache — regenerated via
 # scripts/sync-card-db.mjs, not meaningful project history (multi-hundred-MB).
 data/cards.db

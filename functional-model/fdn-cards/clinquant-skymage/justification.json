@@ -30,9 +30,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onDraw"
+        "name": "onDrawn"
       }
     ],
-    "reasoning": "This card's own onDraw trigger (real putCounter effect, target:'self', +1/+1 x1) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists for a card-draw event) — this FDN pool's own gate automatically classifies it as a capacity gap."
+    "reasoning": "This card's own onDrawn trigger (real putCounter effect, target:'self', +1/+1 x1) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists for a card-draw event) — this FDN pool's own gate automatically classifies it as a capacity gap."
   }
 ]

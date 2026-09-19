@@ -2,15 +2,17 @@ import type { CardDefinition, Effect } from '../../card';
 
 export const eruditeWizard: CardDefinition = {
   name: 'Erudite Wizard',
+  provenance: 'forge-json-compiler',
   manaCost: '{2}{U}',
   typeLine: 'Creature — Human Wizard',
   pt: [2, 3],
-
   triggers: [
     {
-      name: 'onSecondDraw',
-      on: 'drawNthCardThisTurn',
-      drawNthCardThisTurnNumber: 2,
+      name: 'onDrawn',
+      cause: {
+        on: 'drawNthCardThisTurn',
+        drawNthCardThisTurnNumber: 2,
+      },
       effects: [
         {
           kind: 'putCounter',

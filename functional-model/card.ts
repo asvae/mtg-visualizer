@@ -408,7 +408,7 @@ function resolve<T>(value: Computed<T>, ctx: EffectContext): T {
  * you control named Hare Apparent") can be real, walkable `combinator.ts`
  * data (a `QueryChain.count()` `Aggregate`) instead of an opaque raw `(ctx)
  * => ...` closure — see `combinator.ts`'s own `FilterPredicate`/
- * `'sameNameAsSelf'` doc comment and `sink-model/catalog/
+ * `'sameNameAsSelf'` doc comment and `matcher-model/catalog/
  * battlefield-presence-hare-apparent.ts`'s own header for the full "third
  * filter variant" writeup this unblocks. Deliberately scoped to this ONE
  * field, not a widening of the generic `resolve<T>`/`Computed<T>` above —
@@ -924,7 +924,35 @@ export type Effect =
       kind: 'dig';
       qty: Computed<number>;
       take: Computed<number>;
-      validType?: 'artifact' | 'any' | 'creature-or-artifact';
+      /**
+       * `'creature'` (2026-09-19, forge-json-compiler FDN 1-50 coverage
+       * push) — Squad Rallier's own real `ChangeValid$ Creature.powerLE2`
+       * ("reveal a creature card with power 2 or less"), a plain bare
+       * creature filter with no artifact union — added alongside
+       * `powerLE` below rather than reusing `'creature-or-artifact'` as a
+       * dishonest stand-in (that union member is a genuinely DIFFERENT,
+       * wider real disjunction — see its own doc comment above — and was
+       * flagged as exactly this kind of undeclared misuse on this same
+       * card's own prior hand-authored `fdn-cards/squad-rallier/NOTES.md`
+       * before this addition).
+       */
+      validType?: 'artifact' | 'any' | 'creature-or-artifact' | 'creature';
+      /**
+       * Real Forge `ChangeValid$ Creature.powerLE<N>` numeric ceiling
+       * (`CardProperty.java`'s own generic `property.startsWith("power")`
+       * branch, comparator suffix parsed off the tail of the property
+       * string — real source: `forge-game/src/main/java/forge/game/card/
+       * CardProperty.java` lines ~1425-1460) — Squad Rallier's own real
+       * "power 2 or less" clause. Declaratively real (an honest record of
+       * the real printed filter) but NOT YET engine-enforced: `Actions.dig`
+       * (interfaces.ts, engine-owned) has no such filter parameter yet —
+       * same "declared but not yet engine-enforced" posture
+       * `ContinuousGrantTargeting.condition`'s own doc comment already
+       * establishes for an identical kind of gap. Only `<=` (Forge's own
+       * `LE`) is modeled — no real FDN 1-50 card needs another comparator
+       * yet.
+       */
+      powerLE?: number;
       optional?: boolean;
     }
   | {
@@ -1963,8 +1991,8 @@ export interface TriggerOld {
    * pattern as `'otherPermanentEnters'`; see `engine-support-registry.ts`'s
    * own `fdn-trigger-cluster-not-enforced` entry.
    *
-   * 2026-09-19, later still (sink-model pass) — `'counterAdded'`. Closes the
-   * real gap `sink-model/catalog/families/counters.ts`'s own header comment
+   * 2026-09-19, later still (matcher-model pass) — `'counterAdded'`. Closes the
+   * real gap `matcher-model/catalog/families/counters.ts`'s own header comment
    * flagged: "no dedicated `on` value exists for 'a counter was put on this
    * creature' yet," which relied on a free-text `Trigger.name` allowlist
    * (`COUNTER_ADDED_TRIGGER_NAMES`) instead. Real Forge
@@ -2070,8 +2098,21 @@ export interface TriggerOld {
    * `{nonToken: true}` only — `sameController` genuinely omitted/false,
    * since ANY player's nontoken creature dying qualifies, not just the
    * controller's own.
+   *
+   * `excludeSubtype` (2026-09-19, forge-json-compiler FDN 1-50 coverage
+   * push) — Forge's own GENERIC `non<Type>` restriction word (real source:
+   * `CardStateProperty.java`'s own `property.startsWith("non")` branch,
+   * `return !type.hasStringType(property.substring(3))` — matches ANY real
+   * card/creature type or subtype appended after the literal `non` prefix,
+   * not a fixed enum of special-cased words), the EXCLUSION-flavored sibling
+   * of `otherPermanentEntersMatch.subtype`'s own inclusion filter. Valkyrie's
+   * Call's own real `ValidCard$ Creature.!token+nonAngel+YouCtrl` needs
+   * `{nonToken: true, excludeSubtype: 'Angel', sameController: true}` — the
+   * schema field takes the bare subtype word (`'Angel'`), matching
+   * `otherPermanentEntersMatch.subtype`'s own established spelling
+   * convention, not the raw `nonAngel` token.
    */
-  otherCreatureDiesMatch?: { nonToken?: boolean; sameController?: boolean };
+  otherCreatureDiesMatch?: { nonToken?: boolean; sameController?: boolean; excludeSubtype?: string };
   /**
    * Only consulted when `on === 'counterAdded'` — real Forge `CounterType$`
    * param (`TriggerCounterAdded.performTest`: absent means ANY counter type
@@ -2080,8 +2121,8 @@ export interface TriggerOld {
    * real `CounterType$ P1P1` needs `{ counterType: '+1/+1' }` — the schema's
    * own `'+1/+1'` spelling for this counter type (see `Effect.counterType`
    * on `putCounter`/`putCounterTarget`/`putCounterAll`, the SAME string
-   * `sink-model/catalog/families/counters.ts`'s own `CountersSink` factory
-   * already keys a whole sink instance's identity on). Omitted means "any
+   * `matcher-model/catalog/families/counters.ts`'s own `CountersMatcher` factory
+   * already keys a whole matcher's identity on). Omitted means "any
    * counter type" — same "omitted = any" posture `tapLandForManaColor` above
    * already takes for its own color gate, NOT a silent `'+1/+1'` default.
    *
@@ -2159,8 +2200,8 @@ export interface TriggerOld {
    * own posture above. Exemplar of Light's own real `ValidSource$ You`
    * needs `{ source: 'you' }`.
    *
-   * **Not yet consumed by `sink-model/catalog/families/counters.ts`'s own
-   * `CountersSink`** — that family's matching keys purely off `counterType`
+   * **Not yet consumed by `matcher-model/catalog/families/counters.ts`'s own
+   * `CountersMatcher`** — that family's matching keys purely off `counterType`
    * (producer effects + this same match's own `counterType`), and "who
    * caused it" has no bearing on that family's own instance identity; this
    * is a schema-completeness addition only, tracked here for the day some
@@ -2267,7 +2308,7 @@ export interface TriggerCause {
   /** See `TriggerOld.otherPermanentEntersMatch`'s own doc comment — identical field. */
   otherPermanentEntersMatch?: { subtype?: string; nonToken?: boolean; sameController?: boolean; isLand?: boolean };
   /** See `TriggerOld.otherCreatureDiesMatch`'s own doc comment — identical field. */
-  otherCreatureDiesMatch?: { nonToken?: boolean; sameController?: boolean };
+  otherCreatureDiesMatch?: { nonToken?: boolean; sameController?: boolean; excludeSubtype?: string };
   /** See `TriggerOld.counterAddedMatch`'s own doc comment — identical field. */
   counterAddedMatch?: { counterType?: string; source?: 'you' };
   /** See `TriggerOld.attackersDeclaredMinCount`'s own doc comment — identical field. */
@@ -3253,6 +3294,34 @@ export interface CardDefinition {
   // `coverageJustification` used to live here too — see this file's own
   // header note near `MissingSchemaFunctionality`'s doc comment ("RELOCATED,
   // 2026-09-18, later still") for where it moved and why.
+  /**
+   * FDN authoring-pipeline provenance marker (2026-09-19) — set ONLY on a
+   * `functional-model/fdn-cards/<slug>/definition.ts` the
+   * `forge-json-compiler` tool wrote wholesale (`compileForgeCard`'s own
+   * return, `functional-model/scripts/forge-json-compiler/
+   * compile-forge-card.ts`, serialized to disk verbatim by that same
+   * tool's `write-fdn-definition.ts`) — a deterministic STRUCTURAL parse of
+   * Forge's own already-tested implementation, never a hand/AI free-text
+   * reading of printed oracle text. Absence is the "authored by reading
+   * oracle text" signal, same "absence IS the signal" convention
+   * `Fact.provenance`'s own doc comment already establishes for a
+   * parser-derived Fact vs. an agent-authored one, applied here to a whole
+   * `CardDefinition` instead of one Fact.
+   *
+   * `validate-card-definition.mjs`'s gate (Part 1.5) reads this directly
+   * off the already-resolved `CardDefinition` to SKIP the
+   * `justification.json` coverage-manifest requirement for a
+   * compiler-sourced card — that manifest's whole purpose is catching an
+   * AI's own misreading of oracle text during hand/AI transcription, a
+   * risk category that doesn't apply to a deterministic structural parse
+   * of Forge's own real, tested source. The gate still requires the same
+   * vocabulary walk + scoped `tsc` type-check either way — this marker
+   * narrows only the manifest requirement, nothing else. Never itself
+   * hand-set on an authored file; `compileForgeCard` is the ONE real
+   * writer. FIN never populates this (mirrors `missingSchemaFunctionality`
+   * above).
+   */
+  readonly provenance?: 'forge-json-compiler';
 }
 
 /**

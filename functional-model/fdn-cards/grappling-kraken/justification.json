@@ -17,10 +17,10 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onLandfall"
+        "name": "onChangesZone"
       }
     ],
-    "reasoning": "\"Landfall —\" is this ability's own template label, fully expressed by this same trigger, not a separate clause of its own. This card's own `onLandfall` name-only trigger (no dedicated `on` value exists for \"a land you control enters\" yet) runs `tapTarget(validType:'creature', owner:'opponents')` — the exact real tap — then `putCounterTarget(validType:'creature', counterType:'stun', amount:1, owner:'opponents')` — the exact real stun counter."
+    "reasoning": "\"Landfall —\" is this ability's own template label, fully expressed by this same trigger, not a separate clause of its own. This card's own `onChangesZone` trigger (`cause.on:'otherPermanentEnters', otherPermanentEntersMatch:{isLand:true, sameController:true}` — a real, dedicated dispatch value for \"a land you control enters,\" not a name-only trigger) runs `tapTarget(validType:'creature', owner:'opponents')` — the exact real tap — then `putCounterTarget(validType:'creature', counterType:'stun', amount:1, owner:'opponents')` — the exact real stun counter."
   },
   {
     "type": "lore",

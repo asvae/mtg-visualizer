@@ -8,17 +8,36 @@ real route under `/app/engine/{keywords,predicates,features,sets,sinks}/
 `/app/recognizers/[[slug]].vue` stays a separate, unmerged page (considered
 and explicitly dropped from this consolidation).
 
-**Predicates vs. Sinks — easy to confuse, genuinely different axes.**
-Predicates (`functional-model/sink-derivation-status.ts`) tracks
+**Predicates vs. Sinks/Matchers — easy to confuse, genuinely different
+axes.** Predicates (`functional-model/sink-derivation-status.ts`) tracks
 *engine-automation mechanisms* for deriving sinks (e.g. "crew cost
-activation path"). Sinks (`functional-model/sink-catalog-status.ts`)
-tracks the shared, reviewed `SinkQuery` CATALOG entries themselves. The
-Sinks tab was built by mirroring Predicates byte-for-byte (same review
-flow, same 3-file source-evidence pattern) but has no `expectedSinkShapes`
-equivalent — it has a "Query" section showing the entry's live `SinkQuery`
-object as pretty-printed JSON instead. Sinks deliberately has no
-`hide-nav` (unlike Predicates' 4-entry list) since the catalog is expected
-to grow much faster/more organically.
+activation path"). The other tab (`functional-model/matcher-catalog-
+status.ts`, renamed from `sink-catalog-status.ts`) tracks the shared,
+reviewed `MatcherQuery` (renamed from `SinkQuery`) CATALOG entries
+themselves — it was built by mirroring Predicates byte-for-byte (same
+review flow, same 3-file source-evidence pattern) but has no
+`expectedSinkShapes` equivalent — it has a "Query" section showing the
+entry's live `MatcherQuery` object as pretty-printed JSON instead. It
+deliberately has no `hide-nav` (unlike Predicates' 4-entry list) since the
+catalog is expected to grow much faster/more organically.
+
+**2026-09-19 catalog-matcher rename, UI-visible piece only:** the
+underlying catalog-matcher layer (`SinkCatalogEntry`->
+`MatcherCatalogEntry`, `matchSink`->`matchQuery`, `functional-model/sink-
+model/`->`functional-model/matcher-model/`, full map in
+`.claude/contracts/card-schema.md` §14) got renamed Sink->Matcher
+throughout, but the served ROUTE PATH stayed `/app/engine/sinks`
+(`[[slug]].vue`'s filename/folder too) as a deliberate same-day scope
+decision — not revisited since. A same-day follow-up then updated the
+remaining user-VISIBLE label text to match (nav tab label, this page's
+`useHead` title, its "Sink source" code-section title/not-found-label,
+and `CardDetailTabs.vue`'s FDN "Sinks" section heading) all now read
+"Matcher(s)" while the route/filename/identifiers underneath are
+untouched by that pass. Distinct, deliberately-UNtouched "sink" meaning
+still in this same page: `Fact.role`/"Source Candidate"/"Sink Candidate"
+per-card wording (`sinkCandidateMatches` etc.) — that's the OTHER sink
+meaning (per-card role), not the catalog-matcher one, not part of any of
+this renaming.
 
 **Shared pieces** (reuse these for any new axis rather than re-deriving):
 `useStatusFilterList.ts` (composable: search + per-status filter-with-

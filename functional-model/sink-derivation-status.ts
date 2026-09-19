@@ -298,7 +298,7 @@ function loadCorpusManifest(path: string): SinkDerivationCorpusManifest {
  * have either.
  */
 export function computeSinkDerivationStatus(root: string = process.cwd()): SinkDerivationEntry[] {
-  const predicatesDir = join('functional-model', 'sink-model', 'predicates');
+  const predicatesDir = join('functional-model', 'sink-derivation-predicates');
 
   return SINK_DERIVATION_MECHANISMS.map((mechanism): SinkDerivationEntry => {
     const predicateModulePath = join(predicatesDir, `${mechanism.slug}.ts`);
@@ -409,7 +409,7 @@ export function computeSinkDerivationFingerprint(slug: string, root: string = pr
   const mechanism = SINK_DERIVATION_MECHANISMS.find((m) => m.slug === slug);
   if (!mechanism) return null;
 
-  const predicatesDir = join('functional-model', 'sink-model', 'predicates');
+  const predicatesDir = join('functional-model', 'sink-derivation-predicates');
   const predicateResult = readFunctionalModelFile(root, join(predicatesDir, `${slug}.ts`));
   const corpusResult = readFunctionalModelFile(root, join(predicatesDir, `${slug}.corpus.json`));
 

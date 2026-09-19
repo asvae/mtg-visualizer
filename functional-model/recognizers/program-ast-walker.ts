@@ -197,7 +197,7 @@ export function readPool(node: Query | Filter): PoolDescriptor | undefined {
       // variant, but ONLY ever authored today on a bare `createToken.amount`
       // `ValueRef` (`card.ts`'s own `resolveCreateTokenAmount`, resolved
       // directly, never through a `kind:'program'` Effect at all — see
-      // `sink-model/match-sink.ts`'s own `isSameNameCountValueRef`, a
+      // `matcher-model/match-query.ts`'s own `isSameNameCountValueRef`, a
       // dedicated, narrower walker for exactly that shape). No real
       // `kind:'program'` effect in this pool chains this predicate, so this
       // walker (built for `extractOccurrences`'s own program-AST-broadcast

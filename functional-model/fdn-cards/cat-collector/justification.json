@@ -12,10 +12,10 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onEnter"
+        "name": "onChangesZone"
       }
     ],
-    "reasoning": "This card's own onEnter trigger (on:'enter') with a real createToken effect (TOKENS.c_a_food_sac, amount:1) is the exact real structure this sentence describes."
+    "reasoning": "This card's own onChangesZone trigger (cause.on:'enter') with a real createToken effect (an inline Food TokenInfo, amount:1 — 2026-09-19, file replaced with the forge-json-compiler's own output, which emits an inline token literal rather than a `TOKENS.c_a_food_sac` registry reference) is the exact real structure this sentence describes."
   },
   {
     "type": "lore",
@@ -42,9 +42,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onGainLifeFirst"
+        "name": "onLifeGained"
       }
     ],
-    "reasoning": "This card's own onGainLifeFirst trigger (real createToken effect, a 1/1 Cat TokenInfo, amount:1) is the exact real token-creation outcome this sentence describes; the 'first time during each of your turns' gating is not itself separately enforced (no lifegain-event tracking or once-per-turn condition exists), same recognized-but-real-structure story as the trigger's own missing `on` dispatch value. It's a name-only trigger — this FDN pool's own gate automatically classifies it as a capacity gap."
+    "reasoning": "This card's own onLifeGained trigger (real createToken effect, a 1/1 Cat TokenInfo, amount:1) is the exact real token-creation outcome this sentence describes; the 'first time during each of your turns' gating is not itself separately enforced (no lifegain-event tracking or once-per-turn condition exists), same recognized-but-real-structure story as the trigger's own missing `on` dispatch value. It's a name-only trigger — this FDN pool's own gate automatically classifies it as a capacity gap."
   }
 ]

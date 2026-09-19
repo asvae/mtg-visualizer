@@ -42,9 +42,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onEnter"
+        "name": "onChangesZone"
       }
     ],
-    "reasoning": "This card's own `onEnter` trigger (`on:'enter'`) runs a `createToken` effect building a 3/3 'Knight' token, amount:2 — the exact real pair of tokens this sentence creates."
+    "reasoning": "This card's own `onChangesZone` trigger (`cause.on:'enter'`) runs a `createToken` effect building a 3/3 'Knight' token, amount:2 — the exact real pair of tokens this sentence creates."
   }
 ]

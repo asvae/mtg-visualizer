@@ -42,9 +42,9 @@
     "definitionKeys": [
       {
         "kind": "trigger",
-        "name": "onMassAttack"
+        "name": "onAttackersDeclared"
       }
     ],
-    "reasoning": "This card's own onMassAttack trigger (real putCounterTarget effect, validType:'creature', owner:'you', +1/+1 x1) is the exact real structure this sentence describes. It's a name-only trigger (no real `on` dispatch value exists yet for a per-combat attacker-count precondition) — this FDN pool's own gate automatically classifies any name-only trigger as a capacity gap, so this card is expected to land at purple even though the structure itself is real and complete."
+    "reasoning": "This card's own onAttackersDeclared trigger (`cause.on:'attackersDeclared', attackersDeclaredMinCount:3` — a real, dedicated dispatch value for a per-combat attacker-count precondition, not a name-only trigger; real putCounterTarget effect, validType:'creature', owner:'you', +1/+1 x1) is the exact real structure this sentence describes."
   }
 ]

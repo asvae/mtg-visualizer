@@ -220,10 +220,17 @@ def slugify(name: str) -> str:
     characters, underscore for spaces". Observed real filenames (e.g.
     sun_blessed_healer.txt for "Sun-Blessed Healer", high_society_hunter.txt
     for "High-Society Hunter") confirm hyphens are treated the same as
-    spaces, not stripped outright."""
+    spaces, not stripped outright. A literal "/" in a card's own name is
+    the same underscore-separator case, not a stripped special character —
+    verified against two real cardsfolder files whose names contain a
+    slash: "SP//dr, Piloted by Peni" -> sp_dr_piloted_by_peni.txt (a
+    doubled "//" still collapses to one underscore, same as any other
+    repeated separator run) and "Summon: Choco/Mog" -> summon_choco_mog.txt
+    (found while resolving FIN's own card pool, which the FDN-only 517-name
+    corpus this convention was first verified against never exercised)."""
     s = name.lower()
-    s = re.sub(r"[^a-z0-9 \-]", "", s)
-    s = re.sub(r"[ \-]+", "_", s)
+    s = re.sub(r"[^a-z0-9 \-/]", "", s)
+    s = re.sub(r"[ \-/]+", "_", s)
     return s.strip("_")
 
 
@@ -500,6 +507,21 @@ def slug_for(relative_path: str) -> str:
     return Path(relative_path).stem
 
 
+def run_single_card(name: str) -> int:
+    """`--card <name>` mode: resolve and parse exactly one card by name,
+    anywhere in the Forge checkout (not limited to FDN), and print its JSON
+    to stdout. Reuses `resolve_card_file`/`parse_card_file` directly - both
+    were already fully general (a real card name -> a verified file -> a
+    parsed dict), only `resolve_fdn_cards`'s own `data/cards.db` query is
+    FDN-specific. Does NOT write into `OUTPUT_DIR` - that directory's own
+    real scope is exactly the 517 FDN cards `resolve_fdn_cards` resolves;
+    an arbitrary single card printed here has no business in it."""
+    path = resolve_card_file(name)
+    card = parse_card_file(path)
+    print(json.dumps(card, indent=2, ensure_ascii=False))
+    return 0
+
+
 def main() -> int:
     if not CARDSFOLDER.is_dir():
         print(f"ERROR: Forge cardsfolder not found at {CARDSFOLDER}", file=sys.stderr)
@@ -509,6 +531,12 @@ def main() -> int:
             file=sys.stderr,
         )
         return 1
+
+    if len(sys.argv) > 1 and sys.argv[1] == "--card":
+        if len(sys.argv) < 3:
+            print("ERROR: --card requires a card name argument", file=sys.stderr)
+            return 1
+        return run_single_card(sys.argv[2])
 
     cards = resolve_fdn_cards()
     print(f"Resolved {len(cards)} distinct FDN card name(s) from {CARDS_DB.name}.\n")
