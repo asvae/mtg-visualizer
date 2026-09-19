@@ -573,7 +573,7 @@ function hasAnyConstraint(c: Constraints): boolean {
   return !!(c.types || c.cmc || c.power || c.toughness || c.name);
 }
 
-function satisfiesType(types: string[], c: TypeConstraint | undefined): boolean {
+export function satisfiesType(types: string[], c: TypeConstraint | undefined): boolean {
   if (!c) return true;
   if (c.has && !c.has.every((t) => types.includes(t))) return false;
   if (c.hasAny && !c.hasAny.some((t) => types.includes(t))) return false;

@@ -1,175 +1,39 @@
-// Sink catalog FAMILY: Counters — a genuine, reusable `CountersSink` factory
-// (2026-09-18 refactor), parametrized per real `Effect.counterType` string
-// (`card.ts`'s `putCounter`/`putCounterTarget`/`putCounterAll` all carry
-// this SAME `counterType: string` field) rather than a bare, type-blind
-// "counters" bucket the way `synergy.ts`'s own legacy `describeFact`
-// vocabulary collapses every counter type into. Today only `+1/+1` is a
-// real, currently-existing configuration — see `../counters-plus1plus1.ts`
-// (2026-09-18, split out of this file so the reusable factory and the
-// curated per-instance configuration don't share a module — same
-// family-vs-instance separation `battlefield-presence.ts`'s own split
-// establishes) for the real motivating card, Exemplar of Light (FDN #11): a
-// genuine self-referential producer/consumer LOOP —
+// Sink catalog FAMILY: Counters — a `CountersSink` factory parametrized per
+// real `Effect.counterType` string (`card.ts`'s `putCounter`/
+// `putCounterTarget`/`putCounterAll` all carry this SAME `counterType:
+// string` field), rather than a bare, type-blind "counters" bucket the way
+// `synergy.ts`'s own legacy `describeFact` vocabulary collapses every
+// counter type into. Today only `+1/+1` is a real, currently-existing
+// configuration — see `../counters-plus1plus1.ts` (the reusable factory and
+// the curated per-instance configuration deliberately don't share a module,
+// same family-vs-instance split `battlefield-presence.ts` establishes) for
+// the real motivating card, Exemplar of Light (FDN #11): a genuine
+// self-referential producer/consumer LOOP —
 //   - "Whenever you gain life, put a +1/+1 counter on this creature" —
 //     Lifegain CONSUMER (`lifegain.ts`'s own `consumerTriggerNames`) +
 //     Counters PRODUCER (a real `kind:'putCounter', counterType:'+1/+1'`
-//     effect — it genuinely puts the counter).
+//     effect).
 //   - "Whenever one or more counters are put on this creature, draw a
 //     card" — Counters CONSUMER (this configuration's own
-//     `consumerTriggerNames`).
+//     `consumerTriggerNames`/`consumerTriggerOn`).
 //
-// **Producer** — reuses the EXISTING generic `putCounter` `ProducerOccurrence`
-// `match-sink.ts`'s `walkEffects` already derives for EVERY `putCounter`/
-// `putCounterTarget`/`putCounterAll` effect (each already carries its own
-// real `counterType` on the occurrence) — no new occurrence-DERIVATION code
-// needed at all, ever, for a new counter type; a future `+1/+1`-sibling real
-// card driving a `'-1/-1'`/`'loyalty'` configuration is the exact same
-// shape, zero new code in `match-sink.ts` — this factory is exactly the
-// generalization this family's own original header comment already
-// anticipated.
+// `CountersSink(definition: CardDefinition): SinkInstance[]` derives every
+// field (`counterType`(s)/`slug`/`consumerTriggerNames`/`consumerTriggerOn`)
+// from `definition`'s own real structural fields — no hand-authored config
+// object exists, since every fact this factory needs already lives on the
+// card's own `CardDefinition` and a parallel config would just be a second,
+// driftable copy of the same data.
 //
-// **2026-09-18, later still — producer MATCHING no longer goes through a
-// `SinkQuery`/`matchSink` at all.** Per the user's own explicit correction
-// — "Sink family should produce sink out of card definition. Not out of
-// magical query... each sink family's matcher function should directly
-// inspect the candidate... written as real code in the function body, not
-// built as a standalone object handed to a generic comparator" — this
-// factory no longer builds a `SinkQuery` object at all. Instead it calls
-// `deriveOccurrences(candidate, root)` (the same real, structural,
-// `CardDefinition`-derived occurrence walk `matchSink` itself was always
-// built on top of — genuinely reused, not reimplemented) and inspects the
-// result directly, inline, in its own function body: does ANY derived
-// occurrence have `event === 'putCounter'` and `counterType === counterType`,
-// with a controller compatible with `'you'` (the one real constraint the old
-// `SinkQuery{controller:'you'}` field contributed — replicated here as a
-// direct inline check on `occ.controller`/`occ.target`, mirroring
-// `match-sink.ts`'s own private `effectiveController`/`sidesCompatible`
-// helpers byte-for-byte in logic, not imported, since this file must not
-// modify `match-sink.ts`'s own exports for this narrowly-scoped change).
-// Confirmed, by direct derivation against every real `walkEffects` putCounter
-// case (`putCounter`/`putCounterTarget`/`putCounterAll`/the AST-derived
-// `program:putCounter` case), that this inline check accepts and rejects the
-// exact same occurrences `occurrenceSatisfiesSink` used to for this specific
-// query shape — see this task's own final report for the full case-by-case
-// derivation. The entry built by this factory therefore has NO `query`
-// field at all anymore (`SinkCatalogEntry.query` is now optional — see that
-// field's own doc comment, `entry.ts`) — `category` (below) is set as its
-// own top-level field instead, since there's no `query.category` left to
-// carry it. `BattlefieldPresenceSink` (`families/battlefield-presence.ts`)
-// has NOT migrated to this shape yet — still builds and matches via a real
-// `SinkQuery`/`matchSink` call, deliberately out of scope for this pass (see
-// `SINK_MODEL_DESIGN.md`'s own updated section for the "Counters migrated,
-// Battlefield-presence hasn't yet" status).
-//
-// **2026-09-19 — `CountersSink` now takes a real `CardDefinition` directly,
-// not a hand-authored config object.** Per the user's own explicit
-// instruction — "I don't care about magical configuration file.
-// Sink(definition). Got it?" — this factory's public signature is now
-// `CountersSink(definition: CardDefinition): SinkInstance`. Every field the
-// old `CountersSinkConfig` required (`slug`/`counterType`/
-// `consumerTriggerNames`) is now DERIVED from `definition`'s own real
-// structural fields at construction time, by a few small, private, pure
-// helper functions below (`deriveCounterType`/`deriveConsumerTriggerNames`/
-// `slugForCounterType`) — no config object survives as a public or private
-// intermediate type; every real fact this factory needs already lives on
-// the card's own `CardDefinition`, so authoring it a second time as a
-// parallel config was the exact duplication risk the user was rejecting.
-// `../counters-plus1plus1.ts` now calls `CountersSink(exemplarOfLight)`
-// (the real FDN #11 `CardDefinition`, `../../fdn-cards/exemplar-of-light/
-// definition.ts`) instead of a literal `{slug, counterType,
-// consumerTriggerNames}` object.
-//
-// Derivation rules, one per field (each also documented at its own helper
-// function below):
-//  - `counterType` — this card's own `putCounter`/`putCounterTarget`/
-//    `putCounterAll` effect(s), walked across `definition.effects` AND
-//    `definition.triggers[].effects` (the same two real places
-//    `deriveOccurrences`'s own `walkEffects` looks, scoped down here to just
-//    the ONE driving definition being configured, not an arbitrary runtime
-//    candidate) — the first real counter-granting effect found names this
-//    configuration's own counter type. Exemplar of Light's own `onLifeGain`
-//    trigger (`{kind:'putCounter', counterType:'+1/+1', ...}`) is the one
-//    real hit, so `counterType` resolves to `'+1/+1'`. Throws (loudly, not
-//    silently) if the definition has no real counter-granting effect at
-//    all — `CountersSink` is only ever meant to be called with a card that
-//    IS this family's own real driving producer, so a definition with no
-//    such effect is a genuine authoring mistake, not a legitimate empty
-//    result to paper over.
-//  - `slug` — deterministically derived from `counterType` itself
-//    (`slugForCounterType`), NOT authored separately: sanitizes the counter-
-//    type string into a stable identity key (`'+1/+1'` -> lowercase, `+` ->
-//    `'plus'`, non-alphanumerics stripped -> `'plus1plus1'`, prefixed
-//    `'counters-'`) — reproduces the exact pre-existing real slug
-//    (`'counters-plus1plus1'`) byte-for-byte, so every existing filesystem/
-//    review-status convention keyed off this slug (`sink-catalog-status.ts`'s
-//    `sourceFileFor`/`computeSinkCatalogFingerprint`/`memberEvidenceFor`, all
-//    of which resolve `catalog/${slug}.ts`/`catalog/${slug}.corpus.json`
-//    directly off `entry.slug`) keeps resolving to the real, unrenamed
-//    `catalog/counters-plus1plus1.ts`/`.corpus.json` files on disk with zero
-//    changes needed there. A hypothetical future `-1/-1` sibling would
-//    derive `'counters-minus1minus1'` the same deterministic way.
-//  - `consumerTriggerNames` — see `deriveConsumerTriggerNames`'s own doc
-//    comment below for the full "no `on` field is NOT itself a reserved
-//    convention" investigation and the real discriminator chosen instead.
-//
-// **Consumer** (`consumerTriggerNames`, derived — see
-// `deriveConsumerTriggerNames` below) — same gap as `etb.ts`'s own Dazzling
-// Angel fix: "whenever one or more counters are put on this creature" has
-// no real `Trigger.on` value today (`card.ts`'s closed enum has no
-// counter-added member — `ENGINE_GAPS.md`), so this is checked via the
-// free-text `Trigger.name` convention instead, same mechanism
-// `lifegain.ts`/`etb.ts` already establish. `'onCounterAdded'` is the one
-// real, checked-in convention name for this shape as of this writing
-// (grepped every real FDN `definition.ts` — Exemplar of Light is the only
-// card using it). **Deliberately NOT counter-type-aware** — a trigger name
-// alone carries no counter-type information (unlike the producer side,
-// which reads the real `counterType` field directly off the effect), so a
-// future differently-typed counter-added trigger sharing this exact name
-// would ambiguously satisfy every counter-type configuration that declares
-// it; no such collision exists in the pool today (checked), flagged rather
-// than guessed at for whenever one does.
-//
-// **Self-ownership: no `requireConsumerForSelfOwnership` escape hatch**
-// (unlike the Battlefield-presence family) — putting a counter via a real
-// `putCounter`-family effect is a genuine, deliberate AUTHORED effect (the
-// same class as Bigfin Bouncer's real bounce effect or Day of Judgment's
-// real destroy-all program), not bare type/subtype MEMBERSHIP the way
-// merely "being a Cat" is — there's no over-match risk from every creature
-// vacuously satisfying this query. The default `selfDirectProducerMatch ||
-// selfConsumerMatch` rule (`card-interactions.ts`) is correct here
-// unmodified.
-//
-// **2026-09-19, later still — two more real corrections, same day, on top
-// of the "takes a `CardDefinition` directly" rewrite above:**
-// 1. **Boolean-return callable contract.** `CountersSink(definition)`'s own
-//    returned instances now answer `instance(candidate)` with a plain
-//    `boolean` (the PRODUCER question only), not the old combined
-//    `SinkMatchDetail | null`. `isPredicateDerived` is a new, separate
-//    accessor carrying the one real piece of nuance a bare boolean can't
-//    (see `entry.ts`'s own `SinkInstance` doc comment for the full "3rd
-//    real design iteration" writeup, and `buildCounterInstance`/
-//    `producerPredicate` below for the real implementation. The old
-//    `deriveCounterType` (singular, first-match-wins) is now
-//    `deriveCounterTypes` (plural — see next point); `withPredicates` (the
-//    old `{producer, consumer}` pair) is now just `producerPredicate` (the
-//    consumer half moved out of this file entirely — callers check
-//    `instance.consumerTriggerNames` directly via
-//    `matchesConsumerTriggerNames`, imported by THEM, not by this file
-//    anymore).
-// 2. **`CountersSink` returns `SinkInstance[]`, not one `SinkInstance`** —
-//    live user correction: "we need array handling here obviously." A
-//    driving `definition` derives one `SinkInstance` PER DISTINCT
-//    `counterType` found on it, not just the first — see
-//    `deriveCounterTypes`'s own doc comment for the full dedup-rule
-//    writeup (exact-duplicate occurrences of the SAME `counterType`
-//    collapse to one instance; a genuinely different `counterType` value
-//    gets its own). Exemplar of Light (the only real driving definition in
-//    the pool today) has exactly one distinct `counterType`, so this is a
-//    single-element array in practice today — zero real behavior change,
-//    only a widened, honest contract.
+// **Producer matching** reuses `deriveOccurrences(candidate, root)`
+// (`match-sink.ts`) — the same real, structural, `CardDefinition`-derived
+// occurrence walk every other sink family builds on — and inspects the
+// result directly rather than going through a `SinkQuery`/`matchSink` call:
+// each sink family's matcher inspects the candidate as real code in its own
+// function body, not a query object handed to a generic comparator.
 import type { CardDefinition, Effect, TriggerOnValue } from '../../../card';
 import { triggerCounterAddedMatch, triggerOn } from '../../../card';
-import { deriveOccurrences } from '../../match-sink';
+import { staticAttrsFor } from '../../../synergy';
+import { deriveOccurrences, satisfiesType } from '../../match-sink';
 import type { SinkCatalogEntry, SinkFamily, SinkInstance } from '../entry';
 
 /** Stable SINK FAMILY key shared by every real configured instance — see
@@ -192,60 +56,30 @@ function counterTypeOfEffect(effect: Effect): string | undefined {
 }
 
 /**
- * `counterType`S derivation (2026-09-19, widened from a single-value
- * derivation to a real array — live correction: "we need array handling
- * here obviously" — see `entry.ts`'s own `SinkFamily` doc comment for the
- * full "`SinkFamily(definition)` returns `SinkInstance[]`, not one
- * `SinkInstance`" rewrite writeup). Walks `definition.effects` AND
- * `definition.triggers[].effects` (the same two real places
- * `deriveOccurrences`'s own `walkEffects` looks at runtime for an arbitrary
- * candidate, scoped down here to just the ONE driving definition this
- * factory is being configured from) for EVERY real
- * `putCounter`/`putCounterTarget`/`putCounterAll` effect, and returns every
- * DISTINCT `counterType` string found, in first-seen order — not just the
- * first one. Exemplar of Light's own `onLifeGain` trigger
- * (`{kind:'putCounter', counterType:'+1/+1', ...}`) is the one real hit in
- * the pool today, so this still resolves to the single-element `['+1/+1']`
- * for the one real card driving this family — zero behavior change for
- * today's real pool, only a widened contract for whenever a second,
- * differently-typed counter-granting effect lands on the same definition.
+ * Walks `definition.effects` AND `definition.triggers[].effects` (the same
+ * two real places `deriveOccurrences`'s own `walkEffects` looks at runtime
+ * for an arbitrary candidate, scoped down here to just the ONE driving
+ * definition this factory is being configured from) for every real
+ * `putCounter`/`putCounterTarget`/`putCounterAll` effect, UNIONED with
+ * `counterTypesFromConsumerTrigger` below (a card can name a real
+ * `counterType` via a consumer-only `on:'counterAdded'` trigger with no
+ * separate producer effect at all), and returns every DISTINCT `counterType`
+ * string found, in first-seen order.
  *
- * **Dedup rule (2026-09-19, live correction — user's own explicit
- * framing)**: "we should not have any absolutely identical sinks (i.e. when
- * card has 2 locations for exactly the same effect), but any difference
- * should create separate sink." For THIS family, `counterType` is the
- * complete identity key — every other derived field a `CountersSink`
- * instance carries (`slug`/`category`/`consumerTriggerNames`) is a pure
- * function of `counterType` plus the whole `definition` (never of WHICH
- * specific occurrence produced that `counterType`), so two occurrences
- * sharing the same `counterType` genuinely produce the exact same instance
- * and must collapse to one; only a genuinely different `counterType` value
- * is a real difference worth a second instance. Deduping on the raw string
- * itself (a `Set`) is therefore the correct and COMPLETE implementation of
- * that general rule for this family — not an approximation of it. A future
- * family whose own instance identity depends on more than one field would
- * need its own, wider dedup key (whatever fields actually determine ITS
- * instance identity), not this same single-string shortcut.
+ * **Dedup rule**: `counterType` is this family's complete instance identity
+ * key — every other derived field (`slug`/`category`/`consumerTriggerNames`)
+ * is a pure function of `counterType` plus the whole `definition`, never of
+ * WHICH specific occurrence produced that `counterType` — so two occurrences
+ * sharing the same `counterType` produce the exact same instance and must
+ * collapse to one; only a genuinely different `counterType` value is a real
+ * difference worth a second instance. A future family whose own instance
+ * identity depends on more than one field would need its own, wider dedup
+ * key.
  *
- * **2026-09-19, later still — ALSO derives from a real, structural
- * consumer-side signal, not just a producer effect.** `card.ts`'s own
- * `Trigger.on: 'counterAdded'` + `counterAddedMatch.counterType` (added the
- * same day — closes the exact wall this family's own header used to flag:
- * "no dedicated `on` value exists for 'a counter was put on this creature'
- * yet") now lets a definition that has ONLY a real consumer trigger for
- * this shape (Forge's own real `T:Mode$ CounterAddedOnce | CounterType$
- * P1P1 | ...` template — "whenever a counter is put on this creature, draw
- * a card," with no separate producer ability on the same card at all) still
- * resolve a real `counterType`, via `counterTypesFromConsumerTrigger` below,
- * UNIONED with the effect-derived set above (additive, not a replacement —
- * a definition with both a producer effect AND a consumer trigger, e.g.
- * Exemplar of Light itself, still resolves the identical single-element
- * `['+1/+1']` it always did, since both signals agree).
- *
- * Throws only when BOTH signals come up empty — `CountersSink` only makes
- * sense called with a card that genuinely IS this family's own driving
- * producer OR consumer; silently returning nothing would hide a real
- * authoring mistake instead of surfacing it.
+ * Throws when both signals (producer effects, consumer trigger) come up
+ * empty — `CountersSink` only makes sense called with a card that genuinely
+ * IS this family's own driving producer OR consumer; silently returning
+ * nothing would hide a real authoring mistake instead of surfacing it.
  */
 function deriveCounterTypes(definition: CardDefinition): string[] {
   const seen = new Set<string>();
@@ -274,17 +108,14 @@ function deriveCounterTypes(definition: CardDefinition): string[] {
 }
 
 /**
- * Real, structural CONSUMER-side `counterType` signal (2026-09-19) — every
- * distinct `counterType` named by a `definition.triggers[]` entry whose own
+ * Real, structural CONSUMER-side `counterType` signal — every distinct
+ * `counterType` named by a `definition.triggers[]` entry whose own
  * `on === 'counterAdded'` and `counterAddedMatch?.counterType` is set (front
- * face only — same scoping `deriveCounterTypes`'s own effect walk already
- * uses for a driving definition, not an arbitrary runtime candidate). A
- * trigger with `on === 'counterAdded'` but NO `counterAddedMatch.counterType`
- * (the real Forge "any counter type" case, `CounterType$` param absent) is
- * deliberately skipped here — it names no SPECIFIC counter type to derive a
- * `CountersSink` instance's own identity from; no real FDN card has this
- * shape yet (Exemplar of Light's own real trigger always sets
- * `counterType: '+1/+1'`).
+ * face only, same scoping `deriveCounterTypes`'s own effect walk uses). A
+ * trigger with `on === 'counterAdded'` but no `counterAddedMatch.counterType`
+ * (Forge's real "any counter type" case, `CounterType$` param absent) is
+ * deliberately skipped — it names no SPECIFIC counter type to derive a
+ * `CountersSink` instance's own identity from.
  */
 function counterTypesFromConsumerTrigger(definition: CardDefinition): string[] {
   const seen = new Set<string>();
@@ -298,20 +129,18 @@ function counterTypesFromConsumerTrigger(definition: CardDefinition): string[] {
 }
 
 /**
- * `slug` derivation (2026-09-19) — sanitizes `counterType` into a stable,
- * deterministic identity key rather than accepting one as separately
- * authored config (the exact duplication risk the user rejected: a slug
- * authored by hand can drift out of sync with the counter type it's
- * supposedly naming). `'+1/+1'` -> lowercase, `+` replaced with the word
- * `plus`, every remaining non-alphanumeric character (the `/`) stripped,
- * prefixed with `'counters-'` -> `'counters-plus1plus1'` — reproduces the
- * real, pre-existing slug byte-for-byte, so every filesystem/review-status
- * convention keyed off `entry.slug` (`sink-catalog-status.ts`'s
- * `sourceFileFor`/`computeSinkCatalogFingerprint`/`memberEvidenceFor`, all
- * of which resolve `catalog/${slug}.ts`/`catalog/${slug}.corpus.json`
- * directly) keeps resolving to the real, unrenamed
- * `catalog/counters-plus1plus1.ts`/`.corpus.json` files with zero changes
- * needed there. A hypothetical future `'-1/-1'` sibling derives
+ * Sanitizes `counterType` into a stable, deterministic identity key rather
+ * than accepting one as separately authored config (a hand-authored slug can
+ * drift out of sync with the counter type it's supposedly naming).
+ * `'+1/+1'` -> lowercase, `+`/`-` spelled out, remaining non-alphanumerics
+ * stripped, prefixed `'counters-'` -> `'counters-plus1plus1'` — reproduces
+ * the real, pre-existing slug byte-for-byte, so every filesystem/
+ * review-status convention keyed off `entry.slug`
+ * (`sink-catalog-status.ts`'s `sourceFileFor`/`computeSinkCatalogFingerprint`/
+ * `memberEvidenceFor`, all of which resolve
+ * `catalog/${slug}.ts`/`catalog/${slug}.corpus.json` directly) keeps
+ * resolving to the real `catalog/counters-plus1plus1.ts`/`.corpus.json`
+ * files on disk. A hypothetical future `'-1/-1'` sibling derives
  * `'counters-minus1minus1'` the same way.
  */
 function slugForCounterType(counterType: string): string {
@@ -325,63 +154,40 @@ function slugForCounterType(counterType: string): string {
 
 /**
  * Recognized `Trigger.name` spellings for "this card reacts to a counter
- * being added to it" (2026-09-19; SUPERSEDED-for-Exemplar-of-Light
- * 2026-09-19, later same day — see `deriveConsumerTriggerOn` below) — a
- * genuine, explicit, family-owned allowlist, NOT a computed value derived
- * from some other structural signal. This was written when `card.ts`'s
- * `Trigger.on` closed enum had no counter-added member yet; that gap is now
- * closed (`on: 'counterAdded'`, added 2026-09-19, later still — see that
- * field's own doc comment in `card.ts`). **Correction to this comment's own
- * original claim**: it cited this as "a real, tracked gap — `ENGINE_GAPS.md`"
- * — re-verified while closing it and that citation was never actually
- * correct (`ENGINE_GAPS.md` has no counter-added entry, checked directly;
- * this was an unverified assumption when first written, not a real
- * cross-reference). This allowlist is kept, unpruned, as the FALLBACK path
- * for a hypothetical differently-spelled name-only trigger with no real
- * `on` value at all — `deriveConsumerTriggerOn` below is now the PRIMARY,
- * structurally-safer signal for any trigger that DOES set the real
- * `on: 'counterAdded'` value (Exemplar of Light's own trigger now does, so
- * it resolves via that path instead of this one).
+ * being added to it" — a genuine, explicit, family-owned allowlist, NOT a
+ * computed value derived from some other structural signal. Kept as the
+ * FALLBACK path for a hypothetical differently-spelled name-only trigger
+ * with no real `on` value at all; `deriveConsumerTriggerOn` below is the
+ * PRIMARY, structurally-safer signal for any trigger that sets the real
+ * `on: 'counterAdded'` value (every real card in the pool today does, so
+ * this allowlist currently matches nothing live).
  *
- * Investigated (per the task that originally added this comment) whether
- * "this trigger has no `on` field at all" was ALREADY a meaningful, reserved
- * discriminator for this shape elsewhere in the codebase before assuming
- * it — it is NOT: `card.ts`'s own `Trigger.on` doc comment documents dozens
- * of real, currently-shipped FDN/FIN triggers that are name-only (no `on`
- * set) for reasons entirely unrelated to "reacts to a counter" — not yet
- * retrofitted onto a closed auto-fire occasion, fired only by a scenario's
- * own `Scenario.trigger` field, or simply a mechanic this schema has no
- * `on` vocabulary for at all yet (e.g. `'castNoncreatureSpell'`-family gaps
- * predating this pass). Using "no `on` field" alone as the discriminator
- * would over-match: ANY manually-named trigger a card happens to carry
- * would get swept into "reacts to counters," regardless of what it's
- * actually for.
+ * "No `on` field at all" is deliberately NOT itself treated as a signal for
+ * this shape — `card.ts`'s own `Trigger.on` doc comment documents dozens of
+ * real, currently-shipped FDN/FIN triggers that are name-only for reasons
+ * entirely unrelated to counters (not yet retrofitted onto a closed
+ * auto-fire occasion, fired only by a scenario's own `Scenario.trigger`
+ * field, or a mechanic this schema has no `on` vocabulary for at all yet).
+ * Using "no `on` field" alone would over-match: any manually-named trigger a
+ * card happens to carry would get swept into "reacts to counters" regardless
+ * of what it's actually for.
  */
 const COUNTER_ADDED_TRIGGER_NAMES = ['onCounterAdded'];
 
 /**
- * `consumerTriggerNames` derivation (2026-09-19) — scans `definition`'s own
- * `triggers` (front face only; `definition` here is the ONE driving card
- * this factory is being configured from, not an arbitrary runtime
- * candidate — `matchesConsumerTriggerNames` is what later checks an
- * arbitrary candidate's front AND back face against the returned list) for
- * a trigger whose `name` is in `COUNTER_ADDED_TRIGGER_NAMES` above. As an
- * extra safety margin against the exact over-match risk that section's own
- * doc comment describes, a trigger that ALREADY carries a real `on` value
- * is skipped even if its name happens to collide — a trigger with a real,
- * closed auto-fire occasion already has its real reason to exist recorded
- * structurally, handled by the structurally-safer `deriveConsumerTriggerOn`
- * below instead; a free-text name coincidentally matching this convention on
- * top of that would be a name collision, not a genuine second signal. Since
- * Exemplar of Light's own `onCounterAdded` trigger now sets a real
- * `on: 'counterAdded'` value (2026-09-19, later still), it no longer matches
- * HERE — it matches via `deriveConsumerTriggerOn` instead; this function
- * returns `undefined` for the pool's real cards today, kept alive only as
- * the fallback for a hypothetical future differently-spelled, still
- * name-only convention. Returns `undefined` (not an empty array) when
- * nothing matches, mirroring the pre-existing "omitted for a hypothetical
- * future configuration with no real consumer-naming convention in the pool
- * yet" contract `SinkCatalogEntry.consumerTriggerNames` already documents.
+ * Scans `definition`'s own `triggers` (front face only — `definition` here
+ * is the ONE driving card this factory is being configured from, not an
+ * arbitrary runtime candidate; `matchesConsumerTriggerNames` is what later
+ * checks an arbitrary candidate's front AND back face against the returned
+ * list) for a trigger whose `name` is in `COUNTER_ADDED_TRIGGER_NAMES`
+ * above. A trigger that already carries a real `on` value is skipped even if
+ * its name happens to collide — it's handled by the structurally-safer
+ * `deriveConsumerTriggerOn` below instead; a free-text name coincidentally
+ * matching this convention on top of a real `on` value would be a name
+ * collision, not a genuine second signal. Returns `undefined` (not an empty
+ * array) when nothing matches, mirroring
+ * `SinkCatalogEntry.consumerTriggerNames`'s own "omitted, not empty"
+ * contract.
  */
 function deriveConsumerTriggerNames(definition: CardDefinition): string[] | undefined {
   const names = (definition.triggers ?? []).filter((trigger) => !triggerOn(trigger) && COUNTER_ADDED_TRIGGER_NAMES.includes(trigger.name)).map((trigger) => trigger.name);
@@ -389,18 +195,16 @@ function deriveConsumerTriggerNames(definition: CardDefinition): string[] | unde
 }
 
 /**
- * `consumerTriggerOn` derivation (2026-09-19, later still) — the
- * structurally-safer sibling to `deriveConsumerTriggerNames` above, mirroring
- * `etb.ts`'s own `consumerTriggerOn: ['enter']` precedent (see
+ * The structurally-safer sibling to `deriveConsumerTriggerNames` above,
+ * mirroring `etb.ts`'s own `consumerTriggerOn: ['enter']` precedent (see
  * `SinkCatalogEntry.consumerTriggerOn`'s own doc comment, `catalog/entry.ts`,
- * for the full "genuinely SAFER than `consumerTriggerNames`, no name-
- * collision risk" reasoning). Returns `['counterAdded']` iff `definition`
- * (front face only, same scoping convention as every other derivation in
- * this file) has at least one trigger with the real `on: 'counterAdded'`
- * value — `undefined` otherwise, same "omitted, not empty array" contract.
- * Checked via `sink-model/match-sink.ts`'s own `matchesConsumerTriggerOn` at
- * the caller side (`card-interactions.ts`), same as every other
- * `consumerTriggerOn`-declaring entry.
+ * for the full "genuinely safer than `consumerTriggerNames`, no
+ * name-collision risk" reasoning). Returns `['counterAdded']` iff
+ * `definition` (front face only) has at least one trigger with the real
+ * `on: 'counterAdded'` value — `undefined` otherwise, same "omitted, not
+ * empty array" contract. Checked via `match-sink.ts`'s own
+ * `matchesConsumerTriggerOn` at the caller side (`card-interactions.ts`),
+ * same as every other `consumerTriggerOn`-declaring entry.
  */
 function deriveConsumerTriggerOn(definition: CardDefinition): Array<TriggerOnValue> | undefined {
   const hasCounterAddedTrigger = (definition.triggers ?? []).some((trigger) => triggerOn(trigger) === 'counterAdded');
@@ -411,59 +215,71 @@ function deriveConsumerTriggerOn(definition: CardDefinition): Array<TriggerOnVal
  * The MIDDLE step of the `Self Definition -> Sink -> (Predicates) ->
  * Candidate Definition` chain (`SINK_MODEL_DESIGN.md`), made a real, named
  * piece of code instead of anonymous matching logic buried inside the
- * sink's own callable closure. `producerPredicate(counterType)` closes over
- * this ONE configured instance's own `counterType` and returns the ONE real
- * predicate function `buildCounterInstance` below needs.
- *
- * **2026-09-19, later still, boolean-return rewrite** — this used to be
- * `withPredicates(counterType, consumerTriggerNames)`, returning a
- * `{producer, consumer}` pair (`consumer` calling `matchesConsumerTriggerNames`
- * internally). The CONSUMER half is gone from here entirely now: the
+ * sink's own callable closure. `producerPredicate` closes over this ONE
+ * configured instance's own `counterType`/`ownName`/`ownTypes` and returns
+ * the real predicate function `buildCounterInstance` below needs; the
  * callable itself only ever answers the producer question (a plain
- * `boolean` — see `entry.ts`'s own `SinkInstance` doc comment for the full
- * "3rd real design iteration on this callable contract" writeup), and the
- * consumer check is called directly, against this instance's own plain
- * `consumerTriggerNames` DATA field (still assigned onto the returned
- * `SinkInstance` below, unchanged), by whichever caller actually needs it
- * (`card-interactions.ts`, `server/api/sink-catalog/index.get.ts`) — not
- * funneled through this family's own closure at all anymore.
+ * `boolean` — see `entry.ts`'s own `SinkInstance` doc comment). The consumer
+ * check is a separate concern, called directly against this instance's own
+ * plain `consumerTriggerNames`/`consumerTriggerOn` DATA fields by whichever
+ * caller needs it (`card-interactions.ts`, `server/api/sink-catalog/
+ * index.get.ts`), not funneled through this family's own closure.
  */
-function producerPredicate(counterType: string) {
-  /** Does `candidate` itself structurally PUT a counter of `counterType`?
-   * Direct structural inspection — no `SinkQuery`/`matchSink` involved (see
-   * this file's own header for the full 2026-09-18 rewrite writeup).
-   * `deriveOccurrences` IS the real "produced from the card definition"
-   * machinery (walks `candidate`'s own effects/triggers/program AST) —
-   * reused here directly rather than reimplemented. */
+function producerPredicate(counterType: string, ownName: string, ownTypes: string[]) {
+  /** Does `candidate` itself structurally PUT a counter of `counterType` on
+   * a card another candidate could actually be? `deriveOccurrences` IS the
+   * real "produced from the card definition" machinery (walks `candidate`'s
+   * own effects/triggers/program AST) — reused here directly.
+   *
+   * `occ.target` matters here, not just `event`/`counterType`/`controller`:
+   * a `putCounter` occurrence with `target: 'self'` can only ever land the
+   * counter on the SAME card that owns the effect — it structurally can
+   * never reach a different candidate. `ownName`/`ownTypes` (the driving
+   * definition's own identity) are what let this distinguish "Exemplar of
+   * Light's own self-targeted trigger is genuinely its own producer" (the
+   * real self-loop this family exists for) from "a self-only producer can
+   * never satisfy any OTHER card's sink" (the false-positive this closure
+   * used to return before this check existed). A type-constrained target
+   * (`putCounterTarget`/chosen-target `putCounter`/`putCounterAll`) is
+   * checked against `ownTypes` via `satisfiesType`, the same machinery
+   * `match-sink.ts`'s own `occurrenceSatisfiesSink` uses for the equivalent
+   * same-shape check on other sink families. An occurrence with no `target`
+   * at all (an untyped program-AST-derived broadcast) carries no
+   * restriction to check, so it passes through unconditionally. */
   return (candidate: CardDefinition, root: string) => {
     return deriveOccurrences(candidate, root).find((occ) => {
       if (occ.event !== 'putCounter' || occ.counterType !== counterType) return false;
       // The one real constraint the old `SinkQuery{controller:'you'}` field
-      // contributed — mirrors `match-sink.ts`'s own private
-      // `effectiveController`/`sidesCompatible` helpers byte-for-byte in
-      // logic (not imported — this change must not touch `match-sink.ts`'s
-      // own exports): a `putCounter`/`putCounterTarget`/`putCounterAll`
-      // occurrence never sets `controller` directly (only a `target:'self'`
-      // self-directed `putCounter` implies `'you'`), so an occurrence with
-      // NO resolvable controller at all is compatible by construction; only
-      // an occurrence explicitly resolving to `'opp'` (a program-AST-derived
-      // broadcast over an `opponents` pool) is genuinely incompatible.
+      // contributed: a putCounter occurrence never sets `controller`
+      // directly (only a `target:'self'`-shaped occurrence implies `'you'`),
+      // so no resolvable controller is compatible by construction; only an
+      // occurrence explicitly resolving to `'opp'` is genuinely incompatible.
       const controller = occ.controller ?? (occ.subject === 'self' || occ.target === 'self' ? 'you' : undefined);
-      return !controller || controller === 'you';
+      if (controller && controller !== 'you') return false;
+      if (occ.target === 'self') return candidate.name === ownName;
+      if (occ.target) return satisfiesType(ownTypes, occ.target.types);
+      return true;
     });
   };
 }
 
 /**
  * Builds ONE real, fully-configured, invocable `SinkInstance` for exactly
- * one `counterType` derived off `definition` (2026-09-19, split out of the
- * factory body itself so `CountersSink` below can call this once per
- * distinct `counterType` — see `deriveCounterTypes`'s own doc comment for
- * the full array-of-instances rewrite writeup). `consumerTriggerNames`/
+ * one `counterType` derived off `definition` — see `deriveCounterTypes`'s
+ * own doc comment for the array-of-instances contract this is called once
+ * per distinct `counterType` under. `consumerTriggerNames`/
  * `consumerTriggerOn` are computed ONCE by the caller (off `definition` as a
- * whole, not per `counterType` — see `deriveConsumerTriggerNames`'s own doc
- * comment for why this stays deliberately NOT counter-type-aware) and passed
- * in rather than re-derived per instance.
+ * whole, not per `counterType` — deliberately NOT counter-type-aware, since
+ * a trigger name/`on` value alone carries no counter-type information) and
+ * passed in rather than re-derived per instance.
+ *
+ * **No `requireConsumerForSelfOwnership` escape hatch** (unlike
+ * Battlefield-presence) — putting a counter via a real `putCounter`-family
+ * effect is a genuine, deliberate AUTHORED effect, not bare type/subtype
+ * MEMBERSHIP the way merely "being a Cat" is, so there's no over-match risk
+ * from every creature vacuously satisfying this query; the default
+ * `selfDirectProducerMatch || selfConsumerMatch` rule
+ * (`card-interactions.ts`) is correct here unmodified.
  */
 function buildCounterInstance(
   definition: CardDefinition,
@@ -473,16 +289,15 @@ function buildCounterInstance(
 ): SinkInstance {
   const slug = slugForCounterType(counterType);
   const category = counterType;
-  const producer = producerPredicate(counterType);
+  const ownName = definition.name;
+  const ownTypes = staticAttrsFor(definition).types;
+  const producer = producerPredicate(counterType, ownName, ownTypes);
 
-  // **2026-09-19, boolean-return rewrite** — the callable itself answers
-  // ONLY the producer question now, as a plain `boolean` (the user's own
-  // explicit target shape — see `entry.ts`'s own `SinkInstance` doc comment
-  // for the full "3rd real design iteration" writeup). `isPredicateDerived`
-  // carries the one real piece of nuance a bare boolean can't (whether the
-  // match came from a sink-derivation predicate rather than a direct
-  // effect/trigger walk) as its own small, separate accessor — `card-
-  // interactions.ts`'s `matchEntry` is the one real caller that needs it.
+  // `isPredicateDerived` carries the one real piece of nuance a bare boolean
+  // can't (whether the match came from a sink-derivation predicate rather
+  // than a direct effect/trigger walk) — see `entry.ts`'s own `SinkInstance`
+  // doc comment. `card-interactions.ts`'s `matchEntry` is the one real
+  // caller that needs it.
   const sink = ((candidate: CardDefinition, root: string = process.cwd()): boolean => {
     return !!producer(candidate, root);
   }) as SinkInstance;
@@ -503,15 +318,11 @@ function buildCounterInstance(
  * The shared factory — `CountersSink(definition)` derives, from
  * `definition`'s own real structural fields, and returns EVERY real, fully-
  * configured, invocable `SinkInstance` for each DISTINCT counter type
- * `definition` itself grants (2026-09-19, widened from returning one
- * `SinkInstance` to `SinkInstance[]` — see `deriveCounterTypes`'s own doc
- * comment for the full array/dedup rewrite writeup, and this file's own
- * header for the earlier 2026-09-19 "takes a real `CardDefinition`, not a
- * config object" rewrite). Exemplar of Light (the one real driving
- * definition in the pool today) derives exactly one distinct `counterType`
- * (`'+1/+1'`), so this resolves to a single-element array — zero real
- * behavior change for today's pool. A real `SinkFamily<CardDefinition>`
- * value.
+ * `definition` itself grants (see `deriveCounterTypes`'s own doc comment for
+ * the dedup rule). Exemplar of Light (the one real driving definition in the
+ * pool today) derives exactly one distinct `counterType` (`'+1/+1'`), so
+ * this resolves to a single-element array today. A real
+ * `SinkFamily<CardDefinition>` value.
  */
 export const CountersSink: SinkFamily<CardDefinition> = (definition) => {
   const counterTypes = deriveCounterTypes(definition);
